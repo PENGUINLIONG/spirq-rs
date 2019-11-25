@@ -1,0 +1,45 @@
+{
+    "attributes": {
+        "position": 0,
+        "normal": 1,
+        "uv": 2
+    },
+    "attachments": {
+        "[]": 0
+    },
+    "material": {
+        "albedo": {
+            "type": "image2d",
+            "default": [1, 1, 1],
+            "binding": 1
+        },
+        "normal": {
+            "type": "image2d",
+            "default": [1, 1, 1],
+            "binding": 2
+        },
+        "metallicity": {
+            "type": "image2d",
+            "default": [1],
+            "binding": 3
+        },
+        "roughness": {
+            "type": "image2d",
+            "default": [1],
+            "binding": 4
+        }
+    },
+    "techniques": [
+        {
+            "tags": ["default"],
+            "subpasses": {
+                "foo": {
+                    "stages": {
+                        "vert": "vert.main",
+                        "frag": "frag.main"
+                    }
+                }
+            }
+        }
+    ]
+}
