@@ -5,7 +5,7 @@ use std::iter::Peekable;
 use std::fmt;
 use std::ops::RangeInclusive;
 use std::hash::{Hash, Hasher};
-use super::sym::{Sym, Segment};
+use super::sym::{Sym, Seg};
 use super::consts::*;
 use super::instr::*;
 use super::{SpirvBinary, Instrs, Instr, Error, Result};
@@ -393,20 +393,21 @@ pub struct EntryPoint {
     var_name_map: HashMap<String, ResourceLocator>,
 }
 impl EntryPoint {
+    /// Get the offset and type of a descriptor variable identified by a symbol.
     pub fn resolve_desc(&self, sym: &Sym) -> Option<(Option<usize>, Type)> {
-        let mut segs = sym.segments();
+        let mut segs = sym.segs();
         let desc_bind = match segs.next() {
-            Some(Segment::Index(desc_set)) => {
-                if let Some(Segment::Index(bind_point)) = segs.next() {
+            Some(Seg::Index(desc_set)) => {
+                if let Some(Seg::Index(bind_point)) = segs.next() {
                     DescriptorBinding::desc_bind(desc_set as u32, bind_point as u32)
                 } else { return None; }
             },
-            Some(Segment::Empty) => {
+            Some(Seg::Empty) => {
                 // Symbols started with an empty head, like ".modelView", is
                 // used to identify push constants.
                 DescriptorBinding::push_const()
             }
-            Some(Segment::Name(name)) => {
+            Some(Seg::Name(name)) => {
                 if let Some(ResourceLocator::Descriptor(desc_bind)) = self.var_name_map.get(name) {
                     *desc_bind
                 } else { return None; }
@@ -414,58 +415,21 @@ impl EntryPoint {
             None => return None,
         };
         let desc_ty = self.desc_map.get(&desc_bind)?;
-        let mut ty: Type = match desc_ty {
-            DescriptorType::InputAtatchment(_) => {
-                // Subpass data have no members.
-                return if segs.next().is_none() {
-                    Some((None, Type::Image(None)))
-                } else { None };
-            },
-            DescriptorType::Image(img_ty) => {
-                // Images have no members.
-                return if segs.next().is_none() {
-                    Some((None, Type::Image(Some(img_ty.clone()))))
-                } else { None };
-            },
-            DescriptorType::PushConstant(struct_ty) => Type::Struct(struct_ty.clone()),
-            DescriptorType::Block(iblock_ty) => Type::Struct(iblock_ty.block_ty.clone()),
-        };
-        let mut offset = 0;
-        while let Some(seg) = segs.next() {
-            match ty {
-                Type::Struct(struct_ty) => {
-                    let idx = match seg {
-                        Segment::Index(idx) => idx,
-                        Segment::Name(name) => {
-                            if let Some(idx) = struct_ty.name_map.get(name) {
-                                *idx
-                            } else { return None; }
-                        },
-                        _ => return None,
-                    };
-                    if let Some((local_offset, new_ty)) = struct_ty.members.get(idx) {
-                        offset += local_offset;
-                        // TODO: Use `Cow`.
-                        ty = new_ty.clone();
-                    } else { return None; }
-                },
-                Type::Array(arr_ty) => {
-                    if let Segment::Index(idx) = seg {
-                        if let Some(nrepeat) = arr_ty.nrepeat {
-                            if idx >= nrepeat as usize {
-                                return None;
-                            }
-                        }
-                        if let Some(stride) = arr_ty.stride {
-                            offset += stride * idx;
-                        } else { return None; }
-                        ty = (*arr_ty.proto_ty).clone();
-                    } else { return None; }
-                },
-                _ => return None,
-            }
-        }
-        Some((Some(offset), ty.clone()))
+        desc_ty.resolve(segs.remaining())
+    }
+    pub fn attrs<'a>(&'a self) -> impl Iterator<Item=(Location, &InterfaceVariableType)> {
+        self.attr_map.iter()
+            .map(|(location, ivar_ty)| (*location, ivar_ty))
+    }
+    pub fn attms<'a>(&'a self) -> impl Iterator<Item=(Location, &InterfaceVariableType)> {
+        self.attm_map.iter()
+            .map(|(location, ivar_ty)| (*location, ivar_ty))
+    }
+    /// Walk down the hierarchy of descriptor variables and enumerate
+    /// symbols and their corresponding type.
+    pub fn desc_binds<'a>(&'a self) -> impl Iterator<Item=(DescriptorBinding, &DescriptorType)> {
+        self.desc_map.iter()
+            .map(|(desc_bind, iblock_ty)| (*desc_bind, iblock_ty))
     }
 }
 impl fmt::Debug for EntryPoint {
@@ -555,6 +519,63 @@ pub enum DescriptorType {
     Block(InterfaceBlockType),
     Image(ImageType),
     InputAtatchment(u32),
+}
+impl DescriptorType {
+    pub fn resolve(&self, sym: &Sym) -> Option<(Option<usize>, Type)> {
+        let mut segs = sym.segs();
+        let mut ty: Type = match self {
+            DescriptorType::InputAtatchment(_) => {
+                // Subpass data have no members.
+                return if let Some(Seg::Empty) = segs.next() {
+                    Some((None, Type::Image(None)))
+                } else { None };
+            },
+            DescriptorType::Image(img_ty) => {
+                // Images have no members.
+                return if let Some(Seg::Empty) = segs.next() {
+                    Some((None, Type::Image(Some(img_ty.clone()))))
+                } else { None };
+            },
+            DescriptorType::PushConstant(struct_ty) => Type::Struct(struct_ty.clone()),
+            DescriptorType::Block(iblock_ty) => Type::Struct(iblock_ty.block_ty.clone()),
+        };
+        let mut offset = 0;
+        while let Some(seg) = segs.next() {
+            match ty {
+                Type::Struct(struct_ty) => {
+                    let idx = match seg {
+                        Seg::Index(idx) => idx,
+                        Seg::Name(name) => {
+                            if let Some(idx) = struct_ty.name_map.get(name) {
+                                *idx
+                            } else { return None; }
+                        },
+                        _ => return None,
+                    };
+                    if let Some((local_offset, new_ty)) = struct_ty.members.get(idx) {
+                        offset += local_offset;
+                        // TODO: Use `Cow`.
+                        ty = new_ty.clone();
+                    } else { return None; }
+                },
+                Type::Array(arr_ty) => {
+                    if let Seg::Index(idx) = seg {
+                        if let Some(nrepeat) = arr_ty.nrepeat {
+                            if idx >= nrepeat as usize {
+                                return None;
+                            }
+                        }
+                        if let Some(stride) = arr_ty.stride {
+                            offset += stride * idx;
+                        } else { return None; }
+                        ty = (*arr_ty.proto_ty).clone();
+                    } else { return None; }
+                },
+                _ => return None,
+            }
+        }
+        Some((Some(offset), ty.clone()))
+    }
 }
 impl fmt::Debug for DescriptorType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
