@@ -44,4 +44,15 @@ impl SpirvBinary {
     pub fn reflect(&self) -> Result<Box<[EntryPoint]>> {
         reflect::reflect_spirv(&self)
     }
+    pub fn words(&self) -> &[u32] {
+        &self.0
+    }
+    pub fn bytes(&self) -> &[u8] {
+        unsafe {
+            let len = self.0.len() * std::mem::size_of::<u32>();
+            let ptr = self.0.as_ptr() as *const u8;
+            std::slice::from_raw_parts(ptr, len)
+        }
+    }
+    pub fn into_words(self) -> Vec<u32> { self.0 }
 }
