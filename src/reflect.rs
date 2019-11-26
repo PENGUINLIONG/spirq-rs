@@ -243,7 +243,7 @@ pub struct ArrayType {
     stride: Option<usize>,
 }
 impl ArrayType {
-    pub fn new_multibind(proto_ty: &Type, nrepeat: u32) -> ArrayType {
+    fn new_multibind(proto_ty: &Type, nrepeat: u32) -> ArrayType {
         ArrayType {
             proto_ty: Box::new(proto_ty.clone()),
             nrepeat: Some(nrepeat),
@@ -263,6 +263,25 @@ impl ArrayType {
             nrepeat: None,
             stride: Some(stride)
         }
+    }
+
+    pub fn nbyte(&self) -> Option<usize> {
+        match (self.stride, self.nrepeat) {
+            (Some(stride), Some(nrepeat)) => {
+                Some(stride * nrepeat as usize)
+            },
+            _ => None,
+        }
+    }
+    pub fn proto_ty(&self) -> &Type {
+        &self.proto_ty
+    }
+    pub fn stride(&self) -> usize {
+        // Multibind which makes the `stride` be `None` is used internally only.
+        self.stride.unwrap()
+    }
+    pub fn nrepeat(&self) -> Option<u32> {
+        self.nrepeat.clone()
     }
 }
 impl fmt::Debug for ArrayType {
@@ -285,6 +304,18 @@ pub struct StructType {
     // storage class is `StorageClass`. If it is, this field will be canceled in
     // the end to false.
     is_iuniform: bool,
+}
+impl StructType {
+    pub fn nbyte(&self) -> Option<usize> {
+        if let Some((offset, member_ty)) = self.members.last() {
+            member_ty.nbyte().map(|x| offset + x)
+        } else { None }
+    }
+    /// Get the offset and type of each member.
+    pub fn members(&self) -> impl Iterator<Item=(usize, &Type)> {
+        self.members.iter()
+            .map(|&(offset, ref ty)| (offset, ty))
+    }
 }
 impl Hash for StructType {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -330,6 +361,19 @@ pub enum Type {
     Image(Option<ImageType>),
     Array(ArrayType),
     Struct(StructType),
+}
+impl Type {
+    pub fn nbyte(&self) -> Option<usize> {
+        use Type::*;
+        match self {
+            Numeric(num_ty) => Some(num_ty.nbyte()),
+            Vector(vec_ty) => Some(vec_ty.nbyte()),
+            Matrix(mat_ty) => Some(mat_ty.nbyte()),
+            Image(_) => None,
+            Array(arr_ty) => arr_ty.nbyte(),
+            Struct(struct_ty) => struct_ty.nbyte(),
+        }
+    }
 }
 impl fmt::Debug for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -475,9 +519,9 @@ impl Manifest {
 
 #[derive(Default, Clone)]
 pub struct EntryPoint {
-    exec_model: ExecutionModel,
-    name: String,
-    manifest: Manifest,
+    pub exec_model: ExecutionModel,
+    pub name: String,
+    pub manifest: Manifest,
 }
 impl Deref for EntryPoint {
     type Target = Manifest;
@@ -495,7 +539,7 @@ impl fmt::Debug for EntryPoint {
 
 
 #[derive(Hash, Clone)]
-enum InterfaceVariableType {
+pub enum InterfaceVariableType {
     Numeric(NumericType),
     Vector(VectorType),
     Matrix(MatrixType),
@@ -525,8 +569,8 @@ impl fmt::Debug for InterfaceVariableType {
 
 #[derive(Hash, Clone)]
 pub struct InterfaceBlockType {
-    block_ty: StructType,
-    nbind: u32,
+    pub block_ty: StructType,
+    pub nbind: u32,
 }
 impl InterfaceBlockType {
     fn from_store_buf(block_ty: &Type) -> Option<InterfaceBlockType> {
@@ -553,8 +597,16 @@ impl InterfaceBlockType {
         let iblock_ty = InterfaceBlockType { block_ty: block_ty, nbind: nbind };
         Some(iblock_ty)
     }
+    /// Whether the interface block is a uniform buffer block.
     pub fn is_uniform(&self) -> bool { self.block_ty.is_iuniform }
+    /// Whether the interface block is a storage buffer block.
     pub fn is_storage(&self) -> bool { !self.block_ty.is_iuniform }
+
+    /// Get the size of buffer of a single binding. The first return value is
+    /// the minimum size to be allocated for the interface block; the second
+    /// return value is the size of the last repeating unit if the interface
+    /// block is an storage buffer block ended with a unsized array.
+    pub fn nbyte(&self) -> Option<usize> { self.block_ty.nbyte() }
 }
 impl fmt::Debug for InterfaceBlockType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -845,6 +897,7 @@ impl<'a> ReflectIntermediate<'a> {
                     if let &mut Type::Matrix(ref mut mat_ty) = proto_ty {
                         let i = i as u32;
                         let mat_stride = self.get_deco_u32(op.ty_id, Some(i), DECO_MATRIX_STRIDE)
+                            .map(|x| x as usize)
                             .ok_or(Error::CorruptedSpirv)?;
                         let row_major = self.contains_deco(op.ty_id, Some(i), DECO_ROW_MAJOR);
                         let col_major = self.contains_deco(op.ty_id, Some(i), DECO_COL_MAJOR);
@@ -853,15 +906,16 @@ impl<'a> ReflectIntermediate<'a> {
                             (false, true) => MatrixAxisOrder::ColumnMajor,
                             _ => return Err(Error::CorruptedSpirv),
                         };
-                        mat_ty.decorate(mat_stride as usize, major);
+                        mat_ty.decorate(mat_stride, major);
                     }
                     if let Some(name) = self.get_name(op.ty_id, Some(i as u32)) {
                         if !name.is_empty() {
                             struct_ty.name_map.insert(name.to_owned(), i);
                         }
                     }
-                    if let Some(offset) = self.get_deco_u32(op.ty_id, Some(i as u32), DECO_OFFSET) {
-                        struct_ty.members.push((offset as usize, member_ty));
+                    if let Some(offset) = self.get_deco_u32(op.ty_id, Some(i as u32), DECO_OFFSET)
+                        .map(|x| x as usize) {
+                        struct_ty.members.push((offset, member_ty));
                     } else {
                         // For shader input/output blocks there are no offset
                         // decoration. Since these variables are not externally

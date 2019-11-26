@@ -27,6 +27,17 @@ fn main() {
     info!("someImage: offset={:?}, ty={:?}", offset, var_ty);
     let (offset, var_ty) = pl.resolve_desc(Sym::new("imgggg")).unwrap();
     info!("imgggg: offset={:?}, ty={:?}", offset, var_ty);
+
+    info!("-- buffer sizing:");
+    for (desc_bind, desc_ty) in pl.desc_binds() {
+        use spirq::DescriptorType::*;
+        let struct_ty = match desc_ty {
+            PushConstant(struct_ty) => struct_ty,
+            Block(iblock_ty) => &iblock_ty.block_ty,
+            _ => continue,
+        };
+        info!("{:?}: nbyte={:?}", desc_bind, struct_ty.nbyte());
+    }
 }
 
 
