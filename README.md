@@ -1,10 +1,13 @@
 # SPIR-Q
 
-SPIR-Q is a light weight library for SPIR-V pipeline metadata query, which can be very useful for dynamic graphics/compute pipeline construction, shader debugging and so on. BTW, SPIR-Q currently only depends on the Rust standard library.
+SPIR-Q is a light weight library for SPIR-V pipeline metadata query, which can be very useful for dynamic graphics/compute pipeline construction, shader debugging and so on. SPIR-Q is currently compatible with a subset of SPIR-V 1.5, with most of graphics capabilities but no OpenCL kernel capabilities covered. BTW, SPIR-Q currently only depends on the Rust standard library.
 
 ## Usage
 
-The project is still in progress, but some of the functionalities are already in good shape. Please refer to the attached [example](examples/query/main.rs).
+The project is still in progress, but some of the functionalities are already in good shape. Please refer to the attached examples:
+
+* [query](examples/query/main.rs): Query separate entry points in SPIR-V binaries.
+* [pipeline](examples/pipeline/main.rs): Query a (conceptual) pipeline built from multiple shader modules.
 
 ## License
 

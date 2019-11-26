@@ -1,9 +1,9 @@
 use std::convert::{TryFrom};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::collections::hash_map::Entry::Vacant;
-use std::iter::Peekable;
+use std::iter::{FromIterator, Peekable};
 use std::fmt;
-use std::ops::RangeInclusive;
+use std::ops::{Deref, RangeInclusive};
 use std::hash::{Hash, Hasher};
 use super::sym::{Sym, Seg};
 use super::consts::*;
@@ -382,17 +382,57 @@ enum ResourceLocator {
     Descriptor(DescriptorBinding),
 }
 
-
 #[derive(Default, Clone)]
-pub struct EntryPoint {
-    exec_model: ExecutionModel,
-    name: String,
+pub struct Manifest {
     attr_map: HashMap<Location, InterfaceVariableType>,
     attm_map: HashMap<Location, InterfaceVariableType>,
     desc_map: HashMap<DescriptorBinding, DescriptorType>,
     var_name_map: HashMap<String, ResourceLocator>,
 }
-impl EntryPoint {
+impl Manifest {
+    pub fn merge(&mut self, other: &Manifest) -> Result<()> {
+        use std::collections::hash_map::DefaultHasher;
+        use std::collections::hash_map::Entry::{Vacant, Occupied};
+        fn hash<H: Hash>(h: &H) -> u64 {
+            let mut hasher = DefaultHasher::new();
+            h.hash(&mut hasher);
+            hasher.finish()
+        }
+        for (location, ivar_ty) in other.attr_map.iter() {
+            match self.attr_map.entry(*location) {
+                Vacant(entry) => { entry.insert(ivar_ty.clone()); },
+                Occupied(entry) => if hash(entry.get()) != hash(&ivar_ty) {
+                    return Err(Error::MismatchedManifest);
+                }
+            }
+        }
+        for (location, ivar_ty) in other.attm_map.iter() {
+            match self.attm_map.entry(*location) {
+                Vacant(entry) => { entry.insert(ivar_ty.clone()); },
+                Occupied(entry) => if hash(entry.get()) != hash(&ivar_ty) {
+                    return Err(Error::MismatchedManifest);
+                }
+            }
+        }
+        for (desc_bind, desc_ty) in other.desc_map.iter() {
+            match self.desc_map.entry(*desc_bind) {
+                Vacant(entry) => { entry.insert(desc_ty.clone()); },
+                Occupied(entry) => if hash(entry.get()) != hash(&desc_ty) {
+                    return Err(Error::MismatchedManifest);
+                }
+            }
+        }
+        for (name, locator) in other.var_name_map.iter() {
+            match self.var_name_map.entry(name.to_owned()) {
+                Vacant(entry) => { entry.insert(locator.clone()); },
+                Occupied(entry) => if entry.get() != locator {
+                    // Mismatched names are not allowed.
+                    return Err(Error::MismatchedManifest);
+                },
+            }
+        }
+        Ok(())
+    }
     /// Get the offset and type of a descriptor variable identified by a symbol.
     pub fn resolve_desc(&self, sym: &Sym) -> Option<(Option<usize>, Type)> {
         let mut segs = sym.segs();
@@ -429,21 +469,32 @@ impl EntryPoint {
     /// symbols and their corresponding type.
     pub fn desc_binds<'a>(&'a self) -> impl Iterator<Item=(DescriptorBinding, &DescriptorType)> {
         self.desc_map.iter()
-            .map(|(desc_bind, iblock_ty)| (*desc_bind, iblock_ty))
+            .map(|(desc_bind, desc_ty)| (*desc_bind, desc_ty))
     }
+}
+
+#[derive(Default, Clone)]
+pub struct EntryPoint {
+    exec_model: ExecutionModel,
+    name: String,
+    manifest: Manifest,
+}
+impl Deref for EntryPoint {
+    type Target = Manifest;
+    fn deref(&self) -> &Self::Target { &self.manifest }
 }
 impl fmt::Debug for EntryPoint {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct(&self.name)
-            .field("attributes", &self.attr_map)
-            .field("attachments", &self.attm_map)
-            .field("descriptors", &self.desc_map)
+            .field("attributes", &self.manifest.attr_map)
+            .field("attachments", &self.manifest.attm_map)
+            .field("descriptors", &self.manifest.desc_map)
             .finish()
     }
 }
 
 
-#[derive(Clone)]
+#[derive(Hash, Clone)]
 enum InterfaceVariableType {
     Numeric(NumericType),
     Vector(VectorType),
@@ -472,7 +523,7 @@ impl fmt::Debug for InterfaceVariableType {
 }
 
 
-#[derive(Clone)]
+#[derive(Hash, Clone)]
 pub struct InterfaceBlockType {
     block_ty: StructType,
     nbind: u32,
@@ -513,7 +564,7 @@ impl fmt::Debug for InterfaceBlockType {
 }
 
 
-#[derive(Clone)]
+#[derive(Hash, Clone)]
 pub enum DescriptorType {
     PushConstant(StructType),
     Block(InterfaceBlockType),
@@ -1026,25 +1077,26 @@ impl<'a> ReflectIntermediate<'a> {
                     .ok_or(Error::CorruptedSpirv)?;
                 let collision = match accessed_var {
                     Variable::Input(location, ivar_ty) => {
-                        let mut collision = entry_point.attr_map.insert(location, ivar_ty).is_some();
+                        let mut collision = entry_point.manifest.attr_map
+                            .insert(location, ivar_ty).is_some();
                         if let Some(name) = self.get_name(accessed_var_id, None) {
-                            collision |= entry_point.var_name_map
+                            collision |= entry_point.manifest.var_name_map
                                 .insert(name.to_owned(), ResourceLocator::Attribute(location)).is_some();
                         }
                         collision
                     },
                     Variable::Output(location, ivar_ty) => {
-                        let mut collision = entry_point.attm_map.insert(location, ivar_ty).is_some();
+                        let mut collision = entry_point.manifest.attm_map.insert(location, ivar_ty).is_some();
                         if let Some(name) = self.get_name(accessed_var_id, None) {
-                            collision |= entry_point.var_name_map
+                            collision |= entry_point.manifest.var_name_map
                                 .insert(name.to_owned(), ResourceLocator::Attachment(location)).is_some();
                         }
                         collision
                     },
                     Variable::Descriptor(desc_bind, desc_ty) => {
-                        let mut collision = entry_point.desc_map.insert(desc_bind, desc_ty).is_some();
+                        let mut collision = entry_point.manifest.desc_map.insert(desc_bind, desc_ty).is_some();
                         if let Some(name) = self.get_name(accessed_var_id, None) {
-                            collision |= entry_point.var_name_map
+                            collision |= entry_point.manifest.var_name_map
                                 .insert(name.to_owned(), ResourceLocator::Descriptor(desc_bind)).is_some();
                         }
                         collision
@@ -1079,44 +1131,54 @@ pub fn reflect_spirv<'a>(module: &'a SpirvBinary) -> Result<Box<[EntryPoint]>> {
     Ok(itm.collect_entry_points()?)
 }
 
-/*
-#[derive(Debug, Default)]
-pub struct PipelineMetadata {
-    attr_templates: Vec<VertexAttributeContractTemplate>,
-    attm_templates: Vec<AttachmentContractTemplate>,
-    desc_binds: HashMap<DescriptorBinding, Descriptor>,
-    desc_name_map: HashMap<String, DescriptorBinding>,
+#[derive(Default)]
+pub struct Pipeline {
+    manifest: Manifest,
 }
-impl PipelineMetadata {
-    pub fn new(spvs: &[SpirvBinary]) -> Result<PipelineMetadata> {
-        use std::convert::TryInto;
-        use log::debug;
-        let mut found_stages = HashSet::new();
-        let mut meta = PipelineMetadata::default();
-        for spv in spvs {
-            let spv_meta: SpirvMetadata = spv.try_into()?;
-            for entry_point in spv_meta.entry_points {
-                let EntryPoint { func, name, exec_model } = entry_point;
-                if !found_stages.insert(entry_point.exec_model) {
-                    // Stage collision.
-                    return Err(Error::MalformedPipeline);
-                }
-
-                match entry_point.exec_model {
-                    EXEC_MODEL_VERTEX => meta.attr_templates = attr_templates,
-                    EXEC_MODEL_FRAGMENT => meta.attm_templates = attm_templates,
-                    _ => {},
-                }
-                // TODO: (pengunliong) Resolve structural and naming conflicts.
-                for (desc_bind, desc) in desc_binds.into_iter() {
-                    meta.desc_binds.entry(desc_bind).or_insert(desc);
-                }
-                for (name, desc_bind) in desc_name_map.into_iter() {
-                    meta.desc_name_map.entry(name).or_insert(desc_bind);
-                }
-            }
+impl Pipeline {
+    pub fn builder() -> Builder {
+        Builder {
+            found_stages: HashSet::default(),
+            result: Some(Ok(Manifest::default())),
         }
-        Ok(meta)
     }
 }
-*/
+impl fmt::Debug for Pipeline {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct(&"|")
+            .field("attributes", &self.manifest.attr_map)
+            .field("attachments", &self.manifest.attm_map)
+            .field("descriptors", &self.manifest.desc_map)
+            .finish()
+    }
+}
+impl Deref for Pipeline {
+    type Target = Manifest;
+    fn deref(&self) -> &Self::Target { &self.manifest }
+}
+
+pub struct Builder {
+    found_stages: HashSet<ExecutionModel>,
+    result: Option<Result<Manifest>>,
+}
+impl Builder {
+    pub fn with_stage(&mut self, entry_point: &EntryPoint) -> &mut Self {
+        if self.found_stages.insert(entry_point.exec_model) {
+            let result = self.result.take()
+                .unwrap()
+                .and_then(|mut manifest| {
+                    manifest.merge(&entry_point.manifest)?;
+                    Ok(manifest)
+                });
+            self.result = Some(result);
+        } else {
+            // Reject stage collision.
+            self.result = Some(Err(Error::PipelineStageConflict));
+        }
+        self
+    }
+    pub fn build(&mut self) -> Result<Pipeline> {
+        self.result.take().unwrap()
+            .map(|manifest| Pipeline { manifest: manifest })
+    }
+}
