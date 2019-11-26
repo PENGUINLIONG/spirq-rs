@@ -1,13 +1,13 @@
    Compiling spirq v0.1.0 (C:\Users\PENGUINLIONG\Repositories\spirq)
-    Finished dev [unoptimized + debuginfo] target(s) in 1.26s
+    Finished dev [unoptimized + debuginfo] target(s) in 1.12s
      Running `target\debug\examples\query.exe`
-[2019-11-26T05:29:00Z INFO  query] collected spirvs: ["uniform-pbr.vert", "uniform-pbr.frag"]
-[2019-11-26T05:29:00Z INFO  query] [
+[2019-11-26T10:37:18Z INFO  query] collected spirvs: ["uniform-pbr.frag", "uniform-pbr.vert"]
+[2019-11-26T10:37:18Z INFO  query] [
         main {
             attributes: {
                 2: vec2<f32>,
-                1: vec4<f32>,
                 0: vec4<f32>,
+                1: vec4<f32>,
             },
             attachments: {},
             descriptors: {
@@ -15,9 +15,9 @@
             },
         },
     ]
-[2019-11-26T05:29:00Z INFO  query] push_constant[model_view]: offset=Some(0), ty=mat4x4<f32>
-[2019-11-26T05:29:00Z INFO  query] push_constant[view_proj]: offset=Some(64), ty=mat4x4<f32>
-[2019-11-26T05:29:00Z INFO  query] [
+[2019-11-26T10:37:18Z INFO  query] push_constant[model_view]: offset=Some(0), ty=mat4x4<f32>
+[2019-11-26T10:37:18Z INFO  query] push_constant[view_proj]: offset=Some(64), ty=mat4x4<f32>
+[2019-11-26T10:37:18Z INFO  query] [
         main {
             attributes: {},
             attachments: {
@@ -27,9 +27,10 @@
                 (set=0, bind=2): subpassData[0],
                 (set=0, bind=1): [uniform: { albedo: vec3<f32>, metalicity: f32, roughness: f32, fdsa: [mat3x3<f32>; 2] }; 2],
                 (set=0, bind=3): sampler2D,
+                (set=1, bind=0): [buffer: { cam_pos: vec4<f32>, lights: [{ pos: vec3<f32>, color: vec3<f32> } }; 2],
             },
         },
     ]
-[2019-11-26T05:29:00Z INFO  query] mat.fdsa.1: offset=Some(80), ty=mat3x3<f32>
-[2019-11-26T05:29:00Z INFO  query] someImage: offset=None, ty=subpassData
-[2019-11-26T05:29:00Z INFO  query] imgggg: offset=None, ty=sampler2D
+[2019-11-26T10:37:18Z INFO  query] mat.fdsa.1: offset=Some(80), ty=mat3x3<f32>
+[2019-11-26T10:37:18Z INFO  query] someImage: offset=None, ty=subpassData
+[2019-11-26T10:37:18Z INFO  query] imgggg: offset=None, ty=sampler2D

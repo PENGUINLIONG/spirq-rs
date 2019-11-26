@@ -1,12 +1,11 @@
-   Compiling spirq v0.1.0 (C:\Users\PENGUINLIONG\Repositories\spirq)
-    Finished dev [unoptimized + debuginfo] target(s) in 1.40s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.05s
      Running `target\debug\examples\pipeline.exe`
-[2019-11-26T05:27:19Z INFO  pipeline] collected spirvs: ["uniform-pbr.vert", "uniform-pbr.frag"]
-[2019-11-26T05:27:19Z INFO  pipeline] | {
+[2019-11-26T11:20:54Z INFO  pipeline] collected spirvs: ["uniform-pbr.frag", "uniform-pbr.vert"]
+[2019-11-26T11:20:54Z INFO  pipeline] | {
         attributes: {
+            0: vec4<f32>,
             1: vec4<f32>,
             2: vec2<f32>,
-            0: vec4<f32>,
         },
         attachments: {
             0: vec4<f32>,
@@ -15,11 +14,16 @@
             (set=0, bind=3): sampler2D,
             (set=0, bind=1): [uniform: { albedo: vec3<f32>, metalicity: f32, roughness: f32, fdsa: [mat3x3<f32>; 2] }; 2],
             (push_constant): { model_view: mat4x4<f32>, view_proj: mat4x4<f32> },
+            (set=1, bind=0): [buffer: { cam_pos: vec4<f32>, lights: [{ pos: vec3<f32>, color: vec3<f32> } }; 2],
             (set=0, bind=2): subpassData[0],
         },
     }
-[2019-11-26T05:27:19Z INFO  pipeline] push_constant[model_view]: offset=Some(0), ty=mat4x4<f32>
-[2019-11-26T05:27:19Z INFO  pipeline] push_constant[view_proj]: offset=Some(64), ty=mat4x4<f32>
-[2019-11-26T05:27:19Z INFO  pipeline] mat.fdsa.1: offset=Some(80), ty=mat3x3<f32>
-[2019-11-26T05:27:19Z INFO  pipeline] someImage: offset=None, ty=subpassData
-[2019-11-26T05:27:19Z INFO  pipeline] imgggg: offset=None, ty=sampler2D
+[2019-11-26T11:20:54Z INFO  pipeline] push_constant[model_view]: offset=Some(0), ty=mat4x4<f32>
+[2019-11-26T11:20:54Z INFO  pipeline] push_constant[view_proj]: offset=Some(64), ty=mat4x4<f32>
+[2019-11-26T11:20:54Z INFO  pipeline] mat.fdsa.1: offset=Some(80), ty=mat3x3<f32>
+[2019-11-26T11:20:54Z INFO  pipeline] someImage: offset=None, ty=subpassData
+[2019-11-26T11:20:54Z INFO  pipeline] imgggg: offset=None, ty=sampler2D
+[2019-11-26T11:20:54Z INFO  pipeline] -- buffer sizing:
+[2019-11-26T11:20:54Z INFO  pipeline] (set=0, bind=1): nbyte=Some(128)
+[2019-11-26T11:20:54Z INFO  pipeline] (push_constant): nbyte=Some(128)
+[2019-11-26T11:20:54Z INFO  pipeline] (set=1, bind=0): nbyte=None
