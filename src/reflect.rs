@@ -1,3 +1,4 @@
+//! Reflection procedures and types.
 use std::convert::{TryFrom};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::collections::hash_map::Entry::{Vacant, Occupied};
@@ -8,7 +9,8 @@ use std::hash::{Hash, Hasher};
 use super::sym::{Sym, Seg};
 use super::consts::*;
 use super::instr::*;
-use super::{SpirvBinary, Instrs, Instr, Error, Result};
+use super::{SpirvBinary, Instrs, Instr};
+use super::error::{Error, Result};
 
 type ObjectId = u32;
 type TypeId = ObjectId;
@@ -1245,16 +1247,25 @@ pub fn reflect_spirv<'a>(module: &'a SpirvBinary) -> Result<Box<[EntryPoint]>> {
     Ok(itm.collect_entry_points()?)
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Pipeline {
-    manifest: Manifest,
+    pub manifest: Manifest,
 }
-impl Pipeline {
-    pub fn builder() -> Builder {
-        Builder {
-            found_stages: HashSet::default(),
-            result: Some(Ok(Manifest::default())),
+impl TryFrom<&[EntryPoint]> for Pipeline {
+    type Error = Error;
+
+    fn try_from(entry_points: &[EntryPoint]) -> Result<Pipeline> {
+        let mut found_stages = HashSet::<ExecutionModel>::default();
+        let mut manifest = Manifest::default();
+        for entry_point in entry_points.as_ref().iter() {
+            if found_stages.insert(entry_point.exec_model) {
+                manifest.merge(&entry_point.manifest)?;
+            } else {
+                // Reject stage collision.
+                return Err(Error::PipelineStageConflict);
+            }
         }
+        return Ok(Pipeline { manifest: manifest });
     }
 }
 impl fmt::Debug for Pipeline {
@@ -1269,30 +1280,4 @@ impl fmt::Debug for Pipeline {
 impl Deref for Pipeline {
     type Target = Manifest;
     fn deref(&self) -> &Self::Target { &self.manifest }
-}
-
-pub struct Builder {
-    found_stages: HashSet<ExecutionModel>,
-    result: Option<Result<Manifest>>,
-}
-impl Builder {
-    pub fn with_stage(&mut self, entry_point: &EntryPoint) -> &mut Self {
-        if self.found_stages.insert(entry_point.exec_model) {
-            let result = self.result.take()
-                .unwrap()
-                .and_then(|mut manifest| {
-                    manifest.merge(&entry_point.manifest)?;
-                    Ok(manifest)
-                });
-            self.result = Some(result);
-        } else {
-            // Reject stage collision.
-            self.result = Some(Err(Error::PipelineStageConflict));
-        }
-        self
-    }
-    pub fn build(&mut self) -> Result<Pipeline> {
-        self.result.take().unwrap()
-            .map(|manifest| Pipeline { manifest: manifest })
-    }
 }

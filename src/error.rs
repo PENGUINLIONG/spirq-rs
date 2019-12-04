@@ -1,3 +1,4 @@
+//! Error and result reported by SPIR-Q procedures.
 use std::fmt;
 use std::error;
 
@@ -21,3 +22,5 @@ impl fmt::Display for Error {
     }
 }
 impl error::Error for Error { }
+
+pub type Result<T> = std::result::Result<T, Error>;

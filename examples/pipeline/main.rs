@@ -1,5 +1,8 @@
 use std::collections::HashMap;
-use spirq::{SpirvBinary, Sym, Pipeline};
+use std::convert::TryFrom;
+use spirq::SpirvBinary;
+use spirq::reflect::Pipeline;
+use spirq::sym::Sym;
 use log::info;
 use std::path::Path;
 
@@ -11,11 +14,7 @@ fn main() {
     let entry_points = spvs.values()
         .map(|x| x.reflect().unwrap()[0].to_owned())
         .collect::<Vec<_>>();
-    let pl = Pipeline::builder()
-        .with_stage(&entry_points[0])
-        .with_stage(&entry_points[1])
-        .build()
-        .unwrap();
+    let pl = Pipeline::try_from(entry_points.as_ref()).unwrap();
     info!("{:#?}", pl);
     let (offset, var_ty) = pl.resolve_desc(Sym::new(".model_view")).unwrap();
     info!("push_constant[model_view]: offset={:?}, ty={:?}", offset, var_ty);
@@ -30,9 +29,9 @@ fn main() {
 
     info!("-- buffer sizing:");
     for (desc_bind, desc_ty) in pl.desc_binds() {
-        use spirq::DescriptorType::*;
+        use spirq::reflect::DescriptorType::*;
         let struct_ty = match desc_ty {
-            PushConstant(struct_ty) => struct_ty,
+            PushConstant(struct_ty) => &struct_ty,
             Block(iblock_ty) => &iblock_ty.block_ty,
             _ => continue,
         };

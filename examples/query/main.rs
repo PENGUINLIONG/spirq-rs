@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use spirq::{SpirvBinary, Sym};
+use spirq::SpirvBinary;
+use spirq::sym::Sym;
 use log::info;
 use std::path::Path;
 

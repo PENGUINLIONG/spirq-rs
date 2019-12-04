@@ -1,21 +1,22 @@
-//! SPIR-V Reflection
+//! # SPIR-Q: Light Weight SPIR-V Query Utility for Graphics.
 //!
-//! Reflect and extract SPIR-V declared materials.
+//! SPIR-Q is a light weight library for SPIR-V pipeline metadata query, which
+//! can be very useful for dynamic graphics/compute pipeline construction,
+//! shader debugging and so on. SPIR-Q is currently compatible with a subset of
+//! SPIR-V 1.5, with most of graphics capabilities but no OpenCL kernel
+//! capabilities covered.
 mod consts;
 mod parse;
 mod instr;
-mod reflect;
-mod error;
-mod sym;
+pub mod reflect;
+pub mod error;
+pub mod sym;
 
 use std::convert::TryInto;
 use std::iter::FromIterator;
 use parse::{Instrs, Instr};
-pub use reflect::*;
-pub use error::Error;
-pub use sym::*;
-
-type Result<T> = std::result::Result<T, Error>;
+use reflect::*;
+use error::{Error, Result};
 
 #[derive(Debug, Default, Clone)]
 pub struct SpirvBinary(Vec<u32>);
@@ -40,7 +41,7 @@ impl From<Vec<u8>> for SpirvBinary {
 }
 
 impl SpirvBinary {
-    pub fn instrs<'a>(&'a self) -> Instrs<'a> { Instrs::new(&self.0) }
+    pub(crate) fn instrs<'a>(&'a self) -> Instrs<'a> { Instrs::new(&self.0) }
     pub fn reflect(&self) -> Result<Box<[EntryPoint]>> {
         reflect::reflect_spirv(&self)
     }
