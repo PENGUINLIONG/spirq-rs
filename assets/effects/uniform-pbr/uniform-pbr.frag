@@ -46,10 +46,17 @@ uniform subpassInput someImage;
 layout(binding=3)
 uniform sampler2D imgggg;
 
+layout(push_constant)
+uniform YetAnotherPushConstantBlock {
+    vec4 randomColor;
+};
+
+
 const float PI = 3.1415926;
 const float TAU = PI * 2;
 
 void main() {
+    vec4 randcolor = randomColor;
     float x = mat[0].metalicity;
     vec4 ccc = l[0].cam_pos;
     color = vec4(0.0, 0.0, 1.0, 1.0) + subpassLoad(someImage).rgba + texture(imgggg, vec2(0.0, 0.0));

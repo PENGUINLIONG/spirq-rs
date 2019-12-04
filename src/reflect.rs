@@ -298,6 +298,7 @@ impl fmt::Debug for ArrayType {
 #[derive(Default, Clone)]
 pub struct StructType {
     members: Vec<(usize, Type)>, // Offset and type.
+    // BTreeMap to keep the order for hashing.
     name_map: BTreeMap<String, MemberIdx>,
     // We assume a structure decorated by `Block` is uniform in the first place.
     // On instanciating the structure type into interface block, we check if the
@@ -335,6 +336,8 @@ impl fmt::Debug for StructType {
             if let Some(name) = self.name_map.iter()
                 .find_map(|(name, &idx)| if idx == i { Some(name) } else { None }) {
                 write!(f, "{}: {:?}", name, member_ty)?;
+            } else {
+                write!(f, "{}: {:?}", i, member_ty)?;
             }
         }
         f.write_str(" }")
@@ -486,8 +489,40 @@ impl Manifest {
         for (desc_bind, desc_ty) in other.desc_map.iter() {
             match self.desc_map.entry(*desc_bind) {
                 Vacant(entry) => { entry.insert(desc_ty.clone()); },
-                Occupied(entry) => if hash(entry.get()) != hash(&desc_ty) {
-                    return Err(Error::MismatchedManifest);
+                Occupied(mut entry) => {
+                    if let DescriptorType::PushConstant(dst_struct_ty) = entry.get_mut() {
+                        // Merge push constants scattered in different stages.
+                        // This match must success.
+                        let name_offset = dst_struct_ty.members.len();
+                        if let DescriptorType::PushConstant(src_struct_ty) = desc_ty {
+                            // Don't validate the offsets.
+                            let member_appendix = src_struct_ty.members.iter()
+                                .cloned();
+                            dst_struct_ty.members.extend(member_appendix);
+                            for (name, &member_idx) in src_struct_ty.name_map.iter() {
+                                if let Some(&old_member_idx) = dst_struct_ty.name_map.get(name) {
+                                    let old_hash = hash(&dst_struct_ty.members[old_member_idx]);
+                                    let new_hash = hash(&src_struct_ty.members[member_idx]);
+                                    if old_hash != new_hash {
+                                        return Err(Error::MismatchedManifest);
+                                    }
+                                } else {
+                                    dst_struct_ty.name_map
+                                        .insert(name.to_owned(), name_offset + member_idx);
+                                }
+                            }
+                        } else {
+                            unreachable!("push constant merging with push constant");
+                        }
+                        // It's guaranteed to be interface uniform so we don't
+                        // have to check that.
+                    } else {
+                        // Just regular descriptor types. Simply compare the
+                        // hashes.
+                        if hash(entry.get()) != hash(&desc_ty) {
+                            return Err(Error::MismatchedManifest);
+                        }
+                    }
                 }
             }
         }
