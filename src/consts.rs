@@ -56,11 +56,13 @@ pub const OP_LOAD: OpCode = 61;
 pub const OP_STORE: OpCode = 62;
 // pub const OP_IN_BOUNDS_ACCESS_CHAIN: OpCode = 66;
 
-
-pub type ExecutionModel = u32;
-// pub const EXEC_MODEL_VERTEX: ExecutionModel = 0;
-// pub const EXEC_MODEL_FRAGMENT: ExecutionModel = 4;
-
+pub const EXEC_MODEL_VERTEX: u32 = 0;
+pub const EXEC_MODEL_TESSELLATION_CONTROL: u32 = 1;
+pub const EXEC_MODEL_TESSELLATION_EVALUATION: u32 = 2;
+pub const EXEC_MODEL_GEOMETRY: u32 = 3;
+pub const EXEC_MODEL_FRAGMENT: u32 = 4;
+pub const EXEC_MODEL_GL_COMPUTE: u32 = 5;
+pub const EXEC_MODEL_KERNEL: u32 = 6;
 
 pub type Decoration = u32;
 // pub const DECO_SPEC_ID: Decoration = 1;

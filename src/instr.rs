@@ -37,7 +37,7 @@ macro_rules! define_ops {
 // Be aware that the order of the read methods is important.
 define_ops!{
     OpEntryPoint {
-        exec_model: ExecutionModel = read_u32(),
+        exec_model: u32 = read_u32(),
         func_id: FunctionId = read_u32(),
         name: &'a str = read_str(),
     }

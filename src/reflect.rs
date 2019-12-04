@@ -1,7 +1,7 @@
 use std::convert::{TryFrom};
 use std::collections::{BTreeMap, HashMap, HashSet};
-use std::collections::hash_map::Entry::Vacant;
-use std::iter::{FromIterator, Peekable};
+use std::collections::hash_map::Entry::{Vacant, Occupied};
+use std::iter::Peekable;
 use std::fmt;
 use std::ops::{Deref, RangeInclusive};
 use std::hash::{Hash, Hasher};
@@ -411,6 +411,32 @@ impl fmt::Debug for DescriptorBinding {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+pub enum ExecutionModel {
+    Vertex,
+    TessellationControl,
+    TessellationEvaluation,
+    Geometry,
+    Fragment,
+    GLCompute,
+    Kernel,
+}
+impl ExecutionModel {
+    fn from_raw(raw: u32) -> Result<ExecutionModel> {
+        use ExecutionModel::*;
+        let rv = match raw {
+            EXEC_MODEL_VERTEX => Vertex,
+            EXEC_MODEL_TESSELLATION_CONTROL => TessellationControl,
+            EXEC_MODEL_TESSELLATION_EVALUATION => TessellationEvaluation,
+            EXEC_MODEL_GEOMETRY => Geometry,
+            EXEC_MODEL_FRAGMENT => Fragment,
+            EXEC_MODEL_GL_COMPUTE => GLCompute,
+            EXEC_MODEL_KERNEL => Kernel,
+            _ => return Err(Error::UnsupportedSpirv),
+        };
+        return Ok(rv);
+    }
+}
 
 struct EntryPointDeclartion<'a> {
     func_id: u32,
@@ -436,7 +462,6 @@ pub struct Manifest {
 impl Manifest {
     pub fn merge(&mut self, other: &Manifest) -> Result<()> {
         use std::collections::hash_map::DefaultHasher;
-        use std::collections::hash_map::Entry::{Vacant, Occupied};
         fn hash<H: Hash>(h: &H) -> u64 {
             let mut hasher = DefaultHasher::new();
             h.hash(&mut hasher);
@@ -517,7 +542,7 @@ impl Manifest {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct EntryPoint {
     pub exec_model: ExecutionModel,
     pub name: String,
@@ -752,7 +777,7 @@ impl<'a> ReflectIntermediate<'a> {
             if instr.opcode() != OP_ENTRY_POINT { break; }
             let op = OpEntryPoint::try_from(instr)?;
             let entry_point_declr = EntryPointDeclartion {
-                exec_model: op.exec_model,
+                exec_model: ExecutionModel::from_raw(op.exec_model)?,
                 func_id: op.func_id,
                 name: op.name,
             };
@@ -1122,7 +1147,7 @@ impl<'a> ReflectIntermediate<'a> {
             let mut entry_point = EntryPoint {
                 name: entry_point_declr.name.to_owned(),
                 exec_model: entry_point_declr.exec_model,
-                ..Default::default()
+                manifest: Manifest::default(),
             };
             let accessed_var_ids = self.collect_fn_vars(entry_point_declr.func_id);
             for accessed_var_id in accessed_var_ids {
