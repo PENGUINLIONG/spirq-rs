@@ -1,12 +1,12 @@
 [package]
 name = "spirq"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["PENGUINLIONG <admin@penguinliong.moe>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
 description = "Light weight SPIR-V query utility for graphics."
-repository = "https://github.com/PENGUINLIONG/spirq"
-homepage = "https://github.com/PENGUINLIONG/spirq"
+repository = "https://github.com/PENGUINLIONG/spirq-rs"
+homepage = "https://github.com/PENGUINLIONG/spirq-rs"
 documentation = "https://docs.rs/spirq"
 maintenance = { status = "experimental" }
 categories = ["graphics"]
