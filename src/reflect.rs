@@ -6,11 +6,14 @@ use std::iter::Peekable;
 use std::fmt;
 use std::ops::{Deref, RangeInclusive};
 use std::hash::{Hash, Hasher};
+use spirv_headers::{Decoration, Dim, ImageFormat, StorageClass};
 use super::sym::{Sym, Seg};
 use super::consts::*;
 use super::instr::*;
 use super::{SpirvBinary, Instrs, Instr};
 use super::error::{Error, Result};
+
+pub use spirv_headers::ExecutionModel;
 
 type ObjectId = u32;
 type TypeId = ObjectId;
@@ -18,7 +21,6 @@ type VariableId = ObjectId;
 type ConstantId = ObjectId;
 type FunctionId = ObjectId;
 type MemberIdx = usize;
-type Decoration = u32;
 
 #[derive(Hash, Clone)]
 pub struct NumericType {
@@ -126,36 +128,18 @@ impl fmt::Debug for MatrixType {
 }
 
 
-#[derive(Debug, Hash, Clone, Copy)]
-pub enum ColorFormat {
-    Rgba32f = 1,
-    R32f = 3,
-    Rgba8 = 4,
-}
-impl ColorFormat {
-    fn from_spv_def(color_fmt: u32) -> Result<ColorFormat> {
-        let color_fmt = match color_fmt {
-            IMG_UNIT_FMT_RGBA32F => ColorFormat::Rgba32f,
-            IMG_UNIT_FMT_R32F => ColorFormat::R32f,
-            IMG_UNIT_FMT_RGBA8 => ColorFormat::Rgba8,
-            _ => return Err(Error::UnsupportedSpirv),
-        };
-        Ok(color_fmt)
-    }
-}
-
 #[derive(Hash, Clone, Copy)]
 pub enum ImageUnitFormat {
-    Color(ColorFormat),
+    Color(ImageFormat),
     Sampled,
     Depth,
 }
 impl ImageUnitFormat {
-    pub fn from_spv_def(is_sampled: u32, is_depth: u32, color_fmt: u32) -> Result<ImageUnitFormat> {
+    pub fn from_spv_def(is_sampled: u32, is_depth: u32, color_fmt: ImageFormat) -> Result<ImageUnitFormat> {
         let img_unit_fmt = match (is_sampled, is_depth, color_fmt) {
             (1, 0, _) => ImageUnitFormat::Sampled,
             (1, 1, _) => ImageUnitFormat::Depth,
-            (2, 0, color_fmt) => ImageUnitFormat::Color(ColorFormat::from_spv_def(color_fmt)?),
+            (2, 0, color_fmt) => ImageUnitFormat::Color(color_fmt),
             _ => return Err(Error::UnsupportedSpirv),
         };
         Ok(img_unit_fmt)
@@ -178,17 +162,17 @@ pub enum ImageArrangement {
 impl ImageArrangement {
     /// Do note this dim is not the number of dimensions but a enumeration of
     /// values specified in SPIR-V specification.
-    pub fn from_spv_def(dim: u32, is_array: bool, is_multisampled: bool) -> Result<ImageArrangement> {
+    pub fn from_spv_def(dim: Dim, is_array: bool, is_multisampled: bool) -> Result<ImageArrangement> {
         let arng = match (dim, is_array, is_multisampled) {
-            (DIM_IMAGE_1D, false, false) => ImageArrangement::Image1D,
-            (DIM_IMAGE_1D, true, false) => ImageArrangement::Image1DArray,
-            (DIM_IMAGE_2D, false, false) => ImageArrangement::Image2D,
-            (DIM_IMAGE_2D, false, true) => ImageArrangement::Image2DMS,
-            (DIM_IMAGE_2D, true, false) => ImageArrangement::Image2DArray,
-            (DIM_IMAGE_3D, false, false) => ImageArrangement::Image3D,
-            (DIM_IMAGE_3D, true, false) => ImageArrangement::Image3D,
-            (DIM_IMAGE_CUBE, false, false) => ImageArrangement::CubeMap,
-            (DIM_IMAGE_CUBE, true, false) => ImageArrangement::CubeMapArray,
+            (Dim::Dim1D, false, false) => ImageArrangement::Image1D,
+            (Dim::Dim1D, true, false) => ImageArrangement::Image1DArray,
+            (Dim::Dim2D, false, false) => ImageArrangement::Image2D,
+            (Dim::Dim2D, false, true) => ImageArrangement::Image2DMS,
+            (Dim::Dim2D, true, false) => ImageArrangement::Image2DArray,
+            (Dim::Dim3D, false, false) => ImageArrangement::Image3D,
+            (Dim::Dim3D, true, false) => ImageArrangement::Image3D,
+            (Dim::DimCube, false, false) => ImageArrangement::CubeMap,
+            (Dim::DimCube, true, false) => ImageArrangement::CubeMapArray,
             _ => return Err(Error::UnsupportedSpirv),
         };
         Ok(arng)
@@ -413,33 +397,6 @@ impl fmt::Debug for DescriptorBinding {
         } else {
             write!(f, "(push_constant)")
         }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-pub enum ExecutionModel {
-    Vertex,
-    TessellationControl,
-    TessellationEvaluation,
-    Geometry,
-    Fragment,
-    GLCompute,
-    Kernel,
-}
-impl ExecutionModel {
-    fn from_raw(raw: u32) -> Result<ExecutionModel> {
-        use ExecutionModel::*;
-        let rv = match raw {
-            EXEC_MODEL_VERTEX => Vertex,
-            EXEC_MODEL_TESSELLATION_CONTROL => TessellationControl,
-            EXEC_MODEL_TESSELLATION_EVALUATION => TessellationEvaluation,
-            EXEC_MODEL_GEOMETRY => Geometry,
-            EXEC_MODEL_FRAGMENT => Fragment,
-            EXEC_MODEL_GL_COMPUTE => GLCompute,
-            EXEC_MODEL_KERNEL => Kernel,
-            _ => return Err(Error::UnsupportedSpirv),
-        };
-        return Ok(rv);
     }
 }
 
@@ -795,13 +752,13 @@ impl<'a> ReflectIntermediate<'a> {
             .cloned()
     }
     fn get_var_location_or_default(&self, var_id: VariableId) -> u32 {
-        self.get_deco_u32(var_id, None, DECO_LOCATION)
+        self.get_deco_u32(var_id, None, Decoration::Location)
             .unwrap_or(0)
     }
     fn get_var_desc_bind_or_default(&self, var_id: VariableId) -> DescriptorBinding {
-        let desc_set = self.get_deco_u32(var_id, None, DECO_DESCRIPTOR_SET)
+        let desc_set = self.get_deco_u32(var_id, None, Decoration::DescriptorSet)
             .unwrap_or(0);
-        let bind_point = self.get_deco_u32(var_id, None, DECO_BINDING)
+        let bind_point = self.get_deco_u32(var_id, None, Decoration::Binding)
             .unwrap_or(0);
         DescriptorBinding::desc_bind(desc_set, bind_point)
     }
@@ -814,7 +771,7 @@ impl<'a> ReflectIntermediate<'a> {
             if instr.opcode() != OP_ENTRY_POINT { break; }
             let op = OpEntryPoint::try_from(instr)?;
             let entry_point_declr = EntryPointDeclartion {
-                exec_model: ExecutionModel::from_raw(op.exec_model)?,
+                exec_model: op.exec_model,
                 func_id: op.func_id,
                 name: op.name,
             };
@@ -893,7 +850,7 @@ impl<'a> ReflectIntermediate<'a> {
             },
             OP_TYPE_IMAGE => {
                 let op = OpTypeImage::try_from(instr)?;
-                let img_ty = if op.dim == DIM_IMAGE_SUBPASS_DATA {
+                let img_ty = if op.dim == Dim::DimSubpassData {
                     Type::Image(None)
                 } else {
                     // Only unit types allowed to be stored in storage images can
@@ -925,7 +882,7 @@ impl<'a> ReflectIntermediate<'a> {
                         None
                     })
                     .ok_or(Error::CorruptedSpirv)?;
-                let stride = self.get_deco_u32(op.ty_id, None, DECO_ARRAY_STRIDE)
+                let stride = self.get_deco_u32(op.ty_id, None, Decoration::ArrayStride)
                     .map(|x| x as usize);
                 let arr_ty = if let Some(stride) = stride {
                     ArrayType::new(proto_ty, nrepeat, stride)
@@ -938,7 +895,7 @@ impl<'a> ReflectIntermediate<'a> {
                 let op = OpTypeRuntimeArray::try_from(instr)?;
                 let proto_ty = self.ty_map.get(&op.proto_ty_id)
                     .ok_or(Error::CorruptedSpirv)?;
-                let stride = self.get_deco_u32(op.ty_id, None, DECO_ARRAY_STRIDE)
+                let stride = self.get_deco_u32(op.ty_id, None, Decoration::ArrayStride)
                     .map(|x| x as usize)
                     .ok_or(Error::CorruptedSpirv)?;
                 let arr_ty = ArrayType::new_unsized(proto_ty, stride);
@@ -947,7 +904,7 @@ impl<'a> ReflectIntermediate<'a> {
             OP_TYPE_STRUCT => {
                 let op = OpTypeStruct::try_from(instr)?;
                 let mut struct_ty = StructType::default();
-                struct_ty.is_iuniform = self.contains_deco(op.ty_id, None, DECO_BLOCK);
+                struct_ty.is_iuniform = self.contains_deco(op.ty_id, None, Decoration::Block);
                 for (i, &member_ty_id) in op.member_ty_ids.iter().enumerate() {
                     let mut member_ty = self.ty_map.get(&member_ty_id)
                         .cloned()
@@ -958,11 +915,11 @@ impl<'a> ReflectIntermediate<'a> {
                     }
                     if let &mut Type::Matrix(ref mut mat_ty) = proto_ty {
                         let i = i as u32;
-                        let mat_stride = self.get_deco_u32(op.ty_id, Some(i), DECO_MATRIX_STRIDE)
+                        let mat_stride = self.get_deco_u32(op.ty_id, Some(i), Decoration::MatrixStride)
                             .map(|x| x as usize)
                             .ok_or(Error::CorruptedSpirv)?;
-                        let row_major = self.contains_deco(op.ty_id, Some(i), DECO_ROW_MAJOR);
-                        let col_major = self.contains_deco(op.ty_id, Some(i), DECO_COL_MAJOR);
+                        let row_major = self.contains_deco(op.ty_id, Some(i), Decoration::RowMajor);
+                        let col_major = self.contains_deco(op.ty_id, Some(i), Decoration::ColMajor);
                         let major = match (row_major, col_major) {
                             (true, false) => MatrixAxisOrder::RowMajor,
                             (false, true) => MatrixAxisOrder::ColumnMajor,
@@ -975,7 +932,7 @@ impl<'a> ReflectIntermediate<'a> {
                             struct_ty.name_map.insert(name.to_owned(), i);
                         }
                     }
-                    if let Some(offset) = self.get_deco_u32(op.ty_id, Some(i as u32), DECO_OFFSET)
+                    if let Some(offset) = self.get_deco_u32(op.ty_id, Some(i as u32), Decoration::Offset)
                         .map(|x| x as usize) {
                         struct_ty.members.push((offset, member_ty));
                     } else {
@@ -1018,7 +975,7 @@ impl<'a> ReflectIntermediate<'a> {
             return Ok(());
         };
         match op.store_cls {
-            STORE_CLS_INPUT => {
+            StorageClass::Input => {
                 if let Some(ivar_ty) = InterfaceVariableType::from_ty(ty) {
                     let location = self.get_var_location_or_default(op.alloc_id);
                     let var = Variable::Input(location, ivar_ty);
@@ -1030,7 +987,7 @@ impl<'a> ReflectIntermediate<'a> {
                 // won't be any for attribute inputs nor for attachment outputs,
                 // so we just ignore structs and arrays or something else here.
             },
-            STORE_CLS_OUTPUT => {
+            StorageClass::Output => {
                 if let Some(ivar_ty) = InterfaceVariableType::from_ty(ty) {
                     let location = self.get_var_location_or_default(op.alloc_id);
                     let var = Variable::Output(location, ivar_ty);
@@ -1039,7 +996,7 @@ impl<'a> ReflectIntermediate<'a> {
                     }
                 }
             },
-            STORE_CLS_PUSH_CONSTANT => {
+            StorageClass::PushConstant => {
                 // Push constants have no global offset. Offsets are applied to
                 // members.
                 if let Type::Struct(struct_ty) = ty.clone() {
@@ -1051,8 +1008,8 @@ impl<'a> ReflectIntermediate<'a> {
                     }
                 } else { return Err(Error::CorruptedSpirv); }
             },
-            STORE_CLS_UNIFORM => {
-                let ctor = if self.contains_deco(ty_id, None, DECO_BUFFER_BLOCK) {
+            StorageClass::Uniform => {
+                let ctor = if self.contains_deco(ty_id, None, Decoration::BufferBlock) {
                     InterfaceBlockType::from_store_buf
                 } else {
                     InterfaceBlockType::from_uniform
@@ -1066,7 +1023,7 @@ impl<'a> ReflectIntermediate<'a> {
                     }
                 } else { return Err(Error::CorruptedSpirv); }
             },
-            STORE_CLS_STORAGE_BUFFER => {
+            StorageClass::StorageBuffer => {
                 if let Some(iblock_ty) = InterfaceBlockType::from_store_buf(ty) {
                     let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
                     let desc_ty = DescriptorType::Block(iblock_ty);
@@ -1076,13 +1033,13 @@ impl<'a> ReflectIntermediate<'a> {
                     }
                 } else { return Err(Error::CorruptedSpirv); }
             },
-            STORE_CLS_UNIFORM_CONSTANT => {
+            StorageClass::UniformConstant => {
                 if let Type::Image(img_ty) = ty {
                     let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
                     let desc_ty = if let Some(img_ty) = img_ty {
                         DescriptorType::Image(img_ty.clone())
                     } else {
-                        let input_attm_idx = self.get_deco_u32(op.alloc_id, None, DECO_INPUT_ATTACHMENT_INDEX)
+                        let input_attm_idx = self.get_deco_u32(op.alloc_id, None, Decoration::InputAttachmentIndex)
                             .ok_or(Error::CorruptedSpirv)?;
                         DescriptorType::InputAtatchment(input_attm_idx)
                     };

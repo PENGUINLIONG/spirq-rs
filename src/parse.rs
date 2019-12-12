@@ -1,3 +1,4 @@
+use num_traits::FromPrimitive;
 use super::{Error, Result};
 
 pub struct Instrs<'a>(&'a [u32]);
@@ -16,6 +17,8 @@ impl<'a> Iterator for Instrs<'a> {
             if len <= self.0.len() {
                 let opcode = head & 0xFFFF;
                 let instr = Instr {
+                    // Force break the instruction stream if any invalid opcode
+                    // is spotted.
                     opcode: opcode,
                     operands: &self.0[1..len],
                 };
@@ -69,6 +72,12 @@ impl<'a> Operands<'a> {
             }
         }
         Err(Error::CorruptedSpirv)
+    }
+    pub fn read_enum<E: FromPrimitive>(&mut self) -> Result<E> {
+        self.read_u32()
+            .and_then(|x| {
+                FromPrimitive::from_u32(x).ok_or(Error::CorruptedSpirv)
+            })
     }
     pub fn read_list(&mut self) -> Result<&'a [u32]> {
         let rv = self.0;

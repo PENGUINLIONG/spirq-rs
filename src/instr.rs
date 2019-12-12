@@ -1,8 +1,10 @@
 use std::convert::TryFrom;
 use std::marker::PhantomData;
+use spirv_headers::{Decoration, Dim, StorageClass};
 use super::{Error, Result};
-use super::consts::*;
 use super::parse::{Instr};
+
+pub use spirv_headers::{ExecutionModel, ImageFormat};
 
 pub type InstrId = u32;
 pub type FunctionId = u32;
@@ -37,7 +39,7 @@ macro_rules! define_ops {
 // Be aware that the order of the read methods is important.
 define_ops!{
     OpEntryPoint {
-        exec_model: u32 = read_u32(),
+        exec_model: ExecutionModel = read_enum(),
         func_id: FunctionId = read_u32(),
         name: &'a str = read_str(),
     }
@@ -54,13 +56,13 @@ define_ops!{
 
     OpDecorate {
         target_id: InstrId = read_u32(),
-        deco: Decoration = read_u32(),
+        deco: Decoration = read_enum(),
         params: &'a [u32] = read_list(),
     }
     OpMemberDecorate {
         target_id: InstrId = read_u32(),
         member_idx: MemberIdx = read_u32(),
-        deco: Decoration = read_u32(),
+        deco: Decoration = read_enum(),
         params: &'a [u32] = read_list(),
     }
 
@@ -86,12 +88,12 @@ define_ops!{
     OpTypeImage {
         ty_id: TypeId = read_u32(),
         unit_ty_id: TypeId = read_u32(),
-        dim: Dimension = read_u32(),
+        dim: Dim = read_enum(),
         is_depth: u32 = read_u32(),
         is_array: bool = read_bool(),
         is_multisampled: bool = read_bool(),
         is_sampled: u32 = read_u32(),
-        color_fmt: u32 = read_u32(),
+        color_fmt: ImageFormat = read_enum(),
     }
     OpTypeSampledImage {
         ty_id: TypeId = read_u32(),
@@ -112,7 +114,7 @@ define_ops!{
     }
     OpTypePointer {
         ty_id: TypeId = read_u32(),
-        store_cls: StorageClass = read_u32(),
+        store_cls: StorageClass = read_enum(),
         target_ty_id: TypeId = read_u32(),
     }
     OpConstant {
@@ -123,7 +125,7 @@ define_ops!{
     OpVariable {
         ty_id: TypeId = read_u32(),
         alloc_id: ResourceId = read_u32(),
-        store_cls: StorageClass = read_u32(),
+        store_cls: StorageClass = read_enum(),
     }
 
     OpFunction {
