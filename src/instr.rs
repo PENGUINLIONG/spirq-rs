@@ -66,6 +66,9 @@ define_ops!{
         params: &'a [u32] = read_list(),
     }
 
+    OpTypeBool {
+        ty_id: TypeId = read_u32(),
+    }
     OpTypeInt {
         ty_id: TypeId = read_u32(),
         nbyte: u32 = read_u32(),
@@ -77,8 +80,8 @@ define_ops!{
     }
     OpTypeVector {
         ty_id: TypeId = read_u32(),
-        num_ty_id: TypeId = read_u32(),
-        nnum: u32 = read_u32(),
+        scalar_ty_id: TypeId = read_u32(),
+        nscalar: u32 = read_u32(),
     }
     OpTypeMatrix {
         ty_id: TypeId = read_u32(),
