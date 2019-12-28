@@ -685,6 +685,8 @@ impl DescriptorType {
         };
         let mut offset = 0;
         while let Some(seg) = segs.next() {
+            // Ensure the outer-most type can be addressed.
+            if seg == Seg::Empty { break }
             match ty {
                 Type::Struct(struct_ty) => {
                     let idx = match seg {
@@ -718,7 +720,7 @@ impl DescriptorType {
                 _ => return None,
             }
         }
-        Some((Some(offset), ty.clone()))
+        Some((Some(offset), ty))
     }
 }
 impl fmt::Debug for DescriptorType {
