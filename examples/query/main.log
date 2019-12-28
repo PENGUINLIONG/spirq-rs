@@ -1,37 +1,37 @@
-   Compiling spirq v0.1.0 (C:\Users\PENGUINLIONG\Repositories\spirq)
-    Finished dev [unoptimized + debuginfo] target(s) in 1.20s
+Compiling spirq v0.1.0 (C:\Users\PENGUINLIONG\Repositories\spirq)
+    Finished dev [unoptimized + debuginfo] target(s) in 1.47s
      Running `target\debug\examples\query.exe`
-[2019-12-04T10:21:09Z INFO  query] collected spirvs: ["uniform-pbr.vert", "uniform-pbr.frag"]
-[2019-12-04T10:21:09Z INFO  query] [
+[2019-12-28T09:56:55Z INFO  query] collected spirvs: ["uniform-pbr.frag", "uniform-pbr.vert"]
+[2019-12-28T09:56:55Z INFO  query] [
         main {
-            attributes: {
-                2: vec2<f32>,
+            inputs: {
                 0: vec4<f32>,
                 1: vec4<f32>,
+                2: vec2<f32>,
             },
-            attachments: {},
+            outputs: {},
             descriptors: {
                 (push_constant): { model_view: mat4x4<f32>, view_proj: mat4x4<f32> },
             },
         },
     ]
-[2019-12-04T10:21:09Z INFO  query] push_constant[model_view]: offset=Some(0), ty=mat4x4<f32>
-[2019-12-04T10:21:09Z INFO  query] push_constant[view_proj]: offset=Some(64), ty=mat4x4<f32>
-[2019-12-04T10:21:09Z INFO  query] [
+[2019-12-28T09:56:55Z INFO  query] push_constant[model_view]: offset=Some(0), ty=mat4x4<f32>
+[2019-12-28T09:56:55Z INFO  query] push_constant[view_proj]: offset=Some(64), ty=mat4x4<f32>
+[2019-12-28T09:56:55Z INFO  query] [
         main {
-            attributes: {},
-            attachments: {
+            inputs: {},
+            outputs: {
                 0: vec4<f32>,
             },
             descriptors: {
+                (set=1, bind=0): [buffer: { cam_pos: vec4<f32>, lights: [{ pos: vec3<f32>, color: vec3<f32> } }; 2],
                 (push_constant): { randomColor: vec4<f32> },
                 (set=0, bind=2): subpassData[0],
-                (set=0, bind=3): sampler2D,
                 (set=0, bind=1): [uniform: { albedo: vec3<f32>, metalicity: f32, roughness: f32, fdsa: [mat3x3<f32>; 2] }; 2],
-                (set=1, bind=0): [buffer: { cam_pos: vec4<f32>, lights: [{ pos: vec3<f32>, color: vec3<f32> } }; 2],
+                (set=0, bind=3): sampler2D,
             },
         },
     ]
-[2019-12-04T10:21:09Z INFO  query] mat.fdsa.1: offset=Some(80), ty=mat3x3<f32>
-[2019-12-04T10:21:09Z INFO  query] someImage: offset=None, ty=subpassData
-[2019-12-04T10:21:09Z INFO  query] imgggg: offset=None, ty=sampler2D
+[2019-12-28T09:56:55Z INFO  query] mat.fdsa.1: offset=Some(80), ty=mat3x3<f32>
+[2019-12-28T09:56:55Z INFO  query] someImage: offset=None, ty=subpassData
+[2019-12-28T09:56:55Z INFO  query] imgggg: offset=None, ty=sampler2D
