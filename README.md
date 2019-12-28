@@ -11,6 +11,9 @@ The project is still in progress, but some of the functionalities are already in
 
 * [query](examples/query/main.rs): Query separate entry points in SPIR-V binaries.
 * [pipeline](examples/pipeline/main.rs): Query a (conceptual) pipeline built from multiple shader modules.
+* [spirv-spec](examples/spirv-spec/main.rs): Reflection of an example fragment shader program, which can be found in section 1.10 of the SPIR-V specification.
+
+Sample output are attached in the same directories as the code files.
 
 ## License
 

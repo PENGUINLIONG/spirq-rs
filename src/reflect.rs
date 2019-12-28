@@ -23,42 +23,64 @@ type FunctionId = ObjectId;
 type MemberIdx = usize;
 
 #[derive(Hash, Clone)]
-pub struct NumericType {
-    /// Byte-width of this type.
-    pub nbyte: usize,
-    /// For integral types the field indicate it's signed ness, true for signed
-    /// int and false for unsigned. Floating point number will have this field
-    /// `None`.
-    pub is_signed: Option<bool>,
+pub enum ScalarType {
+    Boolean,
+    Signed(u32),
+    Unsigned(u32),
+    Float(u32),
 }
-impl NumericType {
-    pub fn new(nbyte: u32, is_signed: Option<bool>) -> NumericType {
-        NumericType { nbyte: nbyte as usize, is_signed: is_signed }
+impl ScalarType {
+    pub fn boolean() -> ScalarType {
+        Self::Boolean
     }
-    pub fn int(nbyte: u32, is_signed: bool) -> NumericType {
-        NumericType { nbyte: nbyte as usize, is_signed: Some(is_signed) }
+    pub fn int(nbyte: u32, is_signed: bool) -> ScalarType {
+        if is_signed { Self::Signed(nbyte) } else { Self::Unsigned(nbyte) }
     }
-    pub fn float(nbyte: u32) -> NumericType {
-        NumericType { nbyte: nbyte as usize, is_signed: None }
+    pub fn float(nbyte: u32) -> ScalarType {
+        Self::Float(nbyte)
     }
-    pub fn nbyte(&self) -> usize { self.nbyte }
+    /// Whether the scalar type is signed. A floating-point type is always
+    /// signed. A boolean type is not Scalar so it's neither signed or
+    /// unsigned, represented by a `None`.
+    pub fn is_signed(&self) -> Option<bool> {
+        match self {
+            Self::Boolean => None,
+            Self::Signed(_) => Some(true),
+            Self::Unsigned(_) => Some(false),
+            Self::Float(_) => Some(true),
+        }
+    }
+    /// Number of bytes an instance of the type takes.
+    pub fn nbyte(&self) -> usize {
+        let nbyte = match self {
+            Self::Boolean => 1,
+            Self::Signed(nbyte) => *nbyte,
+            Self::Unsigned(nbyte) => *nbyte,
+            Self::Float(nbyte) => *nbyte,
+        };
+        nbyte as usize
+    }
 
-    pub fn is_int(&self) -> bool {
-        if let Some(true) = self.is_signed { true } else { false }
+    pub fn is_boolean(&self) -> bool {
+        if let Self::Boolean = self { true } else { false }
+    }
+    pub fn is_sint(&self) -> bool {
+        if let Self::Signed(_) = self { true } else { false }
     }
     pub fn is_uint(&self) -> bool {
-        if let Some(false) = self.is_signed { true } else { false }
+        if let Self::Unsigned(_) = self { true } else { false }
     }
     pub fn is_float(&self) -> bool {
-        if let None = self.is_signed { true } else { false }
+        if let Self::Float(_) = self { true } else { false }
     }
 }
-impl fmt::Debug for NumericType {
+impl fmt::Debug for ScalarType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.is_signed {
-            Some(true) => write!(f, "i{}", self.nbyte << 3),
-            Some(false) => write!(f, "u{}", self.nbyte << 3),
-            None => write!(f, "f{}", self.nbyte << 3),
+        match self {
+            Self::Boolean => write!(f, "bool"),
+            Self::Signed(nbyte) => write!(f, "i{}", nbyte << 3),
+            Self::Unsigned(nbyte) => write!(f, "i{}", nbyte << 3),
+            Self::Float(nbyte) => write!(f, "f{}", nbyte << 3),
         }
     }
 }
@@ -66,18 +88,18 @@ impl fmt::Debug for NumericType {
 
 #[derive(Hash, Clone)]
 pub struct VectorType {
-    pub num_ty: NumericType,
-    pub nnum: u32,
+    pub scalar_ty: ScalarType,
+    pub nscalar: u32,
 }
 impl VectorType {
-    pub fn new(num_ty: NumericType, nnum: u32) -> VectorType {
-        VectorType { num_ty: num_ty, nnum: nnum }
+    pub fn new(scalar_ty: ScalarType, nscalar: u32) -> VectorType {
+        VectorType { scalar_ty: scalar_ty, nscalar: nscalar }
     }
-    pub fn nbyte(&self) -> usize { self.nnum as usize * self.num_ty.nbyte }
+    pub fn nbyte(&self) -> usize { self.nscalar as usize * self.scalar_ty.nbyte() }
 }
 impl fmt::Debug for VectorType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "vec{}<{:?}>", self.nnum, self.num_ty)
+        write!(f, "vec{}<{:?}>", self.nscalar, self.scalar_ty)
     }
 }
 
@@ -120,10 +142,10 @@ impl fmt::Debug for MatrixType {
             MatrixAxisOrder::ColumnMajor => "",
             MatrixAxisOrder::RowMajor => "T",
         };
-        let nrow = self.vec_ty.nnum;
+        let nrow = self.vec_ty.nscalar;
         let ncol = self.nvec;
-        let num_ty = &self.vec_ty.num_ty;
-        write!(f, "mat{}x{}{}<{:?}>", nrow, ncol, transpose, num_ty)
+        let scalar_ty = &self.vec_ty.scalar_ty;
+        write!(f, "mat{}x{}{}<{:?}>", nrow, ncol, transpose, scalar_ty)
     }
 }
 
@@ -344,7 +366,7 @@ struct Function {
 
 #[derive(Hash, Clone)]
 pub enum Type {
-    Numeric(NumericType),
+    Scalar(ScalarType),
     Vector(VectorType),
     Matrix(MatrixType),
     Image(Option<ImageType>),
@@ -355,7 +377,7 @@ impl Type {
     pub fn nbyte(&self) -> Option<usize> {
         use Type::*;
         match self {
-            Numeric(num_ty) => Some(num_ty.nbyte()),
+            Scalar(scalar_ty) => Some(scalar_ty.nbyte()),
             Vector(vec_ty) => Some(vec_ty.nbyte()),
             Matrix(mat_ty) => Some(mat_ty.nbyte()),
             Image(_) => None,
@@ -367,7 +389,7 @@ impl Type {
 impl fmt::Debug for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Type::Numeric(num_ty) => num_ty.fmt(f),
+            Type::Scalar(scalar_ty) => scalar_ty.fmt(f),
             Type::Vector(vec_ty) => vec_ty.fmt(f),
             Type::Matrix(mat_ty) => mat_ty.fmt(f),
             Type::Image(Some(img_ty)) => img_ty.fmt(f),
@@ -409,8 +431,8 @@ struct EntryPointDeclartion<'a> {
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy)]
 enum ResourceLocator {
-    Attribute(Location),
-    Attachment(Location),
+    Input(Location),
+    Output(Location),
     Descriptor(DescriptorBinding),
 }
 
@@ -549,8 +571,8 @@ impl Deref for EntryPoint {
 impl fmt::Debug for EntryPoint {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct(&self.name)
-            .field("attributes", &self.manifest.attr_map)
-            .field("attachments", &self.manifest.attm_map)
+            .field("inputs", &self.manifest.attr_map)
+            .field("outputs", &self.manifest.attm_map)
             .field("descriptors", &self.manifest.desc_map)
             .finish()
     }
@@ -559,14 +581,14 @@ impl fmt::Debug for EntryPoint {
 
 #[derive(Hash, Clone)]
 pub enum InterfaceVariableType {
-    Numeric(NumericType),
+    Scalar(ScalarType),
     Vector(VectorType),
     Matrix(MatrixType),
 }
 impl InterfaceVariableType {
     fn from_ty<'a>(ty: &Type) -> Option<InterfaceVariableType> {
         let ivar_ty = match ty.clone() {
-            Type::Numeric(num_ty) => InterfaceVariableType::Numeric(num_ty),
+            Type::Scalar(scalar_ty) => InterfaceVariableType::Scalar(scalar_ty),
             Type::Vector(vec_ty) => InterfaceVariableType::Vector(vec_ty),
             Type::Matrix(mat_ty) => InterfaceVariableType::Matrix(mat_ty),
             _ => return None,
@@ -578,7 +600,7 @@ impl fmt::Debug for InterfaceVariableType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use InterfaceVariableType::*;
         match self {
-            Numeric(num_ty) => fmt::Debug::fmt(num_ty, f),
+            Scalar(scalar_ty) => fmt::Debug::fmt(scalar_ty, f),
             Vector(vec_ty) => fmt::Debug::fmt(vec_ty, f),
             Matrix(mat_ty) => fmt::Debug::fmt(mat_ty, f),
         }
@@ -663,6 +685,8 @@ impl DescriptorType {
         };
         let mut offset = 0;
         while let Some(seg) = segs.next() {
+            // Ensure the outer-most type can be addressed.
+            if seg == Seg::Empty { break }
             match ty {
                 Type::Struct(struct_ty) => {
                     let idx = match seg {
@@ -696,7 +720,7 @@ impl DescriptorType {
                 _ => return None,
             }
         }
-        Some((Some(offset), ty.clone()))
+        Some((Some(offset), ty))
     }
 }
 impl fmt::Debug for DescriptorType {
@@ -823,21 +847,25 @@ impl<'a> ReflectIntermediate<'a> {
     fn populate_one_ty(&mut self, instr: &Instr<'a>) -> Result<()> {
         let (key, value) = match instr.opcode() {
             OP_TYPE_VOID | OP_TYPE_FUNCTION => { return Ok(()) },
-            OP_TYPE_BOOL => return Err(Error::UnsupportedSpirv),
+            OP_TYPE_BOOL => {
+                let op = OpTypeBool::try_from(instr)?;
+                let scalar_ty = ScalarType::boolean();
+                (op.ty_id, Type::Scalar(scalar_ty))
+            },
             OP_TYPE_INT => {
                 let op = OpTypeInt::try_from(instr)?;
-                let num_ty = NumericType::int(op.nbyte >> 3, op.is_signed);
-                (op.ty_id, Type::Numeric(num_ty))
+                let scalar_ty = ScalarType::int(op.nbyte >> 3, op.is_signed);
+                (op.ty_id, Type::Scalar(scalar_ty))
             }
             OP_TYPE_FLOAT => {
                 let op = OpTypeFloat::try_from(instr)?;
-                let num_ty = NumericType::float(op.nbyte >> 3);
-                (op.ty_id, Type::Numeric(num_ty))
+                let scalar_ty = ScalarType::float(op.nbyte >> 3);
+                (op.ty_id, Type::Scalar(scalar_ty))
             },
             OP_TYPE_VECTOR => {
                 let op = OpTypeVector::try_from(instr)?;
-                if let Some(Type::Numeric(num_ty)) = self.ty_map.get(&op.num_ty_id).cloned() {
-                    let vec_ty = VectorType::new(num_ty, op.nnum);
+                if let Some(Type::Scalar(scalar_ty)) = self.ty_map.get(&op.scalar_ty_id).cloned() {
+                    let vec_ty = VectorType::new(scalar_ty, op.nscalar);
                     (op.ty_id, Type::Vector(vec_ty))
                 } else { return Err(Error::CorruptedSpirv); }
             },
@@ -874,8 +902,8 @@ impl<'a> ReflectIntermediate<'a> {
                     .ok_or(Error::CorruptedSpirv)?;
                 let nrepeat = self.const_map.get(&op.nrepeat_const_id)
                     .and_then(|constant| {
-                        if let Some(Type::Numeric(num_ty)) = self.ty_map.get(&constant.ty) {
-                            if num_ty.nbyte == 4 && num_ty.is_uint() {
+                        if let Some(Type::Scalar(scalar_ty)) = self.ty_map.get(&constant.ty) {
+                            if scalar_ty.nbyte() == 4 && scalar_ty.is_uint() {
                                 return Some(constant.value[0]);
                             }
                         }
@@ -1154,7 +1182,7 @@ impl<'a> ReflectIntermediate<'a> {
                             .insert(location, ivar_ty).is_some();
                         if let Some(name) = self.get_name(accessed_var_id, None) {
                             collision |= entry_point.manifest.var_name_map
-                                .insert(name.to_owned(), ResourceLocator::Attribute(location)).is_some();
+                                .insert(name.to_owned(), ResourceLocator::Input(location)).is_some();
                         }
                         collision
                     },
@@ -1162,7 +1190,7 @@ impl<'a> ReflectIntermediate<'a> {
                         let mut collision = entry_point.manifest.attm_map.insert(location, ivar_ty).is_some();
                         if let Some(name) = self.get_name(accessed_var_id, None) {
                             collision |= entry_point.manifest.var_name_map
-                                .insert(name.to_owned(), ResourceLocator::Attachment(location)).is_some();
+                                .insert(name.to_owned(), ResourceLocator::Output(location)).is_some();
                         }
                         collision
                     },
@@ -1228,8 +1256,8 @@ impl TryFrom<&[EntryPoint]> for Pipeline {
 impl fmt::Debug for Pipeline {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct(&"|")
-            .field("attributes", &self.manifest.attr_map)
-            .field("attachments", &self.manifest.attm_map)
+            .field("inputs", &self.manifest.attr_map)
+            .field("outputs", &self.manifest.attm_map)
             .field("descriptors", &self.manifest.desc_map)
             .finish()
     }
