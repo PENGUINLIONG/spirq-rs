@@ -16,7 +16,7 @@ use std::convert::TryInto;
 use std::iter::FromIterator;
 use parse::{Instrs, Instr};
 use reflect::*;
-use error::{Error, Result};
+pub use error::{Error, Result};
 
 #[derive(Debug, Default, Clone)]
 pub struct SpirvBinary(Vec<u32>);

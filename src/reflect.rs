@@ -1231,38 +1231,3 @@ pub fn reflect_spirv<'a>(module: &'a SpirvBinary) -> Result<Box<[EntryPoint]>> {
     itm.populate_access(&mut instrs)?;
     Ok(itm.collect_entry_points()?)
 }
-
-#[derive(Clone, Default)]
-pub struct Pipeline {
-    pub manifest: Manifest,
-}
-impl TryFrom<&[EntryPoint]> for Pipeline {
-    type Error = Error;
-
-    fn try_from(entry_points: &[EntryPoint]) -> Result<Pipeline> {
-        let mut found_stages = HashSet::<ExecutionModel>::default();
-        let mut manifest = Manifest::default();
-        for entry_point in entry_points.as_ref().iter() {
-            if found_stages.insert(entry_point.exec_model) {
-                manifest.merge(&entry_point.manifest)?;
-            } else {
-                // Reject stage collision.
-                return Err(Error::PipelineStageConflict);
-            }
-        }
-        return Ok(Pipeline { manifest: manifest });
-    }
-}
-impl fmt::Debug for Pipeline {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct(&"|")
-            .field("inputs", &self.manifest.attr_map)
-            .field("outputs", &self.manifest.attm_map)
-            .field("descriptors", &self.manifest.desc_map)
-            .finish()
-    }
-}
-impl Deref for Pipeline {
-    type Target = Manifest;
-    fn deref(&self) -> &Self::Target { &self.manifest }
-}

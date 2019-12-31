@@ -1,10 +1,37 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
-use spirq::SpirvBinary;
-use spirq::reflect::Pipeline;
+use std::ops::Deref;
+use spirq::{Result, Error, SpirvBinary};
+use spirq::reflect::{EntryPoint, ExecutionModel, Manifest};
 use spirq::sym::Sym;
 use log::info;
 use std::path::Path;
+
+#[derive(Clone, Default)]
+pub struct Pipeline {
+    pub manifest: Manifest,
+}
+impl TryFrom<&[EntryPoint]> for Pipeline {
+    type Error = Error;
+
+    fn try_from(entry_points: &[EntryPoint]) -> Result<Pipeline> {
+        let mut found_stages = HashSet::<ExecutionModel>::default();
+        let mut manifest = Manifest::default();
+        for entry_point in entry_points.as_ref().iter() {
+            if found_stages.insert(entry_point.exec_model) {
+                manifest.merge(&entry_point.manifest)?;
+            } else {
+                // Reject stage collision.
+                panic!("pipeline cannot have two stages of the same execution model");
+            }
+        }
+        return Ok(Pipeline { manifest: manifest });
+    }
+}
+impl Deref for Pipeline {
+    type Target = Manifest;
+    fn deref(&self) -> &Self::Target { &self.manifest }
+}
 
 fn main() {
     env_logger::init();
@@ -15,7 +42,6 @@ fn main() {
         .map(|x| x.reflect().unwrap()[0].to_owned())
         .collect::<Vec<_>>();
     let pl = Pipeline::try_from(entry_points.as_ref()).unwrap();
-    info!("{:#?}", pl);
     let (offset, var_ty) = pl.resolve_desc(Sym::new(".model_view")).unwrap();
     info!("push_constant[model_view]: offset={:?}, ty={:?}", offset, var_ty);
     let (offset, var_ty) = pl.resolve_desc(Sym::new(".view_proj")).unwrap();
