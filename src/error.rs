@@ -6,7 +6,6 @@ use std::error;
 pub enum Error {
     CorruptedSpirv,
     UnsupportedSpirv,
-    PipelineStageConflict,
     MismatchedManifest,
 }
 
@@ -16,7 +15,6 @@ impl fmt::Display for Error {
         match self {
             CorruptedSpirv => write!(f, "spirv binary is corrupted"),
             UnsupportedSpirv => write!(f, "spirv binary used unsupported feature"),
-            PipelineStageConflict => write!(f, "pipeline cannot have two stages of the same execution model"),
             MismatchedManifest => write!(f, "mismatched manifest cannot be merged"),
         }
     }
