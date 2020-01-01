@@ -1,15 +1,15 @@
    Compiling spirq v0.1.0 (C:\Users\PENGUINLIONG\Repositories\spirq)
-    Finished dev [unoptimized + debuginfo] target(s) in 1.74s
+    Finished dev [unoptimized + debuginfo] target(s) in 4.57s
      Running `target\debug\examples\pipeline.exe`
-[2020-01-01T16:48:05Z INFO  pipeline] collected spirvs: ["uniform-pbr.frag", "uniform-pbr.vert"]
-[2020-01-01T16:48:05Z INFO  pipeline] push_constant[model_view]: DescriptorResolution { desc_bind: (push_constant), desc_ty: { randomColor: vec4<f32>, model_view: mat4x4<f32>, view_proj: mat4x4<f32> }, member_var_res: Some(MemberVariableResolution { offset: 0, ty: mat4x4<f32> }) }
-[2020-01-01T16:48:05Z INFO  pipeline] push_constant[view_proj]: DescriptorResolution { desc_bind: (push_constant), desc_ty: { randomColor: vec4<f32>, model_view: mat4x4<f32>, view_proj: mat4x4<f32> }, member_var_res: Some(MemberVariableResolution { offset: 64, ty: mat4x4<f32> }) }
-[2020-01-01T16:48:05Z INFO  pipeline] mat.fdsa.1: DescriptorResolution { desc_bind: (set=0, bind=1), desc_ty: 2x{ albedo: vec3<f32>, metalicity: f32, roughness: f32, fdsa: [mat3x3<f32>; 2] }, member_var_res: Some(MemberVariableResolution { offset: 80, ty: mat3x3<f32> }) }
-[2020-01-01T16:48:05Z INFO  pipeline] someImage: DescriptorResolution { desc_bind: (set=0, bind=2), desc_ty: subpassData[0], member_var_res: None }
-[2020-01-01T16:48:05Z INFO  pipeline] imgggg: DescriptorResolution { desc_bind: (set=0, bind=3), desc_ty: sampler2D, member_var_res: None }
-[2020-01-01T16:48:05Z INFO  pipeline] -- buffer sizing:
-[2020-01-01T16:48:05Z INFO  pipeline] (set=1, bind=0): nbyte=Some(16)
-[2020-01-01T16:48:05Z INFO  pipeline] (set=0, bind=1): nbyte=Some(128)
-[2020-01-01T16:48:05Z INFO  pipeline] (push_constant): nbyte=Some(128)
-[2020-01-01T16:48:05Z INFO  pipeline] (set=0, bind=3): nbyte=None
-[2020-01-01T16:48:05Z INFO  pipeline] (set=0, bind=2): nbyte=None
+[2020-01-01T17:25:21Z INFO  pipeline] collected spirvs: ["uniform-pbr.frag", "uniform-pbr.vert"]
+[2020-01-01T17:25:21Z INFO  pipeline] .model_view: Some(MemberVariableResolution { offset: 0, ty: mat4x4<f32> })
+[2020-01-01T17:25:21Z INFO  pipeline] .view_proj: Some(MemberVariableResolution { offset: 64, ty: mat4x4<f32> })
+[2020-01-01T17:25:21Z INFO  pipeline] mat.fdsa.1: Some(MemberVariableResolution { offset: 80, ty: mat3x3<f32> })
+[2020-01-01T17:25:21Z INFO  pipeline] someImage: None
+[2020-01-01T17:25:21Z INFO  pipeline] imgggg: None
+[2020-01-01T17:25:21Z INFO  pipeline] -- buffer sizing:
+[2020-01-01T17:25:21Z INFO  pipeline] (set=0, bind=2): nbyte=None
+[2020-01-01T17:25:21Z INFO  pipeline] (push_constant): nbyte=Some(128)
+[2020-01-01T17:25:21Z INFO  pipeline] (set=0, bind=3): nbyte=None
+[2020-01-01T17:25:21Z INFO  pipeline] (set=1, bind=0): nbyte=Some(16)
+[2020-01-01T17:25:21Z INFO  pipeline] (set=0, bind=1): nbyte=Some(128)

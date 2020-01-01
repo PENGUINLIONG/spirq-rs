@@ -405,10 +405,10 @@ impl Type {
             Struct(struct_ty) => Some(struct_ty.nbyte()),
         }
     }
-    pub fn resolve(&self, sym: &Sym) -> Option<MemberVariableResolution<'_>> {
+    pub fn resolve<S: AsRef<Sym>>(&self, sym: S) -> Option<MemberVariableResolution<'_>> {
         let mut ty = self;
         let mut offset = 0;
-        for seg in sym.segs() {
+        for seg in sym.as_ref().segs() {
             // Ensure the outer-most type can be addressed.
             if seg == Seg::Empty { break }
             match ty {
@@ -476,7 +476,7 @@ impl DescriptorType {
     }
     /// Resolve a symbol WITHIN the descriptor type. The symbol should not
     /// be led by descriptor set numbers and binding point numbers.
-    pub fn resolve(&self, sym: &Sym) -> Option<MemberVariableResolution<'_>> {
+    pub fn resolve<S: AsRef<Sym>>(&self, sym: S) -> Option<MemberVariableResolution<'_>> {
         use DescriptorType::*;
         // Resolve for descriptor root.
         match self {

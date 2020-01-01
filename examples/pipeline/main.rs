@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
 use std::ops::Deref;
-use spirq::{Result, Error, SpirvBinary, Manifest, Sym, ExecutionModel};
+use spirq::{Result, Error, SpirvBinary, Manifest, ExecutionModel};
 use spirq::EntryPoint;
 use log::info;
 use std::path::Path;
@@ -41,19 +41,20 @@ fn main() {
         .map(|x| x.reflect().unwrap()[0].to_owned())
         .collect::<Vec<_>>();
     let pl = Pipeline::try_from(entry_points.as_ref()).unwrap();
-    let desc_res = pl.resolve_desc(Sym::new(".model_view")).unwrap();
-    info!("push_constant[model_view]: {:?}", desc_res);
-    let desc_res = pl.resolve_desc(Sym::new(".view_proj")).unwrap();
-    info!("push_constant[view_proj]: {:?}", desc_res);
-    let desc_res = pl.resolve_desc(Sym::new("mat.fdsa.1")).unwrap();
-    info!("mat.fdsa.1: {:?}", desc_res);
-    let desc_res = pl.resolve_desc(Sym::new("someImage")).unwrap();
-    info!("someImage: {:?}", desc_res);
-    let desc_res = pl.resolve_desc(Sym::new("imgggg")).unwrap();
-    info!("imgggg: {:?}", desc_res);
+
+    let check = |sym :&str| {
+        let desc_res = pl.resolve_desc(sym).unwrap();
+        info!("{}: {:?}", sym, desc_res.member_var_res);
+    };
+
+    check(".model_view");
+    check(".view_proj");
+    check("mat.fdsa.1");
+    check("someImage");
+    check("imgggg");
 
     info!("-- buffer sizing:");
-    for desc_res in pl.desc_binds() {
+    for desc_res in pl.descs() {
         info!("{:?}: nbyte={:?}", desc_res.desc_bind, desc_res.desc_ty.nbyte());
     }
 }

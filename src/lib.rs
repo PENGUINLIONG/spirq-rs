@@ -204,16 +204,16 @@ impl Manifest {
         Ok(())
     }
     /// Get the input interface variable type.
-    pub fn get_input(&self, location: Location) -> Option<Type> {
-        self.input_map.get(location)
+    pub fn get_input<'a>(&'a self, location: Location) -> Option<&'a Type> {
+        self.input_map.get(&location)
     }
     /// Get the output interface variable type.
-    pub fn get_output(&self, location: Location) -> Option<Type> {
-        self.output_map.get(location)
+    pub fn get_output<'a>(&'a self, location: Location) -> Option<&'a Type> {
+        self.output_map.get(&location)
     }
     /// Get the descriptor type at the given descriptor binding point.
-    pub fn get_desc(&self, desc_bind: DescriptorBinding) -> Option<DescriptorType> {
-        self.desc_map.get(desc_bind)
+    pub fn get_desc<'a>(&'a self, desc_bind: DescriptorBinding) -> Option<&'a DescriptorType> {
+        self.desc_map.get(&desc_bind)
     }
     fn resolve_ivar<'a>(&self, map: &'a HashMap<Location, Type>, sym: &Sym) -> Option<InterfaceVariableResolution<'a>> {
         let mut segs = sym.segs();
@@ -232,18 +232,18 @@ impl Manifest {
         Some(ivar_res)
     }
     /// Get the metadata of a input variable identified by a symbol.
-    pub fn resolve_input(&self, sym: &Sym) -> Option<InterfaceVariableResolution> {
-        self.resolve_ivar(&self.output_map, sym)
+    pub fn resolve_input<S: AsRef<Sym>>(&self, sym: S) -> Option<InterfaceVariableResolution> {
+        self.resolve_ivar(&self.output_map, sym.as_ref())
     }
     /// Get the metadata of a output variable identified by a symbol.
-    pub fn resolve_output(&self, sym: &Sym) -> Option<InterfaceVariableResolution> {
-        self.resolve_ivar(&self.input_map, sym)
+    pub fn resolve_output<S: AsRef<Sym>>(&self, sym: S) -> Option<InterfaceVariableResolution> {
+        self.resolve_ivar(&self.input_map, sym.as_ref())
     }
     /// Get the metadata of a descriptor variable identified by a symbol.
     /// If the exact variable cannot be resolved, the descriptor part of the
     /// resolution will still be returned, if possible.
-    pub fn resolve_desc(&self, sym: &Sym) -> Option<DescriptorResolution> {
-        let mut segs = sym.segs();
+    pub fn resolve_desc<S: AsRef<Sym>>(&self, sym: S) -> Option<DescriptorResolution> {
+        let mut segs = sym.as_ref().segs();
         let desc_bind = match segs.next() {
             Some(Seg::Index(desc_set)) => {
                 if let Some(Seg::Index(bind_point)) = segs.next() {
@@ -263,7 +263,8 @@ impl Manifest {
             None => return None,
         };
         let desc_ty = self.desc_map.get(&desc_bind)?;
-        let member_var_res = desc_ty.resolve(segs.remaining());
+        let rem_sym = segs.remaining();
+        let member_var_res = desc_ty.resolve(rem_sym);
         let desc_res = DescriptorResolution { desc_bind, desc_ty, member_var_res };
         Some(desc_res)
     }

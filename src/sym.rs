@@ -21,6 +21,12 @@ impl ToOwned for Sym {
 impl AsRef<str> for Sym {
     fn as_ref(&self) -> &str { &self.0 }
 }
+impl AsRef<Sym> for str {
+    fn as_ref(&self) -> &Sym { Sym::new(self) }
+}
+impl AsRef<Sym> for Sym {
+    fn as_ref(&self) -> &Sym { self }
+}
 
 pub struct Symbol(Box<Sym>);
 impl Symbol {

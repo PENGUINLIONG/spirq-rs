@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use spirq::{SpirvBinary, Sym};
+use spirq::SpirvBinary;
 use log::info;
 use std::path::Path;
 
@@ -8,31 +8,24 @@ fn main() {
 
     let spvs = collect_spirv_binaries("assets/effects/spirv-spec");
     info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
-    let entries = spvs["referential.frag"].reflect().unwrap();
-    info!("{:#?}", entries);
-
-    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0")).unwrap();
-    info!("0.0: {:?}", buf_var_res);
-    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s")).unwrap();
-    info!("0.0.s: {:?}", buf_var_res);
-    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.cond")).unwrap();
-    info!("0.0.cond: {:?}", buf_var_res);
-    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s.b")).unwrap();
-    info!("0.0.s.b: {:?}", buf_var_res);
-    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s.v")).unwrap();
-    info!("0.0.s.v: {:?}", buf_var_res);
-    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s.v.0")).unwrap();
-    info!("0.0.s.v.0: {:?}", buf_var_res);
-    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s.v.1")).unwrap();
-    info!("0.0.s.v.1: {:?}", buf_var_res);
-    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s.v.2")).unwrap();
-    info!("0.0.s.v.2: {:?}", buf_var_res);
-    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s.v.3")).unwrap();
-    info!("0.0.s.v.3: {:?}", buf_var_res);
-    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s.v.4")).unwrap();
-    info!("0.0.s.v.4: {:?}", buf_var_res);
-    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s.i")).unwrap();
-    info!("0.0.s.i: {:?}", buf_var_res);
+    let frag = spvs["referential.frag"].reflect().unwrap();
+    info!("{:#?}", frag);
+    let frag = &frag[0];
+    let check = |sym :&str| {
+        let desc_res = frag.resolve_desc(sym).unwrap();
+        info!("{}: {:?}", sym, desc_res);
+    };
+    check("0.0");
+    check("0.0.s");
+    check("0.0.cond");
+    check("0.0.s.b");
+    check("0.0.s.v");
+    check("0.0.s.v.0");
+    check("0.0.s.v.1");
+    check("0.0.s.v.2");
+    check("0.0.s.v.3");
+    check("0.0.s.v.4");
+    check("0.0.s.i");
 }
 
 
