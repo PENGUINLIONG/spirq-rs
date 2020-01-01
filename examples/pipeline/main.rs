@@ -37,9 +37,10 @@ fn main() {
 
     let spvs = collect_spirv_binaries("assets/effects/uniform-pbr");
     info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
-    let entry_points = spvs.values()
+    let mut entry_points = spvs.values()
         .map(|x| x.reflect().unwrap()[0].to_owned())
         .collect::<Vec<_>>();
+    entry_points.sort_by_key(|x| x.exec_model as u32);
     let pl = Pipeline::try_from(entry_points.as_ref()).unwrap();
 
     let check = |sym :&str| {
