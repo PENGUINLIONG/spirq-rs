@@ -1,9 +1,8 @@
 use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
 use std::ops::Deref;
-use spirq::{Result, Error, SpirvBinary};
-use spirq::reflect::{EntryPoint, ExecutionModel, Manifest};
-use spirq::sym::Sym;
+use spirq::{Result, Error, SpirvBinary, Manifest, Sym, ExecutionModel};
+use spirq::EntryPoint;
 use log::info;
 use std::path::Path;
 
@@ -42,26 +41,20 @@ fn main() {
         .map(|x| x.reflect().unwrap()[0].to_owned())
         .collect::<Vec<_>>();
     let pl = Pipeline::try_from(entry_points.as_ref()).unwrap();
-    let (offset, var_ty) = pl.resolve_desc(Sym::new(".model_view")).unwrap();
-    info!("push_constant[model_view]: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = pl.resolve_desc(Sym::new(".view_proj")).unwrap();
-    info!("push_constant[view_proj]: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = pl.resolve_desc(Sym::new("mat.fdsa.1")).unwrap();
-    info!("mat.fdsa.1: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = pl.resolve_desc(Sym::new("someImage")).unwrap();
-    info!("someImage: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = pl.resolve_desc(Sym::new("imgggg")).unwrap();
-    info!("imgggg: offset={:?}, ty={:?}", offset, var_ty);
+    let desc_res = pl.resolve_desc(Sym::new(".model_view")).unwrap();
+    info!("push_constant[model_view]: {:?}", desc_res);
+    let desc_res = pl.resolve_desc(Sym::new(".view_proj")).unwrap();
+    info!("push_constant[view_proj]: {:?}", desc_res);
+    let desc_res = pl.resolve_desc(Sym::new("mat.fdsa.1")).unwrap();
+    info!("mat.fdsa.1: {:?}", desc_res);
+    let desc_res = pl.resolve_desc(Sym::new("someImage")).unwrap();
+    info!("someImage: {:?}", desc_res);
+    let desc_res = pl.resolve_desc(Sym::new("imgggg")).unwrap();
+    info!("imgggg: {:?}", desc_res);
 
     info!("-- buffer sizing:");
-    for (desc_bind, desc_ty) in pl.desc_binds() {
-        use spirq::reflect::DescriptorType::*;
-        let struct_ty = match desc_ty {
-            PushConstant(struct_ty) => &struct_ty,
-            Block(iblock_ty) => &iblock_ty.block_ty,
-            _ => continue,
-        };
-        info!("{:?}: nbyte={:?}", desc_bind, struct_ty.nbyte());
+    for desc_res in pl.desc_binds() {
+        info!("{:?}: nbyte={:?}", desc_res.desc_bind, desc_res.desc_ty.nbyte());
     }
 }
 

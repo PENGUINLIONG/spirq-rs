@@ -1,30 +1,31 @@
    Compiling spirq v0.1.0 (C:\Users\PENGUINLIONG\Repositories\spirq)
-    Finished dev [unoptimized + debuginfo] target(s) in 4.18s
+    Finished dev [unoptimized + debuginfo] target(s) in 1.43s
      Running `target\debug\examples\spirv-spec.exe`
-[2019-12-28T10:45:58Z INFO  spirv_spec] collected spirvs: ["referential.frag"]
-[2019-12-28T10:45:58Z INFO  spirv_spec] [
+[2020-01-01T16:52:53Z INFO  spirv_spec] collected spirvs: ["referential.frag"]
+[2020-01-01T16:52:53Z INFO  spirv_spec] [
         main {
             inputs: {
-                1: vec4<f32>,
                 0: vec4<f32>,
+                1: vec4<f32>,
                 2: vec4<f32>,
             },
             outputs: {
                 0: vec4<f32>,
             },
             descriptors: {
-                (set=0, bind=0): [uniform: { s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 }; 1],
+                (set=0, bind=0): 1x{ s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 },
             },
         },
     ]
-[2019-12-28T10:45:58Z INFO  spirv_spec] 0.0: offset=Some(0), ty={ s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 }
-[2019-12-28T10:45:58Z INFO  spirv_spec] 0.0.s: offset=Some(0), ty={ b: i32, v: [vec4<f32>; 5], i: i32 }
-[2019-12-28T10:45:58Z INFO  spirv_spec] 0.0.cond: offset=Some(112), ty=i32
-[2019-12-28T10:45:58Z INFO  spirv_spec] 0.0.s.b: offset=Some(0), ty=i32
-[2019-12-28T10:45:58Z INFO  spirv_spec] 0.0.s.v: offset=Some(16), ty=[vec4<f32>; 5]
-[2019-12-28T10:45:58Z INFO  spirv_spec] 0.0.s.v.0: offset=Some(16), ty=vec4<f32>
-[2019-12-28T10:45:58Z INFO  spirv_spec] 0.0.s.v.1: offset=Some(32), ty=vec4<f32>
-[2019-12-28T10:45:58Z INFO  spirv_spec] 0.0.s.v.2: offset=Some(48), ty=vec4<f32>
-[2019-12-28T10:45:58Z INFO  spirv_spec] 0.0.s.v.3: offset=Some(64), ty=vec4<f32>
-[2019-12-28T10:45:58Z INFO  spirv_spec] 0.0.s.v.4: offset=Some(80), ty=vec4<f32>
-[2019-12-28T10:45:58Z INFO  spirv_spec] 0.0.s.i: offset=Some(96), ty=i32
+[2020-01-01T16:52:53Z INFO  spirv_spec] 0.0: DescriptorResolution { desc_bind: (set=0, bind=0), desc_ty: 1x{ s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 }, member_var_res: Some(MemberVariableResolution { offset: 0, ty: { s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 } }) }
+[2020-01-01T16:52:53Z INFO  spirv_spec] 0.0.s: DescriptorResolution { desc_bind: (set=0, bind=0), desc_ty: 1x{ s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 }, member_var_res:
+Some(MemberVariableResolution { offset: 0, ty: { b: i32, v: [vec4<f32>; 5], i: i32 } }) }
+[2020-01-01T16:52:53Z INFO  spirv_spec] 0.0.cond: DescriptorResolution { desc_bind: (set=0, bind=0), desc_ty: 1x{ s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 }, member_var_res: Some(MemberVariableResolution { offset: 112, ty: i32 }) }
+[2020-01-01T16:52:53Z INFO  spirv_spec] 0.0.s.b: DescriptorResolution { desc_bind: (set=0, bind=0), desc_ty: 1x{ s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 }, member_var_res: Some(MemberVariableResolution { offset: 0, ty: i32 }) }
+[2020-01-01T16:52:53Z INFO  spirv_spec] 0.0.s.v: DescriptorResolution { desc_bind: (set=0, bind=0), desc_ty: 1x{ s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 }, member_var_res: Some(MemberVariableResolution { offset: 16, ty: [vec4<f32>; 5] }) }
+[2020-01-01T16:52:53Z INFO  spirv_spec] 0.0.s.v.0: DescriptorResolution { desc_bind: (set=0, bind=0), desc_ty: 1x{ s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 }, member_var_res: Some(MemberVariableResolution { offset: 16, ty: vec4<f32> }) }
+[2020-01-01T16:52:53Z INFO  spirv_spec] 0.0.s.v.1: DescriptorResolution { desc_bind: (set=0, bind=0), desc_ty: 1x{ s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 }, member_var_res: Some(MemberVariableResolution { offset: 32, ty: vec4<f32> }) }
+[2020-01-01T16:52:53Z INFO  spirv_spec] 0.0.s.v.2: DescriptorResolution { desc_bind: (set=0, bind=0), desc_ty: 1x{ s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 }, member_var_res: Some(MemberVariableResolution { offset: 48, ty: vec4<f32> }) }
+[2020-01-01T16:52:53Z INFO  spirv_spec] 0.0.s.v.3: DescriptorResolution { desc_bind: (set=0, bind=0), desc_ty: 1x{ s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 }, member_var_res: Some(MemberVariableResolution { offset: 64, ty: vec4<f32> }) }
+[2020-01-01T16:52:53Z INFO  spirv_spec] 0.0.s.v.4: DescriptorResolution { desc_bind: (set=0, bind=0), desc_ty: 1x{ s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 }, member_var_res: Some(MemberVariableResolution { offset: 80, ty: vec4<f32> }) }
+[2020-01-01T16:52:53Z INFO  spirv_spec] 0.0.s.i: DescriptorResolution { desc_bind: (set=0, bind=0), desc_ty: 1x{ s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 }, member_var_res: Some(MemberVariableResolution { offset: 96, ty: i32 }) }

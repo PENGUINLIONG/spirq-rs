@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use spirq::SpirvBinary;
-use spirq::sym::Sym;
+use spirq::Sym;
 use log::info;
 use std::path::Path;
 
@@ -11,19 +11,19 @@ fn main() {
     info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
     let entries = spvs["uniform-pbr.vert"].reflect().unwrap();
     info!("{:#?}", entries);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new(".model_view")).unwrap();
-    info!("push_constant[model_view]: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new(".view_proj")).unwrap();
-    info!("push_constant[view_proj]: offset={:?}, ty={:?}", offset, var_ty);
+    let desc_res = entries[0].resolve_desc(Sym::new(".model_view")).unwrap();
+    info!("push_constant[model_view]: {:?}", desc_res);
+    let desc_res = entries[0].resolve_desc(Sym::new(".view_proj")).unwrap();
+    info!("push_constant[view_proj]: {:?}", desc_res);
 
     let entries = spvs["uniform-pbr.frag"].reflect().unwrap();
     info!("{:#?}", entries);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("mat.fdsa.1")).unwrap();
-    info!("mat.fdsa.1: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("someImage")).unwrap();
-    info!("someImage: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("imgggg")).unwrap();
-    info!("imgggg: offset={:?}, ty={:?}", offset, var_ty);
+    let desc_res = entries[0].resolve_desc(Sym::new("mat.fdsa.1")).unwrap();
+    info!("mat.fdsa.1: {:?}", desc_res);
+    let desc_res = entries[0].resolve_desc(Sym::new("someImage")).unwrap();
+    info!("someImage: {:?}", desc_res);
+    let desc_res = entries[0].resolve_desc(Sym::new("imgggg")).unwrap();
+    info!("imgggg: {:?}", desc_res);
 }
 
 

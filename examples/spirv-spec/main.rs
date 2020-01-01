@@ -1,6 +1,5 @@
 use std::collections::HashMap;
-use spirq::SpirvBinary;
-use spirq::sym::Sym;
+use spirq::{SpirvBinary, Sym};
 use log::info;
 use std::path::Path;
 
@@ -12,28 +11,28 @@ fn main() {
     let entries = spvs["referential.frag"].reflect().unwrap();
     info!("{:#?}", entries);
 
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("0.0")).unwrap();
-    info!("0.0: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("0.0.s")).unwrap();
-    info!("0.0.s: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("0.0.cond")).unwrap();
-    info!("0.0.cond: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("0.0.s.b")).unwrap();
-    info!("0.0.s.b: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("0.0.s.v")).unwrap();
-    info!("0.0.s.v: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("0.0.s.v.0")).unwrap();
-    info!("0.0.s.v.0: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("0.0.s.v.1")).unwrap();
-    info!("0.0.s.v.1: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("0.0.s.v.2")).unwrap();
-    info!("0.0.s.v.2: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("0.0.s.v.3")).unwrap();
-    info!("0.0.s.v.3: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("0.0.s.v.4")).unwrap();
-    info!("0.0.s.v.4: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("0.0.s.i")).unwrap();
-    info!("0.0.s.i: offset={:?}, ty={:?}", offset, var_ty);
+    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0")).unwrap();
+    info!("0.0: {:?}", buf_var_res);
+    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s")).unwrap();
+    info!("0.0.s: {:?}", buf_var_res);
+    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.cond")).unwrap();
+    info!("0.0.cond: {:?}", buf_var_res);
+    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s.b")).unwrap();
+    info!("0.0.s.b: {:?}", buf_var_res);
+    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s.v")).unwrap();
+    info!("0.0.s.v: {:?}", buf_var_res);
+    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s.v.0")).unwrap();
+    info!("0.0.s.v.0: {:?}", buf_var_res);
+    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s.v.1")).unwrap();
+    info!("0.0.s.v.1: {:?}", buf_var_res);
+    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s.v.2")).unwrap();
+    info!("0.0.s.v.2: {:?}", buf_var_res);
+    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s.v.3")).unwrap();
+    info!("0.0.s.v.3: {:?}", buf_var_res);
+    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s.v.4")).unwrap();
+    info!("0.0.s.v.4: {:?}", buf_var_res);
+    let buf_var_res = entries[0].resolve_desc(Sym::new("0.0.s.i")).unwrap();
+    info!("0.0.s.i: {:?}", buf_var_res);
 }
 
 
