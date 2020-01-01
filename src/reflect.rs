@@ -73,9 +73,10 @@ impl<'a> ReflectIntermediate<'a> {
             .and_then(|x| x.get(0))
             .cloned()
     }
-    fn get_var_location_or_default(&self, var_id: VariableId) -> u32 {
+    fn get_var_location_or_default(&self, var_id: VariableId) -> Location {
         self.get_deco_u32(var_id, None, Decoration::Location)
             .unwrap_or(0)
+            .into()
     }
     fn get_var_desc_bind_or_default(&self, var_id: VariableId) -> DescriptorBinding {
         let desc_set = self.get_deco_u32(var_id, None, Decoration::DescriptorSet)

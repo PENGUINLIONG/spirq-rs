@@ -1,15 +1,15 @@
-   Compiling spirq v0.1.0 (C:\Users\PENGUINLIONG\Repositories\spirq)
-    Finished dev [unoptimized + debuginfo] target(s) in 4.57s
+   Compiling spirq v0.2.0 (C:\Users\PENGUINLIONG\Repositories\spirq)
+    Finished dev [unoptimized + debuginfo] target(s) in 1.47s
      Running `target\debug\examples\pipeline.exe`
-[2020-01-01T17:25:21Z INFO  pipeline] collected spirvs: ["uniform-pbr.frag", "uniform-pbr.vert"]
-[2020-01-01T17:25:21Z INFO  pipeline] .model_view: Some(MemberVariableResolution { offset: 0, ty: mat4x4<f32> })
-[2020-01-01T17:25:21Z INFO  pipeline] .view_proj: Some(MemberVariableResolution { offset: 64, ty: mat4x4<f32> })
-[2020-01-01T17:25:21Z INFO  pipeline] mat.fdsa.1: Some(MemberVariableResolution { offset: 80, ty: mat3x3<f32> })
-[2020-01-01T17:25:21Z INFO  pipeline] someImage: None
-[2020-01-01T17:25:21Z INFO  pipeline] imgggg: None
-[2020-01-01T17:25:21Z INFO  pipeline] -- buffer sizing:
-[2020-01-01T17:25:21Z INFO  pipeline] (set=0, bind=2): nbyte=None
-[2020-01-01T17:25:21Z INFO  pipeline] (push_constant): nbyte=Some(128)
-[2020-01-01T17:25:21Z INFO  pipeline] (set=0, bind=3): nbyte=None
-[2020-01-01T17:25:21Z INFO  pipeline] (set=1, bind=0): nbyte=Some(16)
-[2020-01-01T17:25:21Z INFO  pipeline] (set=0, bind=1): nbyte=Some(128)
+[2020-01-01T18:52:58Z INFO  pipeline] collected spirvs: ["uniform-pbr.frag", "uniform-pbr.vert"]
+[2020-01-01T18:52:58Z INFO  pipeline] .model_view: Some(MemberVariableResolution { offset: 0, ty: mat4x4<f32> })
+[2020-01-01T18:52:58Z INFO  pipeline] .view_proj: Some(MemberVariableResolution { offset: 64, ty: mat4x4<f32> })
+[2020-01-01T18:52:58Z INFO  pipeline] mat.fdsa.1: Some(MemberVariableResolution { offset: 80, ty: mat3x3<f32> })
+[2020-01-01T18:52:58Z INFO  pipeline] someImage: None
+[2020-01-01T18:52:58Z INFO  pipeline] imgggg: None
+[2020-01-01T18:52:58Z INFO  pipeline] -- buffer sizing:
+[2020-01-01T18:52:58Z INFO  pipeline] (set=1, bind=0): nbyte=Some(16)
+[2020-01-01T18:52:58Z INFO  pipeline] (set=0, bind=1): nbyte=Some(128)
+[2020-01-01T18:52:58Z INFO  pipeline] (set=0, bind=2): nbyte=None
+[2020-01-01T18:52:58Z INFO  pipeline] (push_constant): nbyte=Some(128)
+[2020-01-01T18:52:58Z INFO  pipeline] (set=0, bind=3): nbyte=None

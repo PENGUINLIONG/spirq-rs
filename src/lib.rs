@@ -5,11 +5,30 @@
 //! shader debugging and so on. SPIR-Q is currently compatible with a subset of
 //! SPIR-V 1.5, with most of graphics capabilities but no OpenCL kernel
 //! capabilities covered.
+//!
+//! ## How-to
+//!
+//! ```{rust}
+//! // Load SPIR-V data into `[u32]` buffer `spv_words`.
+//! let spv: SpirvBinary = spv_words.into();
+//! let entries = spv.reflect().unwrap();
+//! // All extracted entry point data are available in `entries`.
+//! ```
+//!
+//! By calling [`reflect`] of the wrapper type [`SpirvBinary`], every entry
+//! point in the binary are analyzed and reported as one or more
+//! [`EntryPoint`]s. Each entry point has a [`Manifest`] that supports queries
+//! from allocation requirement to fine-grained typing details.
+//!
+//! [`SpirvBinary`]: struct.SpirvBinary.html
+//! [`EntryPoint`]: struct.EntryPoint.html
+//! [`reflect`]: struct.SpirvBinary.html#method.reflect
+//! [`Manifest`]: struct.Manifest.html
 mod consts;
 mod parse;
 mod instr;
-mod sym;
-pub mod reflect;
+mod reflect;
+pub mod sym;
 pub mod error;
 pub mod ty;
 
@@ -21,7 +40,7 @@ use std::ops::Deref;
 use parse::{Instrs, Instr};
 use ty::{Type, DescriptorType};
 pub use sym::*;
-pub use error::{Error, Result};
+pub use error::*;
 pub use spirv_headers::ExecutionModel;
 
 /// SPIR-V program binary.
@@ -79,7 +98,18 @@ pub(crate) fn hash<H: std::hash::Hash>(h: &H) -> u64 {
 // Resource locationing.
 
 /// Interface variable location.
-pub type Location = u32;
+#[derive(PartialEq, Eq, Hash, Default, Clone, Copy)]
+pub struct Location(u32);
+impl From<u32> for Location {
+    fn from(x: u32) -> Location { Location(x) }
+}
+impl From<Location> for u32 {
+    fn from(x: Location) -> u32 { x.0 }
+}
+impl fmt::Debug for Location {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { self.0.fmt(f) }
+}
+
 /// Descriptor set and binding point carrier.
 #[derive(PartialEq, Eq, Hash, Default, Clone, Copy)]
 pub struct DescriptorBinding(Option<(u32, u32)>);
@@ -132,6 +162,7 @@ pub struct DescriptorResolution<'a> {
     /// end at a descriptor type.
     pub member_var_res: Option<MemberVariableResolution<'a>>,
 }
+/// Member variable resolution result.
 #[derive(Debug)]
 pub struct MemberVariableResolution<'a> {
     /// Offset to the resolution target from the beginning of buffer.
@@ -149,25 +180,13 @@ pub struct Manifest {
     pub(crate) var_name_map: HashMap<String, ResourceLocator>,
 }
 impl Manifest {
-    /// Merge metadata records in another manifest into the current one.
+    /// Merge metadata records in another manifest into the current one IN
+    /// ORDER. Inputs of the current manifest will kept; outputs will be
+    /// replaced by the `other`'s; and descriptors will be aggregated to contain
+    /// both set of metadata.
     pub fn merge(&mut self, other: &Manifest) -> Result<()> {
         use std::collections::hash_map::Entry::{Vacant, Occupied};
-        for (location, ivar_ty) in other.input_map.iter() {
-            match self.input_map.entry(*location) {
-                Vacant(entry) => { entry.insert(ivar_ty.clone()); },
-                Occupied(entry) => if hash(entry.get()) != hash(&ivar_ty) {
-                    return Err(Error::MismatchedManifest);
-                }
-            }
-        }
-        for (location, ivar_ty) in other.output_map.iter() {
-            match self.output_map.entry(*location) {
-                Vacant(entry) => { entry.insert(ivar_ty.clone()); },
-                Occupied(entry) => if hash(entry.get()) != hash(&ivar_ty) {
-                    return Err(Error::MismatchedManifest);
-                }
-            }
-        }
+        self.output_map = other.output_map.clone();
         for (desc_bind, desc_ty) in other.desc_map.iter() {
             match self.desc_map.entry(*desc_bind) {
                 Vacant(entry) => { entry.insert(desc_ty.clone()); },
@@ -218,7 +237,7 @@ impl Manifest {
     fn resolve_ivar<'a>(&self, map: &'a HashMap<Location, Type>, sym: &Sym) -> Option<InterfaceVariableResolution<'a>> {
         let mut segs = sym.segs();
         let location = match segs.next() {
-            Some(Seg::Index(location)) => location as u32,
+            Some(Seg::Index(location)) => (location as u32).into(),
             Some(Seg::Name(name)) => {
                 if let Some(ResourceLocator::Input(location)) = self.var_name_map.get(name) {
                     *location
@@ -298,8 +317,12 @@ impl Manifest {
 /// Representing an entry point described in a SPIR-V.
 #[derive(Clone)]
 pub struct EntryPoint {
+    /// Entry point execution model.
     pub exec_model: ExecutionModel,
+    /// Name of the entry point.
     pub name: String,
+    /// Manifest object that contains input, output and descriptor type
+    /// information.
     pub manifest: Manifest,
 }
 impl Deref for EntryPoint {
