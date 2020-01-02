@@ -1,427 +1,34 @@
 //! Reflection procedures and types.
 use std::convert::{TryFrom};
-use std::collections::{BTreeMap, HashMap, HashSet};
-use std::collections::hash_map::Entry::{Vacant, Occupied};
+use std::collections::{HashMap, HashSet};
 use std::iter::Peekable;
-use std::fmt;
-use std::ops::{Deref, RangeInclusive};
-use std::hash::{Hash, Hasher};
-use spirv_headers::{Decoration, Dim, ImageFormat, StorageClass};
-use super::sym::{Sym, Seg};
-use super::consts::*;
-use super::instr::*;
-use super::{SpirvBinary, Instrs, Instr};
-use super::error::{Error, Result};
+use std::ops::RangeInclusive;
+use spirv_headers::{Decoration, Dim, StorageClass};
+use crate::ty::*;
+use crate::consts::*;
+use crate::{Location, DescriptorBinding, SpirvBinary, Instrs, Instr, Manifest,
+    ResourceLocator, ExecutionModel, EntryPoint};
+use crate::error::{Error, Result};
+use crate::instr::*;
 
-pub use spirv_headers::ExecutionModel;
-
-type ObjectId = u32;
-type TypeId = ObjectId;
-type VariableId = ObjectId;
-type ConstantId = ObjectId;
-type FunctionId = ObjectId;
-type MemberIdx = usize;
-
-#[derive(Hash, Clone)]
-pub enum ScalarType {
-    Boolean,
-    Signed(u32),
-    Unsigned(u32),
-    Float(u32),
-}
-impl ScalarType {
-    pub fn boolean() -> ScalarType {
-        Self::Boolean
-    }
-    pub fn int(nbyte: u32, is_signed: bool) -> ScalarType {
-        if is_signed { Self::Signed(nbyte) } else { Self::Unsigned(nbyte) }
-    }
-    pub fn float(nbyte: u32) -> ScalarType {
-        Self::Float(nbyte)
-    }
-    /// Whether the scalar type is signed. A floating-point type is always
-    /// signed. A boolean type is not Scalar so it's neither signed or
-    /// unsigned, represented by a `None`.
-    pub fn is_signed(&self) -> Option<bool> {
-        match self {
-            Self::Boolean => None,
-            Self::Signed(_) => Some(true),
-            Self::Unsigned(_) => Some(false),
-            Self::Float(_) => Some(true),
-        }
-    }
-    /// Number of bytes an instance of the type takes.
-    pub fn nbyte(&self) -> usize {
-        let nbyte = match self {
-            Self::Boolean => 1,
-            Self::Signed(nbyte) => *nbyte,
-            Self::Unsigned(nbyte) => *nbyte,
-            Self::Float(nbyte) => *nbyte,
-        };
-        nbyte as usize
-    }
-
-    pub fn is_boolean(&self) -> bool {
-        if let Self::Boolean = self { true } else { false }
-    }
-    pub fn is_sint(&self) -> bool {
-        if let Self::Signed(_) = self { true } else { false }
-    }
-    pub fn is_uint(&self) -> bool {
-        if let Self::Unsigned(_) = self { true } else { false }
-    }
-    pub fn is_float(&self) -> bool {
-        if let Self::Float(_) = self { true } else { false }
-    }
-}
-impl fmt::Debug for ScalarType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::Boolean => write!(f, "bool"),
-            Self::Signed(nbyte) => write!(f, "i{}", nbyte << 3),
-            Self::Unsigned(nbyte) => write!(f, "i{}", nbyte << 3),
-            Self::Float(nbyte) => write!(f, "f{}", nbyte << 3),
-        }
-    }
-}
-
-
-#[derive(Hash, Clone)]
-pub struct VectorType {
-    pub scalar_ty: ScalarType,
-    pub nscalar: u32,
-}
-impl VectorType {
-    pub fn new(scalar_ty: ScalarType, nscalar: u32) -> VectorType {
-        VectorType { scalar_ty: scalar_ty, nscalar: nscalar }
-    }
-    pub fn nbyte(&self) -> usize { self.nscalar as usize * self.scalar_ty.nbyte() }
-}
-impl fmt::Debug for VectorType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "vec{}<{:?}>", self.nscalar, self.scalar_ty)
-    }
-}
-
-
-#[derive(Hash, Clone, Copy)]
-pub enum MatrixAxisOrder {
-    ColumnMajor,
-    RowMajor,
-}
-impl Default for MatrixAxisOrder {
-    fn default() -> MatrixAxisOrder { MatrixAxisOrder::ColumnMajor }
-}
-
-
-#[derive(Hash, Clone)]
-pub struct MatrixType {
-    pub vec_ty: VectorType,
-    pub nvec: u32,
-    pub stride: usize,
-    pub major: MatrixAxisOrder,
-}
-impl MatrixType {
-    pub fn new(vec_ty: VectorType, nvec: u32) -> MatrixType {
-        MatrixType {
-            stride: vec_ty.nbyte(),
-            vec_ty: vec_ty,
-            nvec: nvec,
-            major: MatrixAxisOrder::default(),
-        }
-    }
-    pub fn decorate(&mut self, stride: usize, major: MatrixAxisOrder) {
-        self.stride = stride;
-        self.major = major;
-    }
-    pub fn nbyte(&self) -> usize { self.nvec as usize * self.stride }
-}
-impl fmt::Debug for MatrixType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let transpose = match self.major {
-            MatrixAxisOrder::ColumnMajor => "",
-            MatrixAxisOrder::RowMajor => "T",
-        };
-        let nrow = self.vec_ty.nscalar;
-        let ncol = self.nvec;
-        let scalar_ty = &self.vec_ty.scalar_ty;
-        write!(f, "mat{}x{}{}<{:?}>", nrow, ncol, transpose, scalar_ty)
-    }
-}
-
-
-#[derive(Hash, Clone, Copy)]
-pub enum ImageUnitFormat {
-    Color(ImageFormat),
-    Sampled,
-    Depth,
-}
-impl ImageUnitFormat {
-    pub fn from_spv_def(is_sampled: u32, is_depth: u32, color_fmt: ImageFormat) -> Result<ImageUnitFormat> {
-        let img_unit_fmt = match (is_sampled, is_depth, color_fmt) {
-            (1, 0, _) => ImageUnitFormat::Sampled,
-            (1, 1, _) => ImageUnitFormat::Depth,
-            (2, 0, color_fmt) => ImageUnitFormat::Color(color_fmt),
-            _ => return Err(Error::UnsupportedSpirv),
-        };
-        Ok(img_unit_fmt)
-    }
-}
-
-
-#[derive(Hash, Clone, Copy)]
-pub enum ImageArrangement {
-    Image1D,
-    Image2D,
-    Image2DMS,
-    Image3D,
-    CubeMap,
-    Image1DArray,
-    Image2DArray,
-    Image2DMSArray,
-    CubeMapArray,
-}
-impl ImageArrangement {
-    /// Do note this dim is not the number of dimensions but a enumeration of
-    /// values specified in SPIR-V specification.
-    pub fn from_spv_def(dim: Dim, is_array: bool, is_multisampled: bool) -> Result<ImageArrangement> {
-        let arng = match (dim, is_array, is_multisampled) {
-            (Dim::Dim1D, false, false) => ImageArrangement::Image1D,
-            (Dim::Dim1D, true, false) => ImageArrangement::Image1DArray,
-            (Dim::Dim2D, false, false) => ImageArrangement::Image2D,
-            (Dim::Dim2D, false, true) => ImageArrangement::Image2DMS,
-            (Dim::Dim2D, true, false) => ImageArrangement::Image2DArray,
-            (Dim::Dim3D, false, false) => ImageArrangement::Image3D,
-            (Dim::Dim3D, true, false) => ImageArrangement::Image3D,
-            (Dim::DimCube, false, false) => ImageArrangement::CubeMap,
-            (Dim::DimCube, true, false) => ImageArrangement::CubeMapArray,
-            _ => return Err(Error::UnsupportedSpirv),
-        };
-        Ok(arng)
-    }
-}
-
-
-#[derive(Hash, Clone)]
-pub struct ImageType {
-    unit_fmt: ImageUnitFormat,
-    arng: ImageArrangement,
-}
-impl fmt::Debug for ImageType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use ImageArrangement::*;
-        use ImageUnitFormat::*;
-        match (self.arng, self.unit_fmt) {
-            (Image1D, Color(fmt)) => write!(f, "image1D<{:?}>", fmt),
-            (Image2D, Color(fmt)) => write!(f, "image2D<{:?}>", fmt),
-            (Image2DMS, Color(fmt)) => write!(f, "image2DMS<{:?}>", fmt),
-            (Image3D, Color(fmt)) => write!(f, "image3D<{:?}>", fmt),
-            (CubeMap, Color(fmt)) => write!(f, "imageCube<{:?}>", fmt),
-            (Image1DArray, Color(fmt)) => write!(f, "image1DArray<{:?}>", fmt),
-            (Image2DArray, Color(fmt)) => write!(f, "image2DArray<{:?}>", fmt),
-            (Image2DMSArray, Color(fmt)) => write!(f, "image2DMSArray<{:?}>", fmt),
-            (CubeMapArray, Color(fmt)) => write!(f, "imageCubeArray<{:?}>", fmt),
-            
-            (Image1D, Sampled) => f.write_str("sampler1D"),
-            (Image2D, Sampled) => f.write_str("sampler2D"),
-            (Image2DMS, Sampled) => f.write_str("sampler2DMS"),
-            (Image3D, Sampled) => f.write_str("sampler3D"),
-            (CubeMap, Sampled) => f.write_str("samplerCube"),
-            (Image1DArray, Sampled) => f.write_str("sampler1DArray"),
-            (Image2DArray, Sampled) => f.write_str("sampler2DArray"),
-            (Image2DMSArray, Sampled) => f.write_str("sampler2DMSArray"),
-            (CubeMapArray, Sampled) => f.write_str("samplerCubeArray"),
-
-            (Image1D, Depth) => f.write_str("sampler1DShadow"),
-            (Image2D, Depth) => f.write_str("sampler2DShadow"),
-            (CubeMap, Depth) => f.write_str("samplerCubeShadow"),
-            (Image1DArray, Depth) => f.write_str("sampler1DArrayShadow"),
-            (Image2DArray, Depth) => f.write_str("sampler2DArrayShadow"),
-            (CubeMapArray, Depth) => f.write_str("samplerCubeShadowArray"),
-            _ => Err(fmt::Error::default()),
-        }
-    }
-}
-
-
-#[derive(Hash, Clone)]
-pub struct ArrayType {
-    proto_ty: Box<Type>,
-    nrepeat: Option<u32>,
-    stride: Option<usize>,
-}
-impl ArrayType {
-    fn new_multibind(proto_ty: &Type, nrepeat: u32) -> ArrayType {
-        ArrayType {
-            proto_ty: Box::new(proto_ty.clone()),
-            nrepeat: Some(nrepeat),
-            stride: None,
-        }
-    }
-    pub fn new(proto_ty: &Type, nrepeat: u32, stride: usize) -> ArrayType {
-        ArrayType {
-            proto_ty: Box::new(proto_ty.clone()),
-            nrepeat: Some(nrepeat),
-            stride: Some(stride),
-        }
-    }
-    pub fn new_unsized(proto_ty: &Type, stride: usize) -> ArrayType {
-        ArrayType {
-            proto_ty: Box::new(proto_ty.clone()),
-            nrepeat: None,
-            stride: Some(stride)
-        }
-    }
-
-    pub fn nbyte(&self) -> Option<usize> {
-        match (self.stride, self.nrepeat) {
-            (Some(stride), Some(nrepeat)) => {
-                Some(stride * nrepeat as usize)
-            },
-            _ => None,
-        }
-    }
-    pub fn proto_ty(&self) -> &Type {
-        &self.proto_ty
-    }
-    pub fn stride(&self) -> usize {
-        // Multibind which makes the `stride` be `None` is used internally only.
-        self.stride.unwrap()
-    }
-    pub fn nrepeat(&self) -> Option<u32> {
-        self.nrepeat.clone()
-    }
-}
-impl fmt::Debug for ArrayType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let Some(nrepeat) = self.nrepeat {
-            write!(f, "[{:?}; {}]", self.proto_ty, nrepeat)
-        } else {
-            write!(f, "[{:?}", self.proto_ty)
-        }
-    }
-}
-
-
-#[derive(Default, Clone)]
-pub struct StructType {
-    members: Vec<(usize, Type)>, // Offset and type.
-    // BTreeMap to keep the order for hashing.
-    name_map: BTreeMap<String, MemberIdx>,
-    // We assume a structure decorated by `Block` is uniform in the first place.
-    // On instanciating the structure type into interface block, we check if the
-    // storage class is `StorageClass`. If it is, this field will be canceled in
-    // the end to false.
-    is_iuniform: bool,
-}
-impl StructType {
-    pub fn nbyte(&self) -> Option<usize> {
-        if let Some((offset, member_ty)) = self.members.last() {
-            member_ty.nbyte().map(|x| offset + x)
-        } else { None }
-    }
-    /// Get the offset and type of each member.
-    pub fn members(&self) -> impl Iterator<Item=(usize, &Type)> {
-        self.members.iter()
-            .map(|&(offset, ref ty)| (offset, ty))
-    }
-}
-impl Hash for StructType {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.members.hash(state);
-        // NOTE: This enforces that the names for a same member in each stage
-        // have to be the same to be correctly reflected.
-        for x in self.name_map.iter() {
-            x.hash(state);
-        }
-    }
-}
-impl fmt::Debug for StructType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str("{ ")?;
-        for (i, (_offset, member_ty)) in self.members.iter().enumerate() {
-            if i != 0 { f.write_str(", ")?; }
-            if let Some(name) = self.name_map.iter()
-                .find_map(|(name, &idx)| if idx == i { Some(name) } else { None }) {
-                write!(f, "{}: {:?}", name, member_ty)?;
-            } else {
-                write!(f, "{}: {:?}", i, member_ty)?;
-            }
-        }
-        f.write_str(" }")
-    }
-}
-
+// Intermediate types used in reflection.
 
 #[derive(Debug, Clone)]
 struct Constant<'a> {
     ty: InstrId,
     value: &'a [u32],
 }
+#[derive(Clone)]
+enum Variable {
+    Input(Location, Type),
+    Output(Location, Type),
+    Descriptor(DescriptorBinding, DescriptorType),
+}
 #[derive(Default, Debug, Clone)]
 struct Function {
     accessed_vars: HashSet<InstrId>,
     calls: HashSet<InstrId>,
 }
-
-#[derive(Hash, Clone)]
-pub enum Type {
-    Scalar(ScalarType),
-    Vector(VectorType),
-    Matrix(MatrixType),
-    Image(Option<ImageType>),
-    Array(ArrayType),
-    Struct(StructType),
-}
-impl Type {
-    pub fn nbyte(&self) -> Option<usize> {
-        use Type::*;
-        match self {
-            Scalar(scalar_ty) => Some(scalar_ty.nbyte()),
-            Vector(vec_ty) => Some(vec_ty.nbyte()),
-            Matrix(mat_ty) => Some(mat_ty.nbyte()),
-            Image(_) => None,
-            Array(arr_ty) => arr_ty.nbyte(),
-            Struct(struct_ty) => struct_ty.nbyte(),
-        }
-    }
-}
-impl fmt::Debug for Type {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Type::Scalar(scalar_ty) => scalar_ty.fmt(f),
-            Type::Vector(vec_ty) => vec_ty.fmt(f),
-            Type::Matrix(mat_ty) => mat_ty.fmt(f),
-            Type::Image(Some(img_ty)) => img_ty.fmt(f),
-            Type::Image(None) => write!(f, "subpassData"),
-            Type::Array(arr_ty) => arr_ty.fmt(f),
-            Type::Struct(struct_ty) => struct_ty.fmt(f),
-        }
-    }
-}
-
-pub type Location = u32;
-
-#[derive(PartialEq, Eq, Hash, Default, Clone, Copy)]
-pub struct DescriptorBinding(Option<(u32, u32)>);
-impl DescriptorBinding {
-    pub fn push_const() -> Self { DescriptorBinding(None) }
-    pub fn desc_bind(desc_set: u32, bind_point: u32) -> Self { DescriptorBinding(Some((desc_set, bind_point))) }
-
-    pub fn is_push_const(&self) -> bool { self.0.is_none() }
-    pub fn is_desc_bind(&self) -> bool { self.0.is_some() }
-    pub fn into_inner(self) -> Option<(u32, u32)> { self.0 }
-}
-impl fmt::Debug for DescriptorBinding {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let Some((set, bind)) = self.0 {
-            write!(f, "(set={}, bind={})", set, bind)
-        } else {
-            write!(f, "(push_constant)")
-        }
-    }
-}
-
 struct EntryPointDeclartion<'a> {
     func_id: u32,
     name: &'a str,
@@ -429,318 +36,13 @@ struct EntryPointDeclartion<'a> {
 }
 
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
-enum ResourceLocator {
-    Input(Location),
-    Output(Location),
-    Descriptor(DescriptorBinding),
-}
+type ObjectId = u32;
+type TypeId = ObjectId;
+type VariableId = ObjectId;
+type ConstantId = ObjectId;
+type FunctionId = ObjectId;
 
-#[derive(Default, Clone)]
-pub struct Manifest {
-    attr_map: HashMap<Location, InterfaceVariableType>,
-    attm_map: HashMap<Location, InterfaceVariableType>,
-    desc_map: HashMap<DescriptorBinding, DescriptorType>,
-    var_name_map: HashMap<String, ResourceLocator>,
-}
-impl Manifest {
-    pub fn merge(&mut self, other: &Manifest) -> Result<()> {
-        use std::collections::hash_map::DefaultHasher;
-        fn hash<H: Hash>(h: &H) -> u64 {
-            let mut hasher = DefaultHasher::new();
-            h.hash(&mut hasher);
-            hasher.finish()
-        }
-        for (location, ivar_ty) in other.attr_map.iter() {
-            match self.attr_map.entry(*location) {
-                Vacant(entry) => { entry.insert(ivar_ty.clone()); },
-                Occupied(entry) => if hash(entry.get()) != hash(&ivar_ty) {
-                    return Err(Error::MismatchedManifest);
-                }
-            }
-        }
-        for (location, ivar_ty) in other.attm_map.iter() {
-            match self.attm_map.entry(*location) {
-                Vacant(entry) => { entry.insert(ivar_ty.clone()); },
-                Occupied(entry) => if hash(entry.get()) != hash(&ivar_ty) {
-                    return Err(Error::MismatchedManifest);
-                }
-            }
-        }
-        for (desc_bind, desc_ty) in other.desc_map.iter() {
-            match self.desc_map.entry(*desc_bind) {
-                Vacant(entry) => { entry.insert(desc_ty.clone()); },
-                Occupied(mut entry) => {
-                    if let DescriptorType::PushConstant(dst_struct_ty) = entry.get_mut() {
-                        // Merge push constants scattered in different stages.
-                        // This match must success.
-                        let name_offset = dst_struct_ty.members.len();
-                        if let DescriptorType::PushConstant(src_struct_ty) = desc_ty {
-                            // Don't validate the offsets.
-                            let member_appendix = src_struct_ty.members.iter()
-                                .cloned();
-                            dst_struct_ty.members.extend(member_appendix);
-                            for (name, &member_idx) in src_struct_ty.name_map.iter() {
-                                if let Some(&old_member_idx) = dst_struct_ty.name_map.get(name) {
-                                    let old_hash = hash(&dst_struct_ty.members[old_member_idx]);
-                                    let new_hash = hash(&src_struct_ty.members[member_idx]);
-                                    if old_hash != new_hash {
-                                        return Err(Error::MismatchedManifest);
-                                    }
-                                } else {
-                                    dst_struct_ty.name_map
-                                        .insert(name.to_owned(), name_offset + member_idx);
-                                }
-                            }
-                        } else {
-                            unreachable!("push constant merging with push constant");
-                        }
-                        // It's guaranteed to be interface uniform so we don't
-                        // have to check that.
-                    } else {
-                        // Just regular descriptor types. Simply compare the
-                        // hashes.
-                        if hash(entry.get()) != hash(&desc_ty) {
-                            return Err(Error::MismatchedManifest);
-                        }
-                    }
-                }
-            }
-        }
-        for (name, locator) in other.var_name_map.iter() {
-            match self.var_name_map.entry(name.to_owned()) {
-                Vacant(entry) => { entry.insert(locator.clone()); },
-                Occupied(entry) => if entry.get() != locator {
-                    // Mismatched names are not allowed.
-                    return Err(Error::MismatchedManifest);
-                },
-            }
-        }
-        Ok(())
-    }
-    /// Get the offset and type of a descriptor variable identified by a symbol.
-    pub fn resolve_desc(&self, sym: &Sym) -> Option<(Option<usize>, Type)> {
-        let mut segs = sym.segs();
-        let desc_bind = match segs.next() {
-            Some(Seg::Index(desc_set)) => {
-                if let Some(Seg::Index(bind_point)) = segs.next() {
-                    DescriptorBinding::desc_bind(desc_set as u32, bind_point as u32)
-                } else { return None; }
-            },
-            Some(Seg::Empty) => {
-                // Symbols started with an empty head, like ".modelView", is
-                // used to identify push constants.
-                DescriptorBinding::push_const()
-            }
-            Some(Seg::Name(name)) => {
-                if let Some(ResourceLocator::Descriptor(desc_bind)) = self.var_name_map.get(name) {
-                    *desc_bind
-                } else { return None; }
-            },
-            None => return None,
-        };
-        let desc_ty = self.desc_map.get(&desc_bind)?;
-        desc_ty.resolve(segs.remaining())
-    }
-    pub fn attrs<'a>(&'a self) -> impl Iterator<Item=(Location, &InterfaceVariableType)> {
-        self.attr_map.iter()
-            .map(|(location, ivar_ty)| (*location, ivar_ty))
-    }
-    pub fn attms<'a>(&'a self) -> impl Iterator<Item=(Location, &InterfaceVariableType)> {
-        self.attm_map.iter()
-            .map(|(location, ivar_ty)| (*location, ivar_ty))
-    }
-    /// Walk down the hierarchy of descriptor variables and enumerate
-    /// symbols and their corresponding type.
-    pub fn desc_binds<'a>(&'a self) -> impl Iterator<Item=(DescriptorBinding, &DescriptorType)> {
-        self.desc_map.iter()
-            .map(|(desc_bind, desc_ty)| (*desc_bind, desc_ty))
-    }
-}
-
-#[derive(Clone)]
-pub struct EntryPoint {
-    pub exec_model: ExecutionModel,
-    pub name: String,
-    pub manifest: Manifest,
-}
-impl Deref for EntryPoint {
-    type Target = Manifest;
-    fn deref(&self) -> &Self::Target { &self.manifest }
-}
-impl fmt::Debug for EntryPoint {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct(&self.name)
-            .field("inputs", &self.manifest.attr_map)
-            .field("outputs", &self.manifest.attm_map)
-            .field("descriptors", &self.manifest.desc_map)
-            .finish()
-    }
-}
-
-
-#[derive(Hash, Clone)]
-pub enum InterfaceVariableType {
-    Scalar(ScalarType),
-    Vector(VectorType),
-    Matrix(MatrixType),
-}
-impl InterfaceVariableType {
-    fn from_ty<'a>(ty: &Type) -> Option<InterfaceVariableType> {
-        let ivar_ty = match ty.clone() {
-            Type::Scalar(scalar_ty) => InterfaceVariableType::Scalar(scalar_ty),
-            Type::Vector(vec_ty) => InterfaceVariableType::Vector(vec_ty),
-            Type::Matrix(mat_ty) => InterfaceVariableType::Matrix(mat_ty),
-            _ => return None,
-        };
-        Some(ivar_ty)
-    }
-}
-impl fmt::Debug for InterfaceVariableType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use InterfaceVariableType::*;
-        match self {
-            Scalar(scalar_ty) => fmt::Debug::fmt(scalar_ty, f),
-            Vector(vec_ty) => fmt::Debug::fmt(vec_ty, f),
-            Matrix(mat_ty) => fmt::Debug::fmt(mat_ty, f),
-        }
-    }
-}
-
-
-#[derive(Hash, Clone)]
-pub struct InterfaceBlockType {
-    pub block_ty: StructType,
-    pub nbind: u32,
-}
-impl InterfaceBlockType {
-    fn from_store_buf(block_ty: &Type) -> Option<InterfaceBlockType> {
-        let (mut block_ty, nbind) = match block_ty {
-            Type::Array(arr_ty) => if let Type::Struct(struct_ty) = &*arr_ty.proto_ty {
-                (struct_ty.clone(), arr_ty.nrepeat?)
-            } else { return None },
-            Type::Struct(struct_ty) => (struct_ty.clone(), 1),
-            _ => return None,
-        };
-        // Force cancel the uniformity of current block type.
-        block_ty.is_iuniform = false;
-        let iblock_ty = InterfaceBlockType { block_ty: block_ty, nbind: nbind };
-        Some(iblock_ty)
-    }
-    fn from_uniform(block_ty: &Type) -> Option<InterfaceBlockType> {
-        let (block_ty, nbind) = match block_ty {
-            Type::Array(arr_ty) => if let Type::Struct(struct_ty) = &*arr_ty.proto_ty {
-                (struct_ty.clone(), arr_ty.nrepeat?)
-            } else { return None },
-            Type::Struct(struct_ty) => (struct_ty.clone(), 1),
-            _ => return None,
-        };
-        let iblock_ty = InterfaceBlockType { block_ty: block_ty, nbind: nbind };
-        Some(iblock_ty)
-    }
-    /// Whether the interface block is a uniform buffer block.
-    pub fn is_uniform(&self) -> bool { self.block_ty.is_iuniform }
-    /// Whether the interface block is a storage buffer block.
-    pub fn is_storage(&self) -> bool { !self.block_ty.is_iuniform }
-
-    /// Get the size of buffer of a single binding. The first return value is
-    /// the minimum size to be allocated for the interface block; the second
-    /// return value is the size of the last repeating unit if the interface
-    /// block is an storage buffer block ended with a unsized array.
-    pub fn nbyte(&self) -> Option<usize> { self.block_ty.nbyte() }
-}
-impl fmt::Debug for InterfaceBlockType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let buf_ty = if self.block_ty.is_iuniform { "uniform" } else { "buffer" };
-        write!(f, "[{}: {:?}; {}]", buf_ty, self.block_ty, self.nbind)
-    }
-}
-
-
-#[derive(Hash, Clone)]
-pub enum DescriptorType {
-    PushConstant(StructType),
-    Block(InterfaceBlockType),
-    Image(ImageType),
-    InputAtatchment(u32),
-}
-impl DescriptorType {
-    pub fn resolve(&self, sym: &Sym) -> Option<(Option<usize>, Type)> {
-        let mut segs = sym.segs();
-        let mut ty: Type = match self {
-            DescriptorType::InputAtatchment(_) => {
-                // Subpass data have no members.
-                return if let Some(Seg::Empty) = segs.next() {
-                    Some((None, Type::Image(None)))
-                } else { None };
-            },
-            DescriptorType::Image(img_ty) => {
-                // Images have no members.
-                return if let Some(Seg::Empty) = segs.next() {
-                    Some((None, Type::Image(Some(img_ty.clone()))))
-                } else { None };
-            },
-            DescriptorType::PushConstant(struct_ty) => Type::Struct(struct_ty.clone()),
-            DescriptorType::Block(iblock_ty) => Type::Struct(iblock_ty.block_ty.clone()),
-        };
-        let mut offset = 0;
-        while let Some(seg) = segs.next() {
-            // Ensure the outer-most type can be addressed.
-            if seg == Seg::Empty { break }
-            match ty {
-                Type::Struct(struct_ty) => {
-                    let idx = match seg {
-                        Seg::Index(idx) => idx,
-                        Seg::Name(name) => {
-                            if let Some(idx) = struct_ty.name_map.get(name) {
-                                *idx
-                            } else { return None; }
-                        },
-                        _ => return None,
-                    };
-                    if let Some((local_offset, new_ty)) = struct_ty.members.get(idx) {
-                        offset += local_offset;
-                        // TODO: Use `Cow`.
-                        ty = new_ty.clone();
-                    } else { return None; }
-                },
-                Type::Array(arr_ty) => {
-                    if let Seg::Index(idx) = seg {
-                        if let Some(nrepeat) = arr_ty.nrepeat {
-                            if idx >= nrepeat as usize {
-                                return None;
-                            }
-                        }
-                        if let Some(stride) = arr_ty.stride {
-                            offset += stride * idx;
-                        } else { return None; }
-                        ty = (*arr_ty.proto_ty).clone();
-                    } else { return None; }
-                },
-                _ => return None,
-            }
-        }
-        Some((Some(offset), ty))
-    }
-}
-impl fmt::Debug for DescriptorType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use DescriptorType::*;
-        match self {
-            PushConstant(struct_ty) => write!(f, "{:?}", struct_ty),
-            Block(iblock_ty) => write!(f, "{:?}", iblock_ty),
-            Image(img_ty) => write!(f, "{:?}", img_ty),
-            InputAtatchment(idx) => write!(f, "subpassData[{}]", idx),
-        }
-    }
-}
-
-#[derive(Clone)]
-enum Variable {
-    Input(Location, InterfaceVariableType),
-    Output(Location, InterfaceVariableType),
-    Descriptor(DescriptorBinding, DescriptorType),
-}
+// The actual reflection to take place.
 
 #[derive(Default)]
 struct ReflectIntermediate<'a> {
@@ -766,18 +68,15 @@ impl<'a> ReflectIntermediate<'a> {
     fn contains_deco(&self, id: ObjectId, member_idx: Option<u32>, deco: Decoration) -> bool {
         self.deco_map.contains_key(&(id, member_idx, deco))
     }
-    fn _get_deco(&self, id: InstrId, member_idx: Option<u32>, deco: Decoration) -> Option<&[u32]> {
-        self.deco_map.get(&(id, member_idx, deco))
-            .cloned()
-    }
     fn get_deco_u32(&self, id: InstrId, member_idx: Option<u32>, deco: Decoration) -> Option<u32> {
         self.deco_map.get(&(id, member_idx, deco))
             .and_then(|x| x.get(0))
             .cloned()
     }
-    fn get_var_location_or_default(&self, var_id: VariableId) -> u32 {
+    fn get_var_location_or_default(&self, var_id: VariableId) -> Location {
         self.get_deco_u32(var_id, None, Decoration::Location)
             .unwrap_or(0)
+            .into()
     }
     fn get_var_desc_bind_or_default(&self, var_id: VariableId) -> DescriptorBinding {
         let desc_set = self.get_deco_u32(var_id, None, Decoration::DescriptorSet)
@@ -845,6 +144,7 @@ impl<'a> ReflectIntermediate<'a> {
         Ok(())
     }
     fn populate_one_ty(&mut self, instr: &Instr<'a>) -> Result<()> {
+        use std::collections::hash_map::Entry::Vacant;
         let (key, value) = match instr.opcode() {
             OP_TYPE_VOID | OP_TYPE_FUNCTION => { return Ok(()) },
             OP_TYPE_BOOL => {
@@ -879,14 +179,14 @@ impl<'a> ReflectIntermediate<'a> {
             OP_TYPE_IMAGE => {
                 let op = OpTypeImage::try_from(instr)?;
                 let img_ty = if op.dim == Dim::DimSubpassData {
-                    Type::Image(None)
+                    Type::SubpassData
                 } else {
                     // Only unit types allowed to be stored in storage images can
                     // have given format.
                     let unit_fmt = ImageUnitFormat::from_spv_def(op.is_sampled, op.is_depth, op.color_fmt)?;
                     let arng = ImageArrangement::from_spv_def(op.dim, op.is_array, op.is_multisampled)?;
-                    let img_ty = ImageType { unit_fmt: unit_fmt, arng: arng };
-                    Type::Image(Some(img_ty))
+                    let img_ty = ImageType::new(unit_fmt, arng);
+                    Type::Image(img_ty)
                 };
                 (op.ty_id, img_ty)
             },
@@ -932,17 +232,16 @@ impl<'a> ReflectIntermediate<'a> {
             OP_TYPE_STRUCT => {
                 let op = OpTypeStruct::try_from(instr)?;
                 let mut struct_ty = StructType::default();
-                struct_ty.is_iuniform = self.contains_deco(op.ty_id, None, Decoration::Block);
                 for (i, &member_ty_id) in op.member_ty_ids.iter().enumerate() {
+                    let i = i as u32;
                     let mut member_ty = self.ty_map.get(&member_ty_id)
                         .cloned()
                         .ok_or(Error::CorruptedSpirv)?;
                     let mut proto_ty = &mut member_ty;
                     while let Type::Array(arr_ty) = proto_ty {
-                        proto_ty = &mut arr_ty.proto_ty;
+                        proto_ty = &mut *arr_ty.proto_ty;
                     }
-                    if let &mut Type::Matrix(ref mut mat_ty) = proto_ty {
-                        let i = i as u32;
+                    if let Type::Matrix(ref mut mat_ty) = proto_ty {
                         let mat_stride = self.get_deco_u32(op.ty_id, Some(i), Decoration::MatrixStride)
                             .map(|x| x as usize)
                             .ok_or(Error::CorruptedSpirv)?;
@@ -955,14 +254,13 @@ impl<'a> ReflectIntermediate<'a> {
                         };
                         mat_ty.decorate(mat_stride, major);
                     }
-                    if let Some(name) = self.get_name(op.ty_id, Some(i as u32)) {
-                        if !name.is_empty() {
-                            struct_ty.name_map.insert(name.to_owned(), i);
-                        }
-                    }
-                    if let Some(offset) = self.get_deco_u32(op.ty_id, Some(i as u32), Decoration::Offset)
+                    let name = if let Some(nm) = self.get_name(op.ty_id, Some(i)) {
+                        if nm.is_empty() { None } else { Some(nm.to_owned()) }
+                    } else { None };
+                    if let Some(offset) = self.get_deco_u32(op.ty_id, Some(i), Decoration::Offset)
                         .map(|x| x as usize) {
-                        struct_ty.members.push((offset, member_ty));
+                        let member = StructMember { name, offset, ty: member_ty };
+                        struct_ty.push_member(member)?;
                     } else {
                         // For shader input/output blocks there are no offset
                         // decoration. Since these variables are not externally
@@ -987,6 +285,7 @@ impl<'a> ReflectIntermediate<'a> {
         } else { Err(Error::CorruptedSpirv) }
     }
     fn populate_one_const(&mut self, instr: &Instr<'a>) -> Result<()> {
+        use std::collections::hash_map::Entry::Vacant;
         if instr.opcode() != OP_CONSTANT { return Ok(()) }
         let op = OpConstant::try_from(instr)?;
         let constant = Constant { ty: op.ty_id, value: op.value };
@@ -995,6 +294,26 @@ impl<'a> ReflectIntermediate<'a> {
         } else { Err(Error::CorruptedSpirv) }
     }
     fn populate_one_var(&mut self, instr: &Instr<'a>) -> Result<()> {
+        fn ty2buf(ty: &Type) -> Option<(u32, Type)> {
+            match ty {
+                Type::Array(arr_ty) => if let Type::Struct(struct_ty) = &*arr_ty.proto_ty() {
+                    Some((arr_ty.nrepeat()?, Type::Struct(struct_ty.clone())))
+                } else { return None },
+                Type::Struct(_) => Some((1, ty.clone())),
+                _ => return None,
+            }
+        }
+        fn ty2uniform(buf_ty: &Type) -> Option<DescriptorType> {
+            let (nbind, struct_ty) = ty2buf(buf_ty)?;
+            let desc_ty = DescriptorType::UniformBuffer(nbind, struct_ty);
+            Some(desc_ty)
+        }
+        fn ty2storage(buf_ty: &Type) -> Option<DescriptorType> {
+            let (nbind, struct_ty) = ty2buf(buf_ty)?;
+            let desc_ty = DescriptorType::StorageBuffer(nbind, struct_ty);
+            Some(desc_ty)
+        }
+
         let op = OpVariable::try_from(instr)?;
         let (ty_id, ty) = if let Some(x) = self.resolve_ref(op.ty_id) { x } else {
             // If a variable is declared based on a unregistered type, very
@@ -1004,32 +323,28 @@ impl<'a> ReflectIntermediate<'a> {
         };
         match op.store_cls {
             StorageClass::Input => {
-                if let Some(ivar_ty) = InterfaceVariableType::from_ty(ty) {
-                    let location = self.get_var_location_or_default(op.alloc_id);
-                    let var = Variable::Input(location, ivar_ty);
-                    if self.var_map.insert(op.alloc_id, var).is_some() {
-                        return Err(Error::CorruptedSpirv);
-                    }
+                let location = self.get_var_location_or_default(op.alloc_id);
+                let var = Variable::Input(location, ty.clone());
+                if self.var_map.insert(op.alloc_id, var).is_some() {
+                    return Err(Error::CorruptedSpirv);
                 }
                 // There can be interface blocks for input and output but there
                 // won't be any for attribute inputs nor for attachment outputs,
                 // so we just ignore structs and arrays or something else here.
             },
             StorageClass::Output => {
-                if let Some(ivar_ty) = InterfaceVariableType::from_ty(ty) {
-                    let location = self.get_var_location_or_default(op.alloc_id);
-                    let var = Variable::Output(location, ivar_ty);
-                    if self.var_map.insert(op.alloc_id, var).is_some() {
-                        return Err(Error::CorruptedSpirv);
-                    }
+                let location = self.get_var_location_or_default(op.alloc_id);
+                let var = Variable::Output(location, ty.clone());
+                if self.var_map.insert(op.alloc_id, var).is_some() {
+                    return Err(Error::CorruptedSpirv);
                 }
             },
             StorageClass::PushConstant => {
                 // Push constants have no global offset. Offsets are applied to
                 // members.
-                if let Type::Struct(struct_ty) = ty.clone() {
+                if let Type::Struct(_) = ty {
                     let desc_bind = DescriptorBinding::push_const();
-                    let desc_ty = DescriptorType::PushConstant(struct_ty);
+                    let desc_ty = DescriptorType::PushConstant(ty.clone());
                     let var = Variable::Descriptor(desc_bind, desc_ty);
                     if self.var_map.insert(op.alloc_id, var).is_some() {
                         return Err(Error::CorruptedSpirv);
@@ -1037,44 +352,39 @@ impl<'a> ReflectIntermediate<'a> {
                 } else { return Err(Error::CorruptedSpirv); }
             },
             StorageClass::Uniform => {
-                let ctor = if self.contains_deco(ty_id, None, Decoration::BufferBlock) {
-                    InterfaceBlockType::from_store_buf
+                let desc_ty = if self.contains_deco(ty_id, None, Decoration::BufferBlock) {
+                    ty2storage(ty)
                 } else {
-                    InterfaceBlockType::from_uniform
-                };
-                if let Some(iblock_ty) = ctor(ty) {
-                    let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
-                    let desc_ty = DescriptorType::Block(iblock_ty);
-                    let var = Variable::Descriptor(desc_bind, desc_ty);
-                    if self.var_map.insert(op.alloc_id, var).is_some() {
-                        return Err(Error::CorruptedSpirv);
-                    }
-                } else { return Err(Error::CorruptedSpirv); }
+                    ty2uniform(ty)
+                }.ok_or(Error::CorruptedSpirv)?;
+                let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
+                let var = Variable::Descriptor(desc_bind, desc_ty);
+                if self.var_map.insert(op.alloc_id, var).is_some() {
+                    return Err(Error::CorruptedSpirv);
+                }
             },
             StorageClass::StorageBuffer => {
-                if let Some(iblock_ty) = InterfaceBlockType::from_store_buf(ty) {
-                    let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
-                    let desc_ty = DescriptorType::Block(iblock_ty);
-                    let var = Variable::Descriptor(desc_bind, desc_ty);
-                    if self.var_map.insert(op.alloc_id, var).is_some() {
-                        return Err(Error::CorruptedSpirv);
-                    }
-                } else { return Err(Error::CorruptedSpirv); }
+                let desc_ty = ty2storage(ty).ok_or(Error::CorruptedSpirv)?;
+                let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
+                let var = Variable::Descriptor(desc_bind, desc_ty);
+                if self.var_map.insert(op.alloc_id, var).is_some() {
+                    return Err(Error::CorruptedSpirv);
+                }
             },
             StorageClass::UniformConstant => {
-                if let Type::Image(img_ty) = ty {
-                    let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
-                    let desc_ty = if let Some(img_ty) = img_ty {
-                        DescriptorType::Image(img_ty.clone())
-                    } else {
-                        let input_attm_idx = self.get_deco_u32(op.alloc_id, None, Decoration::InputAttachmentIndex)
-                            .ok_or(Error::CorruptedSpirv)?;
-                        DescriptorType::InputAtatchment(input_attm_idx)
-                    };
-                    let var = Variable::Descriptor(desc_bind, desc_ty);
-                    if self.var_map.insert(op.alloc_id, var).is_some() {
-                        return Err(Error::CorruptedSpirv);
-                    }
+                let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
+                let desc_ty = if let Type::Image(_) = ty {
+                    DescriptorType::Image(ty.clone())
+                } else if let Type::SubpassData = ty {
+                    let input_attm_idx = self.get_deco_u32(op.alloc_id, None, Decoration::InputAttachmentIndex)
+                        .ok_or(Error::CorruptedSpirv)?;
+                    DescriptorType::InputAtatchment(input_attm_idx)
+                } else {
+                    return Err(Error::UnsupportedSpirv);
+                };
+                let var = Variable::Descriptor(desc_bind, desc_ty);
+                if self.var_map.insert(op.alloc_id, var).is_some() {
+                    return Err(Error::CorruptedSpirv);
                 }
                 // Leak out unknown types of uniform constants.
             },
@@ -1178,7 +488,7 @@ impl<'a> ReflectIntermediate<'a> {
                     .ok_or(Error::CorruptedSpirv)?;
                 let collision = match accessed_var {
                     Variable::Input(location, ivar_ty) => {
-                        let mut collision = entry_point.manifest.attr_map
+                        let mut collision = entry_point.manifest.input_map
                             .insert(location, ivar_ty).is_some();
                         if let Some(name) = self.get_name(accessed_var_id, None) {
                             collision |= entry_point.manifest.var_name_map
@@ -1187,7 +497,7 @@ impl<'a> ReflectIntermediate<'a> {
                         collision
                     },
                     Variable::Output(location, ivar_ty) => {
-                        let mut collision = entry_point.manifest.attm_map.insert(location, ivar_ty).is_some();
+                        let mut collision = entry_point.manifest.output_map.insert(location, ivar_ty).is_some();
                         if let Some(name) = self.get_name(accessed_var_id, None) {
                             collision |= entry_point.manifest.var_name_map
                                 .insert(name.to_owned(), ResourceLocator::Output(location)).is_some();
@@ -1211,7 +521,8 @@ impl<'a> ReflectIntermediate<'a> {
     }
 }
 
-pub fn reflect_spirv<'a>(module: &'a SpirvBinary) -> Result<Box<[EntryPoint]>> {
+
+pub(crate) fn reflect_spirv<'a>(module: &'a SpirvBinary) -> Result<Box<[EntryPoint]>> {
     fn skip_until_range_inclusive<'a>(instrs: &'_ mut Peekable<Instrs<'a>>, rng: RangeInclusive<u32>) {
         while let Some(instr) = instrs.peek() {
             if !rng.contains(&instr.opcode()) { instrs.next(); } else { break; }
@@ -1230,39 +541,4 @@ pub fn reflect_spirv<'a>(module: &'a SpirvBinary) -> Result<Box<[EntryPoint]>> {
     itm.populate_defs(&mut instrs)?;
     itm.populate_access(&mut instrs)?;
     Ok(itm.collect_entry_points()?)
-}
-
-#[derive(Clone, Default)]
-pub struct Pipeline {
-    pub manifest: Manifest,
-}
-impl TryFrom<&[EntryPoint]> for Pipeline {
-    type Error = Error;
-
-    fn try_from(entry_points: &[EntryPoint]) -> Result<Pipeline> {
-        let mut found_stages = HashSet::<ExecutionModel>::default();
-        let mut manifest = Manifest::default();
-        for entry_point in entry_points.as_ref().iter() {
-            if found_stages.insert(entry_point.exec_model) {
-                manifest.merge(&entry_point.manifest)?;
-            } else {
-                // Reject stage collision.
-                return Err(Error::PipelineStageConflict);
-            }
-        }
-        return Ok(Pipeline { manifest: manifest });
-    }
-}
-impl fmt::Debug for Pipeline {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct(&"|")
-            .field("inputs", &self.manifest.attr_map)
-            .field("outputs", &self.manifest.attm_map)
-            .field("descriptors", &self.manifest.desc_map)
-            .finish()
-    }
-}
-impl Deref for Pipeline {
-    type Target = Manifest;
-    fn deref(&self) -> &Self::Target { &self.manifest }
 }

@@ -1,41 +1,62 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
-use spirq::SpirvBinary;
-use spirq::reflect::Pipeline;
-use spirq::sym::Sym;
+use std::ops::Deref;
+use spirq::{Result, Error, SpirvBinary, Manifest, ExecutionModel};
+use spirq::EntryPoint;
 use log::info;
 use std::path::Path;
+
+#[derive(Clone, Default)]
+pub struct Pipeline {
+    pub manifest: Manifest,
+}
+impl TryFrom<&[EntryPoint]> for Pipeline {
+    type Error = Error;
+
+    fn try_from(entry_points: &[EntryPoint]) -> Result<Pipeline> {
+        let mut found_stages = HashSet::<ExecutionModel>::default();
+        let mut manifest = Manifest::default();
+        for entry_point in entry_points.as_ref().iter() {
+            if found_stages.insert(entry_point.exec_model) {
+                manifest.merge(&entry_point.manifest)?;
+            } else {
+                // Reject stage collision.
+                panic!("pipeline cannot have two stages of the same execution model");
+            }
+        }
+        return Ok(Pipeline { manifest: manifest });
+    }
+}
+impl Deref for Pipeline {
+    type Target = Manifest;
+    fn deref(&self) -> &Self::Target { &self.manifest }
+}
 
 fn main() {
     env_logger::init();
 
     let spvs = collect_spirv_binaries("assets/effects/uniform-pbr");
     info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
-    let entry_points = spvs.values()
+    let mut entry_points = spvs.values()
         .map(|x| x.reflect().unwrap()[0].to_owned())
         .collect::<Vec<_>>();
+    entry_points.sort_by_key(|x| x.exec_model as u32);
     let pl = Pipeline::try_from(entry_points.as_ref()).unwrap();
-    info!("{:#?}", pl);
-    let (offset, var_ty) = pl.resolve_desc(Sym::new(".model_view")).unwrap();
-    info!("push_constant[model_view]: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = pl.resolve_desc(Sym::new(".view_proj")).unwrap();
-    info!("push_constant[view_proj]: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = pl.resolve_desc(Sym::new("mat.fdsa.1")).unwrap();
-    info!("mat.fdsa.1: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = pl.resolve_desc(Sym::new("someImage")).unwrap();
-    info!("someImage: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = pl.resolve_desc(Sym::new("imgggg")).unwrap();
-    info!("imgggg: offset={:?}, ty={:?}", offset, var_ty);
+
+    let check = |sym :&str| {
+        let desc_res = pl.resolve_desc(sym).unwrap();
+        info!("{}: {:?}", sym, desc_res.member_var_res);
+    };
+
+    check(".model_view");
+    check(".view_proj");
+    check("mat.fdsa.1");
+    check("someImage");
+    check("imgggg");
 
     info!("-- buffer sizing:");
-    for (desc_bind, desc_ty) in pl.desc_binds() {
-        use spirq::reflect::DescriptorType::*;
-        let struct_ty = match desc_ty {
-            PushConstant(struct_ty) => &struct_ty,
-            Block(iblock_ty) => &iblock_ty.block_ty,
-            _ => continue,
-        };
-        info!("{:?}: nbyte={:?}", desc_bind, struct_ty.nbyte());
+    for desc_res in pl.descs() {
+        info!("{:?}: nbyte={:?}", desc_res.desc_bind, desc_res.desc_ty.nbyte());
     }
 }
 

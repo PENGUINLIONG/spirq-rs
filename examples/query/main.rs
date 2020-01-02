@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use spirq::SpirvBinary;
-use spirq::sym::Sym;
 use log::info;
 use std::path::Path;
 
@@ -8,22 +7,29 @@ fn main() {
     env_logger::init();
 
     let spvs = collect_spirv_binaries("assets/effects/uniform-pbr");
-    info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
-    let entries = spvs["uniform-pbr.vert"].reflect().unwrap();
-    info!("{:#?}", entries);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new(".model_view")).unwrap();
-    info!("push_constant[model_view]: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new(".view_proj")).unwrap();
-    info!("push_constant[view_proj]: offset={:?}, ty={:?}", offset, var_ty);
 
-    let entries = spvs["uniform-pbr.frag"].reflect().unwrap();
-    info!("{:#?}", entries);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("mat.fdsa.1")).unwrap();
-    info!("mat.fdsa.1: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("someImage")).unwrap();
-    info!("someImage: offset={:?}, ty={:?}", offset, var_ty);
-    let (offset, var_ty) = entries[0].resolve_desc(Sym::new("imgggg")).unwrap();
-    info!("imgggg: offset={:?}, ty={:?}", offset, var_ty);
+    info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
+    let vert = spvs["uniform-pbr.vert"].reflect().unwrap();
+    let vert = &vert[0];
+    info!("{:#?}", vert);
+
+    let check_vert = |sym :&str| {
+        let desc_res = vert.resolve_desc(sym).unwrap();
+        info!("{}: {:?}", sym, desc_res);
+    };
+    check_vert(".model_view");
+    check_vert(".view_proj");
+
+    let frag = spvs["uniform-pbr.frag"].reflect().unwrap();
+    let frag = &frag[0];
+    info!("{:#?}", frag);
+    let check_frag = |sym :&str| {
+        let desc_res = frag.resolve_desc(sym).unwrap();
+        info!("{}: {:?}", sym, desc_res);
+    };
+    check_frag("mat.fdsa.1");
+    check_frag("someImage");
+    check_frag("imgggg");
 }
 
 
