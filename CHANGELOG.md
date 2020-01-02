@@ -1,5 +1,14 @@
 # Change Log
 
+## v0.2.0
+
+This is a breaking change. SPIR-Q is now more handy with better and easier reflection information accessors.
+
+- Fix several bugs;
+- Restructured project files;
+- Improved API design.
+
+
 ## v0.1.0
 
 This is a breaking change. Some type names has been changed to be more exact. E.g. previous `NumericType` is now `ScalarType`; and the usage of if has also changed.
