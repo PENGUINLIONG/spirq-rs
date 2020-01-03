@@ -106,8 +106,11 @@ impl From<u32> for Location {
 impl From<Location> for u32 {
     fn from(x: Location) -> u32 { x.0 }
 }
-impl fmt::Debug for Location {
+impl fmt::Display for Location {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { self.0.fmt(f) }
+}
+impl fmt::Debug for Location {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
 }
 
 /// Descriptor set and binding point carrier.
@@ -121,7 +124,7 @@ impl DescriptorBinding {
     pub fn is_desc_bind(&self) -> bool { self.0.is_some() }
     pub fn into_inner(self) -> Option<(u32, u32)> { self.0 }
 }
-impl fmt::Debug for DescriptorBinding {
+impl fmt::Display for DescriptorBinding {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let Some((set, bind)) = self.0 {
             write!(f, "(set={}, bind={})", set, bind)
@@ -129,6 +132,9 @@ impl fmt::Debug for DescriptorBinding {
             write!(f, "(push_constant)")
         }
     }
+}
+impl fmt::Debug for DescriptorBinding {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy)]
