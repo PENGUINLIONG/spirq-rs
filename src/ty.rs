@@ -189,8 +189,8 @@ impl ImageArrangement {
 
 #[derive(Hash, Clone)]
 pub struct ImageType {
-    unit_fmt: ImageUnitFormat,
-    arng: ImageArrangement,
+    pub unit_fmt: ImageUnitFormat,
+    pub arng: ImageArrangement,
 }
 impl ImageType {
     pub fn new(unit_fmt: ImageUnitFormat, arng: ImageArrangement) -> ImageType {
