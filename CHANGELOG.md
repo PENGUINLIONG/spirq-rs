@@ -1,5 +1,11 @@
 # Change Log
 
+## v0.2.1
+
+- Fixed a typo (`InputAtatchment`);
+- Added walking through descriptor types;
+- Added an example for descriptor walk.
+
 ## v0.2.0
 
 This is a breaking change. SPIR-Q is now more handy with better and easier reflection information accessors.
