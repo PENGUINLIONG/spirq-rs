@@ -11,9 +11,6 @@ impl Sym {
     }
     pub fn segs<'a>(&'a self) -> Segs<'a> { Segs(self.0.as_ref(), false) }
 }
-impl ToString for Sym {
-    fn to_string(&self) -> String { self.0.to_string() }
-}
 impl ToOwned for Sym {
     type Owned = Symbol;
     fn to_owned(&self) -> Symbol { Symbol::from(self.0.to_owned()) }
@@ -27,9 +24,18 @@ impl AsRef<Sym> for str {
 impl AsRef<Sym> for Sym {
     fn as_ref(&self) -> &Sym { self }
 }
+impl fmt::Display for Sym {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { self.0.fmt(f) }
+}
+impl fmt::Debug for Sym {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { self.0.fmt(f) }
+}
 
 pub struct Symbol(Box<Sym>);
 impl Symbol {
+    pub fn new<S: AsRef<str> + ?Sized>(literal: &S) -> Self {
+        Sym::new(literal).to_owned()
+    }
     pub fn segs<'a>(&'a self) -> Segs<'a> { Segs(&(*self.0).0, false) }
     pub fn push<'a>(&mut self, seg: &Seg<'a>) {
         let inner = format!("{}.{}", &(self.0).0, seg).into_boxed_str();
@@ -48,6 +54,12 @@ impl Symbol {
         Some(rv)
     }
 }
+impl Default for Symbol {
+    fn default() -> Symbol { Symbol::new("") }
+}
+impl Clone for Symbol {
+    fn clone(&self) -> Symbol { self.0.to_owned() }
+}
 impl From<Box<Sym>> for Symbol {
     fn from(boxed: Box<Sym>) -> Symbol {
         Symbol(boxed)
@@ -64,12 +76,10 @@ impl From<String> for Symbol {
     }
 }
 impl From<&'_ str> for Symbol {
-    fn from(literal: &'_ str) -> Symbol {
-        literal.to_owned().into()
-    }
+    fn from(literal: &'_ str) -> Symbol { literal.to_owned().into() }
 }
-impl ToString for Symbol {
-    fn to_string(&self) -> String { self.0.to_string() }
+impl<'a> From<Seg<'a>> for Symbol {
+    fn from(seg: Seg<'a>) -> Symbol { Symbol::from(format!("{}", seg)) }
 }
 impl Borrow<Sym> for Symbol {
     fn borrow(&self) -> &Sym { self }
@@ -77,6 +87,12 @@ impl Borrow<Sym> for Symbol {
 impl Deref for Symbol {
     type Target = Sym;
     fn deref(&self) -> &Sym { &self.0 }
+}
+impl fmt::Display for Symbol {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { self.0.fmt(f) }
+}
+impl fmt::Debug for Symbol {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
