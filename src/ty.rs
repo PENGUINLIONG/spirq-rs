@@ -4,7 +4,7 @@ use std::fmt;
 use spirv_headers::{Dim, ImageFormat};
 use crate::MemberVariableResolution;
 use crate::error::*;
-use crate::sym::{Sym, Seg};
+use crate::sym::{Sym, Seg, Symbol};
 use std::hash::{Hash, Hasher};
 
 #[derive(Hash, Clone)]
@@ -438,6 +438,15 @@ impl Type {
         let member_var_res = MemberVariableResolution { offset, ty };
         Some(member_var_res)
     }
+    // Iterate over all entries in the type tree.
+    pub fn walk<'a>(&'a self) -> Walk<'a> { Walk::new(self) }
+    pub fn is_scalar(&self) -> bool { match self { Type::Scalar(_) => true, _ => false } }
+    pub fn is_vec(&self) -> bool { match self { Type::Vector(_) => true, _ => false } }
+    pub fn is_mat(&self) -> bool { match self { Type::Matrix(_) => true, _ => false } }
+    pub fn is_img(&self) -> bool { match self { Type::Image(_) => true, _ => false } }
+    pub fn is_subpass_data(&self) -> bool { match self { Type::SubpassData => true, _ => false } }
+    pub fn is_arr(&self) -> bool { match self { Type::Array(_) => true, _ => false } }
+    pub fn is_struct(&self) -> bool { match self { Type::Struct(_) => true, _ => false } }
 }
 impl fmt::Debug for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -461,7 +470,7 @@ pub enum DescriptorType {
     UniformBuffer(u32, Type),
     StorageBuffer(u32, Type),
     Image(Type),
-    InputAtatchment(u32),
+    InputAttachment(u32),
 }
 impl DescriptorType {
     pub fn nbyte(&self) -> Option<usize> {
@@ -470,8 +479,7 @@ impl DescriptorType {
             PushConstant(ty) => ty.nbyte(),
             UniformBuffer(_, ty) => ty.nbyte(),
             StorageBuffer(_, ty) => ty.nbyte(),
-            Image(_) => None,
-            InputAtatchment(_) => None,
+            _ => None,
         }
     }
     /// Resolve a symbol WITHIN the descriptor type. The symbol should not
@@ -486,6 +494,26 @@ impl DescriptorType {
             _ => { return None },
         }.resolve(sym)
     }
+    // Iterate over all entries in the type tree.
+    pub fn walk<'a>(&'a self) -> Walk<'a> {
+        use DescriptorType::*;
+        let ty = match self {
+            PushConstant(ty) => ty,
+            UniformBuffer(_, ty) => ty,
+            StorageBuffer(_, ty) => ty,
+            Image(ty) => ty,
+            InputAttachment(_) => {
+                static SUBPASS_DATA: Type = Type::SubpassData;
+                &SUBPASS_DATA
+            },
+        };
+        Walk::new(ty)
+    }
+    pub fn is_push_const(&self) -> bool { match self { DescriptorType::PushConstant(_) => true, _ => false } }
+    pub fn is_uniform_buf(&self) -> bool { match self { DescriptorType::UniformBuffer(_,_) => true, _ => false } }
+    pub fn is_storage_buf(&self) -> bool { match self { DescriptorType::StorageBuffer(_,_) => true, _ => false } }
+    pub fn is_img(&self) -> bool { match self { DescriptorType::Image(_) => true, _ => false } }
+    pub fn is_input_attm(&self) -> bool { match self { DescriptorType::InputAttachment(_) => true, _ => false } }
 }
 impl fmt::Debug for DescriptorType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -495,7 +523,108 @@ impl fmt::Debug for DescriptorType {
             UniformBuffer(nbind, ty) => write!(f, "{}x{:?}", nbind, ty),
             StorageBuffer(nbind, ty) => write!(f, "{}x{:?}", nbind, ty),
             Image(ty) => ty.fmt(f),
-            InputAtatchment(idx) => write!(f, "subpassData[{}]", idx),
+            InputAttachment(idx) => write!(f, "subpassData[{}]", idx),
+        }
+    }
+}
+
+pub struct MemberVariableRouting<'a> {
+    pub sym: Symbol,
+    pub offset: usize,
+    pub ty: &'a Type,
+}
+
+struct WalkFrame<'a> {
+    sym_stem: Option<Symbol>,
+    base_offset: usize,
+    ty: &'a Type,
+    i: usize,
+}
+pub struct Walk<'a> {
+    inner: Vec<WalkFrame<'a>>,
+}
+impl<'a> Walk<'a> {
+    pub fn new(ty: &'a Type) -> Walk<'a> {
+        let frame = WalkFrame {
+            sym_stem: None,
+            base_offset: 0,
+            ty: ty,
+            i: 0,
+        };
+        Walk { inner: vec![frame] }
+    }
+}
+impl<'a> Iterator for Walk<'a> {
+    type Item = MemberVariableRouting<'a>;
+    fn next(&mut self) -> Option<MemberVariableRouting<'a>> {
+        fn get_child_ty_offset_seg<'a>(ty: &'a Type, i: usize) -> Option<(&'a Type, usize, Seg<'a>)> {
+            match ty {
+                Type::Struct(struct_ty) => {
+                    let member = struct_ty.members.get(i)?;
+                    let seg = if let Some(ref name) = member.name {
+                        Seg::Name(name)
+                    } else {
+                        Seg::Index(i)
+                    };
+                    Some((&member.ty, member.offset, seg))
+                },
+                Type::Array(arr_ty) => {
+                    // Unsized buffer are treated as 0-sized.
+                    if i < arr_ty.nrepeat.unwrap_or(0) as usize {
+                        Some((&arr_ty.proto_ty, arr_ty.stride() * i, Seg::Index(i)))
+                    } else { None }
+                },
+                _ => None,
+            }
+        }
+        enum LoopEnd<'a> {
+            Push(WalkFrame<'a>),
+            PopReturn(MemberVariableRouting<'a>),
+        }
+        loop {
+            // If used, this field will be filled with the next frame to be
+            // pushed at the back of the walk stack; or the last frame will be
+            // popped if the field is kept `None`.
+            let loop_end = if let Some(frame) = self.inner.last_mut() {
+                if let Some((child_ty, offset, seg)) = get_child_ty_offset_seg(frame.ty, frame.i) {
+                    frame.i += 1; // Step member.
+                    let sym = if let Some(sym_stem) = &frame.sym_stem {
+                        let mut sym = sym_stem.clone();
+                        sym.push(&seg);
+                        sym
+                    } else { seg.into() };
+                    let offset = frame.base_offset + offset;
+                    let ty = child_ty;
+                    if child_ty.is_struct() || child_ty.is_arr() {
+                        // Found composite type, step into it.
+                        LoopEnd::Push(WalkFrame { sym_stem: Some(sym), base_offset: offset, ty, i: 0 })
+                    } else {
+                        // Return directly if it's not a composite type.
+                        return Some(MemberVariableRouting { sym, offset, ty });
+                    }
+                } else {
+                    // Here can be reached only when the first frame's type is
+                    // neither an array nor a struct; or a later frame's
+                    // composite type's elements has been exhausted.
+                    let ty = frame.ty;
+                    let offset = frame.base_offset;
+                    let sym = frame.sym_stem.clone().unwrap_or_default();
+                    LoopEnd::PopReturn(MemberVariableRouting { sym, offset, ty })
+                }
+            } else {
+                // We have exhausted all types we have, including the root type
+                // of walk.
+                return None;
+            };
+            match loop_end {
+                LoopEnd::Push(frame) => {
+                    self.inner.push(frame)
+                },
+                LoopEnd::PopReturn(route) => {
+                    self.inner.pop();
+                    return Some(route);
+                }
+            }
         }
     }
 }

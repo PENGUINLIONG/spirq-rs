@@ -378,7 +378,7 @@ impl<'a> ReflectIntermediate<'a> {
                 } else if let Type::SubpassData = ty {
                     let input_attm_idx = self.get_deco_u32(op.alloc_id, None, Decoration::InputAttachmentIndex)
                         .ok_or(Error::CorruptedSpirv)?;
-                    DescriptorType::InputAtatchment(input_attm_idx)
+                    DescriptorType::InputAttachment(input_attm_idx)
                 } else {
                     return Err(Error::UnsupportedSpirv);
                 };
