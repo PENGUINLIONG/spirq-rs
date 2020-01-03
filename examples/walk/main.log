@@ -1,20 +1,20 @@
-   Compiling spirq v0.2.0 (C:\Users\PENGUINLIONG\Repositories\spirq)
-    Finished dev [unoptimized + debuginfo] target(s) in 1.25s
+   Compiling spirq v0.2.1 (C:\Users\PENGUINLIONG\Repositories\spirq)
+    Finished dev [unoptimized + debuginfo] target(s) in 4.06s
      Running `target\debug\examples\walk.exe`
-[2020-01-03T21:13:16Z INFO  walk] collected spirvs: ["referential.frag"]
-[2020-01-03T21:13:16Z INFO  walk] input 2: vec4<f32>
-[2020-01-03T21:13:16Z INFO  walk] input 1: vec4<f32>
-[2020-01-03T21:13:16Z INFO  walk] input 0: vec4<f32>
-[2020-01-03T21:13:16Z INFO  walk] output 0: vec4<f32>
-[2020-01-03T21:13:16Z INFO  walk] descriptor (set=0, bind=0):
-[2020-01-03T21:13:16Z INFO  walk]    0        s.b: i32
-[2020-01-03T21:13:16Z INFO  walk]   16      s.v.0: vec4<f32>
-[2020-01-03T21:13:16Z INFO  walk]   32      s.v.1: vec4<f32>
-[2020-01-03T21:13:16Z INFO  walk]   48      s.v.2: vec4<f32>
-[2020-01-03T21:13:16Z INFO  walk]   64      s.v.3: vec4<f32>
-[2020-01-03T21:13:16Z INFO  walk]   80      s.v.4: vec4<f32>
-[2020-01-03T21:13:16Z INFO  walk]   16        s.v: [vec4<f32>; 5]
-[2020-01-03T21:13:16Z INFO  walk]   96        s.i: i32
-[2020-01-03T21:13:16Z INFO  walk]    0          s: { b: i32, v: [vec4<f32>; 5], i: i32 }
-[2020-01-03T21:13:16Z INFO  walk]  112       cond: i32
-[2020-01-03T21:13:16Z INFO  walk]    0           : { s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 }
+[2020-01-03T22:26:33Z INFO  walk] collected spirvs: ["referential.frag"]
+[2020-01-03T22:26:33Z INFO  walk] input#2 (color2): vec4<f32>
+[2020-01-03T22:26:33Z INFO  walk] input#1 (multiplier): vec4<f32>
+[2020-01-03T22:26:33Z INFO  walk] input#0 (color1): vec4<f32>
+[2020-01-03T22:26:33Z INFO  walk] output#0 (color): vec4<f32>
+[2020-01-03T22:26:33Z INFO  walk] descriptor(set=0, bind=0) ():
+[2020-01-03T22:26:33Z INFO  walk]    0        s.b: i32
+[2020-01-03T22:26:33Z INFO  walk]   16      s.v.0: vec4<f32>
+[2020-01-03T22:26:33Z INFO  walk]   32      s.v.1: vec4<f32>
+[2020-01-03T22:26:33Z INFO  walk]   48      s.v.2: vec4<f32>
+[2020-01-03T22:26:33Z INFO  walk]   64      s.v.3: vec4<f32>
+[2020-01-03T22:26:33Z INFO  walk]   80      s.v.4: vec4<f32>
+[2020-01-03T22:26:33Z INFO  walk]   16        s.v: [vec4<f32>; 5]
+[2020-01-03T22:26:33Z INFO  walk]   96        s.i: i32
+[2020-01-03T22:26:33Z INFO  walk]    0          s: { b: i32, v: [vec4<f32>; 5], i: i32 }
+[2020-01-03T22:26:33Z INFO  walk]  112       cond: i32
+[2020-01-03T22:26:33Z INFO  walk]    0           : { s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 }

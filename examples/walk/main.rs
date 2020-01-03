@@ -11,13 +11,16 @@ fn main() {
     let frag = spvs["referential.frag"].reflect().unwrap();
     let frag = &frag[0];
     for input in frag.inputs() {
-        info!("input {:?}: {:?}", input.location, input.ty);
+        let name = frag.get_input_name(input.location).unwrap_or("unnamed");
+        info!("input#{} ({}): {:?}", input.location, name, input.ty);
     }
     for output in frag.outputs() {
-        info!("output {:?}: {:?}", output.location, output.ty);
+        let name = frag.get_output_name(output.location).unwrap_or("unnamed");
+        info!("output#{} ({}): {:?}", output.location, name, output.ty);
     }
     for desc in frag.descs() {
-        info!("descriptor {}:", desc.desc_bind);
+        let name = frag.get_desc_name(desc.desc_bind).unwrap_or("unnamed");
+        info!("descriptor{} ({}):", desc.desc_bind, name);
         for route in desc.desc_ty.walk() {
             info!("{:>4} {:>10}: {:?}", route.offset, route.sym, route.ty);
         }
