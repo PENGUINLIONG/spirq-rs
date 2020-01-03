@@ -20,10 +20,58 @@
 //! [`EntryPoint`]s. Each entry point has a [`Manifest`] that supports queries
 //! from allocation requirement to fine-grained typing details.
 //!
+//! ## Size calculation
+//!
+//! The struct member offsets and array/matrix strides are specified in SPIR-V
+//! files. With these information SPIR-Q deduce the minimal size required for
+//! to contain an instance of a type. However, SPIR-Q cannot handle dynamically-
+//! sized arrays, and it will treat such arrays as zero-sized. The user has to
+//! handle such SSBO-like themselves via [`Type`] APIs.
+//!
+//! ## Symbol resolution
+//!
+//! SPIR-Q uses a very simple solution to help you locate any metadata including
+//! input/output variables, descriptors and variables defined inside those
+//! descriptors. We call it a [`Symbol`]. A symbol is a dot-separated list of
+//! identifiers. Identifiers can be an index or a name literal (or empty for the
+//! push constant block.)
+//!
+//! Input/output variables are referred to by their locations. The following
+//! are examples of input/output variable symbols:
+//!
+//! ```
+//! 1
+//! aTexCoord
+//! vWorldPosition
+//! 1.2 // ERROR: I/O variables cannot be nested.
+//! gl_Position // WARNING: Built-in variables are ignored during reflection.
+//! ```
+//!
+//! Descriptors have to be referred to with both the descriptor set number and
+//! its binding point number specified. The following are valid symbols for
+//! descriptor variables:
+//!
+//! ```
+//! 0.1 // Refering to the descriptor at set 0 on binding 1.
+//! light.0 // Refering to the first member of block 'light'.
+//! 1.0.bones.4 // Refering to the 5th element of array member `bones` in descriptor `1.0`.
+//! .modelview // Push constants are referred to by an empty identifier.
+//! ```
+//!
+//! Note: It should be noted that descriptor multibinds are treated like single-
+//! binds because although they use the same syntax as arrays, they are not
+//! actually arrays.
+//!
+//! Note: Although `spv` files generated directly from compilers normally keep
+//! the nameing data, it should be noticed that names are debug information that
+//! might be wiped out during compression.
+//!
 //! [`SpirvBinary`]: struct.SpirvBinary.html
 //! [`EntryPoint`]: struct.EntryPoint.html
 //! [`reflect`]: struct.SpirvBinary.html#method.reflect
 //! [`Manifest`]: struct.Manifest.html
+//! [`Type`]: ty/enum.Type.html
+//! [`Symbol`]: sym/struct.Symbol.html
 mod consts;
 mod parse;
 mod instr;
@@ -239,6 +287,28 @@ impl Manifest {
     /// Get the descriptor type at the given descriptor binding point.
     pub fn get_desc<'a>(&'a self, desc_bind: DescriptorBinding) -> Option<&'a DescriptorType> {
         self.desc_map.get(&desc_bind)
+    }
+    /// Get the name that also refers to the input at the given location.
+    pub fn get_input_name<'a>(&'a self, location: Location) -> Option<&'a str> {
+        self.var_name_map.iter()
+            .find_map(|x| if let ResourceLocator::Input(loc) = x.1 {
+                if *loc == location { Some(x.0.as_ref()) } else { None }
+            } else { None })
+    }
+    /// Get the name that also refers to the output at the given location.
+    pub fn get_output_name<'a>(&'a self, location: Location) -> Option<&'a str> {
+        self.var_name_map.iter()
+            .find_map(|x| if let ResourceLocator::Output(loc) = x.1 {
+                if *loc == location { Some(x.0.as_ref()) } else { None }
+            } else { None })
+    }
+    /// Get the name that also refers to the descriptor at the given descriptor
+    /// binding.
+    pub fn get_desc_name<'a>(&'a self, desc_bind: DescriptorBinding) -> Option<&'a str> {
+        self.var_name_map.iter()
+            .find_map(|x| if let ResourceLocator::Descriptor(db) = x.1 {
+                if *db == desc_bind { Some(x.0.as_ref()) } else { None }
+            } else { None })
     }
     fn resolve_ivar<'a>(&self, map: &'a HashMap<Location, Type>, sym: &Sym) -> Option<InterfaceVariableResolution<'a>> {
         let mut segs = sym.segs();
