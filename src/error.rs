@@ -1,6 +1,6 @@
 //! Error and result reported by SPIR-Q procedures.
-use std::fmt;
 use std::error;
+use std::fmt;
 
 #[derive(Debug)]
 pub enum Error {
@@ -19,6 +19,6 @@ impl fmt::Display for Error {
         }
     }
 }
-impl error::Error for Error { }
+impl error::Error for Error {}
 
 pub type Result<T> = std::result::Result<T, Error>;

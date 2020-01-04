@@ -73,36 +73,42 @@
 //! [`Type`]: ty/enum.Type.html
 //! [`Symbol`]: sym/struct.Symbol.html
 mod consts;
-mod parse;
+pub mod error;
 mod instr;
+mod parse;
 mod reflect;
 pub mod sym;
-pub mod error;
 pub mod ty;
 
+pub use error::*;
+use parse::{Instr, Instrs};
+pub use spirv_headers::ExecutionModel;
+use std::collections::HashMap;
 use std::convert::TryInto;
-use std::collections::{HashMap};
 use std::fmt;
 use std::iter::FromIterator;
 use std::ops::Deref;
-use parse::{Instrs, Instr};
-use ty::{Type, DescriptorType};
 pub use sym::*;
-pub use error::*;
-pub use spirv_headers::ExecutionModel;
+use ty::{DescriptorType, Type};
 
 /// SPIR-V program binary.
 #[derive(Debug, Default, Clone)]
 pub struct SpirvBinary(Vec<u32>);
 impl From<Vec<u32>> for SpirvBinary {
-    fn from(x: Vec<u32>) -> Self { SpirvBinary(x) }
+    fn from(x: Vec<u32>) -> Self {
+        SpirvBinary(x)
+    }
 }
 impl FromIterator<u32> for SpirvBinary {
-    fn from_iter<I: IntoIterator<Item=u32>>(iter: I) -> Self { SpirvBinary(iter.into_iter().collect::<Vec<u32>>()) }
+    fn from_iter<I: IntoIterator<Item = u32>>(iter: I) -> Self {
+        SpirvBinary(iter.into_iter().collect::<Vec<u32>>())
+    }
 }
 impl From<Vec<u8>> for SpirvBinary {
     fn from(x: Vec<u8>) -> Self {
-        if x.len() == 0 { return SpirvBinary::default(); }
+        if x.len() == 0 {
+            return SpirvBinary::default();
+        }
         x.chunks_exact(4)
             .map(|x| x.try_into().unwrap())
             .map(match x[0] {
@@ -115,7 +121,9 @@ impl From<Vec<u8>> for SpirvBinary {
 }
 
 impl SpirvBinary {
-    pub(crate) fn instrs<'a>(&'a self) -> Instrs<'a> { Instrs::new(&self.0) }
+    pub(crate) fn instrs<'a>(&'a self) -> Instrs<'a> {
+        Instrs::new(&self.0)
+    }
     pub fn reflect(&self) -> Result<Box<[EntryPoint]>> {
         reflect::reflect_spirv(&self)
     }
@@ -129,19 +137,19 @@ impl SpirvBinary {
             std::slice::from_raw_parts(ptr, len)
         }
     }
-    pub fn into_words(self) -> Vec<u32> { self.0 }
+    pub fn into_words(self) -> Vec<u32> {
+        self.0
+    }
 }
-
 
 /// Internal hasher for type equality check.
 pub(crate) fn hash<H: std::hash::Hash>(h: &H) -> u64 {
-    use std::hash::Hasher;
     use std::collections::hash_map::DefaultHasher;
+    use std::hash::Hasher;
     let mut hasher = DefaultHasher::new();
     h.hash(&mut hasher);
     hasher.finish()
 }
-
 
 // Resource locationing.
 
@@ -149,28 +157,46 @@ pub(crate) fn hash<H: std::hash::Hash>(h: &H) -> u64 {
 #[derive(PartialEq, Eq, Hash, Default, Clone, Copy)]
 pub struct Location(u32);
 impl From<u32> for Location {
-    fn from(x: u32) -> Location { Location(x) }
+    fn from(x: u32) -> Location {
+        Location(x)
+    }
 }
 impl From<Location> for u32 {
-    fn from(x: Location) -> u32 { x.0 }
+    fn from(x: Location) -> u32 {
+        x.0
+    }
 }
 impl fmt::Display for Location {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { self.0.fmt(f) }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
 }
 impl fmt::Debug for Location {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        (self as &dyn fmt::Display).fmt(f)
+    }
 }
 
 /// Descriptor set and binding point carrier.
 #[derive(PartialEq, Eq, Hash, Default, Clone, Copy)]
 pub struct DescriptorBinding(Option<(u32, u32)>);
 impl DescriptorBinding {
-    pub fn push_const() -> Self { DescriptorBinding(None) }
-    pub fn desc_bind(desc_set: u32, bind_point: u32) -> Self { DescriptorBinding(Some((desc_set, bind_point))) }
+    pub fn push_const() -> Self {
+        DescriptorBinding(None)
+    }
+    pub fn desc_bind(desc_set: u32, bind_point: u32) -> Self {
+        DescriptorBinding(Some((desc_set, bind_point)))
+    }
 
-    pub fn is_push_const(&self) -> bool { self.0.is_none() }
-    pub fn is_desc_bind(&self) -> bool { self.0.is_some() }
-    pub fn into_inner(self) -> Option<(u32, u32)> { self.0 }
+    pub fn is_push_const(&self) -> bool {
+        self.0.is_none()
+    }
+    pub fn is_desc_bind(&self) -> bool {
+        self.0.is_some()
+    }
+    pub fn into_inner(self) -> Option<(u32, u32)> {
+        self.0
+    }
 }
 impl fmt::Display for DescriptorBinding {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -182,7 +208,9 @@ impl fmt::Display for DescriptorBinding {
     }
 }
 impl fmt::Debug for DescriptorBinding {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        (self as &dyn fmt::Display).fmt(f)
+    }
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy)]
@@ -193,7 +221,6 @@ pub(crate) enum ResourceLocator {
 }
 
 // Resolution results.
-
 
 /// Interface variables resolution result.
 #[derive(Debug)]
@@ -239,13 +266,17 @@ impl Manifest {
     /// replaced by the `other`'s; and descriptors will be aggregated to contain
     /// both set of metadata.
     pub fn merge(&mut self, other: &Manifest) -> Result<()> {
-        use std::collections::hash_map::Entry::{Vacant, Occupied};
+        use std::collections::hash_map::Entry::{Occupied, Vacant};
         self.output_map = other.output_map.clone();
         for (desc_bind, desc_ty) in other.desc_map.iter() {
             match self.desc_map.entry(*desc_bind) {
-                Vacant(entry) => { entry.insert(desc_ty.clone()); },
+                Vacant(entry) => {
+                    entry.insert(desc_ty.clone());
+                }
                 Occupied(mut entry) => {
-                    if let DescriptorType::PushConstant(Type::Struct(dst_struct_ty)) = entry.get_mut() {
+                    if let DescriptorType::PushConstant(Type::Struct(dst_struct_ty)) =
+                        entry.get_mut()
+                    {
                         // Merge push constants scattered in different stages.
                         // This match must success.
                         if let DescriptorType::PushConstant(Type::Struct(src_struct_ty)) = desc_ty {
@@ -253,8 +284,8 @@ impl Manifest {
                         } else {
                             unreachable!("push constant merging with push constant");
                         }
-                        // It's guaranteed to be interface uniform so we don't
-                        // have to check that.
+                    // It's guaranteed to be interface uniform so we don't
+                    // have to check that.
                     } else {
                         // Just regular descriptor types. Simply compare the
                         // hashes.
@@ -267,11 +298,15 @@ impl Manifest {
         }
         for (name, locator) in other.var_name_map.iter() {
             match self.var_name_map.entry(name.to_owned()) {
-                Vacant(entry) => { entry.insert(locator.clone()); },
-                Occupied(entry) => if entry.get() != locator {
-                    // Mismatched names are not allowed.
-                    return Err(Error::MismatchedManifest);
-                },
+                Vacant(entry) => {
+                    entry.insert(locator.clone());
+                }
+                Occupied(entry) => {
+                    if entry.get() != locator {
+                        // Mismatched names are not allowed.
+                        return Err(Error::MismatchedManifest);
+                    }
+                }
             }
         }
         Ok(())
@@ -290,38 +325,67 @@ impl Manifest {
     }
     /// Get the name that also refers to the input at the given location.
     pub fn get_input_name<'a>(&'a self, location: Location) -> Option<&'a str> {
-        self.var_name_map.iter()
-            .find_map(|x| if let ResourceLocator::Input(loc) = x.1 {
-                if *loc == location { Some(x.0.as_ref()) } else { None }
-            } else { None })
+        self.var_name_map.iter().find_map(|x| {
+            if let ResourceLocator::Input(loc) = x.1 {
+                if *loc == location {
+                    Some(x.0.as_ref())
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
     }
     /// Get the name that also refers to the output at the given location.
     pub fn get_output_name<'a>(&'a self, location: Location) -> Option<&'a str> {
-        self.var_name_map.iter()
-            .find_map(|x| if let ResourceLocator::Output(loc) = x.1 {
-                if *loc == location { Some(x.0.as_ref()) } else { None }
-            } else { None })
+        self.var_name_map.iter().find_map(|x| {
+            if let ResourceLocator::Output(loc) = x.1 {
+                if *loc == location {
+                    Some(x.0.as_ref())
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
     }
     /// Get the name that also refers to the descriptor at the given descriptor
     /// binding.
     pub fn get_desc_name<'a>(&'a self, desc_bind: DescriptorBinding) -> Option<&'a str> {
-        self.var_name_map.iter()
-            .find_map(|x| if let ResourceLocator::Descriptor(db) = x.1 {
-                if *db == desc_bind { Some(x.0.as_ref()) } else { None }
-            } else { None })
+        self.var_name_map.iter().find_map(|x| {
+            if let ResourceLocator::Descriptor(db) = x.1 {
+                if *db == desc_bind {
+                    Some(x.0.as_ref())
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
     }
-    fn resolve_ivar<'a>(&self, map: &'a HashMap<Location, Type>, sym: &Sym) -> Option<InterfaceVariableResolution<'a>> {
+    fn resolve_ivar<'a>(
+        &self,
+        map: &'a HashMap<Location, Type>,
+        sym: &Sym,
+    ) -> Option<InterfaceVariableResolution<'a>> {
         let mut segs = sym.segs();
         let location = match segs.next() {
             Some(Seg::Index(location)) => (location as u32).into(),
             Some(Seg::Name(name)) => {
                 if let Some(ResourceLocator::Input(location)) = self.var_name_map.get(name) {
                     *location
-                } else { return None }
-            },
+                } else {
+                    return None;
+                }
+            }
             _ => return None,
         };
-        if segs.next().is_some() { return None }
+        if segs.next().is_some() {
+            return None;
+        }
         let ty = map.get(&location)?;
         let ivar_res = InterfaceVariableResolution { location, ty };
         Some(ivar_res)
@@ -343,8 +407,10 @@ impl Manifest {
             Some(Seg::Index(desc_set)) => {
                 if let Some(Seg::Index(bind_point)) = segs.next() {
                     DescriptorBinding::desc_bind(desc_set as u32, bind_point as u32)
-                } else { return None; }
-            },
+                } else {
+                    return None;
+                }
+            }
             Some(Seg::Empty) => {
                 // Symbols started with an empty head, like ".modelView", is
                 // used to identify push constants.
@@ -353,40 +419,46 @@ impl Manifest {
             Some(Seg::Name(name)) => {
                 if let Some(ResourceLocator::Descriptor(desc_bind)) = self.var_name_map.get(name) {
                     *desc_bind
-                } else { return None; }
-            },
+                } else {
+                    return None;
+                }
+            }
             None => return None,
         };
         let desc_ty = self.desc_map.get(&desc_bind)?;
         let rem_sym = segs.remaining();
         let member_var_res = desc_ty.resolve(rem_sym);
-        let desc_res = DescriptorResolution { desc_bind, desc_ty, member_var_res };
+        let desc_res = DescriptorResolution {
+            desc_bind,
+            desc_ty,
+            member_var_res,
+        };
         Some(desc_res)
     }
     /// List all input locations
-    pub fn inputs<'a>(&'a self) -> impl Iterator<Item=InterfaceVariableResolution<'a>> {
-        self.input_map.iter()
-            .map(|(&location, ty)| {
-                InterfaceVariableResolution { location, ty }
-            })
+    pub fn inputs<'a>(&'a self) -> impl Iterator<Item = InterfaceVariableResolution<'a>> {
+        self.input_map
+            .iter()
+            .map(|(&location, ty)| InterfaceVariableResolution { location, ty })
     }
     /// List all output locations in this manifest.
-    pub fn outputs<'a>(&'a self) -> impl Iterator<Item=InterfaceVariableResolution<'a>> {
-        self.output_map.iter()
-            .map(|(&location, ty)|  {
-                InterfaceVariableResolution { location, ty }
-            })
+    pub fn outputs<'a>(&'a self) -> impl Iterator<Item = InterfaceVariableResolution<'a>> {
+        self.output_map
+            .iter()
+            .map(|(&location, ty)| InterfaceVariableResolution { location, ty })
     }
     /// List all descriptors in this manifest. Results will not contain anything
     /// about exact variables in buffers.
-    pub fn descs<'a>(&'a self) -> impl Iterator<Item=DescriptorResolution<'a>> {
-        self.desc_map.iter()
-            .map(|(&desc_bind, desc_ty)| {
-                DescriptorResolution{ desc_bind, desc_ty, member_var_res: None }
+    pub fn descs<'a>(&'a self) -> impl Iterator<Item = DescriptorResolution<'a>> {
+        self.desc_map
+            .iter()
+            .map(|(&desc_bind, desc_ty)| DescriptorResolution {
+                desc_bind,
+                desc_ty,
+                member_var_res: None,
             })
     }
 }
-
 
 // SPIR-V program entry points.
 
@@ -403,7 +475,9 @@ pub struct EntryPoint {
 }
 impl Deref for EntryPoint {
     type Target = Manifest;
-    fn deref(&self) -> &Self::Target { &self.manifest }
+    fn deref(&self) -> &Self::Target {
+        &self.manifest
+    }
 }
 impl fmt::Debug for EntryPoint {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

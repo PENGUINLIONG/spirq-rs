@@ -1,7 +1,7 @@
 //! Sym used to identify shader module resources.
 use std::borrow::Borrow;
-use std::ops::Deref;
 use std::fmt;
+use std::ops::Deref;
 use std::str::FromStr;
 
 pub struct Sym(str);
@@ -9,26 +9,40 @@ impl Sym {
     pub fn new<S: AsRef<str> + ?Sized>(literal: &S) -> &Sym {
         unsafe { &*(literal.as_ref() as *const str as *const Sym) }
     }
-    pub fn segs<'a>(&'a self) -> Segs<'a> { Segs(self.0.as_ref(), false) }
+    pub fn segs<'a>(&'a self) -> Segs<'a> {
+        Segs(self.0.as_ref(), false)
+    }
 }
 impl ToOwned for Sym {
     type Owned = Symbol;
-    fn to_owned(&self) -> Symbol { Symbol::from(self.0.to_owned()) }
+    fn to_owned(&self) -> Symbol {
+        Symbol::from(self.0.to_owned())
+    }
 }
 impl AsRef<str> for Sym {
-    fn as_ref(&self) -> &str { &self.0 }
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
 }
 impl AsRef<Sym> for str {
-    fn as_ref(&self) -> &Sym { Sym::new(self) }
+    fn as_ref(&self) -> &Sym {
+        Sym::new(self)
+    }
 }
 impl AsRef<Sym> for Sym {
-    fn as_ref(&self) -> &Sym { self }
+    fn as_ref(&self) -> &Sym {
+        self
+    }
 }
 impl fmt::Display for Sym {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { self.0.fmt(f) }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
 }
 impl fmt::Debug for Sym {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { self.0.fmt(f) }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
 }
 
 pub struct Symbol(Box<Sym>);
@@ -36,14 +50,18 @@ impl Symbol {
     pub fn new<S: AsRef<str> + ?Sized>(literal: &S) -> Self {
         Sym::new(literal).to_owned()
     }
-    pub fn segs<'a>(&'a self) -> Segs<'a> { Segs(&(*self.0).0, false) }
+    pub fn segs<'a>(&'a self) -> Segs<'a> {
+        Segs(&(*self.0).0, false)
+    }
     pub fn push<'a>(&mut self, seg: &Seg<'a>) {
         let inner = format!("{}.{}", &(self.0).0, seg).into_boxed_str();
         self.0 = Symbol::from(inner.as_ref()).0;
     }
     pub fn pop(&mut self) -> Option<Symbol> {
         fn split_sym(literal: &str) -> Option<(Symbol, Symbol)> {
-            if literal.len() == 0 { return None; }
+            if literal.len() == 0 {
+                return None;
+            }
             let end = literal.bytes().rposition(|c| c == '.' as u8).unwrap_or(0);
             let rv = literal[end + 1..].to_owned().into();
             let new_inner = literal[..end].to_owned().into();
@@ -55,10 +73,14 @@ impl Symbol {
     }
 }
 impl Default for Symbol {
-    fn default() -> Symbol { Symbol::new("") }
+    fn default() -> Symbol {
+        Symbol::new("")
+    }
 }
 impl Clone for Symbol {
-    fn clone(&self) -> Symbol { self.0.to_owned() }
+    fn clone(&self) -> Symbol {
+        self.0.to_owned()
+    }
 }
 impl From<Box<Sym>> for Symbol {
     fn from(boxed: Box<Sym>) -> Symbol {
@@ -76,23 +98,35 @@ impl From<String> for Symbol {
     }
 }
 impl From<&'_ str> for Symbol {
-    fn from(literal: &'_ str) -> Symbol { literal.to_owned().into() }
+    fn from(literal: &'_ str) -> Symbol {
+        literal.to_owned().into()
+    }
 }
 impl<'a> From<Seg<'a>> for Symbol {
-    fn from(seg: Seg<'a>) -> Symbol { Symbol::from(format!("{}", seg)) }
+    fn from(seg: Seg<'a>) -> Symbol {
+        Symbol::from(format!("{}", seg))
+    }
 }
 impl Borrow<Sym> for Symbol {
-    fn borrow(&self) -> &Sym { self }
+    fn borrow(&self) -> &Sym {
+        self
+    }
 }
 impl Deref for Symbol {
     type Target = Sym;
-    fn deref(&self) -> &Sym { &self.0 }
+    fn deref(&self) -> &Sym {
+        &self.0
+    }
 }
 impl fmt::Display for Symbol {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { self.0.fmt(f) }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
 }
 impl fmt::Debug for Symbol {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        (self as &dyn fmt::Display).fmt(f)
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -102,18 +136,36 @@ pub enum Seg<'a> {
     Empty,
 }
 impl<'a> Seg<'a> {
-    pub fn index(idx: usize) -> Self { Seg::Index(idx) }
-    pub fn name(name: &'a str) -> Self { Seg::Name(name) }
-    pub fn empty() -> Self { Seg::Empty }
+    pub fn index(idx: usize) -> Self {
+        Seg::Index(idx)
+    }
+    pub fn name(name: &'a str) -> Self {
+        Seg::Name(name)
+    }
+    pub fn empty() -> Self {
+        Seg::Empty
+    }
 
     pub fn is_index(&self) -> bool {
-        if let Seg::Index(_) = self { true } else { false }
+        if let Seg::Index(_) = self {
+            true
+        } else {
+            false
+        }
     }
     pub fn is_name(&self) -> bool {
-        if let Seg::Name(_) = self { true } else { false }
+        if let Seg::Name(_) = self {
+            true
+        } else {
+            false
+        }
     }
     pub fn is_empty(&self) -> bool {
-        if let Seg::Empty = self { true } else { false }
+        if let Seg::Empty = self {
+            true
+        } else {
+            false
+        }
     }
 }
 impl<'a> fmt::Display for Seg<'a> {
@@ -129,7 +181,9 @@ impl<'a> fmt::Display for Seg<'a> {
 
 pub struct Segs<'a>(&'a str, bool); // True means that we have reached the end.
 impl<'a> Segs<'a> {
-    pub fn remaining(&self) -> &Sym { Sym::new(self.0) }
+    pub fn remaining(&self) -> &Sym {
+        Sym::new(self.0)
+    }
 }
 impl<'a> Iterator for Segs<'a> {
     type Item = Seg<'a>;
@@ -147,7 +201,9 @@ impl<'a> Iterator for Segs<'a> {
             self.1 = true;
             txt
         };
-        if txt.is_empty() { return Some(Seg::Empty); }
+        if txt.is_empty() {
+            return Some(Seg::Empty);
+        }
         let seg = if let Ok(idx) = usize::from_str(txt) {
             Seg::Index(idx)
         } else {

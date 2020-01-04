@@ -1,9 +1,9 @@
+use log::info;
+use spirq::EntryPoint;
+use spirq::{Error, ExecutionModel, Manifest, Result, SpirvBinary};
 use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
 use std::ops::Deref;
-use spirq::{Result, Error, SpirvBinary, Manifest, ExecutionModel};
-use spirq::EntryPoint;
-use log::info;
 use std::path::Path;
 
 #[derive(Clone, Default)]
@@ -29,21 +29,27 @@ impl TryFrom<&[EntryPoint]> for Pipeline {
 }
 impl Deref for Pipeline {
     type Target = Manifest;
-    fn deref(&self) -> &Self::Target { &self.manifest }
+    fn deref(&self) -> &Self::Target {
+        &self.manifest
+    }
 }
 
 fn main() {
     env_logger::init();
 
     let spvs = collect_spirv_binaries("assets/effects/uniform-pbr");
-    info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
-    let mut entry_points = spvs.values()
+    info!(
+        "collected spirvs: {:?}",
+        spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>()
+    );
+    let mut entry_points = spvs
+        .values()
         .map(|x| x.reflect().unwrap()[0].to_owned())
         .collect::<Vec<_>>();
     entry_points.sort_by_key(|x| x.exec_model as u32);
     let pl = Pipeline::try_from(entry_points.as_ref()).unwrap();
 
-    let check = |sym :&str| {
+    let check = |sym: &str| {
         let desc_res = pl.resolve_desc(sym).unwrap();
         info!("{}: {:?}", sym, desc_res.member_var_res);
     };
@@ -56,35 +62,43 @@ fn main() {
 
     info!("-- buffer sizing:");
     for desc_res in pl.descs() {
-        info!("{:?}: nbyte={:?}", desc_res.desc_bind, desc_res.desc_ty.nbyte());
+        info!(
+            "{:?}: nbyte={:?}",
+            desc_res.desc_bind,
+            desc_res.desc_ty.nbyte()
+        );
     }
 }
 
-
 fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> HashMap<String, SpirvBinary> {
+    use log::warn;
     use std::ffi::OsStr;
     use std::fs::{read_dir, File};
     use std::io::Read;
-    use log::warn;
 
-    read_dir(path).unwrap()
+    read_dir(path)
+        .unwrap()
         .filter_map(|x| match x {
             Ok(rv) => Some(rv.path()),
             Err(err) => {
                 warn!("cannot access to filesystem item: {}", err);
                 None
-            },
+            }
         })
         .filter_map(|x| {
             let mut buf = Vec::new();
-            if !x.is_file() ||
-                x.extension() != Some(OsStr::new("spv")) ||
-                File::open(&x).and_then(|mut x| x.read_to_end(&mut buf)).is_err() ||
-                buf.len() & 3 != 0 {
+            if !x.is_file()
+                || x.extension() != Some(OsStr::new("spv"))
+                || File::open(&x)
+                    .and_then(|mut x| x.read_to_end(&mut buf))
+                    .is_err()
+                || buf.len() & 3 != 0
+            {
                 return None;
             }
             let spv = buf.into();
-            let name = x.file_stem()
+            let name = x
+                .file_stem()
                 .and_then(OsStr::to_str)
                 .map(ToOwned::to_owned)
                 .unwrap();
