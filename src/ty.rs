@@ -147,7 +147,7 @@ impl ImageUnitFormat {
             (1, 0, _) => ImageUnitFormat::Sampled,
             (1, 1, _) => ImageUnitFormat::Depth,
             (2, 0, color_fmt) => ImageUnitFormat::Color(color_fmt),
-            _ => return Err(Error::UnsupportedSpirv),
+            _ => return Err(Error::UNSUPPORTED_IMG_CFG),
         };
         Ok(img_unit_fmt)
     }
@@ -180,7 +180,7 @@ impl ImageArrangement {
             (Dim::Dim3D, true, false) => ImageArrangement::Image3D,
             (Dim::DimCube, false, false) => ImageArrangement::CubeMap,
             (Dim::DimCube, true, false) => ImageArrangement::CubeMapArray,
-            _ => return Err(Error::UnsupportedSpirv),
+            _ => return Err(Error::UNSUPPORTED_IMG_CFG),
         };
         Ok(arng)
     }
@@ -348,7 +348,7 @@ impl StructType {
         let i = self.members.len();
         if let Some(name) = member.name.as_ref() {
             if self.name_map.insert(name.to_owned(), i).is_some() {
-                return Err(Error::CorruptedSpirv);
+                return Err(Error::NAME_COLLISION);
             }
         }
         self.members.push(member);
