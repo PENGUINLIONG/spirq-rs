@@ -8,7 +8,7 @@
 //!
 //! ## How-to
 //!
-//! ```{rust}
+//! ```ignore
 //! // Load SPIR-V data into `[u32]` buffer `spv_words`.
 //! let spv: SpirvBinary = spv_words.into();
 //! let entries = spv.reflect().unwrap();
@@ -39,7 +39,7 @@
 //! Input/output variables are referred to by their locations. The following
 //! are examples of input/output variable symbols:
 //!
-//! ```
+//! ```ignore
 //! 1
 //! aTexCoord
 //! vWorldPosition
@@ -51,7 +51,7 @@
 //! its binding point number specified. The following are valid symbols for
 //! descriptor variables:
 //!
-//! ```
+//! ```ignore
 //! 0.1 // Refering to the descriptor at set 0 on binding 1.
 //! light.0 // Refering to the first member of block 'light'.
 //! 1.0.bones.4 // Refering to the 5th element of array member `bones` in descriptor `1.0`.
