@@ -57,7 +57,9 @@ impl<'a> Operands<'a> {
         if let Some(x) = self.0.first() {
             self.0 = &self.0[1..];
             Ok(*x)
-        } else { Err(Error::CorruptedSpirv) }
+        } else {
+            Err(Error::INSTR_TOO_SHORT)
+        }
     }
     pub fn read_str(&mut self) -> Result<&'a str> {
         use std::os::raw::c_char;
@@ -71,12 +73,13 @@ impl<'a> Operands<'a> {
                 return Ok(string);
             }
         }
-        Err(Error::CorruptedSpirv)
+        Err(Error::STR_NOT_TERMINATED)
     }
     pub fn read_enum<E: FromPrimitive>(&mut self) -> Result<E> {
         self.read_u32()
             .and_then(|x| {
-                FromPrimitive::from_u32(x).ok_or(Error::CorruptedSpirv)
+                FromPrimitive::from_u32(x)
+                    .ok_or(Error::UNENCODED_ENUM)
             })
     }
     pub fn read_list(&mut self) -> Result<&'a [u32]> {

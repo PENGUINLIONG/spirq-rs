@@ -119,7 +119,7 @@ impl<'a> ReflectIntermediate<'a> {
                 _ => break,
             };
             let collision = self.name_map.insert(key, value);
-            if collision.is_some() { return Err(Error::CorruptedSpirv); }
+            if collision.is_some() { return Err(Error::NAME_COLLISION); }
             instrs.next();
         }
         Ok(())
@@ -138,7 +138,7 @@ impl<'a> ReflectIntermediate<'a> {
                 _ => break,
             };
             let collision = self.deco_map.insert(key, value);
-            if collision.is_some() { return Err(Error::CorruptedSpirv); }
+            if collision.is_some() { return Err(Error::DECO_COLLISION); }
             instrs.next();
         }
         Ok(())
@@ -167,14 +167,14 @@ impl<'a> ReflectIntermediate<'a> {
                 if let Some(Type::Scalar(scalar_ty)) = self.ty_map.get(&op.scalar_ty_id).cloned() {
                     let vec_ty = VectorType::new(scalar_ty, op.nscalar);
                     (op.ty_id, Type::Vector(vec_ty))
-                } else { return Err(Error::CorruptedSpirv); }
+                } else { return Err(Error::TY_NOT_FOUND); }
             },
             OP_TYPE_MATRIX => {
                 let op = OpTypeMatrix::try_from(instr)?;
                 if let Some(Type::Vector(vec_ty)) = self.ty_map.get(&op.vec_ty_id).cloned() {
                     let mat_ty = MatrixType::new(vec_ty, op.nvec);
                     (op.ty_id, Type::Matrix(mat_ty))
-                } else { return Err(Error::CorruptedSpirv); }
+                } else { return Err(Error::TY_NOT_FOUND); }
             },
             OP_TYPE_IMAGE => {
                 let op = OpTypeImage::try_from(instr)?;
@@ -194,12 +194,12 @@ impl<'a> ReflectIntermediate<'a> {
                 let op = OpTypeSampledImage::try_from(instr)?;
                 if let Some(Type::Image(img_ty)) = self.ty_map.get(&op.img_ty_id) {
                     (op.ty_id, Type::Image(img_ty.clone()))
-                } else { return Err(Error::CorruptedSpirv); }
+                } else { return Err(Error::TY_NOT_FOUND); }
             },
             OP_TYPE_ARRAY => {
                 let op = OpTypeArray::try_from(instr)?;
                 let proto_ty = self.ty_map.get(&op.proto_ty_id)
-                    .ok_or(Error::CorruptedSpirv)?;
+                    .ok_or(Error::TY_NOT_FOUND)?;
                 let nrepeat = self.const_map.get(&op.nrepeat_const_id)
                     .and_then(|constant| {
                         if let Some(Type::Scalar(scalar_ty)) = self.ty_map.get(&constant.ty) {
@@ -209,7 +209,7 @@ impl<'a> ReflectIntermediate<'a> {
                         }
                         None
                     })
-                    .ok_or(Error::CorruptedSpirv)?;
+                    .ok_or(Error::CONST_NOT_FOUND)?;
                 let stride = self.get_deco_u32(op.ty_id, None, Decoration::ArrayStride)
                     .map(|x| x as usize);
                 let arr_ty = if let Some(stride) = stride {
@@ -222,10 +222,10 @@ impl<'a> ReflectIntermediate<'a> {
             OP_TYPE_RUNTIME_ARRAY => {
                 let op = OpTypeRuntimeArray::try_from(instr)?;
                 let proto_ty = self.ty_map.get(&op.proto_ty_id)
-                    .ok_or(Error::CorruptedSpirv)?;
+                    .ok_or(Error::TY_NOT_FOUND)?;
                 let stride = self.get_deco_u32(op.ty_id, None, Decoration::ArrayStride)
                     .map(|x| x as usize)
-                    .ok_or(Error::CorruptedSpirv)?;
+                    .ok_or(Error::MISSING_DECO)?;
                 let arr_ty = ArrayType::new_unsized(proto_ty, stride);
                 (op.ty_id, Type::Array(arr_ty))
             }
@@ -236,7 +236,7 @@ impl<'a> ReflectIntermediate<'a> {
                     let i = i as u32;
                     let mut member_ty = self.ty_map.get(&member_ty_id)
                         .cloned()
-                        .ok_or(Error::CorruptedSpirv)?;
+                        .ok_or(Error::TY_NOT_FOUND)?;
                     let mut proto_ty = &mut member_ty;
                     while let Type::Array(arr_ty) = proto_ty {
                         proto_ty = &mut *arr_ty.proto_ty;
@@ -244,13 +244,13 @@ impl<'a> ReflectIntermediate<'a> {
                     if let Type::Matrix(ref mut mat_ty) = proto_ty {
                         let mat_stride = self.get_deco_u32(op.ty_id, Some(i), Decoration::MatrixStride)
                             .map(|x| x as usize)
-                            .ok_or(Error::CorruptedSpirv)?;
+                            .ok_or(Error::MISSING_DECO)?;
                         let row_major = self.contains_deco(op.ty_id, Some(i), Decoration::RowMajor);
                         let col_major = self.contains_deco(op.ty_id, Some(i), Decoration::ColMajor);
                         let major = match (row_major, col_major) {
                             (true, false) => MatrixAxisOrder::RowMajor,
                             (false, true) => MatrixAxisOrder::ColumnMajor,
-                            _ => return Err(Error::CorruptedSpirv),
+                            _ => return Err(Error::UNENCODED_ENUM),
                         };
                         mat_ty.decorate(mat_stride, major);
                     }
@@ -275,14 +275,14 @@ impl<'a> ReflectIntermediate<'a> {
             OP_TYPE_POINTER => {
                 let op = OpTypePointer::try_from(instr)?;
                 if self.ptr_map.insert(op.ty_id, op.target_ty_id).is_some() {
-                    return Err(Error::CorruptedSpirv)
+                    return Err(Error::ID_COLLISION)
                 } else { return Ok(()) }
             },
-            _ => return Err(Error::CorruptedSpirv),
+            _ => return Err(Error::UNSUPPORTED_TY),
         };
         if let Vacant(entry) = self.ty_map.entry(key) {
             entry.insert(value); Ok(())
-        } else { Err(Error::CorruptedSpirv) }
+        } else { Err(Error::ID_COLLISION) }
     }
     fn populate_one_const(&mut self, instr: &Instr<'a>) -> Result<()> {
         use std::collections::hash_map::Entry::Vacant;
@@ -291,7 +291,7 @@ impl<'a> ReflectIntermediate<'a> {
         let constant = Constant { ty: op.ty_id, value: op.value };
         if let Vacant(entry) = self.const_map.entry(op.const_id) {
             entry.insert(constant); Ok(())
-        } else { Err(Error::CorruptedSpirv) }
+        } else { Err(Error::ID_COLLISION) }
     }
     fn populate_one_var(&mut self, instr: &Instr<'a>) -> Result<()> {
         fn ty2buf(ty: &Type) -> Option<(u32, Type)> {
@@ -326,7 +326,7 @@ impl<'a> ReflectIntermediate<'a> {
                 let location = self.get_var_location_or_default(op.alloc_id);
                 let var = Variable::Input(location, ty.clone());
                 if self.var_map.insert(op.alloc_id, var).is_some() {
-                    return Err(Error::CorruptedSpirv);
+                    return Err(Error::ID_COLLISION);
                 }
                 // There can be interface blocks for input and output but there
                 // won't be any for attribute inputs nor for attachment outputs,
@@ -336,7 +336,7 @@ impl<'a> ReflectIntermediate<'a> {
                 let location = self.get_var_location_or_default(op.alloc_id);
                 let var = Variable::Output(location, ty.clone());
                 if self.var_map.insert(op.alloc_id, var).is_some() {
-                    return Err(Error::CorruptedSpirv);
+                    return Err(Error::ID_COLLISION);
                 }
             },
             StorageClass::PushConstant => {
@@ -347,28 +347,28 @@ impl<'a> ReflectIntermediate<'a> {
                     let desc_ty = DescriptorType::PushConstant(ty.clone());
                     let var = Variable::Descriptor(desc_bind, desc_ty);
                     if self.var_map.insert(op.alloc_id, var).is_some() {
-                        return Err(Error::CorruptedSpirv);
+                        return Err(Error::ID_COLLISION);
                     }
-                } else { return Err(Error::CorruptedSpirv); }
+                } else { return Err(Error::TY_NOT_FOUND); }
             },
             StorageClass::Uniform => {
                 let desc_ty = if self.contains_deco(ty_id, None, Decoration::BufferBlock) {
                     ty2storage(ty)
                 } else {
                     ty2uniform(ty)
-                }.ok_or(Error::CorruptedSpirv)?;
+                }.ok_or(Error::TY_NOT_FOUND)?;
                 let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
                 let var = Variable::Descriptor(desc_bind, desc_ty);
                 if self.var_map.insert(op.alloc_id, var).is_some() {
-                    return Err(Error::CorruptedSpirv);
+                    return Err(Error::ID_COLLISION);
                 }
             },
             StorageClass::StorageBuffer => {
-                let desc_ty = ty2storage(ty).ok_or(Error::CorruptedSpirv)?;
+                let desc_ty = ty2storage(ty).ok_or(Error::TY_NOT_FOUND)?;
                 let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
                 let var = Variable::Descriptor(desc_bind, desc_ty);
                 if self.var_map.insert(op.alloc_id, var).is_some() {
-                    return Err(Error::CorruptedSpirv);
+                    return Err(Error::ID_COLLISION);
                 }
             },
             StorageClass::UniformConstant => {
@@ -377,14 +377,14 @@ impl<'a> ReflectIntermediate<'a> {
                     DescriptorType::Image(ty.clone())
                 } else if let Type::SubpassData = ty {
                     let input_attm_idx = self.get_deco_u32(op.alloc_id, None, Decoration::InputAttachmentIndex)
-                        .ok_or(Error::CorruptedSpirv)?;
+                        .ok_or(Error::MISSING_DECO)?;
                     DescriptorType::InputAttachment(input_attm_idx)
                 } else {
-                    return Err(Error::UnsupportedSpirv);
+                    return Err(Error::UNSUPPORTED_TY);
                 };
                 let var = Variable::Descriptor(desc_bind, desc_ty);
                 if self.var_map.insert(op.alloc_id, var).is_some() {
-                    return Err(Error::CorruptedSpirv);
+                    return Err(Error::ID_COLLISION);
                 }
                 // Leak out unknown types of uniform constants.
             },
@@ -445,7 +445,7 @@ impl<'a> ReflectIntermediate<'a> {
                     OP_ACCESS_CHAIN => {
                         let op = OpAccessChain::try_from(instr)?;
                         if access_chain_map.insert(op.rsc_id, op.accessed_rsc_id).is_some() {
-                            return Err(Error::CorruptedSpirv);
+                            return Err(Error::ID_COLLISION);
                         }
                     },
                     OP_FUNCTION_END => break,
@@ -483,35 +483,41 @@ impl<'a> ReflectIntermediate<'a> {
             for accessed_var_id in accessed_var_ids {
                 let accessed_var = self.var_map.get(&accessed_var_id)
                     .cloned()
-                    .ok_or(Error::CorruptedSpirv)?;
-                let collision = match accessed_var {
+                    .ok_or(Error::UNDECLARED_VAR)?;
+                match accessed_var {
                     Variable::Input(location, ivar_ty) => {
-                        let mut collision = entry_point.manifest.input_map
-                            .insert(location, ivar_ty).is_some();
+                        // Input variables can share locations (aliasing).
+                        entry_point.manifest.input_map.insert(location, ivar_ty);
                         if let Some(name) = self.get_name(accessed_var_id, None) {
-                            collision |= entry_point.manifest.var_name_map
-                                .insert(name.to_owned(), ResourceLocator::Input(location)).is_some();
+                            if entry_point.manifest.var_name_map
+                                .insert(name.to_owned(), ResourceLocator::Input(location)).is_some() {
+                                return Err(Error::NAME_COLLISION);
+                            }
                         }
-                        collision
                     },
                     Variable::Output(location, ivar_ty) => {
-                        let mut collision = entry_point.manifest.output_map.insert(location, ivar_ty).is_some();
+                        // Output variables can share locations (aliasing).
+                        entry_point.manifest.output_map.insert(location, ivar_ty);
                         if let Some(name) = self.get_name(accessed_var_id, None) {
-                            collision |= entry_point.manifest.var_name_map
-                                .insert(name.to_owned(), ResourceLocator::Output(location)).is_some();
+                            if entry_point.manifest.var_name_map
+                                .insert(name.to_owned(), ResourceLocator::Output(location)).is_some() {
+                                return Err(Error::NAME_COLLISION);
+                            }
                         }
-                        collision
                     },
                     Variable::Descriptor(desc_bind, desc_ty) => {
-                        let mut collision = entry_point.manifest.desc_map.insert(desc_bind, desc_ty).is_some();
-                        if let Some(name) = self.get_name(accessed_var_id, None) {
-                            collision |= entry_point.manifest.var_name_map
-                                .insert(name.to_owned(), ResourceLocator::Descriptor(desc_bind)).is_some();
+                        // Descriptors cannot share bindings.
+                        if entry_point.manifest.desc_map.insert(desc_bind, desc_ty).is_some() {
+                            return Err(Error::DESC_BIND_COLLISION);
                         }
-                        collision
+                        if let Some(name) = self.get_name(accessed_var_id, None) {
+                            if entry_point.manifest.var_name_map
+                                .insert(name.to_owned(), ResourceLocator::Descriptor(desc_bind)).is_some() {
+                                return Err(Error::NAME_COLLISION);
+                            }
+                        }
                     },
                 };
-                if collision { return Err(Error::CorruptedSpirv); }
             }
             entry_points.push(entry_point);
         }
