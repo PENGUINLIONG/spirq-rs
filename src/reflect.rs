@@ -428,9 +428,7 @@ impl<'a> ReflectIntermediate<'a> {
                 match instr.opcode() {
                     OP_FUNCTION_CALL => {
                         let op = OpFunctionCall::try_from(instr)?;
-                        if !func.calls.insert(op.func_id) {
-                            return Err(Error::CorruptedSpirv);
-                        }
+                        func.calls.insert(op.func_id);
                     },
                     OP_LOAD => {
                         let op = OpLoad::try_from(instr)?;
