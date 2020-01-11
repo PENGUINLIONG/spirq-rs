@@ -415,32 +415,33 @@ impl<'a> ReflectIntermediate<'a> {
     fn populate_access(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>) -> Result<()> {
         while instrs.peek().is_some() {
             let mut access_chain_map = HashMap::new();
-            let mut func: &mut Function = unsafe { std::mem::MaybeUninit::uninit().assume_init() };
+            let mut func: Option<&mut Function> = None;
             while let Some(instr) = instrs.peek() {
                 if instr.opcode() == OP_FUNCTION {
                     let op = OpFunction::try_from(instr)?;
-                    func = self.func_map.entry(op.func_id).or_default();
+                    func = Some(self.func_map.entry(op.func_id).or_default());
                     break;
                 }
                 instrs.next();
             }
+
             while let Some(instr) = instrs.peek() {
                 match instr.opcode() {
                     OP_FUNCTION_CALL => {
                         let op = OpFunctionCall::try_from(instr)?;
-                        func.calls.insert(op.func_id);
+                        func.as_mut().unwrap().calls.insert(op.func_id);
                     },
                     OP_LOAD => {
                         let op = OpLoad::try_from(instr)?;
                         let mut rsc_id = op.rsc_id;
                         if let Some(&x) = access_chain_map.get(&rsc_id) { rsc_id = x }
-                        func.accessed_vars.insert(rsc_id);
+                        func.as_mut().unwrap().accessed_vars.insert(rsc_id);
                     },
                     OP_STORE => {
                         let op = OpStore::try_from(instr)?;
                         let mut rsc_id = op.rsc_id;
                         if let Some(&x) = access_chain_map.get(&rsc_id) { rsc_id = x }
-                        func.accessed_vars.insert(rsc_id);
+                        func.as_mut().unwrap().accessed_vars.insert(rsc_id);
                     },
                     OP_ACCESS_CHAIN => {
                         let op = OpAccessChain::try_from(instr)?;
