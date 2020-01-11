@@ -388,6 +388,7 @@ pub enum Type {
     Vector(VectorType),
     Matrix(MatrixType),
     Image(ImageType),
+    Sampler,
     SubpassData,
     Array(ArrayType),
     Struct(StructType),
@@ -400,6 +401,7 @@ impl Type {
             Vector(vec_ty) => Some(vec_ty.nbyte()),
             Matrix(mat_ty) => Some(mat_ty.nbyte()),
             Image(_) => None,
+            Sampler => None,
             SubpassData => None,
             Array(arr_ty) => Some(arr_ty.nbyte()),
             Struct(struct_ty) => Some(struct_ty.nbyte()),
@@ -455,6 +457,7 @@ impl fmt::Debug for Type {
             Type::Vector(vec_ty) => vec_ty.fmt(f),
             Type::Matrix(mat_ty) => mat_ty.fmt(f),
             Type::Image(img_ty) => img_ty.fmt(f),
+            Type::Sampler => write!(f, "sampler"),
             Type::SubpassData => write!(f, "subpassData"),
             Type::Array(arr_ty) => arr_ty.fmt(f),
             Type::Struct(struct_ty) => struct_ty.fmt(f),
@@ -470,6 +473,7 @@ pub enum DescriptorType {
     UniformBuffer(u32, Type),
     StorageBuffer(u32, Type),
     Image(Type),
+    Sampler,
     InputAttachment(u32),
 }
 impl DescriptorType {
@@ -502,6 +506,7 @@ impl DescriptorType {
             UniformBuffer(_, ty) => ty,
             StorageBuffer(_, ty) => ty,
             Image(ty) => ty,
+            Sampler => &Type::Sampler,
             InputAttachment(_) => {
                 static SUBPASS_DATA: Type = Type::SubpassData;
                 &SUBPASS_DATA
@@ -523,6 +528,7 @@ impl fmt::Debug for DescriptorType {
             UniformBuffer(nbind, ty) => write!(f, "{}x{:?}", nbind, ty),
             StorageBuffer(nbind, ty) => write!(f, "{}x{:?}", nbind, ty),
             Image(ty) => ty.fmt(f),
+            Sampler => write!(f, "sampler"),
             InputAttachment(idx) => write!(f, "subpassData[{}]", idx),
         }
     }
