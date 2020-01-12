@@ -98,6 +98,9 @@ define_ops!{
         is_sampled: u32 = read_u32(),
         color_fmt: ImageFormat = read_enum(),
     }
+    OpTypeSampler {
+        ty_id: TypeId = read_u32(),
+    }
     OpTypeSampledImage {
         ty_id: TypeId = read_u32(),
         img_ty_id: TypeId = read_u32(),

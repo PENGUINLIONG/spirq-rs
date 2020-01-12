@@ -190,6 +190,10 @@ impl<'a> ReflectIntermediate<'a> {
                 };
                 (op.ty_id, img_ty)
             },
+            OP_TYPE_SAMPLER => {
+                let op = OpTypeSampler::try_from(instr)?;
+                (op.ty_id, Type::Sampler)
+            }
             OP_TYPE_SAMPLED_IMAGE => {
                 let op = OpTypeSampledImage::try_from(instr)?;
                 if let Some(Type::Image(img_ty)) = self.ty_map.get(&op.img_ty_id) {
@@ -375,6 +379,8 @@ impl<'a> ReflectIntermediate<'a> {
                 let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
                 let desc_ty = if let Type::Image(_) = ty {
                     DescriptorType::Image(ty.clone())
+                } else if let Type::Sampler = ty {
+                    DescriptorType::Sampler
                 } else if let Type::SubpassData = ty {
                     let input_attm_idx = self.get_deco_u32(op.alloc_id, None, Decoration::InputAttachmentIndex)
                         .ok_or(Error::MISSING_DECO)?;

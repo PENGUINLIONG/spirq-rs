@@ -21,8 +21,7 @@ pub const OP_TYPE_FLOAT: OpCode = Op::TypeFloat as u32;
 pub const OP_TYPE_VECTOR: OpCode = Op::TypeVector as u32;
 pub const OP_TYPE_MATRIX: OpCode = Op::TypeMatrix as u32;
 pub const OP_TYPE_IMAGE: OpCode = Op::TypeImage as u32;
-// Not in GLSL.
-// pub const OP_TYPE_SAMPLER: OpCode = 26;
+pub const OP_TYPE_SAMPLER: OpCode = Op::TypeSampler as u32;
 pub const OP_TYPE_SAMPLED_IMAGE: OpCode = Op::TypeSampledImage as u32;
 pub const OP_TYPE_ARRAY: OpCode = Op::TypeArray as u32;
 pub const OP_TYPE_RUNTIME_ARRAY: OpCode = Op::TypeRuntimeArray as u32;
