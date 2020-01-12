@@ -7,7 +7,7 @@ use spirv_headers::{Decoration, Dim, StorageClass};
 use crate::ty::*;
 use crate::consts::*;
 use crate::{Location, DescriptorBinding, SpirvBinary, Instrs, Instr, Manifest,
-    ResourceLocator, ExecutionModel, EntryPoint};
+    ResourceLocator, ExecutionModel, EntryPoint, Component};
 use crate::error::{Error, Result};
 use crate::instr::*;
 
@@ -20,8 +20,8 @@ struct Constant<'a> {
 }
 #[derive(Clone)]
 enum Variable {
-    Input(Location, Type),
-    Output(Location, Type),
+    Input(Location, Component, Type),
+    Output(Location, Component, Type),
     Descriptor(DescriptorBinding, DescriptorType),
 }
 #[derive(Default, Debug, Clone)]
@@ -75,6 +75,11 @@ impl<'a> ReflectIntermediate<'a> {
     }
     fn get_var_location_or_default(&self, var_id: VariableId) -> Location {
         self.get_deco_u32(var_id, None, Decoration::Location)
+            .unwrap_or(0)
+            .into()
+    }
+    fn get_var_component_or_default(&self, var_id: VariableId) -> Component {
+        self.get_deco_u32(var_id, None, Decoration::Component)
             .unwrap_or(0)
             .into()
     }
@@ -324,7 +329,8 @@ impl<'a> ReflectIntermediate<'a> {
         match op.store_cls {
             StorageClass::Input => {
                 let location = self.get_var_location_or_default(op.alloc_id);
-                let var = Variable::Input(location, ty.clone());
+                let component = self.get_var_component_or_default(op.alloc_id);
+                let var = Variable::Input(location, component, ty.clone());
                 if self.var_map.insert(op.alloc_id, var).is_some() {
                     return Err(Error::ID_COLLISION);
                 }
@@ -334,7 +340,8 @@ impl<'a> ReflectIntermediate<'a> {
             },
             StorageClass::Output => {
                 let location = self.get_var_location_or_default(op.alloc_id);
-                let var = Variable::Output(location, ty.clone());
+                let component = self.get_var_component_or_default(op.alloc_id);
+                let var = Variable::Output(location, component, ty.clone());
                 if self.var_map.insert(op.alloc_id, var).is_some() {
                     return Err(Error::ID_COLLISION);
                 }
@@ -485,22 +492,22 @@ impl<'a> ReflectIntermediate<'a> {
                     .cloned()
                     .ok_or(Error::UNDECLARED_VAR)?;
                 match accessed_var {
-                    Variable::Input(location, ivar_ty) => {
+                    Variable::Input(location, component, ivar_ty) => {
                         // Input variables can share locations (aliasing).
-                        entry_point.manifest.input_map.insert(location, ivar_ty);
+                        entry_point.manifest.input_map.insert((location, component), ivar_ty);
                         if let Some(name) = self.get_name(accessed_var_id, None) {
                             if entry_point.manifest.var_name_map
-                                .insert(name.to_owned(), ResourceLocator::Input(location)).is_some() {
+                                .insert(name.to_owned(), ResourceLocator::Input(location, component)).is_some() {
                                 return Err(Error::NAME_COLLISION);
                             }
                         }
                     },
-                    Variable::Output(location, ivar_ty) => {
+                    Variable::Output(location, component, ivar_ty) => {
                         // Output variables can share locations (aliasing).
-                        entry_point.manifest.output_map.insert(location, ivar_ty);
+                        entry_point.manifest.output_map.insert((location, component), ivar_ty);
                         if let Some(name) = self.get_name(accessed_var_id, None) {
                             if entry_point.manifest.var_name_map
-                                .insert(name.to_owned(), ResourceLocator::Output(location)).is_some() {
+                                .insert(name.to_owned(), ResourceLocator::Output(location, component)).is_some() {
                                 return Err(Error::NAME_COLLISION);
                             }
                         }

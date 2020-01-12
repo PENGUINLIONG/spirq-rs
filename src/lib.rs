@@ -161,6 +161,22 @@ impl fmt::Debug for Location {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
 }
 
+/// Interface variable component.
+#[derive(PartialEq, Eq, Hash, Default, Clone, Copy)]
+pub struct Component(u32);
+impl From<u32> for Component {
+    fn from(x: u32) -> Component { Component(x) }
+}
+impl From<Component> for u32 {
+    fn from(x: Component) -> u32 { x.0 }
+}
+impl fmt::Display for Component {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { self.0.fmt(f) }
+}
+impl fmt::Debug for Component {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
+}
+
 /// Descriptor set and binding point carrier.
 #[derive(PartialEq, Eq, Hash, Default, Clone, Copy)]
 pub struct DescriptorBinding(Option<(u32, u32)>);
@@ -187,8 +203,8 @@ impl fmt::Debug for DescriptorBinding {
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub(crate) enum ResourceLocator {
-    Input(Location),
-    Output(Location),
+    Input(Location, Component),
+    Output(Location, Component),
     Descriptor(DescriptorBinding),
 }
 
@@ -201,6 +217,8 @@ pub struct InterfaceVariableResolution<'a> {
     /// Location of the current interface variable. It should be noted that
     /// matrix types can take more than one location.
     pub location: Location,
+    /// First component used by the interface variable.
+    pub component: Component,
     /// Type of the resolution target.
     pub ty: &'a Type,
 }
@@ -228,8 +246,8 @@ pub struct MemberVariableResolution<'a> {
 /// A set of information used to describe variable typing and routing.
 #[derive(Default, Clone)]
 pub struct Manifest {
-    pub(crate) input_map: HashMap<Location, Type>,
-    pub(crate) output_map: HashMap<Location, Type>,
+    pub(crate) input_map: HashMap<(Location, Component), Type>,
+    pub(crate) output_map: HashMap<(Location, Component), Type>,
     pub(crate) desc_map: HashMap<DescriptorBinding, DescriptorType>,
     pub(crate) var_name_map: HashMap<String, ResourceLocator>,
 }
@@ -278,11 +296,11 @@ impl Manifest {
     }
     /// Get the input interface variable type.
     pub fn get_input<'a>(&'a self, location: Location) -> Option<&'a Type> {
-        self.input_map.get(&location)
+        self.input_map.get(&(location, 0.into()))
     }
     /// Get the output interface variable type.
     pub fn get_output<'a>(&'a self, location: Location) -> Option<&'a Type> {
-        self.output_map.get(&location)
+        self.output_map.get(&(location, 0.into()))
     }
     /// Get the descriptor type at the given descriptor binding point.
     pub fn get_desc<'a>(&'a self, desc_bind: DescriptorBinding) -> Option<&'a DescriptorType> {
@@ -291,14 +309,14 @@ impl Manifest {
     /// Get the name that also refers to the input at the given location.
     pub fn get_input_name<'a>(&'a self, location: Location) -> Option<&'a str> {
         self.var_name_map.iter()
-            .find_map(|x| if let ResourceLocator::Input(loc) = x.1 {
+            .find_map(|x| if let ResourceLocator::Input(loc, _comp) = x.1 {
                 if *loc == location { Some(x.0.as_ref()) } else { None }
             } else { None })
     }
     /// Get the name that also refers to the output at the given location.
     pub fn get_output_name<'a>(&'a self, location: Location) -> Option<&'a str> {
         self.var_name_map.iter()
-            .find_map(|x| if let ResourceLocator::Output(loc) = x.1 {
+            .find_map(|x| if let ResourceLocator::Output(loc, _comp) = x.1 {
                 if *loc == location { Some(x.0.as_ref()) } else { None }
             } else { None })
     }
@@ -310,20 +328,21 @@ impl Manifest {
                 if *db == desc_bind { Some(x.0.as_ref()) } else { None }
             } else { None })
     }
-    fn resolve_ivar<'a>(&self, map: &'a HashMap<Location, Type>, sym: &Sym) -> Option<InterfaceVariableResolution<'a>> {
+    fn resolve_ivar<'a>(&self, map: &'a HashMap<(Location, Component), Type>, sym: &Sym) -> Option<InterfaceVariableResolution<'a>> {
         let mut segs = sym.segs();
-        let location = match segs.next() {
-            Some(Seg::Index(location)) => (location as u32).into(),
+        let (location, component) = match segs.next() {
+            // TODO: Should component ever be non-zero here?
+            Some(Seg::Index(location)) => ((location as u32).into(), 0.into()),
             Some(Seg::Name(name)) => {
-                if let Some(ResourceLocator::Input(location)) = self.var_name_map.get(name) {
-                    *location
+                if let Some(ResourceLocator::Input(location, component)) = self.var_name_map.get(name) {
+                    (*location, *component)
                 } else { return None }
             },
             _ => return None,
         };
         if segs.next().is_some() { return None }
-        let ty = map.get(&location)?;
-        let ivar_res = InterfaceVariableResolution { location, ty };
+        let ty = map.get(&(location, component))?;
+        let ivar_res = InterfaceVariableResolution { location, component, ty };
         Some(ivar_res)
     }
     /// Get the metadata of a input variable identified by a symbol.
@@ -366,15 +385,15 @@ impl Manifest {
     /// List all input locations
     pub fn inputs<'a>(&'a self) -> impl Iterator<Item=InterfaceVariableResolution<'a>> {
         self.input_map.iter()
-            .map(|(&location, ty)| {
-                InterfaceVariableResolution { location, ty }
+            .map(|(&(location, component), ty)| {
+                InterfaceVariableResolution { location, component, ty }
             })
     }
     /// List all output locations in this manifest.
     pub fn outputs<'a>(&'a self) -> impl Iterator<Item=InterfaceVariableResolution<'a>> {
         self.output_map.iter()
-            .map(|(&location, ty)|  {
-                InterfaceVariableResolution { location, ty }
+            .map(|(&(location, component), ty)|  {
+                InterfaceVariableResolution { location, component, ty }
             })
     }
     /// List all descriptors in this manifest. Results will not contain anything
