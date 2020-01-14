@@ -197,7 +197,7 @@ impl<'a> ReflectIntermediate<'a> {
             OP_TYPE_SAMPLED_IMAGE => {
                 let op = OpTypeSampledImage::try_from(instr)?;
                 if let Some(Type::Image(img_ty)) = self.ty_map.get(&op.img_ty_id) {
-                    (op.ty_id, Type::Image(img_ty.clone()))
+                    (op.ty_id, Type::SampledImage(img_ty.clone()))
                 } else { return Err(Error::TY_NOT_FOUND); }
             },
             OP_TYPE_ARRAY => {
@@ -377,16 +377,16 @@ impl<'a> ReflectIntermediate<'a> {
             },
             StorageClass::UniformConstant => {
                 let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
-                let desc_ty = if let Type::Image(_) = ty {
-                    DescriptorType::Image(ty.clone())
-                } else if let Type::Sampler = ty {
-                    DescriptorType::Sampler
-                } else if let Type::SubpassData = ty {
-                    let input_attm_idx = self.get_deco_u32(op.alloc_id, None, Decoration::InputAttachmentIndex)
-                        .ok_or(Error::MISSING_DECO)?;
-                    DescriptorType::InputAttachment(input_attm_idx)
-                } else {
-                    return Err(Error::UNSUPPORTED_TY);
+                let desc_ty = match ty {
+                    Type::Image(_) => DescriptorType::Image(ty.clone()),
+                    Type::Sampler => DescriptorType::Sampler,
+                    Type::SampledImage(_) => DescriptorType::SampledImage(ty.clone()),
+                    Type::SubpassData => {
+                        let input_attm_idx = self.get_deco_u32(op.alloc_id, None, Decoration::InputAttachmentIndex)
+                            .ok_or(Error::MISSING_DECO)?;
+                        DescriptorType::InputAttachment(input_attm_idx)
+                    },
+                    _ => return Err(Error::UNSUPPORTED_TY),
                 };
                 let var = Variable::Descriptor(desc_bind, desc_ty);
                 if self.var_map.insert(op.alloc_id, var).is_some() {
