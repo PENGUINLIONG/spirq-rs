@@ -384,13 +384,26 @@ impl fmt::Debug for StructType {
 
 #[derive(Hash, Clone)]
 pub enum Type {
+    /// A single value, which can be a signed or unsigned integer, a floating
+    /// point number, or a boolean value.
     Scalar(ScalarType),
+    /// A collection of scalars.
     Vector(VectorType),
+    /// A collection of vectors.
     Matrix(MatrixType),
+    /// An unsampled image, with no sampler state combined. Such design is
+    /// preferred in DirectX.
     Image(ImageType),
+    /// A sampled image externally combined with a sampler state. Such design is
+    /// preferred in legacy OpenGL.
+    SampledImage(ImageType),
+    /// Separable sampler state.
     Sampler,
+    /// Pixel store from input attachments.
     SubpassData,
+    /// Repetition of a single type.
     Array(ArrayType),
+    /// Aggregation of types.
     Struct(StructType),
 }
 impl Type {
@@ -402,6 +415,7 @@ impl Type {
             Matrix(mat_ty) => Some(mat_ty.nbyte()),
             Image(_) => None,
             Sampler => None,
+            SampledImage(_) => None,
             SubpassData => None,
             Array(arr_ty) => Some(arr_ty.nbyte()),
             Struct(struct_ty) => Some(struct_ty.nbyte()),
@@ -446,6 +460,8 @@ impl Type {
     pub fn is_vec(&self) -> bool { match self { Type::Vector(_) => true, _ => false } }
     pub fn is_mat(&self) -> bool { match self { Type::Matrix(_) => true, _ => false } }
     pub fn is_img(&self) -> bool { match self { Type::Image(_) => true, _ => false } }
+    pub fn is_sampler(&self) -> bool { match self { Type::Sampler => true, _ => false } }
+    pub fn is_sampled_img(&self) -> bool { match self { Type::SampledImage(_) => true, _ => false } }
     pub fn is_subpass_data(&self) -> bool { match self { Type::SubpassData => true, _ => false } }
     pub fn is_arr(&self) -> bool { match self { Type::Array(_) => true, _ => false } }
     pub fn is_struct(&self) -> bool { match self { Type::Struct(_) => true, _ => false } }
@@ -456,8 +472,9 @@ impl fmt::Debug for Type {
             Type::Scalar(scalar_ty) => scalar_ty.fmt(f),
             Type::Vector(vec_ty) => vec_ty.fmt(f),
             Type::Matrix(mat_ty) => mat_ty.fmt(f),
-            Type::Image(img_ty) => img_ty.fmt(f),
+            Type::Image(img_ty) => write!(f, "{:?}*", img_ty),
             Type::Sampler => write!(f, "sampler"),
+            Type::SampledImage(img_ty) => img_ty.fmt(f),
             Type::SubpassData => write!(f, "subpassData"),
             Type::Array(arr_ty) => arr_ty.fmt(f),
             Type::Struct(struct_ty) => struct_ty.fmt(f),
@@ -474,6 +491,7 @@ pub enum DescriptorType {
     StorageBuffer(u32, Type),
     Image(Type),
     Sampler,
+    SampledImage(Type),
     InputAttachment(u32),
 }
 impl DescriptorType {
@@ -507,6 +525,7 @@ impl DescriptorType {
             StorageBuffer(_, ty) => ty,
             Image(ty) => ty,
             Sampler => &Type::Sampler,
+            SampledImage(ty) => ty,
             InputAttachment(_) => {
                 static SUBPASS_DATA: Type = Type::SubpassData;
                 &SUBPASS_DATA
@@ -518,6 +537,8 @@ impl DescriptorType {
     pub fn is_uniform_buf(&self) -> bool { match self { DescriptorType::UniformBuffer(_,_) => true, _ => false } }
     pub fn is_storage_buf(&self) -> bool { match self { DescriptorType::StorageBuffer(_,_) => true, _ => false } }
     pub fn is_img(&self) -> bool { match self { DescriptorType::Image(_) => true, _ => false } }
+    pub fn is_sampler(&self) -> bool { match self { DescriptorType::Sampler => true, _ => false } }
+    pub fn is_sampled_img(&self) -> bool { match self { DescriptorType::SampledImage(_) => true, _ => false } }
     pub fn is_input_attm(&self) -> bool { match self { DescriptorType::InputAttachment(_) => true, _ => false } }
 }
 impl fmt::Debug for DescriptorType {
@@ -529,6 +550,7 @@ impl fmt::Debug for DescriptorType {
             StorageBuffer(nbind, ty) => write!(f, "{}x{:?}", nbind, ty),
             Image(ty) => ty.fmt(f),
             Sampler => write!(f, "sampler"),
+            SampledImage(ty) => ty.fmt(f),
             InputAttachment(idx) => write!(f, "subpassData[{}]", idx),
         }
     }
