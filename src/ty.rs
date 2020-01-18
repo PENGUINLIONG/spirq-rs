@@ -509,8 +509,9 @@ pub enum DescriptorType {
     Image(u32, Type),
     Sampler(u32),
     SampledImage(u32, Type),
-    // Note that the parameter is input attachment index, not binding number.
-    InputAttachment(u32),
+    // Note that the second parameter is input attachment index, the first one
+    // is the binding count.
+    InputAttachment(u32, u32),
 }
 impl DescriptorType {
     /// Get the size of buffer (in bytes) needed to contain all the data for
@@ -535,7 +536,7 @@ impl DescriptorType {
             Image(nbind, _) => *nbind,
             Sampler(nbind) => *nbind,
             SampledImage(nbind, _) => *nbind,
-            InputAttachment(_) => 1,
+            InputAttachment(nbind, _) => *nbind,
         }
     }
     /// Resolve a symbol WITHIN the descriptor type. The symbol should not
@@ -560,7 +561,7 @@ impl DescriptorType {
             Image(_, ty) => ty,
             Sampler(_) => &Type::Sampler(),
             SampledImage(_, ty) => ty,
-            InputAttachment(_) => &Type::SubpassData(),
+            InputAttachment(_, _) => &Type::SubpassData(),
         };
         Walk::new(ty)
     }
@@ -585,7 +586,7 @@ impl fmt::Debug for DescriptorType {
             Image(nbind, ty) => write!(f, "{}x {:?}", nbind, ty),
             Sampler(nbind) => write!(f, "{}x sampler", nbind),
             SampledImage(nbind, ty) => write!(f, "{}x {:?}", nbind, ty),
-            InputAttachment(idx) => write!(f, "subpassData[{}]", idx),
+            InputAttachment(nbind, idx) => write!(f, "{}x subpassData[{}]", nbind, idx),
         }
     }
 }

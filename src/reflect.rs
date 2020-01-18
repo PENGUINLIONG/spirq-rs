@@ -392,7 +392,7 @@ impl<'a> ReflectIntermediate<'a> {
                     Type::SubpassData() => {
                         let input_attm_idx = self.get_deco_u32(op.alloc_id, None, Decoration::InputAttachmentIndex)
                             .ok_or(Error::MISSING_DECO)?;
-                        DescriptorType::InputAttachment(input_attm_idx)
+                        DescriptorType::InputAttachment(nbind, input_attm_idx)
                     },
                     _ => return Err(Error::UNSUPPORTED_TY),
                 };
