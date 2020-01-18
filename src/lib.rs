@@ -146,19 +146,20 @@ pub(crate) fn hash<H: std::hash::Hash>(h: &H) -> u64 {
 
 // Resource locationing.
 
-/// Interface variable location.
+/// Interface variable location and component.
 #[derive(PartialEq, Eq, Hash, Default, Clone, Copy)]
-pub struct Location(u32);
-impl From<u32> for Location {
-    fn from(x: u32) -> Location { Location(x) }
+pub struct InterfaceLocation(u32, u32);
+impl InterfaceLocation {
+    pub fn new(loc: u32, comp: u32) -> Self { InterfaceLocation(loc, comp) }
+
+    pub fn into_inner(self) -> (u32, u32) { (self.0, self.1) }
 }
-impl From<Location> for u32 {
-    fn from(x: Location) -> u32 { x.0 }
+impl fmt::Display for InterfaceLocation {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "(loc={}, comp={})", self.0, self.1)
+    }
 }
-impl fmt::Display for Location {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { self.0.fmt(f) }
-}
-impl fmt::Debug for Location {
+impl fmt::Debug for InterfaceLocation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
 }
 
@@ -188,8 +189,8 @@ impl fmt::Debug for DescriptorBinding {
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub(crate) enum ResourceLocator {
-    Input(Location),
-    Output(Location),
+    Input(InterfaceLocation),
+    Output(InterfaceLocation),
     Descriptor(DescriptorBinding),
 }
 
@@ -201,7 +202,7 @@ pub(crate) enum ResourceLocator {
 pub struct InterfaceVariableResolution<'a> {
     /// Location of the current interface variable. It should be noted that
     /// matrix types can take more than one location.
-    pub location: Location,
+    pub location: InterfaceLocation,
     /// Type of the resolution target.
     pub ty: &'a Type,
 }
@@ -241,8 +242,8 @@ pub enum AccessType {
 /// A set of information used to describe variable typing and routing.
 #[derive(Default, Clone)]
 pub struct Manifest {
-    pub(crate) input_map: HashMap<Location, Type>,
-    pub(crate) output_map: HashMap<Location, Type>,
+    pub(crate) input_map: HashMap<InterfaceLocation, Type>,
+    pub(crate) output_map: HashMap<InterfaceLocation, Type>,
     pub(crate) desc_map: HashMap<DescriptorBinding, DescriptorType>,
     pub(crate) var_name_map: HashMap<String, ResourceLocator>,
     pub(crate) desc_access_map: HashMap<DescriptorBinding, AccessType>
@@ -300,11 +301,11 @@ impl Manifest {
         Ok(())
     }
     /// Get the input interface variable type.
-    pub fn get_input<'a>(&'a self, location: Location) -> Option<&'a Type> {
+    pub fn get_input<'a>(&'a self, location: InterfaceLocation) -> Option<&'a Type> {
         self.input_map.get(&location)
     }
     /// Get the output interface variable type.
-    pub fn get_output<'a>(&'a self, location: Location) -> Option<&'a Type> {
+    pub fn get_output<'a>(&'a self, location: InterfaceLocation) -> Option<&'a Type> {
         self.output_map.get(&location)
     }
     /// Get the descriptor type at the given descriptor binding point.
@@ -312,14 +313,14 @@ impl Manifest {
         self.desc_map.get(&desc_bind)
     }
     /// Get the name that also refers to the input at the given location.
-    pub fn get_input_name<'a>(&'a self, location: Location) -> Option<&'a str> {
+    pub fn get_input_name<'a>(&'a self, location: InterfaceLocation) -> Option<&'a str> {
         self.var_name_map.iter()
             .find_map(|x| if let ResourceLocator::Input(loc) = x.1 {
                 if *loc == location { Some(x.0.as_ref()) } else { None }
             } else { None })
     }
     /// Get the name that also refers to the output at the given location.
-    pub fn get_output_name<'a>(&'a self, location: Location) -> Option<&'a str> {
+    pub fn get_output_name<'a>(&'a self, location: InterfaceLocation) -> Option<&'a str> {
         self.var_name_map.iter()
             .find_map(|x| if let ResourceLocator::Output(loc) = x.1 {
                 if *loc == location { Some(x.0.as_ref()) } else { None }
@@ -340,10 +341,14 @@ impl Manifest {
             .get(&desc_bind)
             .map(|x| *x)
     }
-    fn resolve_ivar<'a>(&self, map: &'a HashMap<Location, Type>, sym: &Sym) -> Option<InterfaceVariableResolution<'a>> {
+    fn resolve_ivar<'a>(&self, map: &'a HashMap<InterfaceLocation, Type>, sym: &Sym) -> Option<InterfaceVariableResolution<'a>> {
         let mut segs = sym.segs();
         let location = match segs.next() {
-            Some(Seg::Index(location)) => (location as u32).into(),
+            Some(Seg::Index(loc)) => {
+                if let Some(Seg::Index(comp)) = segs.next() {
+                    InterfaceLocation::new(loc as u32, comp as u32)
+                } else { return None; }
+            },
             Some(Seg::Name(name)) => {
                 if let Some(ResourceLocator::Input(location)) = self.var_name_map.get(name) {
                     *location
