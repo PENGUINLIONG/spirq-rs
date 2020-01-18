@@ -503,7 +503,6 @@ impl fmt::Debug for Type {
 /// Structured representation of descriptor types.
 #[derive(Hash, Clone)]
 pub enum DescriptorType {
-    PushConstant(Type),
     UniformBuffer(u32, Type),
     StorageBuffer(u32, Type),
     Image(u32, Type),
@@ -519,7 +518,6 @@ impl DescriptorType {
     pub fn nbyte(&self) -> Option<usize> {
         use DescriptorType::*;
         match self {
-            PushConstant(ty) => ty.nbyte(),
             UniformBuffer(_, ty) => ty.nbyte(),
             StorageBuffer(_, ty) => ty.nbyte(),
             _ => None,
@@ -530,7 +528,6 @@ impl DescriptorType {
     pub fn nbind(&self) -> u32 {
         use DescriptorType::*;
         match self {
-            PushConstant(_) => 1,
             UniformBuffer(nbind, _) => *nbind,
             StorageBuffer(nbind, _) => *nbind,
             Image(nbind, _) => *nbind,
@@ -545,7 +542,6 @@ impl DescriptorType {
         use DescriptorType::*;
         // Resolve for descriptor root.
         match self {
-            PushConstant(ref ty) => ty,
             UniformBuffer(_, ref ty) => ty,
             StorageBuffer(_, ref ty) => ty,
             _ => { return None },
@@ -555,7 +551,6 @@ impl DescriptorType {
     pub fn walk<'a>(&'a self) -> Walk<'a> {
         use DescriptorType::*;
         let ty = match self {
-            PushConstant(ty) => ty,
             UniformBuffer(_, ty) => ty,
             StorageBuffer(_, ty) => ty,
             Image(_, ty) => ty,
@@ -567,7 +562,6 @@ impl DescriptorType {
     }
     declr_ty_accessor! {
         [DescriptorType]
-        is_push_const -> PushConstant,
         is_uniform_buf -> UniformBuffer,
         is_storage_buf -> StorageBuffer,
         is_img -> Image,
@@ -580,7 +574,6 @@ impl fmt::Debug for DescriptorType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use DescriptorType::*;
         match self {
-            PushConstant(ty) => ty.fmt(f),
             UniformBuffer(nbind, ty) => write!(f, "{}x {:?}", nbind, ty),
             StorageBuffer(nbind, ty) => write!(f, "{}x {:?}", nbind, ty),
             Image(nbind, ty) => write!(f, "{}x {:?}", nbind, ty),

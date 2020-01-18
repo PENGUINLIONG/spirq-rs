@@ -23,6 +23,7 @@ enum Variable {
     Input(InterfaceLocation, Type),
     Output(InterfaceLocation, Type),
     Descriptor(DescriptorBinding, DescriptorType),
+    PushConstant(Type),
 }
 
 #[derive(Default, Debug, Clone)]
@@ -91,7 +92,7 @@ impl<'a> ReflectIntermediate<'a> {
             .unwrap_or(0);
         let bind_point = self.get_deco_u32(var_id, None, Decoration::Binding)
             .unwrap_or(0);
-        DescriptorBinding::desc_bind(desc_set, bind_point)
+        DescriptorBinding::new(desc_set, bind_point)
     }
     fn get_name(&self, id: InstrId, member_idx: Option<u32>) -> Option<&'a str> {
         self.name_map.get(&(id, member_idx))
@@ -352,9 +353,7 @@ impl<'a> ReflectIntermediate<'a> {
                 // Push constants have no global offset. Offsets are applied to
                 // members.
                 if let Type::Struct(_) = ty {
-                    let desc_bind = DescriptorBinding::push_const();
-                    let desc_ty = DescriptorType::PushConstant(ty.clone());
-                    let var = Variable::Descriptor(desc_bind, desc_ty);
+                    let var = Variable::PushConstant(ty.clone());
                     if self.var_map.insert(op.alloc_id, var).is_some() {
                         return Err(Error::ID_COLLISION);
                     }
@@ -551,6 +550,11 @@ impl<'a> ReflectIntermediate<'a> {
                             }
                         }
                     },
+                    Variable::PushConstant(push_const_ty) => {
+                        if entry_point.manifest.push_const_ty.is_none() {
+                            entry_point.manifest.push_const_ty = Some(push_const_ty);
+                        } else { return Err(Error::MULTI_PUSH_CONST) }
+                    }
                 };
             }
             entry_points.push(entry_point);
