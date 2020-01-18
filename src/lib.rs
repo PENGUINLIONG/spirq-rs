@@ -231,9 +231,9 @@ pub struct MemberVariableResolution<'a> {
 #[derive(Debug, FromPrimitive, Clone, Copy, PartialEq, Eq)]
 pub enum AccessType {
     /// The variable has only been read from.
-    ReadOnly = 0,
+    ReadOnly = 1,
     /// The variable has only been written to.
-    WriteOnly = 1,
+    WriteOnly = 2,
     /// The variable has been read from and written to.
     ReadWrite = 3,
 }
@@ -286,6 +286,15 @@ impl Manifest {
                     // Mismatched names are not allowed.
                     return Err(Error::MismatchedManifest);
                 },
+            }
+        }
+        for (desc_bind, access) in other.desc_access_map.iter() {
+            if let Some(acc) = self.desc_access_map.get_mut(&desc_bind) {
+                use num_traits::FromPrimitive;
+                let access = *acc as u32 | *access as u32;
+                *acc = AccessType::from_u32(access).unwrap();
+            } else {
+                self.desc_access_map.insert(*desc_bind, *access);
             }
         }
         Ok(())
