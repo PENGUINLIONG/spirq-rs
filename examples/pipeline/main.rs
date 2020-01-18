@@ -43,13 +43,17 @@ fn main() {
     entry_points.sort_by_key(|x| x.exec_model as u32);
     let pl = Pipeline::try_from(entry_points.as_ref()).unwrap();
 
+    let pcheck = |sym :&str| {
+        let push_const_res = pl.resolve_push_const(sym).unwrap();
+        info!("{}: {:?}", sym, push_const_res.member_var_res);
+    };
     let check = |sym :&str| {
         let desc_res = pl.resolve_desc(sym).unwrap();
         info!("{}: {:?}", sym, desc_res.member_var_res);
     };
 
-    check(".model_view");
-    check(".view_proj");
+    pcheck(".model_view");
+    pcheck(".view_proj");
     check("mat.fdsa.1");
     check("someImage");
     check("imgggg");

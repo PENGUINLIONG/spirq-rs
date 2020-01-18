@@ -14,8 +14,8 @@ fn main() {
     info!("{:#?}", vert);
 
     let check_vert = |sym :&str| {
-        let desc_res = vert.resolve_desc(sym).unwrap();
-        info!("{}: {:?}", sym, desc_res);
+        let push_const_res = vert.resolve_push_const(sym).unwrap();
+        info!("{}: {:?}", sym, push_const_res);
     };
     check_vert(".model_view");
     check_vert(".view_proj");

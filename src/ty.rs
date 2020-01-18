@@ -503,14 +503,14 @@ impl fmt::Debug for Type {
 /// Structured representation of descriptor types.
 #[derive(Hash, Clone)]
 pub enum DescriptorType {
-    PushConstant(Type),
     UniformBuffer(u32, Type),
     StorageBuffer(u32, Type),
     Image(u32, Type),
     Sampler(u32),
     SampledImage(u32, Type),
-    // Note that the parameter is input attachment index, not binding number.
-    InputAttachment(u32),
+    // Note that the second parameter is input attachment index, the first one
+    // is the binding count.
+    InputAttachment(u32, u32),
 }
 impl DescriptorType {
     /// Get the size of buffer (in bytes) needed to contain all the data for
@@ -518,7 +518,6 @@ impl DescriptorType {
     pub fn nbyte(&self) -> Option<usize> {
         use DescriptorType::*;
         match self {
-            PushConstant(ty) => ty.nbyte(),
             UniformBuffer(_, ty) => ty.nbyte(),
             StorageBuffer(_, ty) => ty.nbyte(),
             _ => None,
@@ -529,13 +528,12 @@ impl DescriptorType {
     pub fn nbind(&self) -> u32 {
         use DescriptorType::*;
         match self {
-            PushConstant(_) => 1,
             UniformBuffer(nbind, _) => *nbind,
             StorageBuffer(nbind, _) => *nbind,
             Image(nbind, _) => *nbind,
             Sampler(nbind) => *nbind,
             SampledImage(nbind, _) => *nbind,
-            InputAttachment(_) => 1,
+            InputAttachment(nbind, _) => *nbind,
         }
     }
     /// Resolve a symbol WITHIN the descriptor type. The symbol should not
@@ -544,7 +542,6 @@ impl DescriptorType {
         use DescriptorType::*;
         // Resolve for descriptor root.
         match self {
-            PushConstant(ref ty) => ty,
             UniformBuffer(_, ref ty) => ty,
             StorageBuffer(_, ref ty) => ty,
             _ => { return None },
@@ -554,19 +551,17 @@ impl DescriptorType {
     pub fn walk<'a>(&'a self) -> Walk<'a> {
         use DescriptorType::*;
         let ty = match self {
-            PushConstant(ty) => ty,
             UniformBuffer(_, ty) => ty,
             StorageBuffer(_, ty) => ty,
             Image(_, ty) => ty,
             Sampler(_) => &Type::Sampler(),
             SampledImage(_, ty) => ty,
-            InputAttachment(_) => &Type::SubpassData(),
+            InputAttachment(_, _) => &Type::SubpassData(),
         };
         Walk::new(ty)
     }
     declr_ty_accessor! {
         [DescriptorType]
-        is_push_const -> PushConstant,
         is_uniform_buf -> UniformBuffer,
         is_storage_buf -> StorageBuffer,
         is_img -> Image,
@@ -579,13 +574,12 @@ impl fmt::Debug for DescriptorType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use DescriptorType::*;
         match self {
-            PushConstant(ty) => ty.fmt(f),
             UniformBuffer(nbind, ty) => write!(f, "{}x {:?}", nbind, ty),
             StorageBuffer(nbind, ty) => write!(f, "{}x {:?}", nbind, ty),
             Image(nbind, ty) => write!(f, "{}x {:?}", nbind, ty),
             Sampler(nbind) => write!(f, "{}x sampler", nbind),
             SampledImage(nbind, ty) => write!(f, "{}x {:?}", nbind, ty),
-            InputAttachment(idx) => write!(f, "subpassData[{}]", idx),
+            InputAttachment(nbind, idx) => write!(f, "{}x subpassData[{}]", nbind, idx),
         }
     }
 }

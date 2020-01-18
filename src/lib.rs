@@ -152,6 +152,8 @@ pub struct InterfaceLocation(u32, u32);
 impl InterfaceLocation {
     pub fn new(loc: u32, comp: u32) -> Self { InterfaceLocation(loc, comp) }
 
+    pub fn loc(&self) -> u32 { self.0 }
+    pub fn bind(&self) -> u32 { self.1 }
     pub fn into_inner(self) -> (u32, u32) { (self.0, self.1) }
 }
 impl fmt::Display for InterfaceLocation {
@@ -165,22 +167,17 @@ impl fmt::Debug for InterfaceLocation {
 
 /// Descriptor set and binding point carrier.
 #[derive(PartialEq, Eq, Hash, Default, Clone, Copy)]
-pub struct DescriptorBinding(Option<(u32, u32)>);
+pub struct DescriptorBinding(u32, u32);
 impl DescriptorBinding {
-    pub fn push_const() -> Self { DescriptorBinding(None) }
-    pub fn desc_bind(desc_set: u32, bind_point: u32) -> Self { DescriptorBinding(Some((desc_set, bind_point))) }
+    pub fn new(desc_set: u32, bind_point: u32) -> Self { DescriptorBinding(desc_set, bind_point) }
 
-    pub fn is_push_const(&self) -> bool { self.0.is_none() }
-    pub fn is_desc_bind(&self) -> bool { self.0.is_some() }
-    pub fn into_inner(self) -> Option<(u32, u32)> { self.0 }
+    pub fn set(&self) -> u32 { self.0 }
+    pub fn bind(&self) -> u32 { self.1 }
+    pub fn into_inner(self) -> (u32, u32) { (self.0, self.1) }
 }
 impl fmt::Display for DescriptorBinding {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let Some((set, bind)) = self.0 {
-            write!(f, "(set={}, bind={})", set, bind)
-        } else {
-            write!(f, "(push_constant)")
-        }
+            write!(f, "(set={}, bind={})", self.0, self.1)
     }
 }
 impl fmt::Debug for DescriptorBinding {
@@ -207,6 +204,15 @@ pub struct InterfaceVariableResolution<'a> {
     pub ty: &'a Type,
 }
 
+/// Push constant resolution result.
+#[derive(Debug)]
+pub struct PushConstantResolution<'a> {
+    /// Type of the push constant block. This is expected to be struct.
+    pub ty: &'a Type,
+    /// Resolution of a variable in the push constant block, if the resolution
+    /// doesn't end at the block.
+    pub member_var_res: Option<MemberVariableResolution<'a>>,
+}
 /// Descriptor variable resolution result.
 #[derive(Debug)]
 pub struct DescriptorResolution<'a> {
@@ -242,6 +248,7 @@ pub enum AccessType {
 /// A set of information used to describe variable typing and routing.
 #[derive(Default, Clone)]
 pub struct Manifest {
+    pub(crate) push_const_ty: Option<Type>,
     pub(crate) input_map: HashMap<InterfaceLocation, Type>,
     pub(crate) output_map: HashMap<InterfaceLocation, Type>,
     pub(crate) desc_map: HashMap<DescriptorBinding, DescriptorType>,
@@ -249,37 +256,37 @@ pub struct Manifest {
     pub(crate) desc_access_map: HashMap<DescriptorBinding, AccessType>
 }
 impl Manifest {
-    /// Merge metadata records in another manifest into the current one IN
-    /// ORDER. Inputs of the current manifest will kept; outputs will be
-    /// replaced by the `other`'s; and descriptors will be aggregated to contain
-    /// both set of metadata.
-    pub fn merge(&mut self, other: &Manifest) -> Result<()> {
+    fn merge_push_const(&mut self, other: &Manifest) -> Result<()> {
+        if let Some(Type::Struct(dst_struct_ty)) = self.push_const_ty.as_mut() {
+            // Merge push constants scattered in different stages. This match
+            // must success.
+            if let Some(Type::Struct(src_struct_ty)) = other.push_const_ty.as_ref() {
+                dst_struct_ty.merge(&src_struct_ty)?;
+            }
+            // It's guaranteed to be interface uniform so we don't have to check
+            // the hash.
+        } else {
+            self.push_const_ty = other.push_const_ty.clone();
+        }
+        Ok(())
+    }
+    fn merge_descs(&mut self, other: &Manifest) -> Result<()> {
         use std::collections::hash_map::Entry::{Vacant, Occupied};
-        self.output_map = other.output_map.clone();
         for (desc_bind, desc_ty) in other.desc_map.iter() {
             match self.desc_map.entry(*desc_bind) {
                 Vacant(entry) => { entry.insert(desc_ty.clone()); },
-                Occupied(mut entry) => {
-                    if let DescriptorType::PushConstant(Type::Struct(dst_struct_ty)) = entry.get_mut() {
-                        // Merge push constants scattered in different stages.
-                        // This match must success.
-                        if let DescriptorType::PushConstant(Type::Struct(src_struct_ty)) = desc_ty {
-                            dst_struct_ty.merge(&src_struct_ty)?;
-                        } else {
-                            unreachable!("push constant merging with push constant");
-                        }
-                        // It's guaranteed to be interface uniform so we don't
-                        // have to check that.
-                    } else {
-                        // Just regular descriptor types. Simply compare the
-                        // hashes.
-                        if hash(entry.get()) != hash(&desc_ty) {
-                            return Err(Error::MismatchedManifest);
-                        }
+                Occupied(entry) => {
+                    // Just regular descriptor types. Simply match the hashes.
+                    if hash(entry.get()) != hash(&desc_ty) {
+                        return Err(Error::MismatchedManifest);
                     }
                 }
             }
         }
+        Ok(())
+    }
+    fn merge_names(&mut self, other: &Manifest) -> Result<()> {
+        use std::collections::hash_map::Entry::{Vacant, Occupied};
         for (name, locator) in other.var_name_map.iter() {
             match self.var_name_map.entry(name.to_owned()) {
                 Vacant(entry) => { entry.insert(locator.clone()); },
@@ -289,6 +296,9 @@ impl Manifest {
                 },
             }
         }
+        Ok(())
+    }
+    fn merge_accesses(&mut self, other: &Manifest) -> Result<()> {
         for (desc_bind, access) in other.desc_access_map.iter() {
             if let Some(acc) = self.desc_access_map.get_mut(&desc_bind) {
                 use num_traits::FromPrimitive;
@@ -299,6 +309,22 @@ impl Manifest {
             }
         }
         Ok(())
+    }
+    /// Merge metadata records in another manifest into the current one IN
+    /// ORDER. Inputs of the current manifest will kept; outputs will be
+    /// replaced by the `other`'s; and descriptors will be aggregated to contain
+    /// both set of metadata.
+    pub fn merge(&mut self, other: &Manifest) -> Result<()> {
+        self.output_map = other.output_map.clone();
+        self.merge_push_const(other)?;
+        self.merge_descs(other)?;
+        self.merge_names(other)?;
+        self.merge_accesses(other)?;
+        Ok(())
+    }
+    /// Get the push constant type.
+    pub fn get_push_const<'a>(&'a self) -> Option<&'a Type> {
+        self.push_const_ty.as_ref()
     }
     /// Get the input interface variable type.
     pub fn get_input<'a>(&'a self, location: InterfaceLocation) -> Option<&'a Type> {
@@ -377,26 +403,39 @@ impl Manifest {
         let desc_bind = match segs.next() {
             Some(Seg::Index(desc_set)) => {
                 if let Some(Seg::Index(bind_point)) = segs.next() {
-                    DescriptorBinding::desc_bind(desc_set as u32, bind_point as u32)
+                    DescriptorBinding::new(desc_set as u32, bind_point as u32)
                 } else { return None; }
             },
-            Some(Seg::Empty) => {
-                // Symbols started with an empty head, like ".modelView", is
-                // used to identify push constants.
-                DescriptorBinding::push_const()
-            }
             Some(Seg::Name(name)) => {
                 if let Some(ResourceLocator::Descriptor(desc_bind)) = self.var_name_map.get(name) {
                     *desc_bind
                 } else { return None; }
             },
-            None => return None,
+            _ => return None,
         };
         let desc_ty = self.desc_map.get(&desc_bind)?;
         let rem_sym = segs.remaining();
         let member_var_res = desc_ty.resolve(rem_sym);
         let desc_res = DescriptorResolution { desc_bind, desc_ty, member_var_res };
         Some(desc_res)
+    }
+    /// Get the metadata of a descriptor variable identified by a symbol.If the
+    /// exact variable cannot be resolved, the descriptor part of the resolution
+    /// will still be returned, if possible.
+    pub fn resolve_push_const<S: AsRef<Sym>>(&self, sym: S) -> Option<PushConstantResolution> {
+        let mut segs = sym.as_ref().segs();
+        match segs.next() {
+            Some(Seg::Empty) => {
+                // Symbols started with an empty head, like ".modelView", is
+                // used to identify push constants.
+            },
+            _ => return None,
+        };
+        let ty = self.push_const_ty.as_ref()?;
+        let rem_sym = segs.remaining();
+        let member_var_res = ty.resolve(rem_sym);
+        let push_const_res = PushConstantResolution { ty, member_var_res };
+        Some(push_const_res)
     }
     /// List all input locations
     pub fn inputs<'a>(&'a self) -> impl Iterator<Item=InterfaceVariableResolution<'a>> {
@@ -443,6 +482,7 @@ impl Deref for EntryPoint {
 impl fmt::Debug for EntryPoint {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct(&self.name)
+            .field("push_const", &self.manifest.push_const_ty)
             .field("inputs", &self.manifest.input_map)
             .field("outputs", &self.manifest.output_map)
             .field("descriptors", &self.manifest.desc_map)
