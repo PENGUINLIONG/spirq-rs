@@ -1,5 +1,14 @@
 # Change Log
 
+## v0.3.0
+
+- Fixed that built-in variables are not correctly ignored;
+- Supported component number for shared-location interface variables;
+- Added support for separable sampler types;
+- Added descriptor access type query;
+- Minor safety improvement.
+
+
 ## v0.2.1
 
 - Fixed a typo (`InputAtatchment`);

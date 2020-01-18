@@ -21,6 +21,7 @@ The project is approaching the finish line. Please refer to the attached example
 * [pipeline](examples/pipeline/main.rs): Query a (conceptual) pipeline built from multiple shader modules.
 * [spirv-spec](examples/spirv-spec/main.rs): Reflection of an example fragment shader program, which can be found in section 1.10 of the SPIR-V specification.
 * [walk](examples/walk/main.rs): Enumerate offsets, symbols and types of all descriptor variables.
+* [sampler-state](examples/sampler-state/main.rs): Separable sampler state support for HLSL-sourced SPIR-Vs.
 
 Sample output are attached in the same directories as the code files.
 
