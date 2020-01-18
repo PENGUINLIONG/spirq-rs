@@ -9,9 +9,16 @@ jobs:
   fast_finish: true
 before_script:
   - rustup component add rustfmt
+env:
+  - RUST_LOG=trace
 script:
   - cargo build --verbose --all
   - cargo test --verbose --all
+  - cargo run --example query
+  - cargo run --example pipeline
+  - cargo run --example sampler-state
+  - cargo run --example walk
+  - cargo run --example spirv-spec
 #  - cargo fmt -- --check
 cache: cargo
 git:
