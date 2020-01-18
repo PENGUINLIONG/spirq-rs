@@ -179,7 +179,7 @@ impl<'a> ReflectIntermediate<'a> {
             OP_TYPE_IMAGE => {
                 let op = OpTypeImage::try_from(instr)?;
                 let img_ty = if op.dim == Dim::DimSubpassData {
-                    Type::SubpassData
+                    Type::SubpassData()
                 } else {
                     // Only unit types allowed to be stored in storage images can
                     // have given format.
@@ -192,7 +192,7 @@ impl<'a> ReflectIntermediate<'a> {
             },
             OP_TYPE_SAMPLER => {
                 let op = OpTypeSampler::try_from(instr)?;
-                (op.ty_id, Type::Sampler)
+                (op.ty_id, Type::Sampler())
             }
             OP_TYPE_SAMPLED_IMAGE => {
                 let op = OpTypeSampledImage::try_from(instr)?;
@@ -298,24 +298,16 @@ impl<'a> ReflectIntermediate<'a> {
         } else { Err(Error::ID_COLLISION) }
     }
     fn populate_one_var(&mut self, instr: &Instr<'a>) -> Result<()> {
-        fn ty2buf(ty: &Type) -> Option<(u32, Type)> {
+        fn extract_proto_ty<'a>(ty: &'a Type) -> Result<(u32, &'a Type)> {
             match ty {
-                Type::Array(arr_ty) => if let Type::Struct(struct_ty) = &*arr_ty.proto_ty() {
-                    Some((arr_ty.nrepeat()?, Type::Struct(struct_ty.clone())))
-                } else { return None },
-                Type::Struct(_) => Some((1, ty.clone())),
-                _ => return None,
+                Type::Array(arr_ty) => {
+                    let nrepeat = arr_ty.nrepeat()
+                        .ok_or(Error::UNKNOWN_NBIND)?;
+                    let proto_ty = arr_ty.proto_ty();
+                    Ok((nrepeat, proto_ty))
+                },
+                _ => Ok((1, ty)),
             }
-        }
-        fn ty2uniform(buf_ty: &Type) -> Option<DescriptorType> {
-            let (nbind, struct_ty) = ty2buf(buf_ty)?;
-            let desc_ty = DescriptorType::UniformBuffer(nbind, struct_ty);
-            Some(desc_ty)
-        }
-        fn ty2storage(buf_ty: &Type) -> Option<DescriptorType> {
-            let (nbind, struct_ty) = ty2buf(buf_ty)?;
-            let desc_ty = DescriptorType::StorageBuffer(nbind, struct_ty);
-            Some(desc_ty)
         }
 
         let op = OpVariable::try_from(instr)?;
@@ -356,11 +348,12 @@ impl<'a> ReflectIntermediate<'a> {
                 } else { return Err(Error::TY_NOT_FOUND); }
             },
             StorageClass::Uniform => {
+                let (nbind, ty) = extract_proto_ty(ty)?;
                 let desc_ty = if self.contains_deco(ty_id, None, Decoration::BufferBlock) {
-                    ty2storage(ty)
+                    DescriptorType::StorageBuffer(nbind, ty.clone())
                 } else {
-                    ty2uniform(ty)
-                }.ok_or(Error::TY_NOT_FOUND)?;
+                    DescriptorType::UniformBuffer(nbind, ty.clone())
+                };
                 let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
                 let var = Variable::Descriptor(desc_bind, desc_ty);
                 if self.var_map.insert(op.alloc_id, var).is_some() {
@@ -368,7 +361,8 @@ impl<'a> ReflectIntermediate<'a> {
                 }
             },
             StorageClass::StorageBuffer => {
-                let desc_ty = ty2storage(ty).ok_or(Error::TY_NOT_FOUND)?;
+                let (nbind, ty) = extract_proto_ty(ty)?;
+                let desc_ty = DescriptorType::StorageBuffer(nbind, ty.clone());
                 let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
                 let var = Variable::Descriptor(desc_bind, desc_ty);
                 if self.var_map.insert(op.alloc_id, var).is_some() {
@@ -376,12 +370,13 @@ impl<'a> ReflectIntermediate<'a> {
                 }
             },
             StorageClass::UniformConstant => {
+                let (nbind, ty) = extract_proto_ty(ty)?;
                 let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
                 let desc_ty = match ty {
-                    Type::Image(_) => DescriptorType::Image(ty.clone()),
-                    Type::Sampler => DescriptorType::Sampler,
-                    Type::SampledImage(_) => DescriptorType::SampledImage(ty.clone()),
-                    Type::SubpassData => {
+                    Type::Image(_) => DescriptorType::Image(nbind, ty.clone()),
+                    Type::Sampler() => DescriptorType::Sampler(nbind),
+                    Type::SampledImage(_) => DescriptorType::SampledImage(nbind, ty.clone()),
+                    Type::SubpassData() => {
                         let input_attm_idx = self.get_deco_u32(op.alloc_id, None, Decoration::InputAttachmentIndex)
                             .ok_or(Error::MISSING_DECO)?;
                         DescriptorType::InputAttachment(input_attm_idx)
