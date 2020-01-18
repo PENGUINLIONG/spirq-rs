@@ -90,6 +90,7 @@ use ty::{Type, DescriptorType};
 pub use sym::*;
 pub use error::*;
 pub use spirv_headers::ExecutionModel;
+use num_derive::FromPrimitive;
 
 /// SPIR-V program binary.
 #[derive(Debug, Default, Clone)]
@@ -225,6 +226,18 @@ pub struct MemberVariableResolution<'a> {
     pub ty: &'a Type,
 }
 
+/// Access type of a variable.
+#[repr(u32)]
+#[derive(Debug, FromPrimitive, Clone, Copy, PartialEq, Eq)]
+pub enum AccessType {
+    /// The variable has only been read from.
+    ReadOnly = 1,
+    /// The variable has only been written to.
+    WriteOnly = 2,
+    /// The variable has been read from and written to.
+    ReadWrite = 3,
+}
+
 /// A set of information used to describe variable typing and routing.
 #[derive(Default, Clone)]
 pub struct Manifest {
@@ -232,6 +245,7 @@ pub struct Manifest {
     pub(crate) output_map: HashMap<Location, Type>,
     pub(crate) desc_map: HashMap<DescriptorBinding, DescriptorType>,
     pub(crate) var_name_map: HashMap<String, ResourceLocator>,
+    pub(crate) desc_access_map: HashMap<DescriptorBinding, AccessType>
 }
 impl Manifest {
     /// Merge metadata records in another manifest into the current one IN
@@ -274,6 +288,15 @@ impl Manifest {
                 },
             }
         }
+        for (desc_bind, access) in other.desc_access_map.iter() {
+            if let Some(acc) = self.desc_access_map.get_mut(&desc_bind) {
+                use num_traits::FromPrimitive;
+                let access = *acc as u32 | *access as u32;
+                *acc = AccessType::from_u32(access).unwrap();
+            } else {
+                self.desc_access_map.insert(*desc_bind, *access);
+            }
+        }
         Ok(())
     }
     /// Get the input interface variable type.
@@ -309,6 +332,13 @@ impl Manifest {
             .find_map(|x| if let ResourceLocator::Descriptor(db) = x.1 {
                 if *db == desc_bind { Some(x.0.as_ref()) } else { None }
             } else { None })
+    }
+    /// Get the access pattern of the descriptor at the given descriptor
+    /// binding.
+    pub fn get_desc_access(&self, desc_bind: DescriptorBinding) -> Option<AccessType> {
+        self.desc_access_map
+            .get(&desc_bind)
+            .map(|x| *x)
     }
     fn resolve_ivar<'a>(&self, map: &'a HashMap<Location, Type>, sym: &Sym) -> Option<InterfaceVariableResolution<'a>> {
         let mut segs = sym.segs();

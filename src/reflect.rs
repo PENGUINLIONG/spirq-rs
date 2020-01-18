@@ -7,7 +7,7 @@ use spirv_headers::{Decoration, Dim, StorageClass};
 use crate::ty::*;
 use crate::consts::*;
 use crate::{Location, DescriptorBinding, SpirvBinary, Instrs, Instr, Manifest,
-    ResourceLocator, ExecutionModel, EntryPoint};
+    ResourceLocator, ExecutionModel, EntryPoint, AccessType};
 use crate::error::{Error, Result};
 use crate::instr::*;
 
@@ -24,9 +24,11 @@ enum Variable {
     Output(Location, Type),
     Descriptor(DescriptorBinding, DescriptorType),
 }
+
 #[derive(Default, Debug, Clone)]
 struct Function {
-    accessed_vars: HashSet<InstrId>,
+    // First bit (01)for READ, second bit (10) for WRITE.
+    accessed_vars: HashMap<InstrId, u32>,
     calls: HashSet<InstrId>,
 }
 struct EntryPointDeclartion<'a> {
@@ -41,6 +43,10 @@ type TypeId = ObjectId;
 type VariableId = ObjectId;
 type ConstantId = ObjectId;
 type FunctionId = ObjectId;
+
+const DESC_ACC_READ: u32 = 1;
+const DESC_ACC_WRITE: u32 = 2;
+
 
 // The actual reflection to take place.
 
@@ -435,14 +441,28 @@ impl<'a> ReflectIntermediate<'a> {
                     OP_LOAD => {
                         let op = OpLoad::try_from(instr)?;
                         let mut rsc_id = op.rsc_id;
+                        // Resolve access chain.
                         if let Some(&x) = access_chain_map.get(&rsc_id) { rsc_id = x }
-                        func.as_mut().unwrap().accessed_vars.insert(rsc_id);
+                        // Mark variable as read.
+                        let func = func.as_mut().unwrap();
+                        if let Some(flags) = func.accessed_vars.get_mut(&rsc_id) {
+                            *flags |= DESC_ACC_READ;
+                        } else {
+                            func.accessed_vars.insert(rsc_id, DESC_ACC_READ);
+                        }
                     },
                     OP_STORE => {
                         let op = OpStore::try_from(instr)?;
                         let mut rsc_id = op.rsc_id;
+                        // Resolve access chain.
                         if let Some(&x) = access_chain_map.get(&rsc_id) { rsc_id = x }
-                        func.as_mut().unwrap().accessed_vars.insert(rsc_id);
+                        // Mark variable as read.
+                        let func = func.as_mut().unwrap();
+                        if let Some(flags) = func.accessed_vars.get_mut(&rsc_id) {
+                            *flags |= DESC_ACC_WRITE;
+                        } else {
+                            func.accessed_vars.insert(rsc_id, DESC_ACC_WRITE);
+                        }
                     },
                     OP_ACCESS_CHAIN => {
                         let op = OpAccessChain::try_from(instr)?;
@@ -458,18 +478,23 @@ impl<'a> ReflectIntermediate<'a> {
         }
         Ok(())
     }
-    fn collect_fn_vars_impl(&self, func: FunctionId, vars: &mut HashSet<VariableId>) {
+    fn collect_fn_vars_impl(&self, func: FunctionId, vars: &mut HashMap<VariableId, AccessType>) {
         if let Some(func) = self.func_map.get(&func) {
             let it = func.accessed_vars.iter()
-                .filter(|x| self.var_map.contains_key(x));
+                .filter_map(|(var_id, access)| {
+                    if self.var_map.contains_key(var_id) {
+                        use num_traits::FromPrimitive;
+                        Some((*var_id, AccessType::from_u32(*access).unwrap()))
+                    } else { None }
+                });
             vars.extend(it);
             for call in func.calls.iter() {
                 self.collect_fn_vars_impl(*call, vars);
             }
         }
     }
-    fn collect_fn_vars(&self, func: FunctionId) -> HashSet<VariableId> {
-        let mut accessed_vars = HashSet::new();
+    fn collect_fn_vars(&self, func: FunctionId) -> HashMap<VariableId, AccessType> {
+        let mut accessed_vars = HashMap::new();
         self.collect_fn_vars_impl(func, &mut accessed_vars);
         accessed_vars
     }
@@ -482,7 +507,7 @@ impl<'a> ReflectIntermediate<'a> {
                 manifest: Manifest::default(),
             };
             let accessed_var_ids = self.collect_fn_vars(entry_point_declr.func_id);
-            for accessed_var_id in accessed_var_ids {
+            for (accessed_var_id, access) in accessed_var_ids {
                 let accessed_var = self.var_map.get(&accessed_var_id)
                     .cloned()
                     .ok_or(Error::UNDECLARED_VAR)?;
@@ -509,9 +534,9 @@ impl<'a> ReflectIntermediate<'a> {
                     },
                     Variable::Descriptor(desc_bind, desc_ty) => {
                         // Descriptors cannot share bindings.
-                        if entry_point.manifest.desc_map.insert(desc_bind, desc_ty).is_some() {
-                            return Err(Error::DESC_BIND_COLLISION);
-                        }
+                        if entry_point.manifest.desc_map.insert(desc_bind, desc_ty).is_none() {
+                            entry_point.manifest.desc_access_map.insert(desc_bind, access);
+                        } else { return Err(Error::DESC_BIND_COLLISION) }
                         if let Some(name) = self.get_name(accessed_var_id, None) {
                             if entry_point.manifest.var_name_map
                                 .insert(name.to_owned(), ResourceLocator::Descriptor(desc_bind)).is_some() {
