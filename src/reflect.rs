@@ -6,8 +6,8 @@ use std::ops::RangeInclusive;
 use spirv_headers::{Decoration, Dim, StorageClass};
 use crate::ty::*;
 use crate::consts::*;
-use crate::{Location, DescriptorBinding, SpirvBinary, Instrs, Instr, Manifest,
-    ResourceLocator, ExecutionModel, EntryPoint, AccessType};
+use crate::{InterfaceLocation, DescriptorBinding, SpirvBinary, Instrs, Instr,
+    Manifest, ResourceLocator, ExecutionModel, EntryPoint, AccessType};
 use crate::error::{Error, Result};
 use crate::instr::*;
 
@@ -20,8 +20,8 @@ struct Constant<'a> {
 }
 #[derive(Clone)]
 enum Variable {
-    Input(Location, Type),
-    Output(Location, Type),
+    Input(InterfaceLocation, Type),
+    Output(InterfaceLocation, Type),
     Descriptor(DescriptorBinding, DescriptorType),
 }
 
@@ -79,10 +79,12 @@ impl<'a> ReflectIntermediate<'a> {
             .and_then(|x| x.get(0))
             .cloned()
     }
-    fn get_var_location_or_default(&self, var_id: VariableId) -> Location {
+    fn get_var_location(&self, var_id: VariableId) -> Option<InterfaceLocation> {
+        let comp = self.get_deco_u32(var_id, None, Decoration::Component)
+            .unwrap_or(0);
         self.get_deco_u32(var_id, None, Decoration::Location)
-            .unwrap_or(0)
-            .into()
+            .map(|loc| InterfaceLocation(loc, comp))
+
     }
     fn get_var_desc_bind_or_default(&self, var_id: VariableId) -> DescriptorBinding {
         let desc_set = self.get_deco_u32(var_id, None, Decoration::DescriptorSet)
@@ -325,21 +327,26 @@ impl<'a> ReflectIntermediate<'a> {
         };
         match op.store_cls {
             StorageClass::Input => {
-                let location = self.get_var_location_or_default(op.alloc_id);
-                let var = Variable::Input(location, ty.clone());
-                if self.var_map.insert(op.alloc_id, var).is_some() {
-                    return Err(Error::ID_COLLISION);
+                if let Some(location) = self.get_var_location(op.alloc_id) {
+                    let var = Variable::Input(location, ty.clone());
+                    if self.var_map.insert(op.alloc_id, var).is_some() {
+                        return Err(Error::ID_COLLISION);
+                    }
+                    // There can be interface blocks for input and output but there
+                    // won't be any for attribute inputs nor for attachment outputs,
+                    // so we just ignore structs and arrays or something else here.
+                } else {
+                    // Ignore built-in interface varaibles whichh have no
+                    // location assigned.
                 }
-                // There can be interface blocks for input and output but there
-                // won't be any for attribute inputs nor for attachment outputs,
-                // so we just ignore structs and arrays or something else here.
             },
             StorageClass::Output => {
-                let location = self.get_var_location_or_default(op.alloc_id);
-                let var = Variable::Output(location, ty.clone());
-                if self.var_map.insert(op.alloc_id, var).is_some() {
-                    return Err(Error::ID_COLLISION);
-                }
+                if let Some(location) = self.get_var_location(op.alloc_id) {
+                    let var = Variable::Output(location, ty.clone());
+                    if self.var_map.insert(op.alloc_id, var).is_some() {
+                        return Err(Error::ID_COLLISION);
+                    }
+                } else {}
             },
             StorageClass::PushConstant => {
                 // Push constants have no global offset. Offsets are applied to
