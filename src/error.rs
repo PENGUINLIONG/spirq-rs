@@ -21,6 +21,7 @@ impl Error {
     pub const CONST_NOT_FOUND: Self = Self::CorruptedSpirv("cannot find a suitable constant");
     pub const UNDECLARED_VAR: Self = Self::CorruptedSpirv("accessing undeclared variable");
     pub const DESC_BIND_COLLISION: Self = Self::CorruptedSpirv("descriptor binding cannot be shared");
+    pub const UNKNOWN_NBIND: Self = Self::CorruptedSpirv("binding count cannot be determined");
 
     pub const UNSUPPORTED_TY: Self = Self::UnsupportedSpirv("unsupported type");
     pub const UNSUPPORTED_IMG_CFG: Self = Self::UnsupportedSpirv("unsupport image configuration");

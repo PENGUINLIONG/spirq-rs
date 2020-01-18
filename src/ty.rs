@@ -382,6 +382,20 @@ impl fmt::Debug for StructType {
 }
 
 
+macro_rules! declr_ty_accessor {
+    ([$e:ident] $($name:ident -> $ty:ident,)+) => {
+        $(
+            pub fn $name(&self) -> bool {
+                match self {
+                    $e::$ty(..) => true,
+                    _ => false
+                }
+            }
+        )+
+    }
+}
+
+
 #[derive(Hash, Clone)]
 pub enum Type {
     /// A single value, which can be a signed or unsigned integer, a floating
@@ -398,9 +412,9 @@ pub enum Type {
     /// preferred in legacy OpenGL.
     SampledImage(ImageType),
     /// Separable sampler state.
-    Sampler,
+    Sampler(),
     /// Pixel store from input attachments.
-    SubpassData,
+    SubpassData(),
     /// Repetition of a single type.
     Array(ArrayType),
     /// Aggregation of types.
@@ -414,9 +428,9 @@ impl Type {
             Vector(vec_ty) => Some(vec_ty.nbyte()),
             Matrix(mat_ty) => Some(mat_ty.nbyte()),
             Image(_) => None,
-            Sampler => None,
+            Sampler() => None,
             SampledImage(_) => None,
-            SubpassData => None,
+            SubpassData() => None,
             Array(arr_ty) => Some(arr_ty.nbyte()),
             Struct(struct_ty) => Some(struct_ty.nbyte()),
         }
@@ -456,15 +470,18 @@ impl Type {
     }
     // Iterate over all entries in the type tree.
     pub fn walk<'a>(&'a self) -> Walk<'a> { Walk::new(self) }
-    pub fn is_scalar(&self) -> bool { match self { Type::Scalar(_) => true, _ => false } }
-    pub fn is_vec(&self) -> bool { match self { Type::Vector(_) => true, _ => false } }
-    pub fn is_mat(&self) -> bool { match self { Type::Matrix(_) => true, _ => false } }
-    pub fn is_img(&self) -> bool { match self { Type::Image(_) => true, _ => false } }
-    pub fn is_sampler(&self) -> bool { match self { Type::Sampler => true, _ => false } }
-    pub fn is_sampled_img(&self) -> bool { match self { Type::SampledImage(_) => true, _ => false } }
-    pub fn is_subpass_data(&self) -> bool { match self { Type::SubpassData => true, _ => false } }
-    pub fn is_arr(&self) -> bool { match self { Type::Array(_) => true, _ => false } }
-    pub fn is_struct(&self) -> bool { match self { Type::Struct(_) => true, _ => false } }
+    declr_ty_accessor! {
+        [Type]
+        is_scalar -> Scalar,
+        is_vec -> Vector,
+        is_mat -> Matrix,
+        is_img -> Image,
+        is_samper -> Sampler,
+        is_sampled_img -> SampledImage,
+        is_subpass_data -> SubpassData,
+        is_arr -> Array,
+        is_struct -> Struct,
+    }
 }
 impl fmt::Debug for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -473,9 +490,9 @@ impl fmt::Debug for Type {
             Type::Vector(vec_ty) => vec_ty.fmt(f),
             Type::Matrix(mat_ty) => mat_ty.fmt(f),
             Type::Image(img_ty) => write!(f, "{:?}*", img_ty),
-            Type::Sampler => write!(f, "sampler"),
+            Type::Sampler() => write!(f, "sampler"),
             Type::SampledImage(img_ty) => img_ty.fmt(f),
-            Type::SubpassData => write!(f, "subpassData"),
+            Type::SubpassData() => write!(f, "subpassData"),
             Type::Array(arr_ty) => arr_ty.fmt(f),
             Type::Struct(struct_ty) => struct_ty.fmt(f),
         }
@@ -489,12 +506,15 @@ pub enum DescriptorType {
     PushConstant(Type),
     UniformBuffer(u32, Type),
     StorageBuffer(u32, Type),
-    Image(Type),
-    Sampler,
-    SampledImage(Type),
+    Image(u32, Type),
+    Sampler(u32),
+    SampledImage(u32, Type),
+    // Note that the parameter is input attachment index, not binding number.
     InputAttachment(u32),
 }
 impl DescriptorType {
+    /// Get the size of buffer (in bytes) needed to contain all the data for
+    /// this buffer object or push constant buffer.
     pub fn nbyte(&self) -> Option<usize> {
         use DescriptorType::*;
         match self {
@@ -502,6 +522,20 @@ impl DescriptorType {
             UniformBuffer(_, ty) => ty.nbyte(),
             StorageBuffer(_, ty) => ty.nbyte(),
             _ => None,
+        }
+    }
+    /// Number of bindings at the binding point. All descriptors can have
+    /// multiple binding points.
+    pub fn nbind(&self) -> u32 {
+        use DescriptorType::*;
+        match self {
+            PushConstant(_) => 1,
+            UniformBuffer(nbind, _) => *nbind,
+            StorageBuffer(nbind, _) => *nbind,
+            Image(nbind, _) => *nbind,
+            Sampler(nbind) => *nbind,
+            SampledImage(nbind, _) => *nbind,
+            InputAttachment(_) => 1,
         }
     }
     /// Resolve a symbol WITHIN the descriptor type. The symbol should not
@@ -523,34 +557,34 @@ impl DescriptorType {
             PushConstant(ty) => ty,
             UniformBuffer(_, ty) => ty,
             StorageBuffer(_, ty) => ty,
-            Image(ty) => ty,
-            Sampler => &Type::Sampler,
-            SampledImage(ty) => ty,
-            InputAttachment(_) => {
-                static SUBPASS_DATA: Type = Type::SubpassData;
-                &SUBPASS_DATA
-            },
+            Image(_, ty) => ty,
+            Sampler(_) => &Type::Sampler(),
+            SampledImage(_, ty) => ty,
+            InputAttachment(_) => &Type::SubpassData(),
         };
         Walk::new(ty)
     }
-    pub fn is_push_const(&self) -> bool { match self { DescriptorType::PushConstant(_) => true, _ => false } }
-    pub fn is_uniform_buf(&self) -> bool { match self { DescriptorType::UniformBuffer(_,_) => true, _ => false } }
-    pub fn is_storage_buf(&self) -> bool { match self { DescriptorType::StorageBuffer(_,_) => true, _ => false } }
-    pub fn is_img(&self) -> bool { match self { DescriptorType::Image(_) => true, _ => false } }
-    pub fn is_sampler(&self) -> bool { match self { DescriptorType::Sampler => true, _ => false } }
-    pub fn is_sampled_img(&self) -> bool { match self { DescriptorType::SampledImage(_) => true, _ => false } }
-    pub fn is_input_attm(&self) -> bool { match self { DescriptorType::InputAttachment(_) => true, _ => false } }
+    declr_ty_accessor! {
+        [DescriptorType]
+        is_push_const -> PushConstant,
+        is_uniform_buf -> UniformBuffer,
+        is_storage_buf -> StorageBuffer,
+        is_img -> Image,
+        is_sampler -> Sampler,
+        is_sampled_img -> SampledImage,
+        is_input_attm -> InputAttachment,
+    }
 }
 impl fmt::Debug for DescriptorType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use DescriptorType::*;
         match self {
             PushConstant(ty) => ty.fmt(f),
-            UniformBuffer(nbind, ty) => write!(f, "{}x{:?}", nbind, ty),
-            StorageBuffer(nbind, ty) => write!(f, "{}x{:?}", nbind, ty),
-            Image(ty) => ty.fmt(f),
-            Sampler => write!(f, "sampler"),
-            SampledImage(ty) => ty.fmt(f),
+            UniformBuffer(nbind, ty) => write!(f, "{}x {:?}", nbind, ty),
+            StorageBuffer(nbind, ty) => write!(f, "{}x {:?}", nbind, ty),
+            Image(nbind, ty) => write!(f, "{}x {:?}", nbind, ty),
+            Sampler(nbind) => write!(f, "{}x sampler", nbind),
+            SampledImage(nbind, ty) => write!(f, "{}x {:?}", nbind, ty),
             InputAttachment(idx) => write!(f, "subpassData[{}]", idx),
         }
     }
