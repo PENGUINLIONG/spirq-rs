@@ -1,5 +1,12 @@
 # Change Log
 
+## v0.4.0
+
+- No longer treating push constant as special cases of descriptors;
+- Support multibinding for all descriptors;
+- Minor clean-up.
+
+
 ## v0.3.0
 
 - Fixed that built-in variables are not correctly ignored;
