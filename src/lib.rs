@@ -256,6 +256,21 @@ pub struct Manifest {
     pub(crate) desc_access_map: HashMap<DescriptorBinding, AccessType>
 }
 impl Manifest {
+    fn merge_ivars(
+        self_ivar_map: &mut HashMap<InterfaceLocation, Type>,
+        other_ivar_map: &HashMap<InterfaceLocation, Type>,
+    ) -> Result<()> {
+        use std::collections::hash_map::Entry::{Vacant, Occupied};
+        for (location, ty) in other_ivar_map.iter() {
+            match self_ivar_map.entry(*location) {
+                Vacant(entry) => { entry.insert(ty.clone()); },
+                Occupied(entry) => if hash(entry.get()) != hash(ty) {
+                    return Err(Error::MismatchedManifest);
+                }
+            }
+        }
+        Ok(())
+    }
     fn merge_push_const(&mut self, other: &Manifest) -> Result<()> {
         if let Some(Type::Struct(dst_struct_ty)) = self.push_const_ty.as_mut() {
             // Merge push constants scattered in different stages. This match
@@ -310,12 +325,13 @@ impl Manifest {
         }
         Ok(())
     }
-    /// Merge metadata records in another manifest into the current one IN
-    /// ORDER. Inputs of the current manifest will kept; outputs will be
-    /// replaced by the `other`'s; and descriptors will be aggregated to contain
-    /// both set of metadata.
+    /// Merge metadata records in another manifest into the current one. If the
+    /// type bound to a interface location, a descriptor binding point or an
+    /// offset position in push constant block mismatches, the merge will fail
+    /// and the `self` manifest will be corrupted.
     pub fn merge(&mut self, other: &Manifest) -> Result<()> {
-        self.output_map = other.output_map.clone();
+        Self::merge_ivars(&mut self.input_map, &other.input_map)?;
+        Self::merge_ivars(&mut self.output_map, &other.output_map)?;
         self.merge_push_const(other)?;
         self.merge_descs(other)?;
         self.merge_names(other)?;
