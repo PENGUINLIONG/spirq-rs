@@ -1,8 +1,9 @@
 //! Reflection procedures and types.
 use std::convert::{TryFrom};
-use std::collections::{HashMap, HashSet};
 use std::iter::Peekable;
 use std::ops::RangeInclusive;
+use fnv::FnvHashMap as HashMap;
+use nohash_hasher::{IntMap, IntSet};
 use spirv_headers::{Decoration, Dim, StorageClass};
 use crate::ty::*;
 use crate::consts::*;
@@ -29,8 +30,8 @@ enum Variable {
 #[derive(Default, Debug, Clone)]
 struct Function {
     // First bit (01)for READ, second bit (10) for WRITE.
-    accessed_vars: HashMap<InstrId, u32>,
-    calls: HashSet<InstrId>,
+    accessed_vars: IntMap<InstrId, u32>,
+    calls: IntSet<InstrId>,
 }
 struct EntryPointDeclartion<'a> {
     func_id: u32,
@@ -56,11 +57,11 @@ struct ReflectIntermediate<'a> {
     entry_point_declrs: Vec<EntryPointDeclartion<'a>>,
     name_map: HashMap<(InstrId, Option<u32>), &'a str>,
     deco_map: HashMap<(InstrId, Option<u32>, Decoration), &'a [u32]>,
-    ty_map: HashMap<TypeId, Type>,
-    var_map: HashMap<VariableId, Variable>,
-    const_map: HashMap<ConstantId, Constant<'a>>,
-    ptr_map: HashMap<TypeId, TypeId>,
-    func_map: HashMap<FunctionId, Function>,
+    ty_map: IntMap<TypeId, Type>,
+    var_map: IntMap<VariableId, Variable>,
+    const_map: IntMap<ConstantId, Constant<'a>>,
+    ptr_map: IntMap<TypeId, TypeId>,
+    func_map: IntMap<FunctionId, Function>,
 }
 impl<'a> ReflectIntermediate<'a> {
     /// Resolve one recurring layer of pointers to the pointer that refer to the
@@ -427,7 +428,7 @@ impl<'a> ReflectIntermediate<'a> {
     }
     fn populate_access(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>) -> Result<()> {
         while instrs.peek().is_some() {
-            let mut access_chain_map = HashMap::new();
+            let mut access_chain_map = IntMap::default();
             let mut func: Option<&mut Function> = None;
             while let Some(instr) = instrs.peek() {
                 if instr.opcode() == OP_FUNCTION {
@@ -484,7 +485,7 @@ impl<'a> ReflectIntermediate<'a> {
         }
         Ok(())
     }
-    fn collect_fn_vars_impl(&self, func: FunctionId, vars: &mut HashMap<VariableId, AccessType>) {
+    fn collect_fn_vars_impl(&self, func: FunctionId, vars: &mut IntMap<VariableId, AccessType>) {
         if let Some(func) = self.func_map.get(&func) {
             let it = func.accessed_vars.iter()
                 .filter_map(|(var_id, access)| {
@@ -499,8 +500,8 @@ impl<'a> ReflectIntermediate<'a> {
             }
         }
     }
-    fn collect_fn_vars(&self, func: FunctionId) -> HashMap<VariableId, AccessType> {
-        let mut accessed_vars = HashMap::new();
+    fn collect_fn_vars(&self, func: FunctionId) -> IntMap<VariableId, AccessType> {
+        let mut accessed_vars = IntMap::default();
         self.collect_fn_vars_impl(func, &mut accessed_vars);
         accessed_vars
     }
@@ -520,7 +521,7 @@ impl<'a> ReflectIntermediate<'a> {
                 match accessed_var {
                     Variable::Input(location, ivar_ty) => {
                         // Input variables can share locations (aliasing).
-                        entry_point.manifest.input_map.insert(location, ivar_ty);
+                        entry_point.manifest.input_map.insert(location.into(), ivar_ty);
                         if let Some(name) = self.get_name(accessed_var_id, None) {
                             if entry_point.manifest.var_name_map
                                 .insert(name.to_owned(), ResourceLocator::Input(location)).is_some() {
@@ -530,7 +531,7 @@ impl<'a> ReflectIntermediate<'a> {
                     },
                     Variable::Output(location, ivar_ty) => {
                         // Output variables can share locations (aliasing).
-                        entry_point.manifest.output_map.insert(location, ivar_ty);
+                        entry_point.manifest.output_map.insert(location.into(), ivar_ty);
                         if let Some(name) = self.get_name(accessed_var_id, None) {
                             if entry_point.manifest.var_name_map
                                 .insert(name.to_owned(), ResourceLocator::Output(location)).is_some() {
@@ -540,8 +541,8 @@ impl<'a> ReflectIntermediate<'a> {
                     },
                     Variable::Descriptor(desc_bind, desc_ty) => {
                         // Descriptors cannot share bindings.
-                        if entry_point.manifest.desc_map.insert(desc_bind, desc_ty).is_none() {
-                            entry_point.manifest.desc_access_map.insert(desc_bind, access);
+                        if entry_point.manifest.desc_map.insert(desc_bind.into(), desc_ty).is_none() {
+                            entry_point.manifest.desc_access_map.insert(desc_bind.into(), access);
                         } else { return Err(Error::DESC_BIND_COLLISION) }
                         if let Some(name) = self.get_name(accessed_var_id, None) {
                             if entry_point.manifest.var_name_map

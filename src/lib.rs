@@ -81,16 +81,18 @@ pub mod error;
 pub mod ty;
 
 use std::convert::TryInto;
-use std::collections::{HashMap};
 use std::fmt;
 use std::iter::FromIterator;
 use std::ops::Deref;
+use num_derive::FromPrimitive;
+use fnv::FnvHashMap as HashMap;
+use nohash_hasher::IntMap;
+
 use parse::{Instrs, Instr};
 use ty::{Type, DescriptorType};
 pub use sym::*;
 pub use error::*;
 pub use spirv_headers::ExecutionModel;
-use num_derive::FromPrimitive;
 
 /// SPIR-V program binary.
 #[derive(Debug, Default, Clone)]
@@ -136,9 +138,8 @@ impl SpirvBinary {
 
 /// Internal hasher for type equality check.
 pub(crate) fn hash<H: std::hash::Hash>(h: &H) -> u64 {
-    use std::hash::Hasher;
-    use std::collections::hash_map::DefaultHasher;
-    let mut hasher = DefaultHasher::new();
+    use std::hash::{BuildHasher, Hasher};
+    let mut hasher = fnv::FnvBuildHasher::default().build_hasher();
     h.hash(&mut hasher);
     hasher.finish()
 }
@@ -164,6 +165,17 @@ impl fmt::Display for InterfaceLocation {
 impl fmt::Debug for InterfaceLocation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
 }
+impl From<InterfaceLocation> for InterfaceLocationCode {
+    fn from(x: InterfaceLocation) -> InterfaceLocationCode {
+        ((x.0 as u64) << 32) | (x.1 as u64)
+    }
+}
+impl From<InterfaceLocationCode> for InterfaceLocation {
+    fn from(x: InterfaceLocationCode) -> InterfaceLocation {
+        InterfaceLocation((x >> 32) as u32, (x & 0xFFFFFFFF) as u32)
+    }
+}
+type InterfaceLocationCode = u64;
 
 /// Descriptor set and binding point carrier.
 #[derive(PartialEq, Eq, Hash, Default, Clone, Copy)]
@@ -183,6 +195,17 @@ impl fmt::Display for DescriptorBinding {
 impl fmt::Debug for DescriptorBinding {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
 }
+impl From<DescriptorBinding> for DescriptorBindingCode {
+    fn from(x: DescriptorBinding) -> DescriptorBindingCode {
+        ((x.0 as u64) << 32) | (x.1 as u64)
+    }
+}
+impl From<DescriptorBindingCode> for DescriptorBinding {
+    fn from(x: DescriptorBindingCode) -> DescriptorBinding {
+        DescriptorBinding((x >> 32) as u32, (x & 0xFFFFFFFF) as u32)
+    }
+}
+type DescriptorBindingCode = u64;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub(crate) enum ResourceLocator {
@@ -249,16 +272,16 @@ pub enum AccessType {
 #[derive(Default, Clone)]
 pub struct Manifest {
     pub(crate) push_const_ty: Option<Type>,
-    pub(crate) input_map: HashMap<InterfaceLocation, Type>,
-    pub(crate) output_map: HashMap<InterfaceLocation, Type>,
-    pub(crate) desc_map: HashMap<DescriptorBinding, DescriptorType>,
+    pub(crate) input_map: IntMap<InterfaceLocationCode, Type>,
+    pub(crate) output_map: IntMap<InterfaceLocationCode, Type>,
+    pub(crate) desc_map: IntMap<DescriptorBindingCode, DescriptorType>,
     pub(crate) var_name_map: HashMap<String, ResourceLocator>,
-    pub(crate) desc_access_map: HashMap<DescriptorBinding, AccessType>
+    pub(crate) desc_access_map: IntMap<DescriptorBindingCode, AccessType>
 }
 impl Manifest {
     fn merge_ivars(
-        self_ivar_map: &mut HashMap<InterfaceLocation, Type>,
-        other_ivar_map: &HashMap<InterfaceLocation, Type>,
+        self_ivar_map: &mut IntMap<InterfaceLocationCode, Type>,
+        other_ivar_map: &IntMap<InterfaceLocationCode, Type>,
     ) -> Result<()> {
         use std::collections::hash_map::Entry::{Vacant, Occupied};
         for (location, ty) in other_ivar_map.iter() {
@@ -344,15 +367,15 @@ impl Manifest {
     }
     /// Get the input interface variable type.
     pub fn get_input<'a>(&'a self, location: InterfaceLocation) -> Option<&'a Type> {
-        self.input_map.get(&location)
+        self.input_map.get(&location.into())
     }
     /// Get the output interface variable type.
     pub fn get_output<'a>(&'a self, location: InterfaceLocation) -> Option<&'a Type> {
-        self.output_map.get(&location)
+        self.output_map.get(&location.into())
     }
     /// Get the descriptor type at the given descriptor binding point.
     pub fn get_desc<'a>(&'a self, desc_bind: DescriptorBinding) -> Option<&'a DescriptorType> {
-        self.desc_map.get(&desc_bind)
+        self.desc_map.get(&desc_bind.into())
     }
     /// Get the name that also refers to the input at the given location.
     pub fn get_input_name<'a>(&'a self, location: InterfaceLocation) -> Option<&'a str> {
@@ -380,10 +403,10 @@ impl Manifest {
     /// binding.
     pub fn get_desc_access(&self, desc_bind: DescriptorBinding) -> Option<AccessType> {
         self.desc_access_map
-            .get(&desc_bind)
+            .get(&desc_bind.into())
             .map(|x| *x)
     }
-    fn resolve_ivar<'a>(&self, map: &'a HashMap<InterfaceLocation, Type>, sym: &Sym) -> Option<InterfaceVariableResolution<'a>> {
+    fn resolve_ivar<'a>(&self, map: &'a IntMap<InterfaceLocationCode, Type>, sym: &Sym) -> Option<InterfaceVariableResolution<'a>> {
         let mut segs = sym.segs();
         let location = match segs.next() {
             Some(Seg::Index(loc)) => {
@@ -399,7 +422,7 @@ impl Manifest {
             _ => return None,
         };
         if segs.next().is_some() { return None }
-        let ty = map.get(&location)?;
+        let ty = map.get(&location.into())?;
         let ivar_res = InterfaceVariableResolution { location, ty };
         Some(ivar_res)
     }
@@ -429,7 +452,7 @@ impl Manifest {
             },
             _ => return None,
         };
-        let desc_ty = self.desc_map.get(&desc_bind)?;
+        let desc_ty = self.desc_map.get(&desc_bind.into())?;
         let rem_sym = segs.remaining();
         let member_var_res = desc_ty.resolve(rem_sym);
         let desc_res = DescriptorResolution { desc_bind, desc_ty, member_var_res };
@@ -457,14 +480,20 @@ impl Manifest {
     pub fn inputs<'a>(&'a self) -> impl Iterator<Item=InterfaceVariableResolution<'a>> {
         self.input_map.iter()
             .map(|(&location, ty)| {
-                InterfaceVariableResolution { location, ty }
+                InterfaceVariableResolution {
+                    location: location.into(),
+                    ty
+                }
             })
     }
     /// List all output locations in this manifest.
     pub fn outputs<'a>(&'a self) -> impl Iterator<Item=InterfaceVariableResolution<'a>> {
         self.output_map.iter()
             .map(|(&location, ty)|  {
-                InterfaceVariableResolution { location, ty }
+                InterfaceVariableResolution {
+                    location: location.into(),
+                    ty
+                }
             })
     }
     /// List all descriptors in this manifest. Results will not contain anything
@@ -472,7 +501,11 @@ impl Manifest {
     pub fn descs<'a>(&'a self) -> impl Iterator<Item=DescriptorResolution<'a>> {
         self.desc_map.iter()
             .map(|(&desc_bind, desc_ty)| {
-                DescriptorResolution{ desc_bind, desc_ty, member_var_res: None }
+                DescriptorResolution{
+                    desc_bind: desc_bind.into(),
+                    desc_ty,
+                    member_var_res: None
+                }
             })
     }
 }

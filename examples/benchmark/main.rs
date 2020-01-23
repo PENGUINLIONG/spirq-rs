@@ -8,9 +8,13 @@ use std::path::Path;
 macro_rules! bench {
     ($task:expr, $inner:block) => {
         {
-            const NREPEAT: u128 = 100;
-            let tic = Instant::now();
+            const NREPEAT: u128 = 10000;
+            const NPREHEAT: u32 = 100;
+            for _ in 0..NPREHEAT {
+                $inner;
+            }
             let mut i = 0;
+            let tic = Instant::now();
             let x = loop {
                 i += 1;
                 let x = $inner;
