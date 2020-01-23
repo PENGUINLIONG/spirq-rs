@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.4.1
+
+- Fixed that interface variables are not correctly merged;
+- Significant performance improvement.
+
 ## v0.4.0
 
 - No longer treating push constant as special cases of descriptors;

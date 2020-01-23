@@ -22,6 +22,7 @@ The project is approaching the finish line. Please refer to the attached example
 * [spirv-spec](examples/spirv-spec/main.rs): Reflection of an example fragment shader program, which can be found in section 1.10 of the SPIR-V specification.
 * [walk](examples/walk/main.rs): Enumerate offsets, symbols and types of all descriptor variables.
 * [sampler-state](examples/sampler-state/main.rs): Separable sampler state support for HLSL-sourced SPIR-Vs.
+* [benchmark](examples/benchmark/main.rs): Feel how fast SPIR-Q can be. (The log was generated from a `debug` run.)
 
 Sample output are attached in the same directories as the code files.
 
