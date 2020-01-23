@@ -81,16 +81,17 @@ pub mod error;
 pub mod ty;
 
 use std::convert::TryInto;
-use std::collections::{HashMap};
 use std::fmt;
 use std::iter::FromIterator;
 use std::ops::Deref;
+use num_derive::FromPrimitive;
+use fnv::FnvHashMap as HashMap;
+
 use parse::{Instrs, Instr};
 use ty::{Type, DescriptorType};
 pub use sym::*;
 pub use error::*;
 pub use spirv_headers::ExecutionModel;
-use num_derive::FromPrimitive;
 
 /// SPIR-V program binary.
 #[derive(Debug, Default, Clone)]
@@ -136,9 +137,8 @@ impl SpirvBinary {
 
 /// Internal hasher for type equality check.
 pub(crate) fn hash<H: std::hash::Hash>(h: &H) -> u64 {
-    use std::hash::Hasher;
-    use std::collections::hash_map::DefaultHasher;
-    let mut hasher = DefaultHasher::new();
+    use std::hash::{BuildHasher, Hasher};
+    let mut hasher = fnv::FnvBuildHasher::default().build_hasher();
     h.hash(&mut hasher);
     hasher.finish()
 }

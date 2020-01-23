@@ -1,8 +1,8 @@
 //! Reflection procedures and types.
 use std::convert::{TryFrom};
-use std::collections::{HashMap, HashSet};
 use std::iter::Peekable;
 use std::ops::RangeInclusive;
+use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use spirv_headers::{Decoration, Dim, StorageClass};
 use crate::ty::*;
 use crate::consts::*;
@@ -427,7 +427,7 @@ impl<'a> ReflectIntermediate<'a> {
     }
     fn populate_access(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>) -> Result<()> {
         while instrs.peek().is_some() {
-            let mut access_chain_map = HashMap::new();
+            let mut access_chain_map = HashMap::default();
             let mut func: Option<&mut Function> = None;
             while let Some(instr) = instrs.peek() {
                 if instr.opcode() == OP_FUNCTION {
@@ -500,7 +500,7 @@ impl<'a> ReflectIntermediate<'a> {
         }
     }
     fn collect_fn_vars(&self, func: FunctionId) -> HashMap<VariableId, AccessType> {
-        let mut accessed_vars = HashMap::new();
+        let mut accessed_vars = HashMap::default();
         self.collect_fn_vars_impl(func, &mut accessed_vars);
         accessed_vars
     }
