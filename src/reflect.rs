@@ -30,7 +30,7 @@ enum Variable {
 #[derive(Default, Debug, Clone)]
 struct Function {
     // First bit (01)for READ, second bit (10) for WRITE.
-    accessed_vars: HashMap<InstrId, u32>,
+    accessed_vars: IntMap<InstrId, u32>,
     calls: IntSet<InstrId>,
 }
 struct EntryPointDeclartion<'a> {
@@ -521,7 +521,7 @@ impl<'a> ReflectIntermediate<'a> {
                 match accessed_var {
                     Variable::Input(location, ivar_ty) => {
                         // Input variables can share locations (aliasing).
-                        entry_point.manifest.input_map.insert(location, ivar_ty);
+                        entry_point.manifest.input_map.insert(location.into(), ivar_ty);
                         if let Some(name) = self.get_name(accessed_var_id, None) {
                             if entry_point.manifest.var_name_map
                                 .insert(name.to_owned(), ResourceLocator::Input(location)).is_some() {
@@ -531,7 +531,7 @@ impl<'a> ReflectIntermediate<'a> {
                     },
                     Variable::Output(location, ivar_ty) => {
                         // Output variables can share locations (aliasing).
-                        entry_point.manifest.output_map.insert(location, ivar_ty);
+                        entry_point.manifest.output_map.insert(location.into(), ivar_ty);
                         if let Some(name) = self.get_name(accessed_var_id, None) {
                             if entry_point.manifest.var_name_map
                                 .insert(name.to_owned(), ResourceLocator::Output(location)).is_some() {
@@ -541,8 +541,8 @@ impl<'a> ReflectIntermediate<'a> {
                     },
                     Variable::Descriptor(desc_bind, desc_ty) => {
                         // Descriptors cannot share bindings.
-                        if entry_point.manifest.desc_map.insert(desc_bind, desc_ty).is_none() {
-                            entry_point.manifest.desc_access_map.insert(desc_bind, access);
+                        if entry_point.manifest.desc_map.insert(desc_bind.into(), desc_ty).is_none() {
+                            entry_point.manifest.desc_access_map.insert(desc_bind.into(), access);
                         } else { return Err(Error::DESC_BIND_COLLISION) }
                         if let Some(name) = self.get_name(accessed_var_id, None) {
                             if entry_point.manifest.var_name_map
