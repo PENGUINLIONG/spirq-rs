@@ -19,6 +19,7 @@ script:
   - cargo run --example sampler-state
   - cargo run --example walk
   - cargo run --example spirv-spec
+  - cargo run --example benchmark
 #  - cargo fmt -- --check
 cache: cargo
 git:
