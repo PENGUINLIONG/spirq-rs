@@ -15,7 +15,7 @@ It should be noted that SPIR-V is targeting at Vulkan so OpenCL binaries are not
 
 ## Usage
 
-The project is approaching the finish line. Please refer to the attached examples:
+Please refer to the attached examples:
 
 * [query](examples/query/main.rs): Query separate entry points in SPIR-V binaries.
 * [pipeline](examples/pipeline/main.rs): Query a (conceptual) pipeline built from multiple shader modules.
