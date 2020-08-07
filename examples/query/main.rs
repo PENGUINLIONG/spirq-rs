@@ -24,12 +24,16 @@ fn main() {
     let frag = &frag[0];
     info!("{:#?}", frag);
     let check_frag = |sym :&str| {
-        let desc_res = frag.resolve_desc(sym).unwrap();
+        dbg!(sym);
+        let desc_res = frag.resolve_desc(sym).expect("failed to resolve desc");
         info!("{}: {:?}", sym, desc_res);
     };
-    check_frag("mat.fdsa.1");
+    check_frag("hahayes");
+    check_frag("hahano");
+    //check_frag("mat.fdsa");
     check_frag("someImage");
     check_frag("imgggg");
+
 }
 
 
@@ -49,6 +53,7 @@ fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> HashMap<String, SpirvBinar
         })
         .filter_map(|x| {
             let mut buf = Vec::new();
+            dbg!(&x);
             if !x.is_file() ||
                 x.extension() != Some(OsStr::new("spv")) ||
                 File::open(&x).and_then(|mut x| x.read_to_end(&mut buf)).is_err() ||

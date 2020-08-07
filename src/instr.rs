@@ -128,6 +128,11 @@ define_ops!{
         const_id: ConstantId = read_u32(),
         value: &'a [u32] = read_list(),
     }
+    OpSpecConstant {
+        ty_id: TypeId = read_u32(),
+        spec_const_id: ConstantId = read_u32(),
+        value: &'a [u32] = read_list(),
+    }
     OpVariable {
         ty_id: TypeId = read_u32(),
         alloc_id: ResourceId = read_u32(),

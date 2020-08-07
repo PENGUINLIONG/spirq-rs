@@ -41,7 +41,7 @@ pub const CONST_RANGE: RangeInclusive<OpCode> = OP_CONSTANT_TRUE..=OP_CONSTANT_N
 
 pub const OP_SPEC_CONSTANT_TRUE: OpCode = Op::SpecConstantTrue as u32;
 // pub const OP_SPEC_CONSTANT_FALSE: OpCode = Op::SpecConstantFalse as u32;
-// pub const OP_SPEC_CONSTANT: OpCode = Op::SpecConstant as u32;
+pub const OP_SPEC_CONSTANT: OpCode = Op::SpecConstant as u32;
 // pub const OP_SPEC_CONSTANT_COMPOSITE: OpCode = Op::SpecConstantComposite as u32;
 pub const OP_SPEC_CONSTANT_OP: OpCode = Op::SpecConstantOp as u32;
 pub const SPEC_CONST_RANGE: RangeInclusive<OpCode> = OP_SPEC_CONSTANT_TRUE..=OP_SPEC_CONSTANT_OP;
