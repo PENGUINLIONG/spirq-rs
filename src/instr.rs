@@ -11,6 +11,7 @@ pub type FunctionId = u32;
 pub type TypeId = u32;
 pub type ResourceId = u32;
 pub type ConstantId = u32;
+pub type SpecConstantId = u32;
 
 pub type MemberIdx = u32;
 
@@ -130,7 +131,7 @@ define_ops!{
     }
     OpSpecConstant {
         ty_id: TypeId = read_u32(),
-        spec_const_id: ConstantId = read_u32(),
+        spec_const_id: SpecConstantId = read_u32(),
         value: &'a [u32] = read_list(),
     }
     OpVariable {
