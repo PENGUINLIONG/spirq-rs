@@ -49,6 +49,7 @@ type ObjectId = u32;
 type TypeId = ObjectId;
 type VariableId = ObjectId;
 type ConstantId = ObjectId;
+type SpecConstantId = ObjectId;
 type FunctionId = ObjectId;
 
 const DESC_ACC_READ: u32 = 1;
@@ -65,7 +66,7 @@ struct ReflectIntermediate<'a> {
     ty_map: IntMap<TypeId, Type>,
     var_map: IntMap<VariableId, Variable>,
     const_map: IntMap<ConstantId, Constant<'a>>,
-    spec_const_map: IntMap<ConstantId, SpecConstant<'a>>,
+    spec_const_map: IntMap<SpecConstantId, SpecConstant<'a>>,
     ptr_map: IntMap<TypeId, TypeId>,
     func_map: IntMap<FunctionId, Function>,
 }
