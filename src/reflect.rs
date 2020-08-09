@@ -15,6 +15,11 @@ use crate::instr::*;
 // Intermediate types used in reflection.
 
 #[derive(Debug, Clone)]
+struct SpecConstant<'a> {
+    ty: InstrId,
+    value: &'a [u32],
+}
+#[derive(Debug, Clone)]
 struct Constant<'a> {
     ty: InstrId,
     value: &'a [u32],
@@ -44,6 +49,7 @@ type ObjectId = u32;
 type TypeId = ObjectId;
 type VariableId = ObjectId;
 type ConstantId = ObjectId;
+type SpecConstantId = ObjectId;
 type FunctionId = ObjectId;
 
 const DESC_ACC_READ: u32 = 1;
@@ -60,6 +66,7 @@ struct ReflectIntermediate<'a> {
     ty_map: IntMap<TypeId, Type>,
     var_map: IntMap<VariableId, Variable>,
     const_map: IntMap<ConstantId, Constant<'a>>,
+    spec_const_map: IntMap<SpecConstantId, SpecConstant<'a>>,
     ptr_map: IntMap<TypeId, TypeId>,
     func_map: IntMap<FunctionId, Function>,
 }
@@ -214,6 +221,7 @@ impl<'a> ReflectIntermediate<'a> {
                 let op = OpTypeArray::try_from(instr)?;
                 let proto_ty = self.ty_map.get(&op.proto_ty_id)
                     .ok_or(Error::TY_NOT_FOUND)?;
+
                 let nrepeat = self.const_map.get(&op.nrepeat_const_id)
                     .and_then(|constant| {
                         if let Some(Type::Scalar(scalar_ty)) = self.ty_map.get(&constant.ty) {
@@ -222,7 +230,16 @@ impl<'a> ReflectIntermediate<'a> {
                             }
                         }
                         None
-                    })
+                    }).or_else(|| self.spec_const_map.get(&op.nrepeat_const_id)
+                        .and_then(|constant| {
+                            if let Some(Type::Scalar(scalar_ty)) = self.ty_map.get(&constant.ty) {
+                                if scalar_ty.nbyte() == 4 && scalar_ty.is_uint() {
+                                    return Some(constant.value[0]);
+                                }
+                            }
+                            None
+                        }
+                        ))
                     .ok_or(Error::CONST_NOT_FOUND)?;
                 let stride = self.get_deco_u32(op.ty_id, None, Decoration::ArrayStride)
                     .map(|x| x as usize);
@@ -300,12 +317,29 @@ impl<'a> ReflectIntermediate<'a> {
     }
     fn populate_one_const(&mut self, instr: &Instr<'a>) -> Result<()> {
         use std::collections::hash_map::Entry::Vacant;
-        if instr.opcode() != OP_CONSTANT { return Ok(()) }
-        let op = OpConstant::try_from(instr)?;
-        let constant = Constant { ty: op.ty_id, value: op.value };
-        if let Vacant(entry) = self.const_map.entry(op.const_id) {
-            entry.insert(constant); Ok(())
-        } else { Err(Error::ID_COLLISION) }
+        if instr.opcode() == OP_CONSTANT {
+            let op = OpConstant::try_from(instr)?;
+            let constant = Constant { ty: op.ty_id, value: op.value };
+            if let Vacant(entry) = self.const_map.entry(op.const_id) {
+                entry.insert(constant);
+                Ok(())
+            } else { Err(Error::ID_COLLISION) }
+        } else {
+            Ok(())
+        }
+    }
+    fn populate_one_spec_const(&mut self, instr: &Instr<'a>) -> Result<()> {
+        use std::collections::hash_map::Entry::Vacant;
+        if instr.opcode() == OP_SPEC_CONSTANT {
+            let op = OpSpecConstant::try_from(instr)?;
+            let constant = SpecConstant { ty: op.ty_id, value: op.value };
+            if let Vacant(entry) = self.spec_const_map.entry(op.spec_const_id) {
+                entry.insert(constant);
+                Ok(())
+            } else { Err(Error::ID_COLLISION) }
+        } else {
+            Ok(())
+        }
     }
     fn populate_one_var(&mut self, instr: &Instr<'a>) -> Result<()> {
         fn extract_proto_ty<'a>(ty: &'a Type) -> Result<(u32, &'a Type)> {
@@ -420,7 +454,7 @@ impl<'a> ReflectIntermediate<'a> {
             } else if CONST_RANGE.contains(&opcode) {
                 self.populate_one_const(instr)?;
             } else if SPEC_CONST_RANGE.contains(&opcode) {
-                // TODO: (penguinliong)
+                self.populate_one_spec_const(instr)?;
             } else { break; }
             instrs.next();
         }
