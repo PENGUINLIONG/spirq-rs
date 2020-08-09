@@ -10,6 +10,10 @@ fn main() {
     info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
     let frag = spvs["referential.frag"].reflect().unwrap();
     let frag = &frag[0];
+    for spec_const in frag.spec.spec_consts() {
+        let name = frag.spec.get_spec_const_name(spec_const.spec_id).unwrap_or("unnamed");
+        info!("spec_const#{} ({}): {:?}", spec_const.spec_id, name, spec_const.ty);
+    }
     for input in frag.inputs() {
         let name = frag.get_input_name(input.location).unwrap_or("unnamed");
         info!("input#{} ({}): {:?}", input.location, name, input.ty);

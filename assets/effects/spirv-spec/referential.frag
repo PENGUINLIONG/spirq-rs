@@ -1,5 +1,10 @@
 #version 450
 
+// Specialization constants walking demo.
+layout(constant_id=233) const int w = 1;
+layout(constant_id=234) const int h = 1;
+//
+
 layout(location=0) in vec4 color1;
 layout(location=1) in vec4 multiplier;
 layout(location=2) noperspective in vec4 color2;
