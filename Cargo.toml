@@ -1,6 +1,6 @@
 [package]
 name = "spirq"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["PENGUINLIONG <admin@penguinliong.moe>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
@@ -8,20 +8,22 @@ description = "Light weight SPIR-V query utility for graphics."
 repository = "https://github.com/PENGUINLIONG/spirq-rs"
 homepage = "https://github.com/PENGUINLIONG/spirq-rs"
 documentation = "https://docs.rs/spirq"
-maintenance = { status = "actively-developed" }
 categories = ["graphics"]
+
+[badges]
+maintenance = { status = "actively-developed" }
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-spirv_headers = "1.3.4"
-num-traits = "0.2.11"
-num-derive = "0.3.0"
-nohash-hasher = "0.1.3"
-fnv = "1.0.6"
+spirv_headers = "1.4.2"
+num-traits = "0.2.12"
+num-derive = "0.3.1"
+nohash-hasher = "0.2.0"
+fnv = "1.0.7"
 
 [dev-dependencies]
-log = "0.4.8"
+log = "0.4.11"
 env_logger = "0.7.1"
-bytes = "0.4.12"
-byteorder = "1.3.2"
+bytes = "0.5.6"
+byteorder = "1.3.4"
