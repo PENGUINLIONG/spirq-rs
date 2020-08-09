@@ -89,7 +89,7 @@ use fnv::FnvHashMap as HashMap;
 use nohash_hasher::IntMap;
 
 use parse::{Instrs, Instr};
-use ty::{Type, DescriptorType};
+pub use ty::{Type, DescriptorType};
 pub use sym::*;
 pub use error::*;
 pub use spirv_headers::ExecutionModel;
@@ -358,6 +358,35 @@ impl Manifest {
         self.merge_push_const(other)?;
         self.merge_descs(other)?;
         self.merge_names(other)?;
+        self.merge_accesses(other)?;
+        Ok(())
+    }
+    /// Similar to `merge` but optionally the current input interface variables
+    /// can be kept alive, and the output interface variables can be cleared and
+    /// replaced with entries in `other`; and names are all discarded. This can
+    /// be used to merge pipeline stages.
+    pub fn merge_pipe(
+        &mut self,
+        other: &Manifest,
+        replace_in: bool,
+        replace_out: bool,
+    ) -> Result<()> {
+        if replace_in {
+            self.input_map.clear();
+            self.input_map.extend(
+                other.input_map.iter()
+                    .map(|(x, y)| (*x, y.clone()))
+            );
+        }
+        if replace_out {
+            self.output_map.clear();
+            self.output_map.extend(
+                other.output_map.iter()
+                    .map(|(x, y)| (*x, y.clone()))
+            );
+        }
+        self.merge_push_const(other)?;
+        self.merge_descs(other)?;
         self.merge_accesses(other)?;
         Ok(())
     }
