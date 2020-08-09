@@ -1,5 +1,11 @@
 # Change Log
 
+## v0.4.2
+
+- Added a more handy manifest merging method for pipeline construction;
+- Supported specialization constant reflection;
+- Fixed interface variable resolution.
+
 ## v0.4.1
 
 - Fixed that interface variables are not correctly merged;
