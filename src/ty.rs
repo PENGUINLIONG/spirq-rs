@@ -9,6 +9,8 @@ use std::hash::{Hash, Hasher};
 
 #[derive(Hash, Clone)]
 pub enum ScalarType {
+    // Be careful with booleans. Booleans is NOT allowed to be exposed to the
+    // host according to the SPIR-V specification.
     Boolean,
     Signed(u32),
     Unsigned(u32),

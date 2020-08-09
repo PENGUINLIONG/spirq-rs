@@ -129,7 +129,20 @@ define_ops!{
         const_id: ConstantId = read_u32(),
         value: &'a [u32] = read_list(),
     }
+    OpSpecConstantTrue {
+        ty_id: TypeId = read_u32(),
+        spec_const_id: SpecConstantId = read_u32(),
+    }
+    OpSpecConstantFalse {
+        ty_id: TypeId = read_u32(),
+        spec_const_id: SpecConstantId = read_u32(),
+    }
     OpSpecConstant {
+        ty_id: TypeId = read_u32(),
+        spec_const_id: SpecConstantId = read_u32(),
+        value: &'a [u32] = read_list(),
+    }
+    OpSpecConstantComposite {
         ty_id: TypeId = read_u32(),
         spec_const_id: SpecConstantId = read_u32(),
         value: &'a [u32] = read_list(),

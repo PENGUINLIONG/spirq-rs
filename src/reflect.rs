@@ -8,7 +8,8 @@ use spirv_headers::{Decoration, Dim, StorageClass};
 use crate::ty::*;
 use crate::consts::*;
 use crate::{InterfaceLocation, DescriptorBinding, SpirvBinary, Instrs, Instr,
-    Manifest, ResourceLocator, ExecutionModel, EntryPoint, AccessType};
+    Manifest, ResourceLocator, ExecutionModel, EntryPoint, AccessType, SpecId,
+    Specialization};
 use crate::error::{Error, Result};
 use crate::instr::*;
 
@@ -18,6 +19,8 @@ use crate::instr::*;
 struct SpecConstant<'a> {
     ty: InstrId,
     value: &'a [u32],
+    spec_id: SpecId,
+    name: Option<&'a str>,
 }
 #[derive(Debug, Clone)]
 struct Constant<'a> {
@@ -230,7 +233,14 @@ impl<'a> ReflectIntermediate<'a> {
                             }
                         }
                         None
-                    }).or_else(|| self.spec_const_map.get(&op.nrepeat_const_id)
+                    })
+                    // This might lead to UNDEFINED BEHAVIOR because structure
+                    // size MUST be definitive at compile time and CANNOT be
+                    // specialized at runtime according to Khronos members, but
+                    // the default behavior of `glslang` is to treat the
+                    // specialization constants as normal constants, then I
+                    // would say... probably it's fine to size array with them?
+                    .or_else(|| self.spec_const_map.get(&op.nrepeat_const_id)
                         .and_then(|constant| {
                             if let Some(Type::Scalar(scalar_ty)) = self.ty_map.get(&constant.ty) {
                                 if scalar_ty.nbyte() == 4 && scalar_ty.is_uint() {
@@ -239,7 +249,7 @@ impl<'a> ReflectIntermediate<'a> {
                             }
                             None
                         }
-                        ))
+                    ))
                     .ok_or(Error::CONST_NOT_FOUND)?;
                 let stride = self.get_deco_u32(op.ty_id, None, Decoration::ArrayStride)
                     .map(|x| x as usize);
@@ -319,8 +329,8 @@ impl<'a> ReflectIntermediate<'a> {
         use std::collections::hash_map::Entry::Vacant;
         if instr.opcode() == OP_CONSTANT {
             let op = OpConstant::try_from(instr)?;
-            let constant = Constant { ty: op.ty_id, value: op.value };
             if let Vacant(entry) = self.const_map.entry(op.const_id) {
+                let constant = Constant { ty: op.ty_id, value: op.value };
                 entry.insert(constant);
                 Ok(())
             } else { Err(Error::ID_COLLISION) }
@@ -330,16 +340,66 @@ impl<'a> ReflectIntermediate<'a> {
     }
     fn populate_one_spec_const(&mut self, instr: &Instr<'a>) -> Result<()> {
         use std::collections::hash_map::Entry::Vacant;
-        if instr.opcode() == OP_SPEC_CONSTANT {
-            let op = OpSpecConstant::try_from(instr)?;
-            let constant = SpecConstant { ty: op.ty_id, value: op.value };
-            if let Vacant(entry) = self.spec_const_map.entry(op.spec_const_id) {
-                entry.insert(constant);
-                Ok(())
-            } else { Err(Error::ID_COLLISION) }
-        } else {
-            Ok(())
-        }
+        match instr.opcode() {
+            OP_SPEC_CONSTANT_TRUE => {
+                let op = OpSpecConstant::try_from(instr)?;
+                let spec_id = self.get_deco_u32(op.spec_const_id, None, Decoration::SpecId)
+                    .ok_or(Error::MISSING_DECO)?;
+                let spec_const = SpecConstant {
+                    ty: op.ty_id,
+                    value: &[1],
+                    spec_id,
+                    name: self.get_name(op.spec_const_id, None),
+                };
+                if let Vacant(entry) = self.spec_const_map.entry(op.spec_const_id) {
+                    entry.insert(spec_const);
+                } else { return Err(Error::ID_COLLISION) }
+            },
+            OP_SPEC_CONSTANT_FALSE => {
+                let op = OpSpecConstant::try_from(instr)?;
+                let spec_id = self.get_deco_u32(op.spec_const_id, None, Decoration::SpecId)
+                    .ok_or(Error::MISSING_DECO)?;
+                let spec_const = SpecConstant {
+                    ty: op.ty_id,
+                    value: &[0],
+                    spec_id,
+                    name: self.get_name(op.spec_const_id, None),
+                };
+                if let Vacant(entry) = self.spec_const_map.entry(op.spec_const_id) {
+                    entry.insert(spec_const);
+                } else { return Err(Error::ID_COLLISION) }
+            },
+            OP_SPEC_CONSTANT => {
+                let op = OpSpecConstant::try_from(instr)?;
+                let spec_id = self.get_deco_u32(op.spec_const_id, None, Decoration::SpecId)
+                    .ok_or(Error::MISSING_DECO)?;
+                let spec_const = SpecConstant {
+                    ty: op.ty_id,
+                    value: op.value,
+                    spec_id,
+                    name: self.get_name(op.spec_const_id, None),
+                };
+                if let Vacant(entry) = self.spec_const_map.entry(op.spec_const_id) {
+                    entry.insert(spec_const);
+                } else { return Err(Error::ID_COLLISION) }
+            },
+            OP_SPEC_CONSTANT_COMPOSITE => {
+                let op = OpSpecConstantComposite::try_from(instr)?;
+                let spec_id = self.get_deco_u32(op.spec_const_id, None, Decoration::SpecId)
+                    .ok_or(Error::MISSING_DECO)?;
+                let spec_const = SpecConstant {
+                    ty: op.ty_id,
+                    value: op.value,
+                    spec_id,
+                    name: self.get_name(op.spec_const_id, None),
+                };
+                if let Vacant(entry) = self.spec_const_map.entry(op.spec_const_id) {
+                    entry.insert(spec_const);
+                } else { return Err(Error::ID_COLLISION) }
+            },
+            _ => return Err(Error::UNSUPPORTED_SPEC),
+        };
+        Ok(())
     }
     fn populate_one_var(&mut self, instr: &Instr<'a>) -> Result<()> {
         fn extract_proto_ty<'a>(ty: &'a Type) -> Result<(u32, &'a Type)> {
@@ -539,59 +599,88 @@ impl<'a> ReflectIntermediate<'a> {
         self.collect_fn_vars_impl(func, &mut accessed_vars);
         accessed_vars
     }
+    fn collect_entry_point_manifest(&self, func_id: FunctionId) -> Result<Manifest> {
+        let mut manifest = Manifest::default();
+        let accessed_var_ids = self.collect_fn_vars(func_id);
+        for (accessed_var_id, access) in accessed_var_ids {
+            let accessed_var = self.var_map.get(&accessed_var_id)
+                .cloned()
+                .ok_or(Error::UNDECLARED_VAR)?;
+            match accessed_var {
+                Variable::Input(location, ivar_ty) => {
+                    // Input variables can share locations (aliasing).
+                    manifest.input_map.insert(location.into(), ivar_ty);
+                    if let Some(name) = self.get_name(accessed_var_id, None) {
+                        if manifest.var_name_map
+                            .insert(name.to_owned(), ResourceLocator::Input(location)).is_some() {
+                            return Err(Error::NAME_COLLISION);
+                        }
+                    }
+                },
+                Variable::Output(location, ivar_ty) => {
+                    // Output variables can share locations (aliasing).
+                    manifest.output_map.insert(location.into(), ivar_ty);
+                    if let Some(name) = self.get_name(accessed_var_id, None) {
+                        if manifest.var_name_map
+                            .insert(name.to_owned(), ResourceLocator::Output(location)).is_some() {
+                            return Err(Error::NAME_COLLISION);
+                        }
+                    }
+                },
+                Variable::Descriptor(desc_bind, desc_ty) => {
+                    // Descriptors cannot share bindings.
+                    if manifest.desc_map.insert(desc_bind.into(), desc_ty).is_none() {
+                        manifest.desc_access_map.insert(desc_bind.into(), access);
+                    } else { return Err(Error::DESC_BIND_COLLISION) }
+                    if let Some(name) = self.get_name(accessed_var_id, None) {
+                        if manifest.var_name_map
+                            .insert(name.to_owned(), ResourceLocator::Descriptor(desc_bind)).is_some() {
+                            return Err(Error::NAME_COLLISION);
+                        }
+                    }
+                },
+                Variable::PushConstant(push_const_ty) => {
+                    if manifest.push_const_ty.is_none() {
+                        manifest.push_const_ty = Some(push_const_ty);
+                    } else { return Err(Error::MULTI_PUSH_CONST) }
+                }
+            };
+        }
+        Ok(manifest)
+    }
+    fn collect_entry_point_spec(&self, _func_id: FunctionId) -> Result<Specialization> {
+        // TODO: (penguinlion) Report only specialization constants that have
+        // been refered to by the specified function. (Do we actually need this?
+        // It might not be an optimization.)
+        let mut spec_const_map = IntMap::default();
+        let mut spec_const_name_map = HashMap::default();
+        for (spec_const_id, spec_const) in self.spec_const_map.iter() {
+            if let Some(ty) = self.ty_map.get(&spec_const.ty).cloned() {
+                if spec_const_map.insert(spec_const.spec_id, ty).is_some() {
+                    return Err(Error::SPEC_ID_COLLISION);
+                }
+                if let Some(name) = self.get_name(*spec_const_id, None) {
+                    if spec_const_name_map
+                        .insert(name.to_owned(), spec_const.spec_id).is_some() {
+                        return Err(Error::NAME_COLLISION);
+                    }
+                }
+            } else { return Err(Error::NONSCALAR_SPEC_CONST) }
+        }
+        let spec = Specialization { spec_const_map, spec_const_name_map };
+        Ok(spec)
+    }
     fn collect_entry_points(&self) -> Result<Box<[EntryPoint]>> {
         let mut entry_points = Vec::with_capacity(self.entry_point_declrs.len());
         for entry_point_declr in self.entry_point_declrs.iter() {
-            let mut entry_point = EntryPoint {
+            let manifest = self.collect_entry_point_manifest(entry_point_declr.func_id)?;
+            let spec = self.collect_entry_point_spec(entry_point_declr.func_id)?;
+            let entry_point = EntryPoint {
                 name: entry_point_declr.name.to_owned(),
                 exec_model: entry_point_declr.exec_model,
-                manifest: Manifest::default(),
+                manifest,
+                spec,
             };
-            let accessed_var_ids = self.collect_fn_vars(entry_point_declr.func_id);
-            for (accessed_var_id, access) in accessed_var_ids {
-                let accessed_var = self.var_map.get(&accessed_var_id)
-                    .cloned()
-                    .ok_or(Error::UNDECLARED_VAR)?;
-                match accessed_var {
-                    Variable::Input(location, ivar_ty) => {
-                        // Input variables can share locations (aliasing).
-                        entry_point.manifest.input_map.insert(location.into(), ivar_ty);
-                        if let Some(name) = self.get_name(accessed_var_id, None) {
-                            if entry_point.manifest.var_name_map
-                                .insert(name.to_owned(), ResourceLocator::Input(location)).is_some() {
-                                return Err(Error::NAME_COLLISION);
-                            }
-                        }
-                    },
-                    Variable::Output(location, ivar_ty) => {
-                        // Output variables can share locations (aliasing).
-                        entry_point.manifest.output_map.insert(location.into(), ivar_ty);
-                        if let Some(name) = self.get_name(accessed_var_id, None) {
-                            if entry_point.manifest.var_name_map
-                                .insert(name.to_owned(), ResourceLocator::Output(location)).is_some() {
-                                return Err(Error::NAME_COLLISION);
-                            }
-                        }
-                    },
-                    Variable::Descriptor(desc_bind, desc_ty) => {
-                        // Descriptors cannot share bindings.
-                        if entry_point.manifest.desc_map.insert(desc_bind.into(), desc_ty).is_none() {
-                            entry_point.manifest.desc_access_map.insert(desc_bind.into(), access);
-                        } else { return Err(Error::DESC_BIND_COLLISION) }
-                        if let Some(name) = self.get_name(accessed_var_id, None) {
-                            if entry_point.manifest.var_name_map
-                                .insert(name.to_owned(), ResourceLocator::Descriptor(desc_bind)).is_some() {
-                                return Err(Error::NAME_COLLISION);
-                            }
-                        }
-                    },
-                    Variable::PushConstant(push_const_ty) => {
-                        if entry_point.manifest.push_const_ty.is_none() {
-                            entry_point.manifest.push_const_ty = Some(push_const_ty);
-                        } else { return Err(Error::MULTI_PUSH_CONST) }
-                    }
-                };
-            }
             entry_points.push(entry_point);
         }
         Ok(entry_points.into_boxed_slice())

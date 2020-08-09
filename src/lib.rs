@@ -147,6 +147,8 @@ pub(crate) fn hash<H: std::hash::Hash>(h: &H) -> u64 {
 
 // Resource locationing.
 
+type SpecId = u32;
+
 /// Interface variable location and component.
 #[derive(PartialEq, Eq, Hash, Default, Clone, Copy)]
 pub struct InterfaceLocation(u32, u32);
@@ -216,6 +218,14 @@ pub(crate) enum ResourceLocator {
 
 // Resolution results.
 
+/// Specialization constant resolution result.
+#[derive(Debug)]
+pub struct SpecConstantResolution<'a> {
+    /// Specialization ID, aka the `constant_id` layout property in GLSL.
+    pub spec_id: SpecId,
+    /// Type of the specialization constant.
+    pub ty: &'a Type,
+}
 
 /// Interface variables resolution result.
 #[derive(Debug)]
@@ -443,10 +453,10 @@ impl Manifest {
                     InterfaceLocation::new(loc as u32, comp as u32)
                 } else { return None; }
             },
-            Some(Seg::Name(name)) => {
-                if let Some(ResourceLocator::Input(location)) = self.var_name_map.get(name) {
-                    *location
-                } else { return None }
+            Some(Seg::Name(name)) => match self.var_name_map.get(name) {
+                Some(ResourceLocator::Input(location)) => *location,
+                Some(ResourceLocator::Output(location)) => *location,
+                _ => return None,
             },
             _ => return None,
         };
@@ -505,7 +515,7 @@ impl Manifest {
         let push_const_res = PushConstantResolution { ty, member_var_res };
         Some(push_const_res)
     }
-    /// List all input locations
+    /// List all input locations.
     pub fn inputs<'a>(&'a self) -> impl Iterator<Item=InterfaceVariableResolution<'a>> {
         self.input_map.iter()
             .map(|(&location, ty)| {
@@ -539,6 +549,48 @@ impl Manifest {
     }
 }
 
+/// Entry point specialization descriptions.
+#[derive(Default, Clone)]
+pub struct Specialization {
+    /// Mapping from specialization constant names to their IDs.
+    pub(crate) spec_const_name_map: HashMap<String, SpecId>,
+    /// Mapping from specialization IDs to specialization constant types.
+    pub(crate) spec_const_map: IntMap<SpecId, Type>,
+}
+impl Specialization {
+    pub fn resolve_spec_const<S: AsRef<Sym>>(&self, sym: S) -> Option<SpecConstantResolution> {
+        let mut segs = sym.as_ref().segs();
+        let spec_id = if let Some(Seg::Name(name)) = segs.next() {
+            if let Some(spec_id) = self.spec_const_name_map.get(name) {
+                *spec_id
+            } else { return None }
+        } else { return None };
+        if segs.next().is_some() { return None }
+        let ty = self.get_spec_const(spec_id)?;
+        let spec_res = SpecConstantResolution { spec_id, ty };
+        Some(spec_res)
+    }
+    /// Get the name that also refers to the specialization constant.
+    pub fn get_spec_const_name<'a>(&'a self, spec_id: SpecId) -> Option<&'a str> {
+        self.spec_const_name_map.iter()
+            .find_map(|x| if spec_id == *x.1 { Some(x.0.as_ref()) } else { None })
+    }
+    /// Get the specialization constant type.
+    pub fn get_spec_const<'a>(&'a self, spec_id: SpecId) -> Option<&'a Type> {
+        self.spec_const_map.get(&spec_id)
+    }
+    /// List all specialization constants.
+    pub fn spec_consts<'a>(&'a self) -> impl Iterator<Item=SpecConstantResolution<'a>> {
+        self.spec_const_map.iter()
+            .map(|(&spec_id, ty)| {
+                SpecConstantResolution {
+                    spec_id,
+                    ty
+                }
+            })
+    }
+}
+
 
 // SPIR-V program entry points.
 
@@ -552,6 +604,8 @@ pub struct EntryPoint {
     /// Manifest object that contains input, output and descriptor type
     /// information.
     pub manifest: Manifest,
+    /// Specialization description of the entry point.
+    pub spec: Specialization,
 }
 impl Deref for EntryPoint {
     type Target = Manifest;
