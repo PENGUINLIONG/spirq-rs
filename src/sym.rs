@@ -4,6 +4,7 @@ use std::ops::Deref;
 use std::fmt;
 use std::str::FromStr;
 
+#[derive(Eq, PartialEq)]
 pub struct Sym(str);
 impl Sym {
     pub fn new<S: AsRef<str> + ?Sized>(literal: &S) -> &Sym {
@@ -31,6 +32,7 @@ impl fmt::Debug for Sym {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { self.0.fmt(f) }
 }
 
+#[derive(Eq, PartialEq)]
 pub struct Symbol(Box<Sym>);
 impl Symbol {
     pub fn new<S: AsRef<str> + ?Sized>(literal: &S) -> Self {
@@ -135,7 +137,7 @@ impl<'a> Iterator for Segs<'a> {
     type Item = Seg<'a>;
     fn next(&mut self) -> Option<Self::Item> {
         if self.0.is_empty() {
-            return if self.1 { None } else { Some(Seg::Empty) };
+            return if self.1 { None } else { self.1 = true; Some(Seg::Empty) };
         }
         let txt = if let Some(pos) = self.0.bytes().position(|c| c == '.' as u8) {
             let txt = &self.0[..pos];
@@ -154,5 +156,58 @@ impl<'a> Iterator for Segs<'a> {
             Seg::Name(txt)
         };
         return Some(seg);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_sym_empty() {
+        let sym = Sym::new("");
+        let mut segs = sym.segs();
+        assert_eq!(segs.next(), Some(Seg::Empty));
+        assert_eq!(segs.next(), None);
+    }
+    #[test]
+    fn test_sym_idx() {
+        let sym = Sym::new("1");
+        let mut segs = sym.segs();
+        assert_eq!(segs.next(), Some(Seg::Index(1)));
+        assert_eq!(segs.next(), None);
+    }
+    #[test]
+    fn test_sym_name() {
+        let sym = Sym::new("name");
+        let mut segs = sym.segs();
+        assert_eq!(segs.next(), Some(Seg::Name("name")));
+        assert_eq!(segs.next(), None);
+    }
+    #[test]
+    fn test_sym_hybrid() {
+        let sym = Sym::new(".name.123..0");
+        let mut segs = sym.segs();
+        assert_eq!(segs.next(), Some(Seg::Empty));
+        assert_eq!(segs.next(), Some(Seg::Name("name")));
+        assert_eq!(segs.next(), Some(Seg::Index(123)));
+        assert_eq!(segs.next(), Some(Seg::Empty));
+        assert_eq!(segs.next(), Some(Seg::Index(0)));
+        assert_eq!(segs.next(), None);
+    }
+    #[test]
+    fn test_symbol() {
+        let mut sym = Symbol::new(".");
+        {
+            let mut segs = sym.segs();
+            assert_eq!(segs.next(), Some(Seg::Empty));
+            assert_eq!(segs.next(), Some(Seg::Empty));
+            assert_eq!(segs.next(), None);
+        }
+        assert_eq!(sym.pop(), Some(Symbol::new("")));
+        assert_eq!(sym.pop(), None);
+        sym.push(&Seg::Name("a"));
+        sym.push(&Seg::Index(233));
+        sym.push(&Seg::Empty);
+        assert_eq!(&*sym, Sym::new(".a.233."));
     }
 }
