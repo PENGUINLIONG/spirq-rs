@@ -289,7 +289,7 @@ impl fmt::Debug for ArrayType {
         if let Some(nrepeat) = self.nrepeat {
             write!(f, "[{:?}; {}]", self.proto_ty, nrepeat)
         } else {
-            write!(f, "[{:?}", self.proto_ty)
+            write!(f, "[{:?}]", self.proto_ty)
         }
     }
 }
