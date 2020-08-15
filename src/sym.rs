@@ -90,6 +90,9 @@ impl Deref for Symbol {
     type Target = Sym;
     fn deref(&self) -> &Sym { &self.0 }
 }
+impl AsRef<Sym> for Symbol {
+    fn as_ref(&self) -> &Sym { &self.0 }
+}
 impl fmt::Display for Symbol {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { self.0.fmt(f) }
 }
