@@ -7,7 +7,7 @@ use crate::error::*;
 use crate::sym::{Sym, Seg, Symbol};
 use std::hash::{Hash, Hasher};
 
-#[derive(Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub enum ScalarType {
     // Be careful with booleans. Booleans is NOT allowed to be exposed to the
     // host according to the SPIR-V specification.
@@ -73,7 +73,7 @@ impl fmt::Debug for ScalarType {
 }
 
 
-#[derive(Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub struct VectorType {
     pub scalar_ty: ScalarType,
     pub nscalar: u32,
@@ -91,7 +91,7 @@ impl fmt::Debug for VectorType {
 }
 
 
-#[derive(Hash, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub enum MatrixAxisOrder {
     ColumnMajor,
     RowMajor,
@@ -101,7 +101,7 @@ impl Default for MatrixAxisOrder {
 }
 
 
-#[derive(Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub struct MatrixType {
     pub vec_ty: VectorType,
     pub nvec: u32,
@@ -137,7 +137,7 @@ impl fmt::Debug for MatrixType {
 }
 
 
-#[derive(Hash, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub enum ImageUnitFormat {
     Color(ImageFormat),
     Sampled,
@@ -156,7 +156,7 @@ impl ImageUnitFormat {
 }
 
 
-#[derive(Hash, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub enum ImageArrangement {
     Image1D,
     Image2D,
@@ -189,7 +189,7 @@ impl ImageArrangement {
 }
 
 
-#[derive(Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub struct ImageType {
     pub unit_fmt: ImageUnitFormat,
     pub arng: ImageArrangement,
@@ -236,7 +236,7 @@ impl fmt::Debug for ImageType {
 }
 
 
-#[derive(Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub struct ArrayType {
     pub(crate) proto_ty: Box<Type>,
     nrepeat: Option<u32>,
@@ -289,18 +289,18 @@ impl fmt::Debug for ArrayType {
         if let Some(nrepeat) = self.nrepeat {
             write!(f, "[{:?}; {}]", self.proto_ty, nrepeat)
         } else {
-            write!(f, "[{:?}", self.proto_ty)
+            write!(f, "[{:?}]", self.proto_ty)
         }
     }
 }
 
-#[derive(Clone, Hash)]
+#[derive(PartialEq, Eq, Clone, Hash)]
 pub struct StructMember {
     pub name: Option<String>,
     pub offset: usize,
     pub ty: Type,
 }
-#[derive(Default, Clone)]
+#[derive(PartialEq, Eq, Default, Clone)]
 pub struct StructType {
     members: Vec<StructMember>, // Offset and type.
     // BTreeMap to keep the order for hashing.
@@ -398,7 +398,7 @@ macro_rules! declr_ty_accessor {
 }
 
 
-#[derive(Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub enum Type {
     /// A single value, which can be a signed or unsigned integer, a floating
     /// point number, or a boolean value.
@@ -503,7 +503,7 @@ impl fmt::Debug for Type {
 
 
 /// Structured representation of descriptor types.
-#[derive(Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub enum DescriptorType {
     UniformBuffer(u32, Type),
     StorageBuffer(u32, Type),

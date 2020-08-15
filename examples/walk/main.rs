@@ -10,6 +10,12 @@ fn main() {
     info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
     let frag = spvs["referential.frag"].reflect().unwrap();
     let frag = &frag[0];
+    for push_const in frag.get_push_const().iter() {
+        info!("push_const:");
+        for route in push_const.walk() {
+            info!("{:>4} {:>20}: {:?}", route.offset, route.sym, route.ty);
+        }
+    }
     for spec_const in frag.spec.spec_consts() {
         let name = frag.spec.get_spec_const_name(spec_const.spec_id).unwrap_or("unnamed");
         info!("spec_const#{} ({}): {:?}", spec_const.spec_id, name, spec_const.ty);
@@ -26,7 +32,7 @@ fn main() {
         let name = frag.get_desc_name(desc.desc_bind).unwrap_or("unnamed");
         info!("descriptor{} ({}):", desc.desc_bind, name);
         for route in desc.desc_ty.walk() {
-            info!("{:>4} {:>10}: {:?}", route.offset, route.sym, route.ty);
+            info!("{:>4} {:>20}: {:?}", route.offset, route.sym, route.ty);
         }
     }
 }
