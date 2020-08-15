@@ -634,11 +634,28 @@ impl Deref for EntryPoint {
 }
 impl fmt::Debug for EntryPoint {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        struct InterfaceLocationDebugHelper<'a>(&'a IntMap<InterfaceLocationCode, Type>);
+        impl<'a> fmt::Debug for InterfaceLocationDebugHelper<'a> {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                f.debug_map()
+                    .entries(self.0.iter().map(|(k, v)| (InterfaceLocation::from(*k as InterfaceLocationCode), v)))
+                    .finish()
+            }
+        }
+        struct DescriptorBindingDebugHelper<'a>(&'a IntMap<DescriptorBindingCode, DescriptorType>);
+        impl<'a> fmt::Debug for DescriptorBindingDebugHelper<'a> {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                f.debug_map()
+                    .entries(self.0.iter().map(|(k, v)| (DescriptorBinding::from(*k as DescriptorBindingCode), v)))
+                    .finish()
+            }
+        }
         f.debug_struct(&self.name)
             .field("push_const", &self.manifest.push_const_ty)
-            .field("inputs", &self.manifest.input_map)
-            .field("outputs", &self.manifest.output_map)
-            .field("descriptors", &self.manifest.desc_map)
+            .field("inputs", &InterfaceLocationDebugHelper(&self.manifest.input_map))
+            .field("outputs", &InterfaceLocationDebugHelper(&self.manifest.output_map))
+            .field("descriptors", &DescriptorBindingDebugHelper(&self.manifest.desc_map))
+            .field("spec_consts", &self.spec.spec_const_map)
             .finish()
     }
 }
