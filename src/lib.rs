@@ -278,6 +278,9 @@ pub enum AccessType {
     /// The variable has only been read from.
     ReadOnly = 1,
     /// The variable has only been written to.
+    ///
+    /// Note: Passing a storage image as parameter to `imageStore` is NOT
+    /// considered an writing access.
     WriteOnly = 2,
     /// The variable has been read from and written to.
     ReadWrite = 3,
@@ -540,15 +543,16 @@ impl Manifest {
                 }
             })
     }
-    /// List all descriptors in this manifest. Results will not contain anything
-    /// about exact variables in buffers.
+    /// List all descriptors in this manifest. In case of a descriptor pointing
+    /// to a buffer block, the outermost structure type will be filled in
+    /// `member_var_res`.
     pub fn descs<'a>(&'a self) -> impl Iterator<Item=DescriptorResolution<'a>> {
         self.desc_map.iter()
             .map(|(&desc_bind, desc_ty)| {
-                DescriptorResolution{
+                DescriptorResolution {
                     desc_bind: desc_bind.into(),
                     desc_ty,
-                    member_var_res: None
+                    member_var_res: desc_ty.resolve(Symbol::default()),
                 }
             })
     }
