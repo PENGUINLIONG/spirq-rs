@@ -161,7 +161,7 @@ impl InterfaceLocation {
     pub fn new(loc: u32, comp: u32) -> Self { InterfaceLocation(loc, comp) }
 
     pub fn loc(&self) -> u32 { self.0 }
-    pub fn bind(&self) -> u32 { self.1 }
+    pub fn comp(&self) -> u32 { self.1 }
     pub fn into_inner(self) -> (u32, u32) { (self.0, self.1) }
 }
 impl fmt::Display for InterfaceLocation {
