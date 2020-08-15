@@ -644,6 +644,12 @@ impl<'a> ReflectIntermediate<'a> {
                 Variable::PushConstant(push_const_ty) => {
                     if manifest.push_const_ty.is_none() {
                         manifest.push_const_ty = Some(push_const_ty);
+                        if let Some(name) = self.get_name(accessed_var_id, None) {
+                            if manifest.var_name_map
+                                .insert(name.to_owned(), ResourceLocator::PushConstant).is_some() {
+                                return Err(Error::NAME_COLLISION);
+                            }
+                        }
                     } else { return Err(Error::MULTI_PUSH_CONST) }
                 }
             };

@@ -55,7 +55,7 @@
 //! 0.1 // Refering to the descriptor at set 0 on binding 1.
 //! light.0 // Refering to the first member of block 'light'.
 //! 1.0.bones.4 // Refering to the 5th element of array member `bones` in descriptor `1.0`.
-//! .modelview // Push constants are referred to by an empty identifier.
+//! .modelview // Push constants can be referred to by either an empty identifier or its variable name.
 //! ```
 //!
 //! Note: It should be noted that descriptor multibinds are treated like single-
@@ -219,6 +219,7 @@ pub(crate) enum ResourceLocator {
     Input(InterfaceLocation),
     Output(InterfaceLocation),
     Descriptor(DescriptorBinding),
+    PushConstant,
 }
 
 // Resolution results.
@@ -424,6 +425,13 @@ impl Manifest {
     pub fn get_desc<'a>(&'a self, desc_bind: DescriptorBinding) -> Option<&'a DescriptorType> {
         self.desc_map.get(&desc_bind.into())
     }
+    /// Get the name that also refers to the push constant block.
+    pub fn get_push_const_name<'a>(&'a self) -> Option<&'a str> {
+        self.var_name_map.iter()
+            .find_map(|x| if let ResourceLocator::PushConstant = x.1 {
+                Some(x.0.as_ref())
+            } else { None })
+    }
     /// Get the name that also refers to the input at the given location.
     pub fn get_input_name<'a>(&'a self, location: InterfaceLocation) -> Option<&'a str> {
         self.var_name_map.iter()
@@ -505,7 +513,7 @@ impl Manifest {
         let desc_res = DescriptorResolution { desc_bind, desc_ty, member_var_res };
         Some(desc_res)
     }
-    /// Get the metadata of a descriptor variable identified by a symbol.If the
+    /// Get the metadata of a descriptor variable identified by a symbol. If the
     /// exact variable cannot be resolved, the descriptor part of the resolution
     /// will still be returned, if possible.
     pub fn resolve_push_const<S: AsRef<Sym>>(&self, sym: S) -> Option<PushConstantResolution> {
@@ -514,6 +522,10 @@ impl Manifest {
             Some(Seg::Empty) => {
                 // Symbols started with an empty head, like ".modelView", is
                 // used to identify push constants.
+            },
+            Some(Seg::Name(name)) => {
+                if let Some(ResourceLocator::PushConstant) = self.var_name_map.get(name) {
+                } else { return None; }
             },
             _ => return None,
         };
@@ -552,7 +564,7 @@ impl Manifest {
                 DescriptorResolution {
                     desc_bind: desc_bind.into(),
                     desc_ty,
-                    member_var_res: desc_ty.resolve(Symbol::default()),
+                    member_var_res: desc_ty.resolve(""),
                 }
             })
     }
