@@ -138,8 +138,10 @@ impl<'a> ReflectIntermediate<'a> {
                 },
                 _ => break,
             };
-            let collision = self.name_map.insert(key, value);
-            if collision.is_some() { return Err(Error::NAME_COLLISION); }
+            if !value.is_empty() {
+                let collision = self.name_map.insert(key, value);
+                if collision.is_some() { return Err(Error::NAME_COLLISION); }
+            }
             instrs.next();
         }
         Ok(())
