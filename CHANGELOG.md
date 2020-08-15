@@ -1,5 +1,15 @@
 # Change Log
 
+## v0.4.3
+
+- Fixed name collision caused by multiple unnamed buffer blocks;
+- Fixed interface variable resolution;
+- Supported buffer block root type resolution in iteration by `descs`;
+- Supported name access to push constant;
+- Improved entrypoint debug printing;
+- Improved API provision;
+- Added comprehensive API testing.
+
 ## v0.4.2
 
 - Added a more handy manifest merging method for pipeline construction;
