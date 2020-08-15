@@ -76,6 +76,8 @@ mod consts;
 mod parse;
 mod instr;
 mod reflect;
+#[cfg(test)]
+mod tests;
 pub mod sym;
 pub mod error;
 pub mod ty;
@@ -103,8 +105,8 @@ impl From<Vec<u32>> for SpirvBinary {
 impl FromIterator<u32> for SpirvBinary {
     fn from_iter<I: IntoIterator<Item=u32>>(iter: I) -> Self { SpirvBinary(iter.into_iter().collect::<Vec<u32>>()) }
 }
-impl From<Vec<u8>> for SpirvBinary {
-    fn from(x: Vec<u8>) -> Self {
+impl From<&[u8]> for SpirvBinary {
+    fn from(x: &[u8]) -> Self {
         if x.len() == 0 { return SpirvBinary::default(); }
         x.chunks_exact(4)
             .map(|x| x.try_into().unwrap())
@@ -115,6 +117,9 @@ impl From<Vec<u8>> for SpirvBinary {
             })
             .collect::<SpirvBinary>()
     }
+}
+impl From<Vec<u8>> for SpirvBinary {
+    fn from(x: Vec<u8>) -> Self { SpirvBinary::from(x.as_ref()) }
 }
 
 impl SpirvBinary {
@@ -150,7 +155,7 @@ pub(crate) fn hash<H: std::hash::Hash>(h: &H) -> u64 {
 type SpecId = u32;
 
 /// Interface variable location and component.
-#[derive(PartialEq, Eq, Hash, Default, Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Default, Clone, Copy)]
 pub struct InterfaceLocation(u32, u32);
 impl InterfaceLocation {
     pub fn new(loc: u32, comp: u32) -> Self { InterfaceLocation(loc, comp) }
@@ -180,7 +185,7 @@ impl From<InterfaceLocationCode> for InterfaceLocation {
 type InterfaceLocationCode = u64;
 
 /// Descriptor set and binding point carrier.
-#[derive(PartialEq, Eq, Hash, Default, Clone, Copy)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Default, Clone, Copy)]
 pub struct DescriptorBinding(u32, u32);
 impl DescriptorBinding {
     pub fn new(desc_set: u32, bind_point: u32) -> Self { DescriptorBinding(desc_set, bind_point) }
@@ -209,7 +214,7 @@ impl From<DescriptorBindingCode> for DescriptorBinding {
 }
 type DescriptorBindingCode = u64;
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub(crate) enum ResourceLocator {
     Input(InterfaceLocation),
     Output(InterfaceLocation),
@@ -219,7 +224,7 @@ pub(crate) enum ResourceLocator {
 // Resolution results.
 
 /// Specialization constant resolution result.
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub struct SpecConstantResolution<'a> {
     /// Specialization ID, aka the `constant_id` layout property in GLSL.
     pub spec_id: SpecId,
@@ -228,7 +233,7 @@ pub struct SpecConstantResolution<'a> {
 }
 
 /// Interface variables resolution result.
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub struct InterfaceVariableResolution<'a> {
     /// Location of the current interface variable. It should be noted that
     /// matrix types can take more than one location.
@@ -238,7 +243,7 @@ pub struct InterfaceVariableResolution<'a> {
 }
 
 /// Push constant resolution result.
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub struct PushConstantResolution<'a> {
     /// Type of the push constant block. This is expected to be struct.
     pub ty: &'a Type,
@@ -247,7 +252,7 @@ pub struct PushConstantResolution<'a> {
     pub member_var_res: Option<MemberVariableResolution<'a>>,
 }
 /// Descriptor variable resolution result.
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub struct DescriptorResolution<'a> {
     /// Descriptor set and binding point of the descriptor.
     pub desc_bind: DescriptorBinding,
@@ -258,7 +263,7 @@ pub struct DescriptorResolution<'a> {
     pub member_var_res: Option<MemberVariableResolution<'a>>,
 }
 /// Member variable resolution result.
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub struct MemberVariableResolution<'a> {
     /// Offset to the resolution target from the beginning of buffer.
     pub offset: usize,
@@ -467,11 +472,11 @@ impl Manifest {
     }
     /// Get the metadata of a input variable identified by a symbol.
     pub fn resolve_input<S: AsRef<Sym>>(&self, sym: S) -> Option<InterfaceVariableResolution> {
-        self.resolve_ivar(&self.output_map, sym.as_ref())
+        self.resolve_ivar(&self.input_map, sym.as_ref())
     }
     /// Get the metadata of a output variable identified by a symbol.
     pub fn resolve_output<S: AsRef<Sym>>(&self, sym: S) -> Option<InterfaceVariableResolution> {
-        self.resolve_ivar(&self.input_map, sym.as_ref())
+        self.resolve_ivar(&self.output_map, sym.as_ref())
     }
     /// Get the metadata of a descriptor variable identified by a symbol.
     /// If the exact variable cannot be resolved, the descriptor part of the
