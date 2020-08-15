@@ -1,5 +1,6 @@
 # SPIR-Q
 
+[![Build Status](https://travis-ci.org/PENGUINLIONG/spirq-rs.svg?branch=master)](https://travis-ci.org/PENGUINLIONG/spirq-rs)
 [![Crate](https://img.shields.io/crates/v/spirq)](https://crates.io/crates/spirq)
 [![Documentation](https://docs.rs/spirq/badge.svg)](https://docs.rs/spirq)
 
