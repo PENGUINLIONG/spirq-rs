@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.4.4
+
+- Fixed that separable sampler and image object cannot share a same binding point;
+- Fixed field name typo.
+
 ## v0.4.3
 
 - Fixed name collision caused by multiple unnamed buffer blocks;
