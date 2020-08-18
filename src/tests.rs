@@ -201,4 +201,23 @@ fn test_push_consts() {
     assert_eq!(entry.get_push_const().unwrap(), resolved.ty);
     assert_eq!(entry.get_push_const().unwrap().resolve(""), resolved.member_var_res);
 }
+#[test]
+fn test_implicit_sampled_img() {
+    use shaderc::{CompileOptions, SourceLanguage, ShaderKind, Compiler};
+    // Currently only shaderc is outputting binding-sharing image and sampler.
+    let src = r#"
+        [[vk::bind(0, 0)]]
+        Texture2D img;
+        [[vk::bind(0, 0)]]
+        SamplerState samp;
+        float4 main() : SV_POSITION { return img.Sample(samp, float2(0,0)); }
+    "#;
+    let mut opt = CompileOptions::new().unwrap();
+    opt.set_source_language(SourceLanguage::HLSL);
+    let mut compiler = Compiler::new().unwrap();
+    let out = compiler.compile_into_spirv(src, ShaderKind::Vertex, "<inline>", "main", Some(&opt))
+        .unwrap();
+    let spv: Vec<u32> = out.as_binary().into();
+    SpirvBinary::from(spv).reflect().unwrap();
+}
 // TODO: (penguinliong) Comprehensive type testing.

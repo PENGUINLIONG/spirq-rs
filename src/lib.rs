@@ -161,7 +161,7 @@ impl InterfaceLocation {
     pub fn new(loc: u32, comp: u32) -> Self { InterfaceLocation(loc, comp) }
 
     pub fn loc(&self) -> u32 { self.0 }
-    pub fn bind(&self) -> u32 { self.1 }
+    pub fn comp(&self) -> u32 { self.1 }
     pub fn into_inner(self) -> (u32, u32) { (self.0, self.1) }
 }
 impl fmt::Display for InterfaceLocation {
@@ -286,16 +286,23 @@ pub enum AccessType {
     /// The variable has been read from and written to.
     ReadWrite = 3,
 }
+impl std::ops::Add<AccessType> for AccessType {
+    type Output = AccessType;
+    fn add(self, rhs: AccessType) -> AccessType {
+        use num_traits::FromPrimitive;
+        AccessType::from_u32((self as u32) + (rhs as u32)).unwrap()
+    }
+}
 
 /// A set of information used to describe variable typing and routing.
 #[derive(Default, Clone)]
 pub struct Manifest {
-    pub(crate) push_const_ty: Option<Type>,
-    pub(crate) input_map: IntMap<InterfaceLocationCode, Type>,
-    pub(crate) output_map: IntMap<InterfaceLocationCode, Type>,
-    pub(crate) desc_map: IntMap<DescriptorBindingCode, DescriptorType>,
-    pub(crate) var_name_map: HashMap<String, ResourceLocator>,
-    pub(crate) desc_access_map: IntMap<DescriptorBindingCode, AccessType>
+    push_const_ty: Option<Type>,
+    input_map: IntMap<InterfaceLocationCode, Type>,
+    output_map: IntMap<InterfaceLocationCode, Type>,
+    desc_map: IntMap<DescriptorBindingCode, DescriptorType>,
+    var_name_map: HashMap<String, ResourceLocator>,
+    desc_access_map: IntMap<DescriptorBindingCode, AccessType>
 }
 impl Manifest {
     fn merge_ivars(
@@ -568,15 +575,102 @@ impl Manifest {
                 }
             })
     }
+
+    pub(crate) fn insert_rsc_name(&mut self, name: &str, rsc_locator: ResourceLocator) -> Result<()> {
+        if self.var_name_map.insert(name.to_owned(), rsc_locator).is_some() {
+            Err(Error::NAME_COLLISION)
+        } else { Ok(()) }
+    }
+    pub(crate) fn insert_input(&mut self, location: InterfaceLocation, ivar_ty: Type) -> Result<()> {
+        // Input variables can share locations (aliasing).
+        self.input_map.insert(location.into(), ivar_ty);
+        Ok(())
+    }
+    pub(crate) fn insert_output(&mut self, location: InterfaceLocation, ivar_ty: Type) -> Result<()> {
+        // Ouput variables can share locations (aliasing).
+        self.output_map.insert(location.into(), ivar_ty);
+        Ok(())
+    }
+    pub(crate) fn insert_desc(
+        &mut self,
+        desc_bind: DescriptorBinding,
+        desc_ty: DescriptorType,
+        access: AccessType,
+    ) -> Result<()> {
+        use std::collections::hash_map::Entry::{Vacant, Occupied};
+        fn combine_img_sampler(
+            nbind_samp: u32,
+            nbind_img: u32,
+            img_ty: &Type,
+            access_samp: AccessType,
+            access_img: AccessType,
+        ) -> Vec<(DescriptorType, AccessType)> {
+            use std::cmp::Ordering;
+            match nbind_samp.cmp(&nbind_img) {
+                Ordering::Equal => vec![
+                    (DescriptorType::SampledImage(nbind_img, img_ty.clone()), access_samp + access_img)
+                ],
+                Ordering::Less => vec![
+                    (DescriptorType::SampledImage(nbind_samp, img_ty.clone()), access_samp + access_img),
+                    (DescriptorType::Image(nbind_img - nbind_samp, img_ty.clone()), access_img),
+                ],
+                Ordering::Greater => vec![
+                    (DescriptorType::SampledImage(nbind_img, img_ty.clone()), access_samp + access_img),
+                    (DescriptorType::Sampler(nbind_samp - nbind_img), access_samp),
+                ],
+            }
+        }
+        // Allow override of resource access...?
+        self.desc_access_map.insert(desc_bind.into(), access);
+        // Descriptors cannot share bindings, but separate image and
+        // sampler can be fused implicitly into a
+        // `CombinedImageSampler` by sharing bindings.
+        let replaces = match self.desc_map.entry(desc_bind.into()) {
+            Vacant(entry) => {
+                entry.insert(desc_ty);
+                Vec::new()
+            },
+            Occupied(entry) => {
+                let replaces = match (entry.get(), &desc_ty) {
+                    (DescriptorType::Sampler(nbind_samp), DescriptorType::Image(nbind_img, img_ty)) => {
+                        let access_samp = self.desc_access_map[&desc_bind.into()];
+                        combine_img_sampler(*nbind_samp, *nbind_img, &img_ty, access_samp, access)
+                    },
+                    (DescriptorType::Image(nbind_img, img_ty), DescriptorType::Sampler(nbind_samp)) => {
+                        let access_img = self.desc_access_map[&desc_bind.into()];
+                        combine_img_sampler(*nbind_samp, *nbind_img, &img_ty, access, access_img)
+                    },
+                    _ => return Err(Error::DESC_BIND_COLLISION),
+                };
+                entry.remove();
+                replaces
+            },
+        };
+        // Insert replace items back to the manifest.
+        let mut replace_bind = desc_bind.bind();
+        // `replaces`'s base binding MUST BE monotonically increamental.
+        for (desc_ty, access) in replaces {
+            let nbind = desc_ty.nbind();
+            self.insert_desc(DescriptorBinding(desc_bind.set(), replace_bind), desc_ty, access)?;
+            replace_bind += nbind;
+        }
+        Ok(())
+    }
+    pub(crate) fn insert_push_const(&mut self, push_const_ty: Type) -> Result<()> {
+        if self.push_const_ty.is_none() {
+            self.push_const_ty = Some(push_const_ty);
+            Ok(())
+        } else { Err(Error::MULTI_PUSH_CONST) }
+    }
 }
 
 /// Entry point specialization descriptions.
 #[derive(Default, Clone)]
 pub struct Specialization {
     /// Mapping from specialization constant names to their IDs.
-    pub(crate) spec_const_name_map: HashMap<String, SpecId>,
+    spec_const_name_map: HashMap<String, SpecId>,
     /// Mapping from specialization IDs to specialization constant types.
-    pub(crate) spec_const_map: IntMap<SpecId, Type>,
+    spec_const_map: IntMap<SpecId, Type>,
 }
 impl Specialization {
     pub fn resolve_spec_const<S: AsRef<Sym>>(&self, sym: S) -> Option<SpecConstantResolution> {
@@ -609,6 +703,17 @@ impl Specialization {
                     ty
                 }
             })
+    }
+
+    pub fn insert_spec_const(&mut self, spec_id: SpecId, ty: Type) -> Result<()> {
+        if self.spec_const_map.insert(spec_id, ty).is_some() {
+            Err(Error::SPEC_ID_COLLISION)
+        } else { Ok(()) }
+    }
+    pub fn insert_spec_const_name(&mut self, name: &str, spec_id: SpecId) -> Result<()>{
+        if self.spec_const_name_map.insert(name.to_owned(), spec_id).is_some() {
+            Err(Error::NAME_COLLISION)
+        } else { Ok(()) }
     }
 }
 
