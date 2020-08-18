@@ -610,47 +610,28 @@ impl<'a> ReflectIntermediate<'a> {
                 .ok_or(Error::UNDECLARED_VAR)?;
             match accessed_var {
                 Variable::Input(location, ivar_ty) => {
-                    // Input variables can share locations (aliasing).
-                    manifest.input_map.insert(location.into(), ivar_ty);
+                    manifest.insert_input(location, ivar_ty)?;
                     if let Some(name) = self.get_name(accessed_var_id, None) {
-                        if manifest.var_name_map
-                            .insert(name.to_owned(), ResourceLocator::Input(location)).is_some() {
-                            return Err(Error::NAME_COLLISION);
-                        }
+                        manifest.insert_rsc_name(name, ResourceLocator::Input(location))?;
                     }
                 },
                 Variable::Output(location, ivar_ty) => {
-                    // Output variables can share locations (aliasing).
-                    manifest.output_map.insert(location.into(), ivar_ty);
+                    manifest.insert_output(location, ivar_ty)?;
                     if let Some(name) = self.get_name(accessed_var_id, None) {
-                        if manifest.var_name_map
-                            .insert(name.to_owned(), ResourceLocator::Output(location)).is_some() {
-                            return Err(Error::NAME_COLLISION);
-                        }
+                        manifest.insert_rsc_name(name, ResourceLocator::Output(location))?;
                     }
                 },
                 Variable::Descriptor(desc_bind, desc_ty) => {
-                    // Descriptors cannot share bindings.
-                    if manifest.desc_map.insert(desc_bind.into(), desc_ty).is_none() {
-                        manifest.desc_access_map.insert(desc_bind.into(), access);
-                    } else { return Err(Error::DESC_BIND_COLLISION) }
+                    manifest.insert_desc(desc_bind, desc_ty, access)?;
                     if let Some(name) = self.get_name(accessed_var_id, None) {
-                        if manifest.var_name_map
-                            .insert(name.to_owned(), ResourceLocator::Descriptor(desc_bind)).is_some() {
-                            return Err(Error::NAME_COLLISION);
-                        }
+                        manifest.insert_rsc_name(name, ResourceLocator::Descriptor(desc_bind))?;
                     }
                 },
                 Variable::PushConstant(push_const_ty) => {
-                    if manifest.push_const_ty.is_none() {
-                        manifest.push_const_ty = Some(push_const_ty);
-                        if let Some(name) = self.get_name(accessed_var_id, None) {
-                            if manifest.var_name_map
-                                .insert(name.to_owned(), ResourceLocator::PushConstant).is_some() {
-                                return Err(Error::NAME_COLLISION);
-                            }
-                        }
-                    } else { return Err(Error::MULTI_PUSH_CONST) }
+                    manifest.insert_push_const(push_const_ty)?;
+                    if let Some(name) = self.get_name(accessed_var_id, None) {
+                        manifest.insert_rsc_name(name, ResourceLocator::PushConstant)?;
+                    }
                 }
             };
         }
@@ -659,23 +640,16 @@ impl<'a> ReflectIntermediate<'a> {
     fn collect_entry_point_spec(&self, _func_id: FunctionId) -> Result<Specialization> {
         // TODO: (penguinlion) Report only specialization constants that have
         // been refered to by the specified function. (Do we actually need this?
-        // It might not be an optimization.)
-        let mut spec_const_map = IntMap::default();
-        let mut spec_const_name_map = HashMap::default();
+        // It might not be an optimization in mind of engineering.)
+        let mut spec = Specialization::default();
         for (spec_const_id, spec_const) in self.spec_const_map.iter() {
             if let Some(ty) = self.ty_map.get(&spec_const.ty).cloned() {
-                if spec_const_map.insert(spec_const.spec_id, ty).is_some() {
-                    return Err(Error::SPEC_ID_COLLISION);
-                }
+                spec.insert_spec_const(spec_const.spec_id, ty)?;
                 if let Some(name) = self.get_name(*spec_const_id, None) {
-                    if spec_const_name_map
-                        .insert(name.to_owned(), spec_const.spec_id).is_some() {
-                        return Err(Error::NAME_COLLISION);
-                    }
+                    spec.insert_spec_const_name(name, spec_const.spec_id)?;
                 }
-            } else { return Err(Error::NONSCALAR_SPEC_CONST) }
+            } else { return Err(Error::TY_NOT_FOUND) }
         }
-        let spec = Specialization { spec_const_map, spec_const_name_map };
         Ok(spec)
     }
     fn collect_entry_points(&self) -> Result<Box<[EntryPoint]>> {

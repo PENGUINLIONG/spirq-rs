@@ -23,7 +23,6 @@ impl Error {
     pub const DESC_BIND_COLLISION: Self = Self::CorruptedSpirv("descriptor binding cannot be shared");
     pub const UNKNOWN_NBIND: Self = Self::CorruptedSpirv("binding count cannot be determined");
     pub const MULTI_PUSH_CONST: Self = Self::CorruptedSpirv("an entry point cannot have multiple push constant blocks");
-    pub const NONSCALAR_SPEC_CONST: Self = Self::CorruptedSpirv("specialization constant must be a scalar");
     pub const SPEC_ID_COLLISION: Self = Self::CorruptedSpirv("specialization id can only be assigned once");
 
     pub const UNSUPPORTED_TY: Self = Self::UnsupportedSpirv("unsupported type");
