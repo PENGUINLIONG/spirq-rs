@@ -1,6 +1,6 @@
 [package]
 name = "spirq"
-version = "0.4.4"
+version = "0.4.5"
 authors = ["PENGUINLIONG <admin@penguinliong.moe>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
@@ -9,6 +9,7 @@ repository = "https://github.com/PENGUINLIONG/spirq-rs"
 homepage = "https://github.com/PENGUINLIONG/spirq-rs"
 documentation = "https://docs.rs/spirq"
 categories = ["graphics"]
+readme = "README.md"
 
 [badges]
 maintenance = { status = "actively-developed" }

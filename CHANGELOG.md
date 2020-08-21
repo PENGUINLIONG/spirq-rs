@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.4.5
+
+- Supported dynamically sized multi-binding (`SPV_EXT_descriptor_indexing`).
+
 ## v0.4.4
 
 - Fixed that separable sampler and image object cannot share a same binding point;
