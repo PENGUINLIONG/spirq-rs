@@ -1,17 +1,23 @@
-use glsl_to_spirv_macros::*;
-use glsl_to_spirv_macros_impl::*;
+use inline_spirv::*;
 use std::collections::HashSet;
 use super::*;
 
 macro_rules! gen_entries(
-    ($stage_fn:ident, $glsl:expr) => {{
-        static SPV: &'static [u8] = $stage_fn!($glsl);
-        SpirvBinary::from(SPV).reflect().unwrap()
+    ($stage:ident, $src:expr, $lang:ident) => {{
+        static SPV: &'static [u32] = inline_spirv!($src, $stage, $lang);
+        SPV.iter().copied().collect::<SpirvBinary>().reflect().unwrap()
     }}
 );
 macro_rules! gen_one_entry(
-    ($stage_fn:ident, $glsl:expr) => {{
-        let entries = gen_entries!($stage_fn, $glsl);
+    ($stage:ident, $glsl:expr) => {{
+        let entries = gen_entries!($stage, $glsl, glsl);
+        assert_eq!(entries.len(), 1, "expected 1 entry point, found {}", entries.len());
+        entries[0].clone()
+    }}
+);
+macro_rules! gen_one_entry_hlsl(
+    ($stage:ident, $hlsl:expr) => {{
+        let entries = gen_entries!($stage, $hlsl, hlsl);
         assert_eq!(entries.len(), 1, "expected 1 entry point, found {}", entries.len());
         entries[0].clone()
     }}
@@ -20,8 +26,8 @@ macro_rules! gen_one_entry(
 #[test]
 fn test_basic_shader_stage() {
     macro_rules! x(
-        ($stage_fn:ident, $exec_model:ident) => {{
-            let entry = gen_one_entry!($stage_fn, "#version 450 core\nvoid main() {}");
+        ($stage:ident, $exec_model:ident) => {{
+            let entry = gen_one_entry!($stage, "#version 450 core\nvoid main() {}");
             assert_eq!(entry.exec_model, ExecutionModel::$exec_model, "shader stage execution model mismatched");
             assert!(entry.spec.spec_consts().next().is_none(), "unexpected specialization");
             assert!(entry.inputs().next().is_none(), "unexpected input");
@@ -29,8 +35,8 @@ fn test_basic_shader_stage() {
             assert!(entry.descs().next().is_none(), "unexpected descriptor binding");
         }}
     );
-    x!(glsl_vs, Vertex);
-    x!(glsl_fs, Fragment);
+    x!(vert, Vertex);
+    x!(frag, Fragment);
 }
 // For maximal compatibility interface varriables like the output of vertex
 // buffer is not forced empty, because it requires prior knowledge from the
@@ -39,7 +45,7 @@ fn test_basic_shader_stage() {
 // been created yet.
 #[test]
 fn test_vs_input_loc() {
-    let entry = gen_one_entry!(glsl_vs, r#"
+    let entry = gen_one_entry!(vert, r#"
         #version 450 core
         layout(location=0, component=0)
         in uint a;
@@ -74,7 +80,7 @@ fn test_vs_input_loc() {
 fn test_fs_output_loc() {
     // Note that fragment shader location-sharing outputs must have the same
     // type.
-    let entry = gen_one_entry!(glsl_fs, r#"
+    let entry = gen_one_entry!(frag, r#"
         #version 450 core
         layout(location=0, component=0)
         out float a;
@@ -107,7 +113,7 @@ fn test_fs_output_loc() {
 }
 #[test]
 fn test_spec_consts() {
-    let entry = gen_one_entry!(glsl_gs, r#"
+    let entry = gen_one_entry!(geom, r#"
         #version 450 core
         layout(points) in;
         layout(points, max_vertices=1) out;
@@ -136,7 +142,7 @@ fn test_spec_consts() {
 }
 #[test]
 fn test_desc_tys() {
-    let entry = gen_one_entry!(glsl_fs, r#"
+    let entry = gen_one_entry!(frag, r#"
         #version 450 core
         layout(std140, set=0, binding=0)
         uniform A {
@@ -187,7 +193,7 @@ fn test_desc_tys() {
 }
 #[test]
 fn test_push_consts() {
-    let entry = gen_one_entry!(glsl_vs, r#"
+    let entry = gen_one_entry!(vert, r#"
         #version 450 core
         layout(push_constant)
         uniform A {
@@ -203,21 +209,30 @@ fn test_push_consts() {
 }
 #[test]
 fn test_implicit_sampled_img() {
-    use shaderc::{CompileOptions, SourceLanguage, ShaderKind, Compiler};
     // Currently only shaderc is outputting binding-sharing image and sampler.
-    let src = r#"
-        [[vk::bind(0, 0)]]
+    let entry = gen_one_entry_hlsl!(vert, r#"
+        [[vk::binding(0, 0)]]
         Texture2D img;
-        [[vk::bind(0, 0)]]
+        [[vk::binding(0, 0)]]
         SamplerState samp;
         float4 main() : SV_POSITION { return img.Sample(samp, float2(0,0)); }
-    "#;
-    let mut opt = CompileOptions::new().unwrap();
-    opt.set_source_language(SourceLanguage::HLSL);
-    let mut compiler = Compiler::new().unwrap();
-    let out = compiler.compile_into_spirv(src, ShaderKind::Vertex, "<inline>", "main", Some(&opt))
-        .unwrap();
-    let spv: Vec<u32> = out.as_binary().into();
-    SpirvBinary::from(spv).reflect().unwrap();
+    "#);
+}
+#[test]
+fn test_dyn_multibind() {
+    let entry = gen_one_entry!(frag, r#"
+        #version 450 core
+        #extension GL_EXT_nonuniform_qualifier: enable
+        
+        layout(binding = 0, set = 0)
+        uniform sampler2D arr[];
+        layout(location=0)
+        in flat int xx;
+
+        void main() {
+            texture(arr[xx], vec2(0,0));
+        }
+    "#);
+    assert_eq!(entry.get_desc(DescriptorBinding(0, 0)).unwrap().nbind(), 0);
 }
 // TODO: (penguinliong) Comprehensive type testing.

@@ -250,6 +250,13 @@ impl ArrayType {
             stride: None,
         }
     }
+    pub(crate) fn new_unsized_multibind(proto_ty: &Type) -> ArrayType {
+        ArrayType {
+            proto_ty: Box::new(proto_ty.clone()),
+            nrepeat: None,
+            stride: None,
+        }
+    }
     pub fn new(proto_ty: &Type, nrepeat: u32, stride: usize) -> ArrayType {
         ArrayType {
             proto_ty: Box::new(proto_ty.clone()),
@@ -491,7 +498,7 @@ impl fmt::Debug for Type {
             Type::Scalar(scalar_ty) => scalar_ty.fmt(f),
             Type::Vector(vec_ty) => vec_ty.fmt(f),
             Type::Matrix(mat_ty) => mat_ty.fmt(f),
-            Type::Image(img_ty) => write!(f, "{:?}*", img_ty),
+            Type::Image(img_ty) => write!(f, "{:?}", img_ty),
             Type::Sampler() => write!(f, "sampler"),
             Type::SampledImage(img_ty) => img_ty.fmt(f),
             Type::SubpassData() => write!(f, "subpassData"),
@@ -526,7 +533,14 @@ impl DescriptorType {
         }
     }
     /// Number of bindings at the binding point. All descriptors can have
-    /// multiple binding points.
+    /// multiple binding points. If the multi-binding is dynamic, 0 will be
+    /// returned.
+    ///
+    /// For more information about dynamic multi-binding, please refer to
+    /// Vulkan extension `VK_EXT_descriptor_indexing`, GLSL extension
+    /// `GL_EXT_nonuniform_qualifier` and SPIR-V extension
+    /// `SPV_EXT_descriptor_indexing`. Dynamic multi-binding is only supported
+    /// in Vulkan 1.2.
     pub fn nbind(&self) -> u32 {
         use DescriptorType::*;
         match self {
