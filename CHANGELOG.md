@@ -2,7 +2,8 @@
 
 ## v0.4.5
 
-- Supported dynamically sized multi-binding (`SPV_EXT_descriptor_indexing`).
+- Supported dynamically sized multi-binding (`SPV_EXT_descriptor_indexing`);
+- Fixed tests.
 
 ## v0.4.4
 
