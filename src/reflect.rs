@@ -267,9 +267,12 @@ impl<'a> ReflectIntermediate<'a> {
                 let proto_ty = self.ty_map.get(&op.proto_ty_id)
                     .ok_or(Error::TY_NOT_FOUND)?;
                 let stride = self.get_deco_u32(op.ty_id, None, Decoration::ArrayStride)
-                    .map(|x| x as usize)
-                    .ok_or(Error::MISSING_DECO)?;
-                let arr_ty = ArrayType::new_unsized(proto_ty, stride);
+                    .map(|x| x as usize);
+                let arr_ty = if let Some(stride) = stride {
+                    ArrayType::new_unsized(proto_ty, stride)
+                } else {
+                    ArrayType::new_unsized_multibind(proto_ty)
+                };
                 (op.ty_id, Type::Array(arr_ty))
             }
             OP_TYPE_STRUCT => {
@@ -407,8 +410,11 @@ impl<'a> ReflectIntermediate<'a> {
         fn extract_proto_ty<'a>(ty: &'a Type) -> Result<(u32, &'a Type)> {
             match ty {
                 Type::Array(arr_ty) => {
+                    // `nrepeat=None` is no longer considered invalid because of
+                    // the adoption of `SPV_EXT_descriptor_indexing`. This
+                    // shader extension has been supported in Vulkan 1.2.
                     let nrepeat = arr_ty.nrepeat()
-                        .ok_or(Error::UNKNOWN_NBIND)?;
+                        .unwrap_or(0);
                     let proto_ty = arr_ty.proto_ty();
                     Ok((nrepeat, proto_ty))
                 },

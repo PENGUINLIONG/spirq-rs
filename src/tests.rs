@@ -220,4 +220,21 @@ fn test_implicit_sampled_img() {
     let spv: Vec<u32> = out.as_binary().into();
     SpirvBinary::from(spv).reflect().unwrap();
 }
+#[test]
+fn test_dyn_multibind() {
+    let entry = gen_one_entry!(glsl_fs, r#"
+        #version 450 core
+        #extension GL_EXT_nonuniform_qualifier: enable
+        
+        layout(binding = 0, set = 0)
+        uniform sampler2D arr[];
+        layout(location=0)
+        in flat int xx;
+
+        void main() {
+            texture(arr[xx], vec2(0,0));
+        }
+    "#);
+    assert_eq!(entry.get_desc(DescriptorBinding(0, 0)).unwrap().nbind(), 0);
+}
 // TODO: (penguinliong) Comprehensive type testing.
