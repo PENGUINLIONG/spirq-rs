@@ -4,7 +4,7 @@
 [![Crate](https://img.shields.io/crates/v/spirq)](https://crates.io/crates/spirq)
 [![Documentation](https://docs.rs/spirq/badge.svg)](https://docs.rs/spirq)
 
-SPIR-Q is a light weight library for SPIR-V pipeline metadata query.
+SPIR-Q is a light weight library for SPIR-V pipeline metadata query, supporting upto SPIR-V 1.5 specification aligned with Vulkan 1.2.
 
 ## Why SPIR-Q?
 
@@ -26,10 +26,6 @@ Please refer to the attached examples:
 * [benchmark](examples/benchmark/main.rs): Feel how fast SPIR-Q can be. (The log was generated from a `debug` run.)
 
 Sample output are attached in the same directories as the code files.
-
-## To-do
-
-We are looking forward to improve SPIR-Q with features specified in SPIR-V 1.4. E.g. we no longer need to scan through function implementations to see what variables are used by an entry point. But unfortunately we have been blocked by [`spirv_headers`](https://crates.io/crates/spirv_headers). SPIR-Q will follow up as soon as `spirv-headers` updates.
 
 ## License
 
