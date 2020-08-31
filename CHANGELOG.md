@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.4.6
+
+- Added API for better user experience.
+
 ## v0.4.5
 
 - Supported dynamically sized multi-binding (`SPV_EXT_descriptor_indexing`);

@@ -658,7 +658,7 @@ impl<'a> ReflectIntermediate<'a> {
         }
         Ok(spec)
     }
-    fn collect_entry_points(&self) -> Result<Box<[EntryPoint]>> {
+    fn collect_entry_points(&self) -> Result<Vec<EntryPoint>> {
         let mut entry_points = Vec::with_capacity(self.entry_point_declrs.len());
         for entry_point_declr in self.entry_point_declrs.iter() {
             let manifest = self.collect_entry_point_manifest(entry_point_declr.func_id)?;
@@ -671,12 +671,12 @@ impl<'a> ReflectIntermediate<'a> {
             };
             entry_points.push(entry_point);
         }
-        Ok(entry_points.into_boxed_slice())
+        Ok(entry_points)
     }
 }
 
 
-pub(crate) fn reflect_spirv<'a>(module: &'a SpirvBinary) -> Result<Box<[EntryPoint]>> {
+pub(crate) fn reflect_spirv<'a>(module: &'a SpirvBinary) -> Result<Vec<EntryPoint>> {
     fn skip_until_range_inclusive<'a>(instrs: &'_ mut Peekable<Instrs<'a>>, rng: RangeInclusive<u32>) {
         while let Some(instr) = instrs.peek() {
             if !rng.contains(&instr.opcode()) { instrs.next(); } else { break; }
