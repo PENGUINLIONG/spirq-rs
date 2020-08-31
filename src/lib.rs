@@ -102,6 +102,9 @@ pub struct SpirvBinary(Vec<u32>);
 impl From<Vec<u32>> for SpirvBinary {
     fn from(x: Vec<u32>) -> Self { SpirvBinary(x) }
 }
+impl From<&[u32]> for SpirvBinary {
+    fn from(x: &[u32]) -> Self { SpirvBinary(x.to_owned()) }
+}
 impl FromIterator<u32> for SpirvBinary {
     fn from_iter<I: IntoIterator<Item=u32>>(iter: I) -> Self { SpirvBinary(iter.into_iter().collect::<Vec<u32>>()) }
 }
@@ -119,12 +122,20 @@ impl From<&[u8]> for SpirvBinary {
     }
 }
 impl From<Vec<u8>> for SpirvBinary {
-    fn from(x: Vec<u8>) -> Self { SpirvBinary::from(x.as_ref()) }
+    fn from(x: Vec<u8>) -> Self { SpirvBinary::from(x.as_ref() as &[u8]) }
 }
 
 impl SpirvBinary {
     pub(crate) fn instrs<'a>(&'a self) -> Instrs<'a> { Instrs::new(&self.0) }
+    /// Reflect the SPIR-V binary and extract all the entry points. It's
+    /// the same as `refelct_vec` while it returns a boxed slice. You may find
+    /// `reflect_vec` more handy but this is kept for API compatibility.
     pub fn reflect(&self) -> Result<Box<[EntryPoint]>> {
+        self.reflect_vec()
+            .map(|x| x.into_boxed_slice())
+    }
+    /// Reflect the SPIR-V binary and extract all the entry points.
+    pub fn reflect_vec(&self) -> Result<Vec<EntryPoint>> {
         reflect::reflect_spirv(&self)
     }
     pub fn words(&self) -> &[u32] {
