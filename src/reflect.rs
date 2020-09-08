@@ -157,7 +157,7 @@ impl<'a> ReflectIntermediate<'a> {
                     let op = OpMemberDecorate::try_from(instr)?;
                     ((op.target_id, Some(op.member_idx), op.deco), op.params)
                 },
-                _ => break,
+                x => if is_deco_op(x) { instrs.next(); continue } else { break },
             };
             let collision = self.deco_map.insert(key, value);
             if collision.is_some() { return Err(Error::DECO_COLLISION); }
@@ -682,6 +682,11 @@ pub(crate) fn reflect_spirv<'a>(module: &'a SpirvBinary) -> Result<Vec<EntryPoin
             if !rng.contains(&instr.opcode()) { instrs.next(); } else { break; }
         }
     }
+    fn skip_until<'a>(instrs: &'_ mut Peekable<Instrs<'a>>, pred: fn(u32) -> bool) {
+        while let Some(instr) = instrs.peek() {
+            if !pred(instr.opcode()) { instrs.next(); } else { break; }
+        }
+    }
     // Don't change the order. See _2.4 Logical Layout of a Module_ of the
     // SPIR-V specification for more information.
     let mut instrs = module.instrs().peekable();
@@ -690,7 +695,7 @@ pub(crate) fn reflect_spirv<'a>(module: &'a SpirvBinary) -> Result<Vec<EntryPoin
     itm.populate_entry_points(&mut instrs)?;
     skip_until_range_inclusive(&mut instrs, NAME_RANGE);
     itm.populate_names(&mut instrs)?;
-    skip_until_range_inclusive(&mut instrs, DECO_RANGE);
+    skip_until(&mut instrs, is_deco_op);
     itm.populate_decos(&mut instrs)?;
     itm.populate_defs(&mut instrs)?;
     itm.populate_access(&mut instrs)?;

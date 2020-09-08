@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::ops::RangeInclusive;
 use spirv_headers::Op;
 
@@ -9,9 +10,23 @@ pub const OP_NAME: OpCode = Op::Name as u32;
 pub const OP_MEMBER_NAME: OpCode = Op::MemberName as u32;
 pub const NAME_RANGE: RangeInclusive<OpCode> = OP_NAME..=OP_MEMBER_NAME;
 
-pub const OP_DECORATE: OpCode = 71;
-pub const OP_MEMBER_DECORATE: OpCode = 72;
-pub const DECO_RANGE: RangeInclusive<OpCode> = OP_DECORATE..=OP_MEMBER_DECORATE;
+pub const OP_DECORATE: OpCode = Op::Decorate as u32;
+pub const OP_MEMBER_DECORATE: OpCode = Op::MemberDecorate as u32;
+pub const OP_DECORATION_GROUP: OpCode = Op::DecorationGroup as u32;
+pub const OP_GROUP_DECORATE: OpCode = Op::GroupDecorate as u32;
+pub const OP_GROUP_MEMBER_DECORATE: OpCode = Op::GroupMemberDecorate as u32;
+pub const OP_DECORATE_ID: OpCode = Op::DecorateId as u32;
+pub const OP_DECORATE_STRING: OpCode = Op::DecorateString as u32;
+pub const OP_MEMBER_DECORATE_STRING: OpCode = Op::MemberDecorateString as u32;
+
+pub fn is_deco_op(op: u32) -> bool {
+    match op {
+        OP_DECORATE..=OP_GROUP_MEMBER_DECORATE => true,
+        OP_DECORATE_ID => true,
+        OP_DECORATE_STRING..=OP_MEMBER_DECORATE_STRING => true,
+        _ => false,
+    }
+}
 
 // Don't need this: Not a resource type. But kept for the range.
 pub const OP_TYPE_VOID: OpCode = Op::TypeVoid as u32;
