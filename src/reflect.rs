@@ -388,20 +388,10 @@ impl<'a> ReflectIntermediate<'a> {
                     entry.insert(spec_const);
                 } else { return Err(Error::ID_COLLISION) }
             },
-            OP_SPEC_CONSTANT_COMPOSITE => {
-                let op = OpSpecConstantComposite::try_from(instr)?;
-                let spec_id = self.get_deco_u32(op.spec_const_id, None, Decoration::SpecId)
-                    .ok_or(Error::MISSING_DECO)?;
-                let spec_const = SpecConstant {
-                    ty: op.ty_id,
-                    value: op.value,
-                    spec_id,
-                    name: self.get_name(op.spec_const_id, None),
-                };
-                if let Vacant(entry) = self.spec_const_map.entry(op.spec_const_id) {
-                    entry.insert(spec_const);
-                } else { return Err(Error::ID_COLLISION) }
-            },
+            // `SpecId` decorations will be specified to each of the
+            // constituents so we don't have to worry about the composite of
+            // them.
+            OP_SPEC_CONSTANT_COMPOSITE => {},
             _ => return Err(Error::UNSUPPORTED_SPEC),
         };
         Ok(())
