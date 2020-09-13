@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.4.7
+
+- Fixed early-terminating decoration parsing (#38);
+- Fixed specialization constant composite (#41).
+
 ## v0.4.6
 
 - Added API for better user experience.
