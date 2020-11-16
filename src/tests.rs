@@ -189,6 +189,37 @@ fn test_desc_tys() {
         } else {
             assert_eq!(entry.get_desc_access(desc.desc_bind).unwrap(), AccessType::ReadOnly);
         }
+
+        if desc.desc_bind == DescriptorBinding(0, 0) {
+            let members = desc
+                .member_var_res
+                .expect("did not resolve struct def as member");
+            if let crate::Type::Struct(s) = members.ty {
+                assert_eq!(s.name().expect("name was not populated for struct"), "A");
+            } else {
+                assert!(
+                    false,
+                    "expected a uniform struct definition, got {:?}",
+                    members.ty
+                );
+            }
+        } else if desc.desc_bind == DescriptorBinding(0, 3) {
+            let members = desc
+                .member_var_res
+                .expect("did not resolve struct def as member");
+            if let crate::Type::Struct(s) = members.ty {
+                assert_eq!(
+                    s.name().expect("name was not populated for buffer struct"),
+                    "F"
+                );
+            } else {
+                assert!(
+                    false,
+                    "expected a buffer struct definition, got {:?}",
+                    members.ty
+                );
+            }
+        }
     }
 }
 #[test]
