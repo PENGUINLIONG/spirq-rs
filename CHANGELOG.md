@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.4.8
+
+- Supported structure type name extraction (#44)
+
 ## v0.4.7
 
 - Fixed early-terminating decoration parsing (#38);
