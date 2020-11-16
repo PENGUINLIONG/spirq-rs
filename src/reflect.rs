@@ -277,8 +277,8 @@ impl<'a> ReflectIntermediate<'a> {
             }
             OP_TYPE_STRUCT => {
                 let op = OpTypeStruct::try_from(instr)?;
-                let mut struct_ty = StructType::default();
-                struct_ty.name = self.get_name(op.ty_id, None).map(|n| n.to_string());
+                let struct_name = self.get_name(op.ty_id, None).map(|n| n.to_string());
+                let mut struct_ty = StructType::new(struct_name);
                 for (i, &member_ty_id) in op.member_ty_ids.iter().enumerate() {
                     let i = i as u32;
                     let mut member_ty = self.ty_map.get(&member_ty_id)

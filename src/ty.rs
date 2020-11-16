@@ -309,14 +309,21 @@ pub struct StructMember {
 }
 #[derive(PartialEq, Eq, Default, Clone)]
 pub struct StructType {
-    pub(crate) name: Option<String>,
+    name: Option<String>,
     members: Vec<StructMember>, // Offset and type.
     // BTreeMap to keep the order for hashing.
     name_map: BTreeMap<String, usize>,
 }
 impl StructType {
-    pub fn name(&self) -> Option<&String> {
-        self.name.as_ref()
+    pub(crate) fn new(name: Option<String>) -> StructType {
+        StructType {
+            name,
+            ..Default::default()
+        }
+    }
+
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_ref().map(AsRef::as_ref)
     }
     pub fn nbyte(&self) -> usize {
         self.members.last()
@@ -381,9 +388,10 @@ impl Hash for StructType {
 impl fmt::Debug for StructType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let Some(name) = &self.name {
-            f.write_str(name.as_str())?;
+            write!(f, "{} {{ ", name)?;
+        } else {
+            f.write_str("{ ")?;
         }
-        f.write_str("{ ")?;
         for (i, member) in self.members.iter().enumerate() {
             if i != 0 { f.write_str(", ")?; }
             if let Some(name) = self.name_map.iter()
