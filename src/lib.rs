@@ -233,6 +233,12 @@ pub(crate) enum ResourceLocator {
     PushConstant,
 }
 
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
+pub(crate) enum ResolveKind {
+    Input,
+    Output,
+}
+
 // Resolution results.
 
 /// Specialization constant resolution result.
@@ -479,7 +485,7 @@ impl Manifest {
             .get(&desc_bind.into())
             .map(|x| *x)
     }
-    fn resolve_ivar<'a>(&self, map: &'a IntMap<InterfaceLocationCode, Type>, sym: &Sym) -> Option<InterfaceVariableResolution<'a>> {
+    fn resolve_ivar<'a>(&self, map: &'a IntMap<InterfaceLocationCode, Type>, sym: &Sym, kind: ResolveKind) -> Option<InterfaceVariableResolution<'a>> {
         let mut segs = sym.segs();
         let location = match segs.next() {
             Some(Seg::Index(loc)) => {
@@ -488,8 +494,12 @@ impl Manifest {
                 } else { return None; }
             },
             Some(Seg::Name(name)) => match self.var_name_map.get(name) {
-                Some(ResourceLocator::Input(location)) => *location,
-                Some(ResourceLocator::Output(location)) => *location,
+                Some(ResourceLocator::Input(location)) =>
+                    if kind == ResolveKind::Input { *location } else { return None; },
+
+                Some(ResourceLocator::Output(location)) =>
+                    if kind == ResolveKind::Output { *location } else { return None; },
+
                 _ => return None,
             },
             _ => return None,
@@ -501,11 +511,11 @@ impl Manifest {
     }
     /// Get the metadata of a input variable identified by a symbol.
     pub fn resolve_input<S: AsRef<Sym>>(&self, sym: S) -> Option<InterfaceVariableResolution> {
-        self.resolve_ivar(&self.input_map, sym.as_ref())
+        self.resolve_ivar(&self.input_map, sym.as_ref(), ResolveKind::Input)
     }
     /// Get the metadata of a output variable identified by a symbol.
     pub fn resolve_output<S: AsRef<Sym>>(&self, sym: S) -> Option<InterfaceVariableResolution> {
-        self.resolve_ivar(&self.output_map, sym.as_ref())
+        self.resolve_ivar(&self.output_map, sym.as_ref(), ResolveKind::Output)
     }
     /// Get the metadata of a descriptor variable identified by a symbol.
     /// If the exact variable cannot be resolved, the descriptor part of the
