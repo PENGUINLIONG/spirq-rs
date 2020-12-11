@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.4.9
+
+- Fixed that symbol resolution succeeds when the interface variable kind mismatches.
+
 ## v0.4.8
 
 - Supported structure type name extraction (#44)
