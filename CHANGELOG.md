@@ -1,8 +1,13 @@
 # Change Log
 
+## v0.4.10
+
+- Supported customized reflection inspection and opened reflection intermediates. (#47)
+- Fixed potential buffer overread when string operand is missing.
+
 ## v0.4.9
 
-- Fixed that symbol resolution succeeds when the interface variable kind mismatches.
+- Fixed that symbol resolution succeeds when the interface variable kind mismatches. (#46)
 
 ## v0.4.8
 
