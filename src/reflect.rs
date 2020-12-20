@@ -43,7 +43,7 @@ pub struct Constant<'a> {
     /// Defined value of constant.
     pub value: &'a [u32],
 }
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum Variable {
     /// Input interface variable.
     Input(InterfaceLocation, Type),
