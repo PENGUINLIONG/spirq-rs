@@ -24,6 +24,8 @@ impl Error {
     pub const UNKNOWN_NBIND: Self = Self::CorruptedSpirv("binding count cannot be determined");
     pub const MULTI_PUSH_CONST: Self = Self::CorruptedSpirv("an entry point cannot have multiple push constant blocks");
     pub const SPEC_ID_COLLISION: Self = Self::CorruptedSpirv("specialization id can only be assigned once");
+    pub const FUNC_NOT_FOUND: Self = Self::CorruptedSpirv("cannot find a function");
+    pub const BROKEN_ACCESS_CHAIN: Self = Self::CorruptedSpirv("pointer in access chain points to non-existing type");
 
     pub const UNSUPPORTED_TY: Self = Self::UnsupportedSpirv("unsupported type");
     pub const UNSUPPORTED_IMG_CFG: Self = Self::UnsupportedSpirv("unsupport image configuration");

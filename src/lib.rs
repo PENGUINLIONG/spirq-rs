@@ -73,11 +73,12 @@
 //! [`Type`]: ty/enum.Type.html
 //! [`Symbol`]: sym/struct.Symbol.html
 mod consts;
-mod parse;
 mod instr;
-mod reflect;
+mod inspect;
 #[cfg(test)]
 mod tests;
+pub mod reflect;
+pub mod parse;
 pub mod sym;
 pub mod error;
 pub mod ty;
@@ -89,6 +90,8 @@ use std::ops::Deref;
 use num_derive::FromPrimitive;
 use fnv::FnvHashMap as HashMap;
 use nohash_hasher::IntMap;
+use reflect::ReflectIntermediate;
+use inspect::{NopInspector, FnInspector};
 
 use parse::{Instrs, Instr};
 pub use ty::{Type, DescriptorType};
@@ -136,7 +139,12 @@ impl SpirvBinary {
     }
     /// Reflect the SPIR-V binary and extract all the entry points.
     pub fn reflect_vec(&self) -> Result<Vec<EntryPoint>> {
-        reflect::reflect_spirv(&self)
+        reflect::reflect_spirv(&self, NopInspector())
+    }
+    /// Similar to `reflect_vec` while you can inspect each instruction during
+    /// the parse.
+    pub fn reflect_vec_inspect<F: FnMut(&ReflectIntermediate<'_>, &Instr<'_>)>(&self, inspector: F) -> Result<Vec<EntryPoint>> {
+        reflect::reflect_spirv(&self, FnInspector::<F>(inspector))
     }
     pub fn words(&self) -> &[u32] {
         &self.0
@@ -726,11 +734,15 @@ impl Specialization {
             })
     }
 
+    // TODO: (penguinliong) This should not be exposed. Hide it in next larger
+    // release.
     pub fn insert_spec_const(&mut self, spec_id: SpecId, ty: Type) -> Result<()> {
         if self.spec_const_map.insert(spec_id, ty).is_some() {
             Err(Error::SPEC_ID_COLLISION)
         } else { Ok(()) }
     }
+    // TODO: (penguinliong) This should not be exposed. Hide it in next larger
+    // release.
     pub fn insert_spec_const_name(&mut self, name: &str, spec_id: SpecId) -> Result<()>{
         if self.spec_const_name_map.insert(name.to_owned(), spec_id).is_some() {
             Err(Error::NAME_COLLISION)

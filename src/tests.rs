@@ -241,7 +241,7 @@ fn test_push_consts() {
 #[test]
 fn test_implicit_sampled_img() {
     // Currently only shaderc is outputting binding-sharing image and sampler.
-    let entry = gen_one_entry_hlsl!(vert, r#"
+    let _entry = gen_one_entry_hlsl!(vert, r#"
         [[vk::binding(0, 0)]]
         Texture2D img;
         [[vk::binding(0, 0)]]
