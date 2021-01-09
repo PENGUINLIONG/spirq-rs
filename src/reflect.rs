@@ -59,8 +59,7 @@ pub enum Variable {
 
 #[derive(Default, Debug, Clone)]
 struct Function {
-    // First bit (01)for READ, second bit (10) for WRITE.
-    accessed_vars: IntMap<InstrId, u32>,
+    accessed_vars: IntSet<VariableId>,
     callees: IntSet<InstrId>,
 }
 struct EntryPointDeclartion<'a> {
@@ -68,9 +67,6 @@ struct EntryPointDeclartion<'a> {
     name: &'a str,
     exec_model: ExecutionModel,
 }
-
-const DESC_ACC_READ: u32 = 1;
-const DESC_ACC_WRITE: u32 = 2;
 
 
 
@@ -83,6 +79,7 @@ pub struct ReflectIntermediate<'a> {
     deco_map: HashMap<(InstrId, Option<u32>, Decoration), &'a [u32]>,
     ty_map: IntMap<TypeId, Type>,
     var_map: IntMap<VariableId, Variable>,
+    access_map: IntMap<VariableId, AccessType>,
     const_map: IntMap<ConstantId, Constant<'a>>,
     spec_const_map: IntMap<SpecConstantId, SpecConstant<'a>>,
     ptr_map: IntMap<TypeId, TypeId>,
@@ -479,39 +476,38 @@ impl<'a> ReflectIntermediate<'a> {
             // can safely ignore them.
             return Ok(());
         };
-        match op.store_cls {
+        let var = match op.store_cls {
             StorageClass::Input => {
                 if let Some(location) = self.get_var_location(op.alloc_id) {
                     let var = Variable::Input(location, ty.clone());
-                    if self.var_map.insert(op.alloc_id, var).is_some() {
-                        return Err(Error::ID_COLLISION);
-                    }
                     // There can be interface blocks for input and output but
                     // there won't be any for attribute inputs nor for
                     // attachment outputs, so we just ignore structs and arrays
                     // or something else here.
+                    Some(var)
                 } else {
                     // Ignore built-in interface varaibles whichh have no
                     // location assigned.
+                    None
                 }
             },
             StorageClass::Output => {
                 if let Some(location) = self.get_var_location(op.alloc_id) {
                     let var = Variable::Output(location, ty.clone());
-                    if self.var_map.insert(op.alloc_id, var).is_some() {
-                        return Err(Error::ID_COLLISION);
-                    }
-                } else {}
+                    Some(var)
+                } else {
+                    None
+                }
             },
             StorageClass::PushConstant => {
                 // Push constants have no global offset. Offsets are applied to
                 // members.
                 if let Type::Struct(_) = ty {
                     let var = Variable::PushConstant(ty.clone());
-                    if self.var_map.insert(op.alloc_id, var).is_some() {
-                        return Err(Error::ID_COLLISION);
-                    }
-                } else { return Err(Error::TY_NOT_FOUND); }
+                    Some(var)
+                } else {
+                    return Err(Error::TY_NOT_FOUND);
+                }
             },
             StorageClass::Uniform => {
                 let (nbind, ty) = extract_proto_ty(ty)?;
@@ -522,18 +518,14 @@ impl<'a> ReflectIntermediate<'a> {
                 };
                 let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
                 let var = Variable::Descriptor(desc_bind, desc_ty);
-                if self.var_map.insert(op.alloc_id, var).is_some() {
-                    return Err(Error::ID_COLLISION);
-                }
+                Some(var)
             },
             StorageClass::StorageBuffer => {
                 let (nbind, ty) = extract_proto_ty(ty)?;
                 let desc_ty = DescriptorType::StorageBuffer(nbind, ty.clone());
                 let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
                 let var = Variable::Descriptor(desc_bind, desc_ty);
-                if self.var_map.insert(op.alloc_id, var).is_some() {
-                    return Err(Error::ID_COLLISION);
-                }
+                Some(var)
             },
             StorageClass::UniformConstant => {
                 let (nbind, ty) = extract_proto_ty(ty)?;
@@ -550,15 +542,47 @@ impl<'a> ReflectIntermediate<'a> {
                     _ => return Err(Error::UNSUPPORTED_TY),
                 };
                 let var = Variable::Descriptor(desc_bind, desc_ty);
-                if self.var_map.insert(op.alloc_id, var).is_some() {
-                    return Err(Error::ID_COLLISION);
-                }
-                // Leak out unknown types of uniform constants.
+                Some(var)
             },
             _ => {
                 // Leak out unknown storage classes.
+                None
             },
+        };
+
+        if let Some(var) = var {
+            // Determine descriptor access type.
+            let access_ty = match &var {
+                Variable::Descriptor(_, desc_ty) => {
+                    match desc_ty {
+                        DescriptorType::Image(..) | DescriptorType::StorageBuffer(..) => {
+                            let read_only = self.contains_deco(op.alloc_id, None, Decoration::NonWritable);
+                            let write_only = self.contains_deco(op.alloc_id, None, Decoration::NonReadable);
+                            match (read_only, write_only) {
+                                (true, true) => return Err(Error::ACCESS_CONFLICT),
+                                (true, false) => AccessType::ReadOnly,
+                                (false, true) => AccessType::WriteOnly,
+                                (false, false) => AccessType::ReadWrite,
+                            }
+                        },
+                        _ => AccessType::ReadOnly,
+                    }
+                },
+                Variable::PushConstant(_) => AccessType::ReadOnly,
+                Variable::Input(_, _) => AccessType::ReadOnly,
+                Variable::Output(_, _) => AccessType::WriteOnly,
+            };
+            if self.access_map.insert(op.alloc_id, access_ty).is_some() {
+                return Err(Error::ID_COLLISION);
+            }
+
+            // Register variable.
+            if self.var_map.insert(op.alloc_id, var).is_some() {
+                return Err(Error::ID_COLLISION);
+            }
         }
+
+
         Ok(())
     }
     fn populate_defs(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>) -> Result<()> {
@@ -607,28 +631,18 @@ impl<'a> ReflectIntermediate<'a> {
                     let mut rsc_id = op.rsc_id;
                     // Resolve access chain.
                     if let Some(&x) = access_chain_map.get(&rsc_id) { rsc_id = x }
-                    // Mark variable as read.
                     let func = self.func_map.get_mut(&func_id)
                         .ok_or(Error::FUNC_NOT_FOUND)?;
-                    if let Some(flags) = func.accessed_vars.get_mut(&rsc_id) {
-                        *flags |= DESC_ACC_READ;
-                    } else {
-                        func.accessed_vars.insert(rsc_id, DESC_ACC_READ);
-                    }
+                    func.accessed_vars.insert(rsc_id);
                 },
                 OP_STORE => {
                     let op = OpStore::try_from(instr)?;
                     let mut rsc_id = op.rsc_id;
                     // Resolve access chain.
                     if let Some(&x) = access_chain_map.get(&rsc_id) { rsc_id = x }
-                    // Mark variable as read.
                     let func = self.func_map.get_mut(&func_id)
                         .ok_or(Error::FUNC_NOT_FOUND)?;
-                    if let Some(flags) = func.accessed_vars.get_mut(&rsc_id) {
-                        *flags |= DESC_ACC_WRITE;
-                    } else {
-                        func.accessed_vars.insert(rsc_id, DESC_ACC_WRITE);
-                    }
+                    func.accessed_vars.insert(rsc_id);
                 },
                 OP_ACCESS_CHAIN => {
                     let op = OpAccessChain::try_from(instr)?;
@@ -653,11 +667,9 @@ impl<'a> ReflectIntermediate<'a> {
     fn collect_fn_vars_impl(&self, func: FunctionId, vars: &mut IntMap<VariableId, AccessType>) {
         if let Some(func) = self.func_map.get(&func) {
             let it = func.accessed_vars.iter()
-                .filter_map(|(var_id, access)| {
-                    if self.var_map.contains_key(var_id) {
-                        use num_traits::FromPrimitive;
-                        Some((*var_id, AccessType::from_u32(*access).unwrap()))
-                    } else { None }
+                .filter_map(|var_id| {
+                    self.access_map.get(var_id)
+                        .map(|access_ty| (var_id, access_ty))
                 });
             vars.extend(it);
             for call in func.callees.iter() {

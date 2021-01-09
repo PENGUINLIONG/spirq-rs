@@ -1,6 +1,6 @@
 [package]
 name = "spirq"
-version = "0.4.10"
+version = "0.4.11"
 authors = ["PENGUINLIONG <admin@penguinliong.moe>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"

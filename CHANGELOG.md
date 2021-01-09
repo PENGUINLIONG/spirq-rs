@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.4.11
+
+- Redefined `AccessType` as the validity of read or write accesses instead of actual loads/stores by functions. (#49)
+
 ## v0.4.10
 
 - Supported customized reflection inspection and opened reflection intermediates. (#47)
