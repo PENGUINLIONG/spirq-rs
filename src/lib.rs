@@ -301,21 +301,25 @@ pub struct MemberVariableResolution<'a> {
 #[repr(u32)]
 #[derive(Debug, FromPrimitive, Clone, Copy, PartialEq, Eq)]
 pub enum AccessType {
-    /// The variable has only been read from.
+    /// The variable can be accessed by read.
     ReadOnly = 1,
-    /// The variable has only been written to.
-    ///
-    /// Note: Passing a storage image as parameter to `imageStore` is NOT
-    /// considered an writing access.
+    /// The variable can be accessed by write.
     WriteOnly = 2,
-    /// The variable has been read from and written to.
+    /// The variable can be accessed by read or by write.
     ReadWrite = 3,
 }
-impl std::ops::Add<AccessType> for AccessType {
+impl std::ops::BitOr<AccessType> for AccessType {
     type Output = AccessType;
-    fn add(self, rhs: AccessType) -> AccessType {
+    fn bitor(self, rhs: AccessType) -> AccessType {
         use num_traits::FromPrimitive;
-        AccessType::from_u32((self as u32) + (rhs as u32)).unwrap()
+        AccessType::from_u32((self as u32) | (rhs as u32)).unwrap()
+    }
+}
+impl std::ops::BitAnd<AccessType> for AccessType {
+    type Output = AccessType;
+    fn bitand(self, rhs: AccessType) -> AccessType {
+        use num_traits::FromPrimitive;
+        AccessType::from_u32((self as u32) & (rhs as u32)).unwrap()
     }
 }
 
@@ -486,8 +490,13 @@ impl Manifest {
                 if *db == desc_bind { Some(x.0.as_ref()) } else { None }
             } else { None })
     }
-    /// Get the access pattern of the descriptor at the given descriptor
-    /// binding.
+    /// Get the valid access patterns of the descriptor at the given binding
+    /// point. Currently only storage buffers and storage images can be accessed
+    /// by write.
+    ///
+    /// Note that the returned access type is the nominal access type declared
+    /// in SPIR-V. If a storage image is declared as `ReadWrite` but is only
+    /// accessed by write, it is still considered a `ReadWrite` descriptor.
     pub fn get_desc_access(&self, desc_bind: DescriptorBinding) -> Option<AccessType> {
         self.desc_access_map
             .get(&desc_bind.into())
@@ -637,14 +646,14 @@ impl Manifest {
             use std::cmp::Ordering;
             match nbind_samp.cmp(&nbind_img) {
                 Ordering::Equal => vec![
-                    (DescriptorType::SampledImage(nbind_img, img_ty.clone()), access_samp + access_img)
+                    (DescriptorType::SampledImage(nbind_img, img_ty.clone()), access_samp | access_img)
                 ],
                 Ordering::Less => vec![
-                    (DescriptorType::SampledImage(nbind_samp, img_ty.clone()), access_samp + access_img),
+                    (DescriptorType::SampledImage(nbind_samp, img_ty.clone()), access_samp | access_img),
                     (DescriptorType::Image(nbind_img - nbind_samp, img_ty.clone()), access_img),
                 ],
                 Ordering::Greater => vec![
-                    (DescriptorType::SampledImage(nbind_img, img_ty.clone()), access_samp + access_img),
+                    (DescriptorType::SampledImage(nbind_img, img_ty.clone()), access_samp | access_img),
                     (DescriptorType::Sampler(nbind_samp - nbind_img), access_samp),
                 ],
             }

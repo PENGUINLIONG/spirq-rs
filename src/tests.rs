@@ -162,9 +162,12 @@ fn test_desc_tys() {
         buffer F {
             vec4 f;
         } ff;
+        layout(rgba32f, set=3, binding=5) writeonly
+        uniform image2D g;
         void main() {
             bb.b = 0.0;
             ff.f = vec4(aa.a,0,0,0) + bb.b * texture(c, vec2(0,0)) + subpassLoad(e) + imageLoad(d, ivec2(0,0));
+            imageStore(g, ivec2(0,0), vec4(0,0,0,0));
         }
     "#);
     let desc_binds = entry.descs()
@@ -174,6 +177,7 @@ fn test_desc_tys() {
     assert!(desc_binds.contains(&DescriptorBinding(0, 1)));
     assert!(desc_binds.contains(&DescriptorBinding(1, 0)));
     assert!(desc_binds.contains(&DescriptorBinding(3, 4)));
+    assert!(desc_binds.contains(&DescriptorBinding(3, 5)));
     assert!(desc_binds.contains(&DescriptorBinding(1, 3)));
     assert!(desc_binds.contains(&DescriptorBinding(0, 3)));
     assert!(!desc_binds.contains(&DescriptorBinding(0, 2)));
@@ -183,9 +187,11 @@ fn test_desc_tys() {
         assert_eq!(desc, resolved);
         assert_eq!(resolved.desc_ty, entry.get_desc(desc.desc_bind).unwrap());
         if desc.desc_bind == DescriptorBinding(0, 3) {
-            assert_eq!(entry.get_desc_access(desc.desc_bind).unwrap(), AccessType::WriteOnly);
+            assert_eq!(entry.get_desc_access(desc.desc_bind).unwrap(), AccessType::ReadWrite);
         } else if desc.desc_bind == DescriptorBinding(0, 1) {
             assert_eq!(entry.get_desc_access(desc.desc_bind).unwrap(), AccessType::ReadWrite);
+        } else if desc.desc_bind == DescriptorBinding(3, 5) {
+            assert_eq!(entry.get_desc_access(desc.desc_bind).unwrap(), AccessType::WriteOnly);
         } else {
             assert_eq!(entry.get_desc_access(desc.desc_bind).unwrap(), AccessType::ReadOnly);
         }

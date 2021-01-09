@@ -26,6 +26,7 @@ impl Error {
     pub const SPEC_ID_COLLISION: Self = Self::CorruptedSpirv("specialization id can only be assigned once");
     pub const FUNC_NOT_FOUND: Self = Self::CorruptedSpirv("cannot find a function");
     pub const BROKEN_ACCESS_CHAIN: Self = Self::CorruptedSpirv("pointer in access chain points to non-existing type");
+    pub const ACCESS_CONFLICT: Self = Self::CorruptedSpirv("variable is both read-only and write-only");
 
     pub const UNSUPPORTED_TY: Self = Self::UnsupportedSpirv("unsupported type");
     pub const UNSUPPORTED_IMG_CFG: Self = Self::UnsupportedSpirv("unsupport image configuration");
