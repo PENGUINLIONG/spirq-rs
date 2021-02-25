@@ -12,34 +12,55 @@ use crate::{InterfaceLocation, DescriptorBinding, SpirvBinary, Instrs, Instr,
     Specialization};
 use crate::error::{Error, Result};
 use crate::instr::*;
+use crate::inspect::Inspector;
+
+
+
+type TypeId = InstrId;
+type VariableId = InstrId;
+type ConstantId = InstrId;
+type SpecConstantId = InstrId;
+type FunctionId = InstrId;
+
+
 
 // Intermediate types used in reflection.
 
 #[derive(Debug, Clone)]
-struct SpecConstant<'a> {
-    ty: InstrId,
-    value: &'a [u32],
-    spec_id: SpecId,
-    name: Option<&'a str>,
+pub struct SpecConstant<'a> {
+    /// Type of specialization constant.
+    pub ty_id: TypeId,
+    /// Default value of specialization constant.
+    pub value: &'a [u32],
+    /// Specialization constant ID, notice that this is NOT an instruction ID.
+    /// It is used to identify specialization constants for graphics libraries.
+    pub spec_id: SpecId,
 }
 #[derive(Debug, Clone)]
-struct Constant<'a> {
-    ty: InstrId,
-    value: &'a [u32],
+pub struct Constant<'a> {
+    /// Type of constant.
+    pub ty_id: InstrId,
+    /// Defined value of constant.
+    pub value: &'a [u32],
 }
-#[derive(Clone)]
-enum Variable {
+#[derive(Debug, Clone)]
+pub enum Variable {
+    /// Input interface variable.
     Input(InterfaceLocation, Type),
+    /// Output interface variable.
     Output(InterfaceLocation, Type),
+    /// Descriptor resource.
     Descriptor(DescriptorBinding, DescriptorType),
+    /// Push constant.
     PushConstant(Type),
 }
 
+
+
 #[derive(Default, Debug, Clone)]
 struct Function {
-    // First bit (01)for READ, second bit (10) for WRITE.
-    accessed_vars: IntMap<InstrId, u32>,
-    calls: IntSet<InstrId>,
+    accessed_vars: IntSet<VariableId>,
+    callees: IntSet<InstrId>,
 }
 struct EntryPointDeclartion<'a> {
     func_id: u32,
@@ -48,67 +69,102 @@ struct EntryPointDeclartion<'a> {
 }
 
 
-type ObjectId = u32;
-type TypeId = ObjectId;
-type VariableId = ObjectId;
-type ConstantId = ObjectId;
-type SpecConstantId = ObjectId;
-type FunctionId = ObjectId;
-
-const DESC_ACC_READ: u32 = 1;
-const DESC_ACC_WRITE: u32 = 2;
-
 
 // The actual reflection to take place.
 
 #[derive(Default)]
-struct ReflectIntermediate<'a> {
+pub struct ReflectIntermediate<'a> {
     entry_point_declrs: Vec<EntryPointDeclartion<'a>>,
     name_map: HashMap<(InstrId, Option<u32>), &'a str>,
     deco_map: HashMap<(InstrId, Option<u32>, Decoration), &'a [u32]>,
     ty_map: IntMap<TypeId, Type>,
     var_map: IntMap<VariableId, Variable>,
+    access_map: IntMap<VariableId, AccessType>,
     const_map: IntMap<ConstantId, Constant<'a>>,
     spec_const_map: IntMap<SpecConstantId, SpecConstant<'a>>,
     ptr_map: IntMap<TypeId, TypeId>,
     func_map: IntMap<FunctionId, Function>,
 }
 impl<'a> ReflectIntermediate<'a> {
-    /// Resolve one recurring layer of pointers to the pointer that refer to the
-    /// data directly.
-    fn resolve_ref(&self, ty_id: TypeId) -> Option<(TypeId, &Type)> {
-        self.ptr_map.get(&ty_id)
-            .and_then(|ty_id| {
-                self.ty_map.get(ty_id)
-                    .map(|ty| (*ty_id, ty))
-            })
-    }
-    fn contains_deco(&self, id: ObjectId, member_idx: Option<u32>, deco: Decoration) -> bool {
+    /// Check if a result (like a variable declaration result) or a memeber of a
+    /// result (like a structure definition result) has the given decoration.
+    pub fn contains_deco(&self, id: InstrId, member_idx: Option<u32>, deco: Decoration) -> bool {
         self.deco_map.contains_key(&(id, member_idx, deco))
     }
-    fn get_deco_u32(&self, id: InstrId, member_idx: Option<u32>, deco: Decoration) -> Option<u32> {
-        self.deco_map.get(&(id, member_idx, deco))
+    /// Get the single-word decoration of an instruction result.
+    pub fn get_deco_u32(&self, id: InstrId, deco: Decoration) -> Option<u32> {
+        self.get_deco_list(id, deco)
             .and_then(|x| x.get(0))
             .cloned()
     }
-    fn get_var_location(&self, var_id: VariableId) -> Option<InterfaceLocation> {
-        let comp = self.get_deco_u32(var_id, None, Decoration::Component)
+    /// Get the single-word decoration of a member of an instruction result.
+    pub fn get_member_deco_u32(&self, id: InstrId, member_idx: u32, deco: Decoration) -> Option<u32> {
+        self.get_member_deco_list(id, member_idx, deco)
+            .and_then(|x| x.get(0))
+            .cloned()
+    }
+    /// Get the multi-word declaration of a instruction result.
+    pub fn get_deco_list(&self, id: InstrId, deco: Decoration) -> Option<&'a [u32]> {
+        self.deco_map.get(&(id, None, deco))
+            .cloned()
+    }
+    /// Get the multi-word declaration of a member of an instruction result.
+    pub fn get_member_deco_list(&self, id: InstrId, member_idx: u32, deco: Decoration) -> Option<&'a [u32]> {
+        self.deco_map.get(&(id, Some(member_idx), deco))
+            .cloned()
+    }
+    /// Get the location-component pair of an interface variable.
+    pub fn get_var_location(&self, var_id: VariableId) -> Option<InterfaceLocation> {
+        let comp = self.get_deco_u32(var_id, Decoration::Component)
             .unwrap_or(0);
-        self.get_deco_u32(var_id, None, Decoration::Location)
+        self.get_deco_u32(var_id, Decoration::Location)
             .map(|loc| InterfaceLocation(loc, comp))
-
     }
-    fn get_var_desc_bind_or_default(&self, var_id: VariableId) -> DescriptorBinding {
-        let desc_set = self.get_deco_u32(var_id, None, Decoration::DescriptorSet)
+    /// Get the set-binding pair of a descriptor resource.
+    pub fn get_var_desc_bind(&self, var_id: VariableId) -> Option<DescriptorBinding> {
+        let desc_set = self.get_deco_u32(var_id, Decoration::DescriptorSet)
             .unwrap_or(0);
-        let bind_point = self.get_deco_u32(var_id, None, Decoration::Binding)
-            .unwrap_or(0);
-        DescriptorBinding::new(desc_set, bind_point)
+        self.get_deco_u32(var_id, Decoration::Binding)
+            .map(|bind_point| DescriptorBinding::new(desc_set, bind_point))
     }
-    fn get_name(&self, id: InstrId, member_idx: Option<u32>) -> Option<&'a str> {
-        self.name_map.get(&(id, member_idx))
-            .map(|x| *x)
+    /// Get the set-binding pair of a descriptor resource, but the binding point
+    /// is forced to 0 if it's not specified in SPIR-V source.
+    pub fn get_var_desc_bind_or_default(&self, var_id: VariableId) -> DescriptorBinding {
+        self.get_var_desc_bind(var_id)
+            .unwrap_or(DescriptorBinding(0, 0))
     }
+    /// Get the type identified by `ty_id`.
+    pub fn get_ty(&self, ty_id: TypeId) -> Option<Type> {
+        self.ty_map.get(&ty_id).cloned()
+    }
+    /// Get the variable identified by `var_id`.
+    pub fn get_var(&self, var_id: VariableId) -> Option<Variable> {
+        self.var_map.get(&var_id).cloned()
+    }
+    /// Get the constant identified by `const_id`.
+    pub fn get_const(&self, const_id: ConstantId) -> Option<Constant> {
+        self.const_map.get(&const_id).cloned()
+    }
+    /// Get the specialization constant identified by `spec_const_id`.
+    pub fn get_spec_const(&self, spec_const_id: SpecConstantId) -> Option<SpecConstant> {
+        self.spec_const_map.get(&spec_const_id).cloned()
+    }
+    /// Get the human-friendly name of an instruction result.
+    pub fn get_name(&self, id: InstrId) -> Option<&'a str> {
+        self.name_map.get(&(id, None)).cloned()
+    }
+    /// Get the human-friendly name of a member of an instruction result.
+    pub fn get_member_name(&self, id: InstrId, member_idx: u32) -> Option<&'a str> {
+        self.name_map.get(&(id, Some(member_idx))).cloned()
+    }
+    /// Resolve one recurring layer of pointers to the pointer that refer to the
+    /// data directly. `ty_id` should be refer to a pointer type. Returns the ID
+    /// of the type the pointer points to.
+    pub fn access_chain(&self, ty_id: TypeId) -> Option<TypeId> {
+        self.ptr_map.get(&ty_id).cloned()
+    }
+}
+impl<'a> ReflectIntermediate<'a> {
     fn populate_entry_points(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>) -> Result<()> {
         while let Some(instr) = instrs.peek() {
             if instr.opcode() != OP_ENTRY_POINT { break; }
@@ -186,14 +242,14 @@ impl<'a> ReflectIntermediate<'a> {
             },
             OP_TYPE_VECTOR => {
                 let op = OpTypeVector::try_from(instr)?;
-                if let Some(Type::Scalar(scalar_ty)) = self.ty_map.get(&op.scalar_ty_id).cloned() {
+                if let Some(Type::Scalar(scalar_ty)) = self.get_ty(op.scalar_ty_id) {
                     let vec_ty = VectorType::new(scalar_ty, op.nscalar);
                     (op.ty_id, Type::Vector(vec_ty))
                 } else { return Err(Error::TY_NOT_FOUND); }
             },
             OP_TYPE_MATRIX => {
                 let op = OpTypeMatrix::try_from(instr)?;
-                if let Some(Type::Vector(vec_ty)) = self.ty_map.get(&op.vec_ty_id).cloned() {
+                if let Some(Type::Vector(vec_ty)) = self.get_ty(op.vec_ty_id) {
                     let mat_ty = MatrixType::new(vec_ty, op.nvec);
                     (op.ty_id, Type::Matrix(mat_ty))
                 } else { return Err(Error::TY_NOT_FOUND); }
@@ -218,18 +274,21 @@ impl<'a> ReflectIntermediate<'a> {
             }
             OP_TYPE_SAMPLED_IMAGE => {
                 let op = OpTypeSampledImage::try_from(instr)?;
-                if let Some(Type::Image(img_ty)) = self.ty_map.get(&op.img_ty_id) {
-                    (op.ty_id, Type::SampledImage(img_ty.clone()))
+                if let Some(Type::Image(img_ty)) = self.get_ty(op.img_ty_id) {
+                    (op.ty_id, Type::SampledImage(img_ty))
                 } else { return Err(Error::TY_NOT_FOUND); }
             },
             OP_TYPE_ARRAY => {
                 let op = OpTypeArray::try_from(instr)?;
-                let proto_ty = self.ty_map.get(&op.proto_ty_id)
-                    .ok_or(Error::TY_NOT_FOUND)?;
+                let proto_ty = if let Some(proto_ty) = self.get_ty(op.proto_ty_id) {
+                    proto_ty
+                } else {
+                    return Ok(());
+                };
 
                 let nrepeat = self.const_map.get(&op.nrepeat_const_id)
                     .and_then(|constant| {
-                        if let Some(Type::Scalar(scalar_ty)) = self.ty_map.get(&constant.ty) {
+                        if let Some(Type::Scalar(scalar_ty)) = self.get_ty(constant.ty_id) {
                             if scalar_ty.nbyte() == 4 && scalar_ty.is_uint() {
                                 return Some(constant.value[0]);
                             }
@@ -244,7 +303,7 @@ impl<'a> ReflectIntermediate<'a> {
                     // would say... probably it's fine to size array with them?
                     .or_else(|| self.spec_const_map.get(&op.nrepeat_const_id)
                         .and_then(|constant| {
-                            if let Some(Type::Scalar(scalar_ty)) = self.ty_map.get(&constant.ty) {
+                            if let Some(Type::Scalar(scalar_ty)) = self.get_ty(constant.ty_id) {
                                 if scalar_ty.nbyte() == 4 && scalar_ty.is_uint() {
                                     return Some(constant.value[0]);
                                 }
@@ -253,43 +312,48 @@ impl<'a> ReflectIntermediate<'a> {
                         }
                     ))
                     .ok_or(Error::CONST_NOT_FOUND)?;
-                let stride = self.get_deco_u32(op.ty_id, None, Decoration::ArrayStride)
+                let stride = self.get_deco_u32(op.ty_id, Decoration::ArrayStride)
                     .map(|x| x as usize);
                 let arr_ty = if let Some(stride) = stride {
-                    ArrayType::new(proto_ty, nrepeat, stride)
+                    ArrayType::new(&proto_ty, nrepeat, stride)
                 } else {
-                    ArrayType::new_multibind(proto_ty, nrepeat)
+                    ArrayType::new_multibind(&proto_ty, nrepeat)
                 };
                 (op.ty_id, Type::Array(arr_ty))
             },
             OP_TYPE_RUNTIME_ARRAY => {
                 let op = OpTypeRuntimeArray::try_from(instr)?;
-                let proto_ty = self.ty_map.get(&op.proto_ty_id)
-                    .ok_or(Error::TY_NOT_FOUND)?;
-                let stride = self.get_deco_u32(op.ty_id, None, Decoration::ArrayStride)
+                let proto_ty = if let Some(proto_ty) = self.get_ty(op.proto_ty_id) {
+                    proto_ty
+                } else {
+                    return Ok(());
+                };
+                let stride = self.get_deco_u32(op.ty_id, Decoration::ArrayStride)
                     .map(|x| x as usize);
                 let arr_ty = if let Some(stride) = stride {
-                    ArrayType::new_unsized(proto_ty, stride)
+                    ArrayType::new_unsized(&proto_ty, stride)
                 } else {
-                    ArrayType::new_unsized_multibind(proto_ty)
+                    ArrayType::new_unsized_multibind(&proto_ty)
                 };
                 (op.ty_id, Type::Array(arr_ty))
             }
             OP_TYPE_STRUCT => {
                 let op = OpTypeStruct::try_from(instr)?;
-                let struct_name = self.get_name(op.ty_id, None).map(|n| n.to_string());
+                let struct_name = self.get_name(op.ty_id).map(|n| n.to_string());
                 let mut struct_ty = StructType::new(struct_name);
                 for (i, &member_ty_id) in op.member_ty_ids.iter().enumerate() {
                     let i = i as u32;
-                    let mut member_ty = self.ty_map.get(&member_ty_id)
-                        .cloned()
-                        .ok_or(Error::TY_NOT_FOUND)?;
+                    let mut member_ty = if let Some(member_ty) = self.get_ty(member_ty_id) {
+                        member_ty
+                    } else {
+                        return Ok(());
+                    };
                     let mut proto_ty = &mut member_ty;
                     while let Type::Array(arr_ty) = proto_ty {
                         proto_ty = &mut *arr_ty.proto_ty;
                     }
                     if let Type::Matrix(ref mut mat_ty) = proto_ty {
-                        let mat_stride = self.get_deco_u32(op.ty_id, Some(i), Decoration::MatrixStride)
+                        let mat_stride = self.get_member_deco_u32(op.ty_id, i, Decoration::MatrixStride)
                             .map(|x| x as usize)
                             .ok_or(Error::MISSING_DECO)?;
                         let row_major = self.contains_deco(op.ty_id, Some(i), Decoration::RowMajor);
@@ -301,10 +365,10 @@ impl<'a> ReflectIntermediate<'a> {
                         };
                         mat_ty.decorate(mat_stride, major);
                     }
-                    let name = if let Some(nm) = self.get_name(op.ty_id, Some(i)) {
+                    let name = if let Some(nm) = self.get_member_name(op.ty_id, i) {
                         if nm.is_empty() { None } else { Some(nm.to_owned()) }
                     } else { None };
-                    if let Some(offset) = self.get_deco_u32(op.ty_id, Some(i), Decoration::Offset)
+                    if let Some(offset) = self.get_member_deco_u32(op.ty_id, i, Decoration::Offset)
                         .map(|x| x as usize) {
                         let member = StructMember { name, offset, ty: member_ty };
                         struct_ty.push_member(member)?;
@@ -336,7 +400,7 @@ impl<'a> ReflectIntermediate<'a> {
         if instr.opcode() == OP_CONSTANT {
             let op = OpConstant::try_from(instr)?;
             if let Vacant(entry) = self.const_map.entry(op.const_id) {
-                let constant = Constant { ty: op.ty_id, value: op.value };
+                let constant = Constant { ty_id: op.ty_id, value: op.value };
                 entry.insert(constant);
                 Ok(())
             } else { Err(Error::ID_COLLISION) }
@@ -349,13 +413,12 @@ impl<'a> ReflectIntermediate<'a> {
         match instr.opcode() {
             OP_SPEC_CONSTANT_TRUE => {
                 let op = OpSpecConstant::try_from(instr)?;
-                let spec_id = self.get_deco_u32(op.spec_const_id, None, Decoration::SpecId)
+                let spec_id = self.get_deco_u32(op.spec_const_id, Decoration::SpecId)
                     .ok_or(Error::MISSING_DECO)?;
                 let spec_const = SpecConstant {
-                    ty: op.ty_id,
+                    ty_id: op.ty_id,
                     value: &[1],
                     spec_id,
-                    name: self.get_name(op.spec_const_id, None),
                 };
                 if let Vacant(entry) = self.spec_const_map.entry(op.spec_const_id) {
                     entry.insert(spec_const);
@@ -363,13 +426,12 @@ impl<'a> ReflectIntermediate<'a> {
             },
             OP_SPEC_CONSTANT_FALSE => {
                 let op = OpSpecConstant::try_from(instr)?;
-                let spec_id = self.get_deco_u32(op.spec_const_id, None, Decoration::SpecId)
+                let spec_id = self.get_deco_u32(op.spec_const_id, Decoration::SpecId)
                     .ok_or(Error::MISSING_DECO)?;
                 let spec_const = SpecConstant {
-                    ty: op.ty_id,
+                    ty_id: op.ty_id,
                     value: &[0],
                     spec_id,
-                    name: self.get_name(op.spec_const_id, None),
                 };
                 if let Vacant(entry) = self.spec_const_map.entry(op.spec_const_id) {
                     entry.insert(spec_const);
@@ -377,13 +439,12 @@ impl<'a> ReflectIntermediate<'a> {
             },
             OP_SPEC_CONSTANT => {
                 let op = OpSpecConstant::try_from(instr)?;
-                let spec_id = self.get_deco_u32(op.spec_const_id, None, Decoration::SpecId)
+                let spec_id = self.get_deco_u32(op.spec_const_id, Decoration::SpecId)
                     .ok_or(Error::MISSING_DECO)?;
                 let spec_const = SpecConstant {
-                    ty: op.ty_id,
+                    ty_id: op.ty_id,
                     value: op.value,
                     spec_id,
-                    name: self.get_name(op.spec_const_id, None),
                 };
                 if let Vacant(entry) = self.spec_const_map.entry(op.spec_const_id) {
                     entry.insert(spec_const);
@@ -398,7 +459,7 @@ impl<'a> ReflectIntermediate<'a> {
         Ok(())
     }
     fn populate_one_var(&mut self, instr: &Instr<'a>) -> Result<()> {
-        fn extract_proto_ty<'a>(ty: &'a Type) -> Result<(u32, &'a Type)> {
+        fn extract_proto_ty<'a>(ty: Type) -> Result<(u32, Type)> {
             match ty {
                 Type::Array(arr_ty) => {
                     // `nrepeat=None` is no longer considered invalid because of
@@ -407,51 +468,55 @@ impl<'a> ReflectIntermediate<'a> {
                     let nrepeat = arr_ty.nrepeat()
                         .unwrap_or(0);
                     let proto_ty = arr_ty.proto_ty();
-                    Ok((nrepeat, proto_ty))
+                    Ok((nrepeat, proto_ty.clone()))
                 },
                 _ => Ok((1, ty)),
             }
         }
 
         let op = OpVariable::try_from(instr)?;
-        let (ty_id, ty) = if let Some(x) = self.resolve_ref(op.ty_id) { x } else {
+        let ty_id = self.access_chain(op.ty_id)
+            .ok_or(Error::BROKEN_ACCESS_CHAIN)?;
+        let ty = if let Some(ty) = self.get_ty(ty_id) {
+            ty
+        } else {
             // If a variable is declared based on a unregistered type, very
             // likely it's a input/output block passed between shader stages. We
             // can safely ignore them.
             return Ok(());
         };
-        match op.store_cls {
+        let var = match op.store_cls {
             StorageClass::Input => {
                 if let Some(location) = self.get_var_location(op.alloc_id) {
                     let var = Variable::Input(location, ty.clone());
-                    if self.var_map.insert(op.alloc_id, var).is_some() {
-                        return Err(Error::ID_COLLISION);
-                    }
-                    // There can be interface blocks for input and output but there
-                    // won't be any for attribute inputs nor for attachment outputs,
-                    // so we just ignore structs and arrays or something else here.
+                    // There can be interface blocks for input and output but
+                    // there won't be any for attribute inputs nor for
+                    // attachment outputs, so we just ignore structs and arrays
+                    // or something else here.
+                    Some(var)
                 } else {
                     // Ignore built-in interface varaibles whichh have no
                     // location assigned.
+                    None
                 }
             },
             StorageClass::Output => {
                 if let Some(location) = self.get_var_location(op.alloc_id) {
                     let var = Variable::Output(location, ty.clone());
-                    if self.var_map.insert(op.alloc_id, var).is_some() {
-                        return Err(Error::ID_COLLISION);
-                    }
-                } else {}
+                    Some(var)
+                } else {
+                    None
+                }
             },
             StorageClass::PushConstant => {
                 // Push constants have no global offset. Offsets are applied to
                 // members.
                 if let Type::Struct(_) = ty {
                     let var = Variable::PushConstant(ty.clone());
-                    if self.var_map.insert(op.alloc_id, var).is_some() {
-                        return Err(Error::ID_COLLISION);
-                    }
-                } else { return Err(Error::TY_NOT_FOUND); }
+                    Some(var)
+                } else {
+                    return Err(Error::TY_NOT_FOUND);
+                }
             },
             StorageClass::Uniform => {
                 let (nbind, ty) = extract_proto_ty(ty)?;
@@ -462,18 +527,14 @@ impl<'a> ReflectIntermediate<'a> {
                 };
                 let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
                 let var = Variable::Descriptor(desc_bind, desc_ty);
-                if self.var_map.insert(op.alloc_id, var).is_some() {
-                    return Err(Error::ID_COLLISION);
-                }
+                Some(var)
             },
             StorageClass::StorageBuffer => {
                 let (nbind, ty) = extract_proto_ty(ty)?;
                 let desc_ty = DescriptorType::StorageBuffer(nbind, ty.clone());
                 let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
                 let var = Variable::Descriptor(desc_bind, desc_ty);
-                if self.var_map.insert(op.alloc_id, var).is_some() {
-                    return Err(Error::ID_COLLISION);
-                }
+                Some(var)
             },
             StorageClass::UniformConstant => {
                 let (nbind, ty) = extract_proto_ty(ty)?;
@@ -483,22 +544,54 @@ impl<'a> ReflectIntermediate<'a> {
                     Type::Sampler() => DescriptorType::Sampler(nbind),
                     Type::SampledImage(_) => DescriptorType::SampledImage(nbind, ty.clone()),
                     Type::SubpassData() => {
-                        let input_attm_idx = self.get_deco_u32(op.alloc_id, None, Decoration::InputAttachmentIndex)
+                        let input_attm_idx = self.get_deco_u32(op.alloc_id, Decoration::InputAttachmentIndex)
                             .ok_or(Error::MISSING_DECO)?;
                         DescriptorType::InputAttachment(nbind, input_attm_idx)
                     },
                     _ => return Err(Error::UNSUPPORTED_TY),
                 };
                 let var = Variable::Descriptor(desc_bind, desc_ty);
-                if self.var_map.insert(op.alloc_id, var).is_some() {
-                    return Err(Error::ID_COLLISION);
-                }
-                // Leak out unknown types of uniform constants.
+                Some(var)
             },
             _ => {
                 // Leak out unknown storage classes.
+                None
             },
+        };
+
+        if let Some(var) = var {
+            // Determine descriptor access type.
+            let access_ty = match &var {
+                Variable::Descriptor(_, desc_ty) => {
+                    match desc_ty {
+                        DescriptorType::Image(..) | DescriptorType::StorageBuffer(..) => {
+                            let read_only = self.contains_deco(op.alloc_id, None, Decoration::NonWritable);
+                            let write_only = self.contains_deco(op.alloc_id, None, Decoration::NonReadable);
+                            match (read_only, write_only) {
+                                (true, true) => return Err(Error::ACCESS_CONFLICT),
+                                (true, false) => AccessType::ReadOnly,
+                                (false, true) => AccessType::WriteOnly,
+                                (false, false) => AccessType::ReadWrite,
+                            }
+                        },
+                        _ => AccessType::ReadOnly,
+                    }
+                },
+                Variable::PushConstant(_) => AccessType::ReadOnly,
+                Variable::Input(_, _) => AccessType::ReadOnly,
+                Variable::Output(_, _) => AccessType::WriteOnly,
+            };
+            if self.access_map.insert(op.alloc_id, access_ty).is_some() {
+                return Err(Error::ID_COLLISION);
+            }
+
+            // Register variable.
+            if self.var_map.insert(op.alloc_id, var).is_some() {
+                return Err(Error::ID_COLLISION);
+            }
         }
+
+
         Ok(())
     }
     fn populate_defs(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>) -> Result<()> {
@@ -519,76 +612,76 @@ impl<'a> ReflectIntermediate<'a> {
         }
         Ok(())
     }
-    fn populate_access(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>) -> Result<()> {
-        while instrs.peek().is_some() {
-            let mut access_chain_map = IntMap::default();
-            let mut func: Option<&mut Function> = None;
-            while let Some(instr) = instrs.peek() {
-                if instr.opcode() == OP_FUNCTION {
+    fn populate_access<I: Inspector>(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>, mut inspector: I) -> Result<()> {
+        let mut access_chain_map = IntMap::default();
+        let mut func_id: InstrId = !0;
+
+        while let Some(instr) = instrs.peek() {
+            let mut notify_inspector = func_id != !0;
+            // Do our works first.
+            match instr.opcode() {
+                OP_FUNCTION => {
                     let op = OpFunction::try_from(instr)?;
-                    func = Some(self.func_map.entry(op.func_id).or_default());
-                    break;
-                }
-                instrs.next();
+                    func_id = op.func_id;
+                    let last = self.func_map.insert(func_id, Default::default());
+                    if last.is_some() {
+                        return Err(Error::ID_COLLISION);
+                    }
+                    notify_inspector = true;
+                },
+                OP_FUNCTION_CALL => {
+                    let op = OpFunctionCall::try_from(instr)?;
+                    let func = self.func_map.get_mut(&func_id)
+                        .ok_or(Error::FUNC_NOT_FOUND)?;
+                    func.callees.insert(op.func_id);
+                },
+                OP_LOAD => {
+                    let op = OpLoad::try_from(instr)?;
+                    let mut rsc_id = op.rsc_id;
+                    // Resolve access chain.
+                    if let Some(&x) = access_chain_map.get(&rsc_id) { rsc_id = x }
+                    let func = self.func_map.get_mut(&func_id)
+                        .ok_or(Error::FUNC_NOT_FOUND)?;
+                    func.accessed_vars.insert(rsc_id);
+                },
+                OP_STORE => {
+                    let op = OpStore::try_from(instr)?;
+                    let mut rsc_id = op.rsc_id;
+                    // Resolve access chain.
+                    if let Some(&x) = access_chain_map.get(&rsc_id) { rsc_id = x }
+                    let func = self.func_map.get_mut(&func_id)
+                        .ok_or(Error::FUNC_NOT_FOUND)?;
+                    func.accessed_vars.insert(rsc_id);
+                },
+                OP_ACCESS_CHAIN => {
+                    let op = OpAccessChain::try_from(instr)?;
+                    if access_chain_map.insert(op.rsc_id, op.accessed_rsc_id).is_some() {
+                        return Err(Error::ID_COLLISION);
+                    }
+                },
+                OP_FUNCTION_END => {
+                    func_id = !0;
+                },
+                _ => { },
+            }
+            // Then notify the inspector.
+            if notify_inspector {
+                inspector.inspect(&self, instr)
             }
 
-            while let Some(instr) = instrs.peek() {
-                match instr.opcode() {
-                    OP_FUNCTION_CALL => {
-                        let op = OpFunctionCall::try_from(instr)?;
-                        func.as_mut().unwrap().calls.insert(op.func_id);
-                    },
-                    OP_LOAD => {
-                        let op = OpLoad::try_from(instr)?;
-                        let mut rsc_id = op.rsc_id;
-                        // Resolve access chain.
-                        if let Some(&x) = access_chain_map.get(&rsc_id) { rsc_id = x }
-                        // Mark variable as read.
-                        let func = func.as_mut().unwrap();
-                        if let Some(flags) = func.accessed_vars.get_mut(&rsc_id) {
-                            *flags |= DESC_ACC_READ;
-                        } else {
-                            func.accessed_vars.insert(rsc_id, DESC_ACC_READ);
-                        }
-                    },
-                    OP_STORE => {
-                        let op = OpStore::try_from(instr)?;
-                        let mut rsc_id = op.rsc_id;
-                        // Resolve access chain.
-                        if let Some(&x) = access_chain_map.get(&rsc_id) { rsc_id = x }
-                        // Mark variable as read.
-                        let func = func.as_mut().unwrap();
-                        if let Some(flags) = func.accessed_vars.get_mut(&rsc_id) {
-                            *flags |= DESC_ACC_WRITE;
-                        } else {
-                            func.accessed_vars.insert(rsc_id, DESC_ACC_WRITE);
-                        }
-                    },
-                    OP_ACCESS_CHAIN => {
-                        let op = OpAccessChain::try_from(instr)?;
-                        if access_chain_map.insert(op.rsc_id, op.accessed_rsc_id).is_some() {
-                            return Err(Error::ID_COLLISION);
-                        }
-                    },
-                    OP_FUNCTION_END => break,
-                    _ => { },
-                }
-                instrs.next();
-            }
+            instrs.next();
         }
         Ok(())
     }
     fn collect_fn_vars_impl(&self, func: FunctionId, vars: &mut IntMap<VariableId, AccessType>) {
         if let Some(func) = self.func_map.get(&func) {
             let it = func.accessed_vars.iter()
-                .filter_map(|(var_id, access)| {
-                    if self.var_map.contains_key(var_id) {
-                        use num_traits::FromPrimitive;
-                        Some((*var_id, AccessType::from_u32(*access).unwrap()))
-                    } else { None }
+                .filter_map(|var_id| {
+                    self.access_map.get(var_id)
+                        .map(|access_ty| (var_id, access_ty))
                 });
             vars.extend(it);
-            for call in func.calls.iter() {
+            for call in func.callees.iter() {
                 self.collect_fn_vars_impl(*call, vars);
             }
         }
@@ -602,31 +695,30 @@ impl<'a> ReflectIntermediate<'a> {
         let mut manifest = Manifest::default();
         let accessed_var_ids = self.collect_fn_vars(func_id);
         for (accessed_var_id, access) in accessed_var_ids {
-            let accessed_var = self.var_map.get(&accessed_var_id)
-                .cloned()
+            let accessed_var = self.get_var(accessed_var_id)
                 .ok_or(Error::UNDECLARED_VAR)?;
             match accessed_var {
                 Variable::Input(location, ivar_ty) => {
                     manifest.insert_input(location, ivar_ty)?;
-                    if let Some(name) = self.get_name(accessed_var_id, None) {
+                    if let Some(name) = self.get_name(accessed_var_id) {
                         manifest.insert_rsc_name(name, ResourceLocator::Input(location))?;
                     }
                 },
                 Variable::Output(location, ivar_ty) => {
                     manifest.insert_output(location, ivar_ty)?;
-                    if let Some(name) = self.get_name(accessed_var_id, None) {
+                    if let Some(name) = self.get_name(accessed_var_id) {
                         manifest.insert_rsc_name(name, ResourceLocator::Output(location))?;
                     }
                 },
                 Variable::Descriptor(desc_bind, desc_ty) => {
                     manifest.insert_desc(desc_bind, desc_ty, access)?;
-                    if let Some(name) = self.get_name(accessed_var_id, None) {
+                    if let Some(name) = self.get_name(accessed_var_id) {
                         manifest.insert_rsc_name(name, ResourceLocator::Descriptor(desc_bind))?;
                     }
                 },
                 Variable::PushConstant(push_const_ty) => {
                     manifest.insert_push_const(push_const_ty)?;
-                    if let Some(name) = self.get_name(accessed_var_id, None) {
+                    if let Some(name) = self.get_name(accessed_var_id) {
                         manifest.insert_rsc_name(name, ResourceLocator::PushConstant)?;
                     }
                 }
@@ -640,9 +732,9 @@ impl<'a> ReflectIntermediate<'a> {
         // It might not be an optimization in mind of engineering.)
         let mut spec = Specialization::default();
         for (spec_const_id, spec_const) in self.spec_const_map.iter() {
-            if let Some(ty) = self.ty_map.get(&spec_const.ty).cloned() {
+            if let Some(ty) = self.get_ty(spec_const.ty_id) {
                 spec.insert_spec_const(spec_const.spec_id, ty)?;
-                if let Some(name) = self.get_name(*spec_const_id, None) {
+                if let Some(name) = self.get_name(*spec_const_id) {
                     spec.insert_spec_const_name(name, spec_const.spec_id)?;
                 }
             } else { return Err(Error::TY_NOT_FOUND) }
@@ -667,7 +759,7 @@ impl<'a> ReflectIntermediate<'a> {
 }
 
 
-pub(crate) fn reflect_spirv<'a>(module: &'a SpirvBinary) -> Result<Vec<EntryPoint>> {
+pub(crate) fn reflect_spirv<'a, I: Inspector>(module: &'a SpirvBinary, inspector: I) -> Result<Vec<EntryPoint>> {
     fn skip_until_range_inclusive<'a>(instrs: &'_ mut Peekable<Instrs<'a>>, rng: RangeInclusive<u32>) {
         while let Some(instr) = instrs.peek() {
             if !rng.contains(&instr.opcode()) { instrs.next(); } else { break; }
@@ -689,6 +781,6 @@ pub(crate) fn reflect_spirv<'a>(module: &'a SpirvBinary) -> Result<Vec<EntryPoin
     skip_until(&mut instrs, is_deco_op);
     itm.populate_decos(&mut instrs)?;
     itm.populate_defs(&mut instrs)?;
-    itm.populate_access(&mut instrs)?;
+    itm.populate_access(&mut instrs, inspector)?;
     Ok(itm.collect_entry_points()?)
 }

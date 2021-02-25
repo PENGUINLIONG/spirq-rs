@@ -31,7 +31,7 @@ impl<'a> Iterator for Instrs<'a> {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Instr<'a> {
     opcode: u32,
     operands: &'a [u32],

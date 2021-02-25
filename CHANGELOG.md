@@ -1,5 +1,18 @@
 # Change Log
 
+## v0.4.11
+
+- Redefined `AccessType` as the validity of read or write accesses instead of actual loads/stores by functions. (#49)
+
+## v0.4.10
+
+- Supported customized reflection inspection and opened reflection intermediates. (#47)
+- Fixed potential buffer overread when string operand is missing.
+
+## v0.4.9
+
+- Fixed that symbol resolution succeeds when the interface variable kind mismatches. (#46)
+
 ## v0.4.8
 
 - Supported structure type name extraction (#44)

@@ -73,11 +73,12 @@
 //! [`Type`]: ty/enum.Type.html
 //! [`Symbol`]: sym/struct.Symbol.html
 mod consts;
-mod parse;
 mod instr;
-mod reflect;
+mod inspect;
 #[cfg(test)]
 mod tests;
+pub mod reflect;
+pub mod parse;
 pub mod sym;
 pub mod error;
 pub mod ty;
@@ -89,6 +90,8 @@ use std::ops::Deref;
 use num_derive::FromPrimitive;
 use fnv::FnvHashMap as HashMap;
 use nohash_hasher::IntMap;
+use reflect::ReflectIntermediate;
+use inspect::{NopInspector, FnInspector};
 
 use parse::{Instrs, Instr};
 pub use ty::{Type, DescriptorType};
@@ -136,7 +139,12 @@ impl SpirvBinary {
     }
     /// Reflect the SPIR-V binary and extract all the entry points.
     pub fn reflect_vec(&self) -> Result<Vec<EntryPoint>> {
-        reflect::reflect_spirv(&self)
+        reflect::reflect_spirv(&self, NopInspector())
+    }
+    /// Similar to `reflect_vec` while you can inspect each instruction during
+    /// the parse.
+    pub fn reflect_vec_inspect<F: FnMut(&ReflectIntermediate<'_>, &Instr<'_>)>(&self, inspector: F) -> Result<Vec<EntryPoint>> {
+        reflect::reflect_spirv(&self, FnInspector::<F>(inspector))
     }
     pub fn words(&self) -> &[u32] {
         &self.0
@@ -233,6 +241,12 @@ pub(crate) enum ResourceLocator {
     PushConstant,
 }
 
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
+pub(crate) enum ResolveKind {
+    Input,
+    Output,
+}
+
 // Resolution results.
 
 /// Specialization constant resolution result.
@@ -287,21 +301,25 @@ pub struct MemberVariableResolution<'a> {
 #[repr(u32)]
 #[derive(Debug, FromPrimitive, Clone, Copy, PartialEq, Eq)]
 pub enum AccessType {
-    /// The variable has only been read from.
+    /// The variable can be accessed by read.
     ReadOnly = 1,
-    /// The variable has only been written to.
-    ///
-    /// Note: Passing a storage image as parameter to `imageStore` is NOT
-    /// considered an writing access.
+    /// The variable can be accessed by write.
     WriteOnly = 2,
-    /// The variable has been read from and written to.
+    /// The variable can be accessed by read or by write.
     ReadWrite = 3,
 }
-impl std::ops::Add<AccessType> for AccessType {
+impl std::ops::BitOr<AccessType> for AccessType {
     type Output = AccessType;
-    fn add(self, rhs: AccessType) -> AccessType {
+    fn bitor(self, rhs: AccessType) -> AccessType {
         use num_traits::FromPrimitive;
-        AccessType::from_u32((self as u32) + (rhs as u32)).unwrap()
+        AccessType::from_u32((self as u32) | (rhs as u32)).unwrap()
+    }
+}
+impl std::ops::BitAnd<AccessType> for AccessType {
+    type Output = AccessType;
+    fn bitand(self, rhs: AccessType) -> AccessType {
+        use num_traits::FromPrimitive;
+        AccessType::from_u32((self as u32) & (rhs as u32)).unwrap()
     }
 }
 
@@ -472,14 +490,19 @@ impl Manifest {
                 if *db == desc_bind { Some(x.0.as_ref()) } else { None }
             } else { None })
     }
-    /// Get the access pattern of the descriptor at the given descriptor
-    /// binding.
+    /// Get the valid access patterns of the descriptor at the given binding
+    /// point. Currently only storage buffers and storage images can be accessed
+    /// by write.
+    ///
+    /// Note that the returned access type is the nominal access type declared
+    /// in SPIR-V. If a storage image is declared as `ReadWrite` but is only
+    /// accessed by write, it is still considered a `ReadWrite` descriptor.
     pub fn get_desc_access(&self, desc_bind: DescriptorBinding) -> Option<AccessType> {
         self.desc_access_map
             .get(&desc_bind.into())
             .map(|x| *x)
     }
-    fn resolve_ivar<'a>(&self, map: &'a IntMap<InterfaceLocationCode, Type>, sym: &Sym) -> Option<InterfaceVariableResolution<'a>> {
+    fn resolve_ivar<'a>(&self, map: &'a IntMap<InterfaceLocationCode, Type>, sym: &Sym, kind: ResolveKind) -> Option<InterfaceVariableResolution<'a>> {
         let mut segs = sym.segs();
         let location = match segs.next() {
             Some(Seg::Index(loc)) => {
@@ -488,8 +511,12 @@ impl Manifest {
                 } else { return None; }
             },
             Some(Seg::Name(name)) => match self.var_name_map.get(name) {
-                Some(ResourceLocator::Input(location)) => *location,
-                Some(ResourceLocator::Output(location)) => *location,
+                Some(ResourceLocator::Input(location)) =>
+                    if kind == ResolveKind::Input { *location } else { return None; },
+
+                Some(ResourceLocator::Output(location)) =>
+                    if kind == ResolveKind::Output { *location } else { return None; },
+
                 _ => return None,
             },
             _ => return None,
@@ -501,11 +528,11 @@ impl Manifest {
     }
     /// Get the metadata of a input variable identified by a symbol.
     pub fn resolve_input<S: AsRef<Sym>>(&self, sym: S) -> Option<InterfaceVariableResolution> {
-        self.resolve_ivar(&self.input_map, sym.as_ref())
+        self.resolve_ivar(&self.input_map, sym.as_ref(), ResolveKind::Input)
     }
     /// Get the metadata of a output variable identified by a symbol.
     pub fn resolve_output<S: AsRef<Sym>>(&self, sym: S) -> Option<InterfaceVariableResolution> {
-        self.resolve_ivar(&self.output_map, sym.as_ref())
+        self.resolve_ivar(&self.output_map, sym.as_ref(), ResolveKind::Output)
     }
     /// Get the metadata of a descriptor variable identified by a symbol.
     /// If the exact variable cannot be resolved, the descriptor part of the
@@ -619,14 +646,14 @@ impl Manifest {
             use std::cmp::Ordering;
             match nbind_samp.cmp(&nbind_img) {
                 Ordering::Equal => vec![
-                    (DescriptorType::SampledImage(nbind_img, img_ty.clone()), access_samp + access_img)
+                    (DescriptorType::SampledImage(nbind_img, img_ty.clone()), access_samp | access_img)
                 ],
                 Ordering::Less => vec![
-                    (DescriptorType::SampledImage(nbind_samp, img_ty.clone()), access_samp + access_img),
+                    (DescriptorType::SampledImage(nbind_samp, img_ty.clone()), access_samp | access_img),
                     (DescriptorType::Image(nbind_img - nbind_samp, img_ty.clone()), access_img),
                 ],
                 Ordering::Greater => vec![
-                    (DescriptorType::SampledImage(nbind_img, img_ty.clone()), access_samp + access_img),
+                    (DescriptorType::SampledImage(nbind_img, img_ty.clone()), access_samp | access_img),
                     (DescriptorType::Sampler(nbind_samp - nbind_img), access_samp),
                 ],
             }
@@ -716,11 +743,15 @@ impl Specialization {
             })
     }
 
+    // TODO: (penguinliong) This should not be exposed. Hide it in next larger
+    // release.
     pub fn insert_spec_const(&mut self, spec_id: SpecId, ty: Type) -> Result<()> {
         if self.spec_const_map.insert(spec_id, ty).is_some() {
             Err(Error::SPEC_ID_COLLISION)
         } else { Ok(()) }
     }
+    // TODO: (penguinliong) This should not be exposed. Hide it in next larger
+    // release.
     pub fn insert_spec_const_name(&mut self, name: &str, spec_id: SpecId) -> Result<()>{
         if self.spec_const_name_map.insert(name.to_owned(), spec_id).is_some() {
             Err(Error::NAME_COLLISION)
