@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.4.12
+
+- Relaxed validation of non-interface composite types. (#51)
+
 ## v0.4.11
 
 - Redefined `AccessType` as the validity of read or write accesses instead of actual loads/stores by functions. (#49)
