@@ -280,8 +280,11 @@ impl<'a> ReflectIntermediate<'a> {
             },
             OP_TYPE_ARRAY => {
                 let op = OpTypeArray::try_from(instr)?;
-                let proto_ty = self.get_ty(op.proto_ty_id)
-                    .ok_or(Error::TY_NOT_FOUND)?;
+                let proto_ty = if let Some(proto_ty) = self.get_ty(op.proto_ty_id) {
+                    proto_ty
+                } else {
+                    return Ok(());
+                };
 
                 let nrepeat = self.const_map.get(&op.nrepeat_const_id)
                     .and_then(|constant| {
@@ -320,8 +323,11 @@ impl<'a> ReflectIntermediate<'a> {
             },
             OP_TYPE_RUNTIME_ARRAY => {
                 let op = OpTypeRuntimeArray::try_from(instr)?;
-                let proto_ty = self.get_ty(op.proto_ty_id)
-                    .ok_or(Error::TY_NOT_FOUND)?;
+                let proto_ty = if let Some(proto_ty) = self.get_ty(op.proto_ty_id) {
+                    proto_ty
+                } else {
+                    return Ok(());
+                };
                 let stride = self.get_deco_u32(op.ty_id, Decoration::ArrayStride)
                     .map(|x| x as usize);
                 let arr_ty = if let Some(stride) = stride {
@@ -337,8 +343,11 @@ impl<'a> ReflectIntermediate<'a> {
                 let mut struct_ty = StructType::new(struct_name);
                 for (i, &member_ty_id) in op.member_ty_ids.iter().enumerate() {
                     let i = i as u32;
-                    let mut member_ty = self.get_ty(member_ty_id)
-                        .ok_or(Error::TY_NOT_FOUND)?;
+                    let mut member_ty = if let Some(member_ty) = self.get_ty(member_ty_id) {
+                        member_ty
+                    } else {
+                        return Ok(());
+                    };
                     let mut proto_ty = &mut member_ty;
                     while let Type::Array(arr_ty) = proto_ty {
                         proto_ty = &mut *arr_ty.proto_ty;
