@@ -66,7 +66,7 @@ impl fmt::Debug for ScalarType {
         match self {
             Self::Boolean => write!(f, "bool"),
             Self::Signed(nbyte) => write!(f, "i{}", nbyte << 3),
-            Self::Unsigned(nbyte) => write!(f, "i{}", nbyte << 3),
+            Self::Unsigned(nbyte) => write!(f, "u{}", nbyte << 3),
             Self::Float(nbyte) => write!(f, "f{}", nbyte << 3),
         }
     }
