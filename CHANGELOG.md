@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.4.13
+
+- Fixed typo. (#55)
+
 ## v0.4.12
 
 - Relaxed validation of non-interface composite types. (#51)
