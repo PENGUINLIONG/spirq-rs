@@ -8,7 +8,7 @@ fn main() {
 
     let spvs = collect_spirv_binaries("assets/effects/spirv-spec");
     info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
-    let frag = spvs["referential.frag"].reflect().unwrap();
+    let frag = spvs["referential.frag"].reflect_vec().unwrap();
     info!("{:#?}", frag);
     let frag = &frag[0];
     let check = |sym :&str| {

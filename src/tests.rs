@@ -4,8 +4,8 @@ use super::*;
 
 macro_rules! gen_entries(
     ($stage:ident, $src:expr, $lang:ident) => {{
-        static SPV: &'static [u32] = inline_spirv!($src, $stage, $lang);
-        SPV.iter().copied().collect::<SpirvBinary>().reflect().unwrap()
+        static SPV: &'static [u32] = inline_spirv!($src, $stage, $lang, vulkan1_2);
+        SPV.iter().copied().collect::<SpirvBinary>().reflect_vec().unwrap()
     }}
 );
 macro_rules! gen_one_entry(
@@ -271,5 +271,23 @@ fn test_dyn_multibind() {
         }
     "#);
     assert_eq!(entry.get_desc(DescriptorBinding(0, 0)).unwrap().nbind(), 0);
+}
+#[test]
+fn test_ray_tracing() {
+    let entry = gen_one_entry!(rgen, r#"
+        #version 460 core
+        #extension GL_EXT_ray_tracing: enable
+
+        uniform accelerationStructureEXT acc;
+
+        layout(location = 0) rayPayloadEXT vec4 payload;
+
+        void main() {
+            traceRayEXT(acc, gl_RayFlagsOpaqueEXT, 0xff, 0,
+                0, 0, vec3(0, 0, 0), 0.0,
+                vec3(0, 0, 0), 100.0f, 0);
+        }
+    "#);
+    assert!(entry.get_desc(DescriptorBinding(0, 0)).unwrap().is_accel_struct());
 }
 // TODO: (penguinliong) Comprehensive type testing.

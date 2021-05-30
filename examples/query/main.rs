@@ -9,7 +9,7 @@ fn main() {
     let spvs = collect_spirv_binaries("assets/effects/uniform-pbr");
 
     info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
-    let vert = spvs["uniform-pbr.vert"].reflect().unwrap();
+    let vert = spvs["uniform-pbr.vert"].reflect_vec().unwrap();
     let vert = &vert[0];
     info!("{:#?}", vert);
 
@@ -20,7 +20,7 @@ fn main() {
     check_vert(".model_view");
     check_vert(".view_proj");
 
-    let frag = spvs["uniform-pbr.frag"].reflect().unwrap();
+    let frag = spvs["uniform-pbr.frag"].reflect_vec().unwrap();
     let frag = &frag[0];
     info!("{:#?}", frag);
     let check_frag = |sym :&str| {
