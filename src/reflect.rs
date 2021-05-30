@@ -234,7 +234,7 @@ impl<'a> ReflectIntermediate<'a> {
                 let op = OpTypeInt::try_from(instr)?;
                 let scalar_ty = ScalarType::int(op.nbyte >> 3, op.is_signed);
                 (op.ty_id, Type::Scalar(scalar_ty))
-            }
+            },
             OP_TYPE_FLOAT => {
                 let op = OpTypeFloat::try_from(instr)?;
                 let scalar_ty = ScalarType::float(op.nbyte >> 3);
@@ -271,7 +271,7 @@ impl<'a> ReflectIntermediate<'a> {
             OP_TYPE_SAMPLER => {
                 let op = OpTypeSampler::try_from(instr)?;
                 (op.ty_id, Type::Sampler())
-            }
+            },
             OP_TYPE_SAMPLED_IMAGE => {
                 let op = OpTypeSampledImage::try_from(instr)?;
                 if let Some(Type::Image(img_ty)) = self.get_ty(op.img_ty_id) {
@@ -330,7 +330,7 @@ impl<'a> ReflectIntermediate<'a> {
                     ArrayType::new_unsized_multibind(&proto_ty)
                 };
                 (op.ty_id, Type::Array(arr_ty))
-            }
+            },
             OP_TYPE_STRUCT => {
                 let op = OpTypeStruct::try_from(instr)?;
                 let struct_name = self.get_name(op.ty_id).map(|n| n.to_string());
@@ -379,6 +379,10 @@ impl<'a> ReflectIntermediate<'a> {
                 if self.ptr_map.insert(op.ty_id, op.target_ty_id).is_some() {
                     return Err(Error::ID_COLLISION)
                 } else { return Ok(()) }
+            },
+            OP_TYPE_ACCELERATION_STRUCTURE_KHR => {
+                let op = OpTypeAccelerationStructureKHR::try_from(instr)?;
+                (op.ty_id, Type::AccelStruct())
             },
             _ => return Err(Error::UNSUPPORTED_TY),
         };
@@ -539,6 +543,7 @@ impl<'a> ReflectIntermediate<'a> {
                             .ok_or(Error::MISSING_DECO)?;
                         DescriptorType::InputAttachment(nbind, input_attm_idx)
                     },
+                    Type::AccelStruct() => DescriptorType::AccelStruct(nbind),
                     _ => return Err(Error::UNSUPPORTED_TY),
                 };
                 let var = Variable::Descriptor(desc_bind, desc_ty);
@@ -590,7 +595,7 @@ impl<'a> ReflectIntermediate<'a> {
         // instructions here.
         while let Some(instr) = instrs.peek() {
             let opcode = instr.opcode();
-            if TYPE_RANGE.contains(&opcode) {
+            if TYPE_RANGE.contains(&opcode) || opcode == OP_TYPE_ACCELERATION_STRUCTURE_KHR {
                 self.populate_one_ty(instr)?;
             } else if opcode == OP_VARIABLE {
                 self.populate_one_var(instr)?;

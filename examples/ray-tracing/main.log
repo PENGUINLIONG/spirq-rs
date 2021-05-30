@@ -1,0 +1,29 @@
+   Compiling spirq v0.4.11 (C:\Users\PENGUINLIONG\Repositories\spirq)
+    Finished dev [unoptimized + debuginfo] target(s) in 1.70s
+     Running `target\debug\examples\ray-tracing.exe`
+[2021-05-30T16:54:47Z INFO  ray_tracing] collected spirvs: ["ray-generation", "miss", "closest-hit"]
+[2021-05-30T16:54:47Z INFO  ray_tracing] ray-generation: main {
+        push_const: None,
+        inputs: {},
+        outputs: {},
+        descriptors: {
+            (set=0, bind=0): 1x accelerationStructure,
+            (set=0, bind=1): 1x image2D<Rgba32f>,
+            (set=0, bind=2): 1x rayParams { rayOrigin: vec3<f32>, rayDir: vec3<f32>, sbtOffset: i32, sbtStride: i32, missIndex: i32 },      
+        },
+        spec_consts: {},
+    }
+[2021-05-30T16:54:47Z INFO  ray_tracing] miss: main {
+        push_const: None,
+        inputs: {},
+        outputs: {},
+        descriptors: {},
+        spec_consts: {},
+    }
+[2021-05-30T16:54:47Z INFO  ray_tracing] closest-hit: main {
+        push_const: None,
+        inputs: {},
+        outputs: {},
+        descriptors: {},
+        spec_consts: {},
+    }

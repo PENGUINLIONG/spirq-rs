@@ -443,6 +443,7 @@ pub enum Type {
     Array(ArrayType),
     /// Aggregation of types.
     Struct(StructType),
+    AccelStruct(),
 }
 impl Type {
     pub fn nbyte(&self) -> Option<usize> {
@@ -457,6 +458,7 @@ impl Type {
             SubpassData() => None,
             Array(arr_ty) => Some(arr_ty.nbyte()),
             Struct(struct_ty) => Some(struct_ty.nbyte()),
+            AccelStruct() => None,
         }
     }
     pub fn resolve<S: AsRef<Sym>>(&self, sym: S) -> Option<MemberVariableResolution<'_>> {
@@ -505,6 +507,7 @@ impl Type {
         is_subpass_data -> SubpassData,
         is_arr -> Array,
         is_struct -> Struct,
+        is_accel_struct -> AccelStruct,
     }
 }
 impl fmt::Debug for Type {
@@ -519,6 +522,7 @@ impl fmt::Debug for Type {
             Type::SubpassData() => write!(f, "subpassData"),
             Type::Array(arr_ty) => arr_ty.fmt(f),
             Type::Struct(struct_ty) => struct_ty.fmt(f),
+            Type::AccelStruct() => write!(f, "accelerationStructure"),
         }
     }
 }
@@ -535,6 +539,7 @@ pub enum DescriptorType {
     // Note that the second parameter is input attachment index, the first one
     // is the binding count.
     InputAttachment(u32, u32),
+    AccelStruct(u32),
 }
 impl DescriptorType {
     /// Get the size of buffer (in bytes) needed to contain all the data for
@@ -565,6 +570,7 @@ impl DescriptorType {
             Sampler(nbind) => *nbind,
             SampledImage(nbind, _) => *nbind,
             InputAttachment(nbind, _) => *nbind,
+            AccelStruct(nbind) => *nbind,
         }
     }
     /// Resolve a symbol WITHIN the descriptor type. The symbol should not
@@ -588,6 +594,7 @@ impl DescriptorType {
             Sampler(_) => &Type::Sampler(),
             SampledImage(_, ty) => ty,
             InputAttachment(_, _) => &Type::SubpassData(),
+            AccelStruct(_) => &Type::AccelStruct(),
         };
         Walk::new(ty)
     }
@@ -599,6 +606,7 @@ impl DescriptorType {
         is_sampler -> Sampler,
         is_sampled_img -> SampledImage,
         is_input_attm -> InputAttachment,
+        is_accel_struct -> AccelStruct,
     }
 }
 impl fmt::Debug for DescriptorType {
@@ -611,6 +619,7 @@ impl fmt::Debug for DescriptorType {
             Sampler(nbind) => write!(f, "{}x sampler", nbind),
             SampledImage(nbind, ty) => write!(f, "{}x {:?}", nbind, ty),
             InputAttachment(nbind, idx) => write!(f, "{}x subpassData[{}]", nbind, idx),
+            AccelStruct(nbind) => write!(f, "{}x accelerationStructure", nbind),
         }
     }
 }
