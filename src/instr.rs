@@ -175,4 +175,7 @@ define_ops!{
         rsc_id: ResourceId = read_u32(),
         accessed_rsc_id: ResourceId = read_u32(),
     }
+    OpTypeAccelerationStructureKHR {
+        ty_id: TypeId = read_u32(),
+    }
 }

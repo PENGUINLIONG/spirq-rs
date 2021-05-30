@@ -11,7 +11,7 @@
 //! ```ignore
 //! // Load SPIR-V data into `[u32]` buffer `spv_words`.
 //! let spv: SpirvBinary = spv_words.into();
-//! let entries = spv.reflect().unwrap();
+//! let entries = spv.reflect_vec().unwrap();
 //! // All extracted entry point data are available in `entries`.
 //! ```
 //!
@@ -133,6 +133,7 @@ impl SpirvBinary {
     /// Reflect the SPIR-V binary and extract all the entry points. It's
     /// the same as `refelct_vec` while it returns a boxed slice. You may find
     /// `reflect_vec` more handy but this is kept for API compatibility.
+    #[deprecated(since="0.4.6", note="please use `reflect_vec` instead")]
     pub fn reflect(&self) -> Result<Box<[EntryPoint]>> {
         self.reflect_vec()
             .map(|x| x.into_boxed_slice())

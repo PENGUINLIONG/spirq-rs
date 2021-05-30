@@ -41,7 +41,7 @@ impl<'a> Instr<'a> {
     pub fn opcode(&self) -> u32 { self.opcode }
     /// Get the word count of the instruction, including the first word
     /// containing the word count and opcode.
-    pub fn _word_count(&self) -> usize { self.operands.len() + 1 }
+    pub fn word_count(&self) -> usize { self.operands.len() + 1 }
     /// Get an instruction operand reader. The reader does NO boundary checking
     /// so the user code MUST make sure the implementation follows the
     /// specification.

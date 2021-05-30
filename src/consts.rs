@@ -44,6 +44,7 @@ pub const OP_TYPE_STRUCT: OpCode = Op::TypeStruct as u32;
 pub const OP_TYPE_POINTER: OpCode = Op::TypePointer as u32;
 // Don't need this: Not a resource type. But kept for the range.
 pub const OP_TYPE_FUNCTION: OpCode = Op::TypeFunction as u32;
+pub const OP_TYPE_ACCELERATION_STRUCTURE_KHR: OpCode = Op::TypeAccelerationStructureKHR as u32;
 pub const TYPE_RANGE: RangeInclusive<OpCode> = OP_TYPE_VOID..=OP_TYPE_FUNCTION;
 
 pub const OP_CONSTANT_TRUE: OpCode = Op::ConstantTrue as u32;
