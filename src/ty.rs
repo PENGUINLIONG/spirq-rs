@@ -443,6 +443,8 @@ pub enum Type {
     Array(ArrayType),
     /// Aggregation of types.
     Struct(StructType),
+    /// Acceleration structure for ray-tracing. Only available with
+    /// `RayTracingKHR` capability enabled.
     AccelStruct(),
 }
 impl Type {

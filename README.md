@@ -25,6 +25,7 @@ Please refer to the attached examples:
 * [sampler-state](examples/sampler-state/main.rs): Separable sampler state support for HLSL-sourced SPIR-Vs.
 * [inspect](examples/inspect/main.rs): Customize shader reflection with your own inspector function.
 * [benchmark](examples/benchmark/main.rs): Feel how fast SPIR-Q can be. (The log was generated from a `debug` run.)
+* [ray-tracing](examples/ray-tracing/main.rs): Vulkan ray-tracing shader support.
 
 Sample output are attached in the same directories as the code files.
 

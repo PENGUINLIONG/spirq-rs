@@ -3,6 +3,7 @@
 ## v0.4.13
 
 - Fixed typo. (#55)
+- Supported acceleration structure for ray-tracing.
 
 ## v0.4.12
 

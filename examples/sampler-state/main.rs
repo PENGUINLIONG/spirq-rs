@@ -8,7 +8,7 @@ fn main() {
 
     let spvs = collect_spirv_binaries("assets/effects/hlsl");
     info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
-    let frag = spvs["sampler-state.frag.hlsl"].reflect().unwrap();
+    let frag = spvs["sampler-state.frag.hlsl"].reflect_vec().unwrap();
     info!("{:#?}", frag);
     let frag = &frag[0];
     let check = |sym :&str| {

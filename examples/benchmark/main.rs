@@ -65,7 +65,7 @@ fn main() {
     info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
     let (vert, frag) = (&spvs["uniform-pbr.vert"], &spvs["uniform-pbr.frag"]);
     let (vert, frag) = bench!("reflection", {
-        (vert.reflect().unwrap(), frag.reflect().unwrap())
+        (vert.reflect_vec().unwrap(), frag.reflect_vec().unwrap())
     });
     let pipe = &[vert[0].to_owned(), frag[0].to_owned()];
     let pipe = bench!("merging manifests", {
