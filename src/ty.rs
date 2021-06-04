@@ -167,6 +167,8 @@ pub enum ImageArrangement {
     Image2DArray,
     Image2DMSArray,
     CubeMapArray,
+    Image2DRect,
+    ImageBuffer,
 }
 impl ImageArrangement {
     /// Do note this dim is not the number of dimensions but a enumeration of
@@ -178,10 +180,13 @@ impl ImageArrangement {
             (Dim::Dim2D, false, false) => ImageArrangement::Image2D,
             (Dim::Dim2D, false, true) => ImageArrangement::Image2DMS,
             (Dim::Dim2D, true, false) => ImageArrangement::Image2DArray,
+            (Dim::Dim2D, true, true) => ImageArrangement::Image2DMSArray,
             (Dim::Dim3D, false, false) => ImageArrangement::Image3D,
             (Dim::Dim3D, true, false) => ImageArrangement::Image3D,
             (Dim::DimCube, false, false) => ImageArrangement::CubeMap,
             (Dim::DimCube, true, false) => ImageArrangement::CubeMapArray,
+            (Dim::DimRect, false, false) => ImageArrangement::Image2DRect,
+            (Dim::DimBuffer, false, false) => ImageArrangement::ImageBuffer,
             _ => return Err(Error::UNSUPPORTED_IMG_CFG),
         };
         Ok(arng)
@@ -213,6 +218,8 @@ impl fmt::Debug for ImageType {
             (Image2DArray, Color(fmt)) => write!(f, "image2DArray<{:?}>", fmt),
             (Image2DMSArray, Color(fmt)) => write!(f, "image2DMSArray<{:?}>", fmt),
             (CubeMapArray, Color(fmt)) => write!(f, "imageCubeArray<{:?}>", fmt),
+            (Image2DRect, Color(fmt)) => write!(f, "image2DRect<{:?}>", fmt),
+            (ImageBuffer, Color(fmt)) => write!(f, "imageBuffer<{:?}>", fmt),
             
             (Image1D, Sampled) => f.write_str("sampler1D"),
             (Image2D, Sampled) => f.write_str("sampler2D"),
@@ -223,13 +230,16 @@ impl fmt::Debug for ImageType {
             (Image2DArray, Sampled) => f.write_str("sampler2DArray"),
             (Image2DMSArray, Sampled) => f.write_str("sampler2DMSArray"),
             (CubeMapArray, Sampled) => f.write_str("samplerCubeArray"),
-
+            (Image2DRect, Sampled) => write!(f, "sampler2DRect"),
+            (ImageBuffer, Sampled) => write!(f, "samplerBuffer"),
+            
             (Image1D, Depth) => f.write_str("sampler1DShadow"),
             (Image2D, Depth) => f.write_str("sampler2DShadow"),
             (CubeMap, Depth) => f.write_str("samplerCubeShadow"),
             (Image1DArray, Depth) => f.write_str("sampler1DArrayShadow"),
             (Image2DArray, Depth) => f.write_str("sampler2DArrayShadow"),
             (CubeMapArray, Depth) => f.write_str("samplerCubeShadowArray"),
+            (Image2DRect, Depth) => write!(f, "sampler2DRectShadow"),
             _ => Err(fmt::Error::default()),
         }
     }

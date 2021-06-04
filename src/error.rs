@@ -31,13 +31,14 @@ impl Error {
     pub const UNSUPPORTED_TY: Self = Self::UnsupportedSpirv("unsupported type");
     pub const UNSUPPORTED_IMG_CFG: Self = Self::UnsupportedSpirv("unsupport image configuration");
     pub const UNSUPPORTED_SPEC: Self = Self::UnsupportedSpirv("unsupported specialization");
+    pub const MULTI_ENTRY_POINTS: Self = Self::UnsupportedSpirv("cannot fast reflect a module with multiple entry points");
 }
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use Error::*;
         match self {
             CorruptedSpirv(msg) => write!(f, "spirv binary is corrupted: {}", msg),
-            UnsupportedSpirv(msg) => write!(f, "spirv binary used unsupported feature: {}", msg),
+            UnsupportedSpirv(msg) => write!(f, "spirv binary is unsupported: {}", msg),
             MismatchedManifest => write!(f, "mismatched manifest cannot be merged"),
         }
     }

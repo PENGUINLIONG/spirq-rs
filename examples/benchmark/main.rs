@@ -2,7 +2,6 @@ use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
 use spirq::{ExecutionModel, Error, EntryPoint, SpirvBinary, Manifest, Result};
 use std::ops::Deref;
-use log::info;
 use std::path::Path;
 
 macro_rules! bench {
@@ -23,7 +22,7 @@ macro_rules! bench {
             let toc = Instant::now();
             let dur = toc.duration_since(tic).as_nanos();
             let avg_dur = dur / NREPEAT;
-            info!("{} took {:.3}us ({} times avg)", $task, avg_dur as f64 / 1000., NREPEAT);
+            println!("{} took {:.3}us ({} times avg)", $task, avg_dur as f64 / 1000., NREPEAT);
             x
         }
     }
@@ -59,10 +58,8 @@ impl Deref for Pipeline {
 fn main() {
     use std::time::Instant;
 
-    env_logger::init();
-
     let spvs = collect_spirv_binaries("assets/effects/uniform-pbr");
-    info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
+    println!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
     let (vert, frag) = (&spvs["uniform-pbr.vert"], &spvs["uniform-pbr.frag"]);
     let (vert, frag) = bench!("reflection", {
         (vert.reflect_vec().unwrap(), frag.reflect_vec().unwrap())
@@ -96,14 +93,12 @@ fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> HashMap<String, SpirvBinar
     use std::ffi::OsStr;
     use std::fs::{read_dir, File};
     use std::io::Read;
-    use log::warn;
 
     read_dir(path).unwrap()
         .filter_map(|x| match x {
             Ok(rv) => Some(rv.path()),
             Err(err) => {
-                warn!("cannot access to filesystem item: {}", err);
-                None
+                panic!("cannot access to filesystem item: {}", err);
             },
         })
         .filter_map(|x| {

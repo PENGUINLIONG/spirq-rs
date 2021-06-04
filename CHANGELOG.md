@@ -4,6 +4,10 @@
 
 - Fixed typo. (#55)
 - Supported acceleration structure for ray-tracing.
+- Fast reflection support (reflect without variable dependency analysis).
+- Removed unexpectedly exposed `Specialization` APIs.
+- Full coverage of GLSL data types.
+- Integrate `AccessType` as a part of `Descriptor`, for storage images and buffers.
 
 ## v0.4.12
 

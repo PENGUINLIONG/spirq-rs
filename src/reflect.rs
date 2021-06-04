@@ -8,7 +8,7 @@ use spirv_headers::{Decoration, Dim, StorageClass};
 use crate::ty::*;
 use crate::consts::*;
 use crate::{InterfaceLocation, DescriptorBinding, SpirvBinary, Instrs, Instr,
-    Manifest, ResourceLocator, ExecutionModel, EntryPoint, AccessType, SpecId,
+    Manifest, ExecutionModel, EntryPoint, AccessType, SpecId,
     Specialization};
 use crate::error::{Error, Result};
 use crate::instr::*;
@@ -50,7 +50,7 @@ pub enum Variable {
     /// Output interface variable.
     Output(InterfaceLocation, Type),
     /// Descriptor resource.
-    Descriptor(DescriptorBinding, DescriptorType),
+    Descriptor(DescriptorBinding, DescriptorType, AccessType),
     /// Push constant.
     PushConstant(Type),
 }
@@ -79,7 +79,6 @@ pub struct ReflectIntermediate<'a> {
     deco_map: HashMap<(InstrId, Option<u32>, Decoration), &'a [u32]>,
     ty_map: IntMap<TypeId, Type>,
     var_map: IntMap<VariableId, Variable>,
-    access_map: IntMap<VariableId, AccessType>,
     const_map: IntMap<ConstantId, Constant<'a>>,
     spec_const_map: IntMap<SpecConstantId, SpecConstant<'a>>,
     ptr_map: IntMap<TypeId, TypeId>,
@@ -98,7 +97,12 @@ impl<'a> ReflectIntermediate<'a> {
             .cloned()
     }
     /// Get the single-word decoration of a member of an instruction result.
-    pub fn get_member_deco_u32(&self, id: InstrId, member_idx: u32, deco: Decoration) -> Option<u32> {
+    pub fn get_member_deco_u32(
+        &self,
+        id: InstrId,
+        member_idx: u32,
+        deco: Decoration,
+    ) -> Option<u32> {
         self.get_member_deco_list(id, member_idx, deco)
             .and_then(|x| x.get(0))
             .cloned()
@@ -109,7 +113,12 @@ impl<'a> ReflectIntermediate<'a> {
             .cloned()
     }
     /// Get the multi-word declaration of a member of an instruction result.
-    pub fn get_member_deco_list(&self, id: InstrId, member_idx: u32, deco: Decoration) -> Option<&'a [u32]> {
+    pub fn get_member_deco_list(
+        &self,
+        id: InstrId,
+        member_idx: u32,
+        deco: Decoration,
+    ) -> Option<&'a [u32]> {
         self.deco_map.get(&(id, Some(member_idx), deco))
             .cloned()
     }
@@ -156,6 +165,16 @@ impl<'a> ReflectIntermediate<'a> {
     /// Get the human-friendly name of a member of an instruction result.
     pub fn get_member_name(&self, id: InstrId, member_idx: u32) -> Option<&'a str> {
         self.name_map.get(&(id, Some(member_idx))).cloned()
+    }
+    fn get_desc_access(&self, var_id: VariableId) -> Option<AccessType> {
+        let read_only = self.contains_deco(var_id, None, Decoration::NonWritable);
+        let write_only = self.contains_deco(var_id, None, Decoration::NonReadable);
+        match (read_only, write_only) {
+            (true, true) => None,
+            (true, false) => Some(AccessType::ReadOnly),
+            (false, true) => Some(AccessType::WriteOnly),
+            (false, false) => Some(AccessType::ReadWrite),
+        }
     }
     /// Resolve one recurring layer of pointers to the pointer that refer to the
     /// data directly. `ty_id` should be refer to a pointer type. Returns the ID
@@ -261,8 +280,10 @@ impl<'a> ReflectIntermediate<'a> {
                 } else {
                     // Only unit types allowed to be stored in storage images can
                     // have given format.
-                    let unit_fmt = ImageUnitFormat::from_spv_def(op.is_sampled, op.is_depth, op.color_fmt)?;
-                    let arng = ImageArrangement::from_spv_def(op.dim, op.is_array, op.is_multisampled)?;
+                    let unit_fmt = ImageUnitFormat::from_spv_def(
+                        op.is_sampled, op.is_depth, op.color_fmt)?;
+                    let arng = ImageArrangement::from_spv_def(
+                        op.dim, op.is_array, op.is_multisampled)?;
                     let img_ty = ImageType::new(unit_fmt, arng);
                     Type::Image(img_ty)
                 };
@@ -353,7 +374,8 @@ impl<'a> ReflectIntermediate<'a> {
                         proto_ty = &mut *arr_ty.proto_ty;
                     }
                     if let Type::Matrix(ref mut mat_ty) = proto_ty {
-                        let mat_stride = self.get_member_deco_u32(op.ty_id, i, Decoration::MatrixStride)
+                        let mat_stride = self
+                            .get_member_deco_u32(op.ty_id, i, Decoration::MatrixStride)
                             .map(|x| x as usize)
                             .ok_or(Error::MISSING_DECO)?;
                         let row_major = self.contains_deco(op.ty_id, Some(i), Decoration::RowMajor);
@@ -524,38 +546,63 @@ impl<'a> ReflectIntermediate<'a> {
             },
             StorageClass::Uniform => {
                 let (nbind, ty) = extract_proto_ty(ty)?;
-                let desc_ty = if self.contains_deco(ty_id, None, Decoration::BufferBlock) {
-                    DescriptorType::StorageBuffer(nbind, ty.clone())
-                } else {
-                    DescriptorType::UniformBuffer(nbind, ty.clone())
-                };
                 let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
-                let var = Variable::Descriptor(desc_bind, desc_ty);
+                let var = if self.contains_deco(ty_id, None, Decoration::BufferBlock) {
+                    let desc_ty = DescriptorType::StorageBuffer(nbind, ty.clone());
+                    let access = self.get_desc_access(op.alloc_id)
+                        .ok_or(Error::ACCESS_CONFLICT)?;
+                    Variable::Descriptor(desc_bind, desc_ty, access)
+                } else {
+                    let desc_ty = DescriptorType::UniformBuffer(nbind, ty.clone());
+                    let access = AccessType::ReadOnly;
+                    Variable::Descriptor(desc_bind, desc_ty, access)
+                };
                 Some(var)
             },
             StorageClass::StorageBuffer => {
                 let (nbind, ty) = extract_proto_ty(ty)?;
-                let desc_ty = DescriptorType::StorageBuffer(nbind, ty.clone());
                 let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
-                let var = Variable::Descriptor(desc_bind, desc_ty);
+                let desc_ty = DescriptorType::StorageBuffer(nbind, ty.clone());
+                let access = self.get_desc_access(op.alloc_id)
+                    .ok_or(Error::ACCESS_CONFLICT)?;
+                let var = Variable::Descriptor(desc_bind, desc_ty, access);
                 Some(var)
             },
             StorageClass::UniformConstant => {
                 let (nbind, ty) = extract_proto_ty(ty)?;
                 let desc_bind = self.get_var_desc_bind_or_default(op.alloc_id);
-                let desc_ty = match ty {
-                    Type::Image(_) => DescriptorType::Image(nbind, ty.clone()),
-                    Type::Sampler() => DescriptorType::Sampler(nbind),
-                    Type::SampledImage(_) => DescriptorType::SampledImage(nbind, ty.clone()),
-                    Type::SubpassData() => {
-                        let input_attm_idx = self.get_deco_u32(op.alloc_id, Decoration::InputAttachmentIndex)
-                            .ok_or(Error::MISSING_DECO)?;
-                        DescriptorType::InputAttachment(nbind, input_attm_idx)
+                let var = match ty {
+                    Type::Image(_) => {
+                        let desc_ty = DescriptorType::Image(nbind, ty.clone());
+                        let access = self.get_desc_access(op.alloc_id)
+                            .ok_or(Error::ACCESS_CONFLICT)?;
+                        Variable::Descriptor(desc_bind, desc_ty, access)
                     },
-                    Type::AccelStruct() => DescriptorType::AccelStruct(nbind),
+                    Type::Sampler() => {
+                        let desc_ty = DescriptorType::Sampler(nbind);
+                        let access = AccessType::ReadOnly;
+                        Variable::Descriptor(desc_bind, desc_ty, access)
+                    },
+                    Type::SampledImage(_) => {
+                        let desc_ty = DescriptorType::SampledImage(nbind, ty.clone());
+                        let access = AccessType::ReadOnly;
+                        Variable::Descriptor(desc_bind, desc_ty, access)
+                    },
+                    Type::SubpassData() => {
+                        let input_attm_idx = self
+                            .get_deco_u32(op.alloc_id, Decoration::InputAttachmentIndex)
+                            .ok_or(Error::MISSING_DECO)?;
+                        let desc_ty = DescriptorType::InputAttachment(nbind, input_attm_idx);
+                        let access = AccessType::ReadOnly;
+                        Variable::Descriptor(desc_bind, desc_ty, access)
+                    },
+                    Type::AccelStruct() => {
+                        let desc_ty = DescriptorType::AccelStruct(nbind);
+                        let access = AccessType::ReadOnly;
+                        Variable::Descriptor(desc_bind, desc_ty, access)
+                    },
                     _ => return Err(Error::UNSUPPORTED_TY),
                 };
-                let var = Variable::Descriptor(desc_bind, desc_ty);
                 Some(var)
             },
             _ => {
@@ -563,33 +610,8 @@ impl<'a> ReflectIntermediate<'a> {
                 None
             },
         };
-
+        
         if let Some(var) = var {
-            // Determine descriptor access type.
-            let access_ty = match &var {
-                Variable::Descriptor(_, desc_ty) => {
-                    match desc_ty {
-                        DescriptorType::Image(..) | DescriptorType::StorageBuffer(..) => {
-                            let read_only = self.contains_deco(op.alloc_id, None, Decoration::NonWritable);
-                            let write_only = self.contains_deco(op.alloc_id, None, Decoration::NonReadable);
-                            match (read_only, write_only) {
-                                (true, true) => return Err(Error::ACCESS_CONFLICT),
-                                (true, false) => AccessType::ReadOnly,
-                                (false, true) => AccessType::WriteOnly,
-                                (false, false) => AccessType::ReadWrite,
-                            }
-                        },
-                        _ => AccessType::ReadOnly,
-                    }
-                },
-                Variable::PushConstant(_) => AccessType::ReadOnly,
-                Variable::Input(_, _) => AccessType::ReadOnly,
-                Variable::Output(_, _) => AccessType::WriteOnly,
-            };
-            if self.access_map.insert(op.alloc_id, access_ty).is_some() {
-                return Err(Error::ID_COLLISION);
-            }
-
             // Register variable.
             if self.var_map.insert(op.alloc_id, var).is_some() {
                 return Err(Error::ID_COLLISION);
@@ -617,7 +639,11 @@ impl<'a> ReflectIntermediate<'a> {
         }
         Ok(())
     }
-    fn populate_access<I: Inspector>(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>, mut inspector: I) -> Result<()> {
+    fn populate_access<I: Inspector>(
+        &mut self,
+        instrs: &'_ mut Peekable<Instrs<'a>>,
+        mut inspector: I
+    ) -> Result<()> {
         let mut access_chain_map = IntMap::default();
         let mut func_id: InstrId = !0;
 
@@ -678,56 +704,62 @@ impl<'a> ReflectIntermediate<'a> {
         }
         Ok(())
     }
-    fn collect_fn_vars_impl(&self, func: FunctionId, vars: &mut IntMap<VariableId, AccessType>) {
+    pub(crate) fn reflect<I: Inspector>(module: &'a SpirvBinary, inspector: I) -> Result<Self> {
+        fn skip_until_range_inclusive<'a>(
+            instrs: &'_ mut Peekable<Instrs<'a>>,
+            rng: RangeInclusive<u32>
+        ) {
+            while let Some(instr) = instrs.peek() {
+                if !rng.contains(&instr.opcode()) { instrs.next(); } else { break; }
+            }
+        }
+        fn skip_until<'a>(instrs: &'_ mut Peekable<Instrs<'a>>, pred: fn(u32) -> bool) {
+            while let Some(instr) = instrs.peek() {
+                if !pred(instr.opcode()) { instrs.next(); } else { break; }
+            }
+        }
+        // Don't change the order. See _2.4 Logical Layout of a Module_ of the
+        // SPIR-V specification for more information.
+        let mut instrs = module.instrs().peekable();
+        let mut itm = ReflectIntermediate::default();
+        skip_until_range_inclusive(&mut instrs, ENTRY_POINT_RANGE);
+        itm.populate_entry_points(&mut instrs)?;
+        skip_until_range_inclusive(&mut instrs, NAME_RANGE);
+        itm.populate_names(&mut instrs)?;
+        skip_until(&mut instrs, is_deco_op);
+        itm.populate_decos(&mut instrs)?;
+        itm.populate_defs(&mut instrs)?;
+        itm.populate_access(&mut instrs, inspector)?;
+        return Ok(itm);
+    }
+}
+impl<'a> ReflectIntermediate<'a> {
+    fn collect_fn_vars_impl(&self, func: FunctionId, vars: &mut Vec<VariableId>) {
         if let Some(func) = self.func_map.get(&func) {
-            let it = func.accessed_vars.iter()
-                .filter_map(|var_id| {
-                    self.access_map.get(var_id)
-                        .map(|access_ty| (var_id, access_ty))
-                });
-            vars.extend(it);
+            vars.extend(func.accessed_vars.iter());
             for call in func.callees.iter() {
                 self.collect_fn_vars_impl(*call, vars);
             }
         }
     }
-    fn collect_fn_vars(&self, func: FunctionId) -> IntMap<VariableId, AccessType> {
-        let mut accessed_vars = IntMap::default();
+    fn collect_fn_vars(&self, func: FunctionId) -> Vec<VariableId> {
+        let mut accessed_vars = Vec::new();
         self.collect_fn_vars_impl(func, &mut accessed_vars);
         accessed_vars
     }
     fn collect_entry_point_manifest(&self, func_id: FunctionId) -> Result<Manifest> {
         let mut manifest = Manifest::default();
         let accessed_var_ids = self.collect_fn_vars(func_id);
-        for (accessed_var_id, access) in accessed_var_ids {
-            let accessed_var = self.get_var(accessed_var_id)
-                .ok_or(Error::UNDECLARED_VAR)?;
-            match accessed_var {
-                Variable::Input(location, ivar_ty) => {
-                    manifest.insert_input(location, ivar_ty)?;
-                    if let Some(name) = self.get_name(accessed_var_id) {
-                        manifest.insert_rsc_name(name, ResourceLocator::Input(location))?;
-                    }
-                },
-                Variable::Output(location, ivar_ty) => {
-                    manifest.insert_output(location, ivar_ty)?;
-                    if let Some(name) = self.get_name(accessed_var_id) {
-                        manifest.insert_rsc_name(name, ResourceLocator::Output(location))?;
-                    }
-                },
-                Variable::Descriptor(desc_bind, desc_ty) => {
-                    manifest.insert_desc(desc_bind, desc_ty, access)?;
-                    if let Some(name) = self.get_name(accessed_var_id) {
-                        manifest.insert_rsc_name(name, ResourceLocator::Descriptor(desc_bind))?;
-                    }
-                },
-                Variable::PushConstant(push_const_ty) => {
-                    manifest.insert_push_const(push_const_ty)?;
-                    if let Some(name) = self.get_name(accessed_var_id) {
-                        manifest.insert_rsc_name(name, ResourceLocator::PushConstant)?;
-                    }
-                }
-            };
+        for accessed_var_id in accessed_var_ids {
+            // Sometimes this process would meet interface variables without
+            // locations. These are should built-ins otherwise the SPIR-V is
+            // corrupted. Since we assume the SPIR-V is valid and we don't
+            // collect built-in variable as useful information, we simply ignore
+            // such null-references.
+            if let Some(accessed_var) = self.get_var(accessed_var_id) {
+                let name = self.get_name(accessed_var_id);
+                manifest.insert_var(accessed_var, name)?;
+            }
         }
         Ok(manifest)
     }
@@ -737,16 +769,14 @@ impl<'a> ReflectIntermediate<'a> {
         // It might not be an optimization in mind of engineering.)
         let mut spec = Specialization::default();
         for (spec_const_id, spec_const) in self.spec_const_map.iter() {
-            if let Some(ty) = self.get_ty(spec_const.ty_id) {
-                spec.insert_spec_const(spec_const.spec_id, ty)?;
-                if let Some(name) = self.get_name(*spec_const_id) {
-                    spec.insert_spec_const_name(name, spec_const.spec_id)?;
-                }
-            } else { return Err(Error::TY_NOT_FOUND) }
+            let ty = self.get_ty(spec_const.ty_id)
+                .ok_or(Error::TY_NOT_FOUND)?;
+            let name = self.get_name(*spec_const_id);
+            spec.insert_spec_const(spec_const.spec_id, ty, name)?;
         }
         Ok(spec)
     }
-    fn collect_entry_points(&self) -> Result<Vec<EntryPoint>> {
+    pub(crate) fn collect_entry_points(&self) -> Result<Vec<EntryPoint>> {
         let mut entry_points = Vec::with_capacity(self.entry_point_declrs.len());
         for entry_point_declr in self.entry_point_declrs.iter() {
             let manifest = self.collect_entry_point_manifest(entry_point_declr.func_id)?;
@@ -761,31 +791,31 @@ impl<'a> ReflectIntermediate<'a> {
         }
         Ok(entry_points)
     }
-}
-
-
-pub(crate) fn reflect_spirv<'a, I: Inspector>(module: &'a SpirvBinary, inspector: I) -> Result<Vec<EntryPoint>> {
-    fn skip_until_range_inclusive<'a>(instrs: &'_ mut Peekable<Instrs<'a>>, rng: RangeInclusive<u32>) {
-        while let Some(instr) = instrs.peek() {
-            if !rng.contains(&instr.opcode()) { instrs.next(); } else { break; }
+    /// Collect resources discovered in this reflection session, no matter if
+    /// it's been used by any entry point.
+    pub(crate) fn collect_module_as_entry_point(&self) -> Result<EntryPoint> {
+        let mut manifest = Manifest::default();
+        for (accessed_var_id, accessed_var) in self.var_map.iter() {
+            let name = self.get_name(*accessed_var_id);
+            manifest.insert_var(accessed_var.clone(), name)?;
         }
-    }
-    fn skip_until<'a>(instrs: &'_ mut Peekable<Instrs<'a>>, pred: fn(u32) -> bool) {
-        while let Some(instr) = instrs.peek() {
-            if !pred(instr.opcode()) { instrs.next(); } else { break; }
+        let mut spec = Specialization::default();
+        for (spec_const_id, spec_const) in self.spec_const_map.iter() {
+            let ty = self.get_ty(spec_const.ty_id)
+                .ok_or(Error::TY_NOT_FOUND)?;
+            let name = self.get_name(*spec_const_id);
+            spec.insert_spec_const(spec_const.spec_id, ty, name)?;
         }
+        if self.entry_point_declrs.len() != 1 {
+            return Err(Error::MULTI_ENTRY_POINTS);
+        }
+        let entry_point_declr = &self.entry_point_declrs[0];
+        let entry_point = EntryPoint {
+            name: entry_point_declr.name.to_owned(),
+            exec_model: entry_point_declr.exec_model,
+            manifest,
+            spec,
+        };
+        Ok(entry_point)
     }
-    // Don't change the order. See _2.4 Logical Layout of a Module_ of the
-    // SPIR-V specification for more information.
-    let mut instrs = module.instrs().peekable();
-    let mut itm = ReflectIntermediate::default();
-    skip_until_range_inclusive(&mut instrs, ENTRY_POINT_RANGE);
-    itm.populate_entry_points(&mut instrs)?;
-    skip_until_range_inclusive(&mut instrs, NAME_RANGE);
-    itm.populate_names(&mut instrs)?;
-    skip_until(&mut instrs, is_deco_op);
-    itm.populate_decos(&mut instrs)?;
-    itm.populate_defs(&mut instrs)?;
-    itm.populate_access(&mut instrs, inspector)?;
-    Ok(itm.collect_entry_points()?)
 }
