@@ -26,6 +26,7 @@ Please refer to the attached examples:
 * [inspect](examples/inspect/main.rs): Customize shader reflection with your own inspector function.
 * [benchmark](examples/benchmark/main.rs): Feel how fast SPIR-Q can be. (The log was generated from a `debug` run.)
 * [ray-tracing](examples/ray-tracing/main.rs): Vulkan ray-tracing shader support.
+* [gallery](examples/gallery/main.rs): All data types in GLSL.
 
 Sample output are attached in the same directories as the code files.
 

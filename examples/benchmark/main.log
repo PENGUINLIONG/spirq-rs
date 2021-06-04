@@ -1,9 +1,6 @@
-   Compiling spirq v0.4.0 (C:\Users\PENGUINLIONG\Repositories\spirq)
-    Finished dev [unoptimized + debuginfo] target(s) in 4.34s
-     Running `target\debug\examples\benchmark.exe`
-[2020-01-23T02:30:02Z INFO  benchmark] collected spirvs: ["uniform-pbr.vert", "uniform-pbr.frag"]
-[2020-01-23T02:30:09Z INFO  benchmark] reflection took 762.288us (10000 times avg)
-[2020-01-23T02:30:10Z INFO  benchmark] merging manifests took 70.800us (10000 times avg)
-[2020-01-23T02:30:10Z INFO  benchmark] enumerating input names took 1.403us (10000 times avg)
-[2020-01-23T02:30:10Z INFO  benchmark] enumerating output names took 0.416us (10000 times avg)
-[2020-01-23T02:30:10Z INFO  benchmark] walking descriptors took 11.930us (10000 times avg)
+collected spirvs: ["uniform-pbr.frag", "uniform-pbr.vert"]
+reflection took 109.936us (10000 times avg)
+merging manifests took 9.390us (10000 times avg)
+enumerating input names took 0.080us (10000 times avg)
+enumerating output names took 0.022us (10000 times avg)
+walking descriptors took 5.930us (10000 times avg)

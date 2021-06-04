@@ -1,19 +1,16 @@
 use std::collections::HashMap;
 use spirq::SpirvBinary;
-use log::info;
 use std::path::Path;
 
 fn main() {
-    env_logger::init();
-
     let spvs = collect_spirv_binaries("assets/effects/spirv-spec");
-    info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
+    println!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
     let frag = spvs["referential.frag"].reflect_vec().unwrap();
-    info!("{:#?}", frag);
+    println!("{:#?}", frag);
     let frag = &frag[0];
     let check = |sym :&str| {
         let desc_res = frag.resolve_desc(sym).unwrap();
-        info!("{}: {:?}", sym, desc_res);
+        println!("{}: {:?}", sym, desc_res);
     };
     check("0.0");
     check("0.0.s");
@@ -33,14 +30,12 @@ fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> HashMap<String, SpirvBinar
     use std::ffi::OsStr;
     use std::fs::{read_dir, File};
     use std::io::Read;
-    use log::warn;
 
     read_dir(path).unwrap()
         .filter_map(|x| match x {
             Ok(rv) => Some(rv.path()),
             Err(err) => {
-                warn!("cannot access to filesystem item: {}", err);
-                None
+                panic!("cannot access to filesystem item: {}", err);
             },
         })
         .filter_map(|x| {

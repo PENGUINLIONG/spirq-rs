@@ -1,16 +1,13 @@
 use std::collections::HashMap;
 use spirq::SpirvBinary;
-use log::info;
 use std::path::Path;
 use spirv_headers::Op;
 use num_traits::FromPrimitive;
 
 fn main() {
-    env_logger::init();
-
     let spvs = collect_spirv_binaries("assets/effects/uniform-pbr");
 
-    info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
+    println!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
     let mut cur_func_name = String::new();
     let mut nfunc = 0;
     let mut nload = 0;
@@ -23,19 +20,19 @@ fn main() {
                     let _ty_id = operands.read_u32().unwrap();
                     let func_id = operands.read_u32().unwrap();
                     cur_func_name = itm.get_name(func_id).unwrap().to_owned();
-                    info!("entered function {}", cur_func_name);
+                    println!("entered function {}", cur_func_name);
                     nfunc += 1;
                 },
                 Op::Load => {
-                    info!("found a load instruction");
+                    println!("found a load instruction");
                     nload += 1;
                 },
                 Op::Store => {
-                    info!("found a store instruction");
+                    println!("found a store instruction");
                     nstore += 1;
                 },
                 Op::FunctionEnd => {
-                    info!("left function {}", cur_func_name);
+                    println!("left function {}", cur_func_name);
                     cur_func_name = String::new();
                 }
                 _ => {},
@@ -43,7 +40,7 @@ fn main() {
         })
         .unwrap();
 
-    info!("{} load instructions and {} store instructions in {} functions of this shader file", nload, nstore, nfunc);
+    println!("{} load instructions and {} store instructions in {} functions of this shader file", nload, nstore, nfunc);
 }
 
 
@@ -51,19 +48,16 @@ fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> HashMap<String, SpirvBinar
     use std::ffi::OsStr;
     use std::fs::{read_dir, File};
     use std::io::Read;
-    use log::warn;
 
     read_dir(path).unwrap()
         .filter_map(|x| match x {
             Ok(rv) => Some(rv.path()),
             Err(err) => {
-                warn!("cannot access to filesystem item: {}", err);
-                None
+                panic!("cannot access to filesystem item: {}", err);
             },
         })
         .filter_map(|x| {
             let mut buf = Vec::new();
-            dbg!(&x);
             if !x.is_file() ||
                 x.extension() != Some(OsStr::new("spv")) ||
                 File::open(&x).and_then(|mut x| x.read_to_end(&mut buf)).is_err() ||

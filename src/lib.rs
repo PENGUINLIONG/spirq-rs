@@ -90,7 +90,7 @@ use std::ops::Deref;
 use num_derive::FromPrimitive;
 use fnv::FnvHashMap as HashMap;
 use nohash_hasher::IntMap;
-use reflect::ReflectIntermediate;
+use reflect::{ReflectIntermediate, Variable};
 use inspect::{NopInspector, FnInspector};
 
 use parse::{Instrs, Instr};
@@ -140,12 +140,42 @@ impl SpirvBinary {
     }
     /// Reflect the SPIR-V binary and extract all the entry points.
     pub fn reflect_vec(&self) -> Result<Vec<EntryPoint>> {
-        reflect::reflect_spirv(&self, NopInspector())
+        let inspector = NopInspector();
+        reflect::ReflectIntermediate::reflect(&self, inspector)?
+            .collect_entry_points()
     }
     /// Similar to `reflect_vec` while you can inspect each instruction during
     /// the parse.
-    pub fn reflect_vec_inspect<F: FnMut(&ReflectIntermediate<'_>, &Instr<'_>)>(&self, inspector: F) -> Result<Vec<EntryPoint>> {
-        reflect::reflect_spirv(&self, FnInspector::<F>(inspector))
+    pub fn reflect_vec_inspect<F: FnMut(&ReflectIntermediate<'_>, &Instr<'_>)>(
+        &self,
+        inspector: F
+    ) -> Result<Vec<EntryPoint>> {
+        let inspector = FnInspector::<F>(inspector);
+        reflect::ReflectIntermediate::reflect(&self, inspector)?
+            .collect_entry_points()
+    }
+    // Reflect the SPIR-V binary fast. This method returns the only entry point
+    // in the SPIR-V binary, with all declared descriptors and interface
+    // variables enumerated. Unlike `reflect_vec`, the resources are not
+    // filtered based on references in entry points.
+    //
+    // It can be a faster option in case the SPIR-V only contains one single
+    // entry point, and no descriptor or variable have conflicting binding
+    // points or locations.
+    pub fn reflect_fast(&self) -> Result<EntryPoint> {
+        let inspector = NopInspector();
+        reflect::ReflectIntermediate::reflect(&self, inspector)?
+            .collect_module_as_entry_point()
+    }
+    /// Similar to `reflect_fast` while you can inspect each instruction during
+    /// the parse.
+    pub fn reflect_fast_inspect<F: FnMut(&ReflectIntermediate<'_>, &Instr<'_>)>(
+        &self,
+        inspector: F
+    ) -> Result<EntryPoint> {
+        let inspector = FnInspector::<F>(inspector);
+        reflect::ReflectIntermediate::reflect(&self, inspector)?
+            .collect_module_as_entry_point()
     }
     pub fn words(&self) -> &[u32] {
         &self.0
@@ -615,22 +645,22 @@ impl Manifest {
             })
     }
 
-    pub(crate) fn insert_rsc_name(&mut self, name: &str, rsc_locator: ResourceLocator) -> Result<()> {
+    fn insert_rsc_name(&mut self, name: &str, rsc_locator: ResourceLocator) -> Result<()> {
         if self.var_name_map.insert(name.to_owned(), rsc_locator).is_some() {
             Err(Error::NAME_COLLISION)
         } else { Ok(()) }
     }
-    pub(crate) fn insert_input(&mut self, location: InterfaceLocation, ivar_ty: Type) -> Result<()> {
+    fn insert_input(&mut self, location: InterfaceLocation, ivar_ty: Type) -> Result<()> {
         // Input variables can share locations (aliasing).
         self.input_map.insert(location.into(), ivar_ty);
         Ok(())
     }
-    pub(crate) fn insert_output(&mut self, location: InterfaceLocation, ivar_ty: Type) -> Result<()> {
+    fn insert_output(&mut self, location: InterfaceLocation, ivar_ty: Type) -> Result<()> {
         // Ouput variables can share locations (aliasing).
         self.output_map.insert(location.into(), ivar_ty);
         Ok(())
     }
-    pub(crate) fn insert_desc(
+    fn insert_desc(
         &mut self,
         desc_bind: DescriptorBinding,
         desc_ty: DescriptorType,
@@ -695,11 +725,44 @@ impl Manifest {
         }
         Ok(())
     }
-    pub(crate) fn insert_push_const(&mut self, push_const_ty: Type) -> Result<()> {
+    fn insert_push_const(&mut self, push_const_ty: Type) -> Result<()> {
         if self.push_const_ty.is_none() {
             self.push_const_ty = Some(push_const_ty);
             Ok(())
         } else { Err(Error::MULTI_PUSH_CONST) }
+    }
+    fn insert_var(
+        &mut self,
+        var: Variable,
+        name: Option<&str>,
+    ) -> Result<()> {
+        match var {
+            Variable::Input(location, ivar_ty) => {
+                self.insert_input(location, ivar_ty)?;
+                if let Some(name) = name {
+                    self.insert_rsc_name(name, ResourceLocator::Input(location))?;
+                }
+            },
+            Variable::Output(location, ivar_ty) => {
+                self.insert_output(location, ivar_ty)?;
+                if let Some(name) = name {
+                    self.insert_rsc_name(name, ResourceLocator::Output(location))?;
+                }
+            },
+            Variable::Descriptor(desc_bind, desc_ty, access) => {
+                self.insert_desc(desc_bind, desc_ty, access)?;
+                if let Some(name) = name {
+                    self.insert_rsc_name(name, ResourceLocator::Descriptor(desc_bind))?;
+                }
+            },
+            Variable::PushConstant(push_const_ty) => {
+                self.insert_push_const(push_const_ty)?;
+                if let Some(name) = name {
+                    self.insert_rsc_name(name, ResourceLocator::PushConstant)?;
+                }
+            },
+        }
+        Ok(())
     }
 }
 
@@ -744,19 +807,21 @@ impl Specialization {
             })
     }
 
-    // TODO: (penguinliong) This should not be exposed. Hide it in next larger
-    // release.
-    pub fn insert_spec_const(&mut self, spec_id: SpecId, ty: Type) -> Result<()> {
+    fn insert_spec_const(
+        &mut self,
+        spec_id: SpecId,
+        ty: Type,
+        name: Option<&str>
+    ) -> Result<()> {
         if self.spec_const_map.insert(spec_id, ty).is_some() {
-            Err(Error::SPEC_ID_COLLISION)
-        } else { Ok(()) }
-    }
-    // TODO: (penguinliong) This should not be exposed. Hide it in next larger
-    // release.
-    pub fn insert_spec_const_name(&mut self, name: &str, spec_id: SpecId) -> Result<()>{
-        if self.spec_const_name_map.insert(name.to_owned(), spec_id).is_some() {
-            Err(Error::NAME_COLLISION)
-        } else { Ok(()) }
+            return Err(Error::SPEC_ID_COLLISION);
+        }
+        if let Some(name) = name {
+            if self.spec_const_name_map.insert(name.to_owned(), spec_id).is_some() {
+                return Err(Error::NAME_COLLISION);
+            }
+        }
+        Ok(())
     }
 }
 
