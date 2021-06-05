@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 use std::marker::PhantomData;
-use spirv_headers::{Decoration, Dim, StorageClass};
+use spirv_headers::{Dim, StorageClass};
 use super::{Error, Result};
 use super::parse::{Instr};
 
@@ -57,13 +57,13 @@ define_ops!{
 
     OpDecorate {
         target_id: InstrId = read_u32(),
-        deco: Decoration = read_enum(),
+        deco: u32 = read_enum(),
         params: &'a [u32] = read_list(),
     }
     OpMemberDecorate {
         target_id: InstrId = read_u32(),
         member_idx: MemberIdx = read_u32(),
-        deco: Decoration = read_enum(),
+        deco: u32 = read_enum(),
         params: &'a [u32] = read_list(),
     }
 

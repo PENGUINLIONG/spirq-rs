@@ -2,14 +2,15 @@
 use std::convert::{TryFrom};
 use std::iter::Peekable;
 use std::ops::RangeInclusive;
+use std::fmt;
 use fnv::FnvHashMap as HashMap;
 use nohash_hasher::{IntMap, IntSet};
-use spirv_headers::{Decoration, Dim, StorageClass};
+use num_derive::FromPrimitive;
+use spirv_headers::{ExecutionModel, Decoration, Dim, StorageClass};
 use crate::ty::*;
 use crate::consts::*;
-use crate::{InterfaceLocation, DescriptorBinding, SpirvBinary, Instrs, Instr,
-    Manifest, ExecutionModel, EntryPoint, AccessType, SpecId,
-    Specialization};
+use crate::{ResourceLocator, Manifest, EntryPoint, Specialization};
+use crate::parse::{Instrs, Instr};
 use crate::error::{Error, Result};
 use crate::instr::*;
 use crate::inspect::Inspector;
@@ -19,9 +20,75 @@ use crate::inspect::Inspector;
 type TypeId = InstrId;
 type VariableId = InstrId;
 type ConstantId = InstrId;
-type SpecConstantId = InstrId;
 type FunctionId = InstrId;
 
+// Public types.
+
+/// Access type of a variable.
+#[repr(u32)]
+#[derive(Debug, FromPrimitive, Clone, Copy, PartialEq, Eq)]
+pub enum AccessType {
+    /// The variable can be accessed by read.
+    ReadOnly = 1,
+    /// The variable can be accessed by write.
+    WriteOnly = 2,
+    /// The variable can be accessed by read or by write.
+    ReadWrite = 3,
+}
+impl std::ops::BitOr<AccessType> for AccessType {
+    type Output = AccessType;
+    fn bitor(self, rhs: AccessType) -> AccessType {
+        use num_traits::FromPrimitive;
+        AccessType::from_u32((self as u32) | (rhs as u32)).unwrap()
+    }
+}
+impl std::ops::BitAnd<AccessType> for AccessType {
+    type Output = AccessType;
+    fn bitand(self, rhs: AccessType) -> AccessType {
+        use num_traits::FromPrimitive;
+        AccessType::from_u32((self as u32) & (rhs as u32)).unwrap()
+    }
+}
+
+/// Descriptor set and binding point carrier.
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Default, Clone, Copy)]
+pub struct DescriptorBinding(u32, u32);
+impl DescriptorBinding {
+    pub fn new(desc_set: u32, bind_point: u32) -> Self { DescriptorBinding(desc_set, bind_point) }
+
+    pub fn set(&self) -> u32 { self.0 }
+    pub fn bind(&self) -> u32 { self.1 }
+    pub fn into_inner(self) -> (u32, u32) { (self.0, self.1) }
+}
+impl fmt::Display for DescriptorBinding {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "(set={}, bind={})", self.0, self.1)
+    }
+}
+impl fmt::Debug for DescriptorBinding {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
+}
+
+/// Interface variable location and component.
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Default, Clone, Copy)]
+pub struct InterfaceLocation(u32, u32);
+impl InterfaceLocation {
+    pub fn new(loc: u32, comp: u32) -> Self { InterfaceLocation(loc, comp) }
+
+    pub fn loc(&self) -> u32 { self.0 }
+    pub fn comp(&self) -> u32 { self.1 }
+    pub fn into_inner(self) -> (u32, u32) { (self.0, self.1) }
+}
+impl fmt::Display for InterfaceLocation {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "(loc={}, comp={})", self.0, self.1)
+    }
+}
+impl fmt::Debug for InterfaceLocation {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
+}
+
+pub type SpecId = u32;
 
 
 // Intermediate types used in reflection.
@@ -54,18 +121,25 @@ pub enum Variable {
     /// Push constant.
     PushConstant(Type),
 }
-
-
-
-#[derive(Default, Debug, Clone)]
-struct Function {
-    accessed_vars: IntSet<VariableId>,
-    callees: IntSet<InstrId>,
+impl Variable {
+    fn rsc_locator(&self) -> ResourceLocator {
+        match self {
+            Variable::Input(location, ..) => ResourceLocator::Input(*location),
+            Variable::Output(location, ..) => ResourceLocator::Output(*location),
+            Variable::Descriptor(desc_bind, ..) => ResourceLocator::Descriptor(*desc_bind),
+            Variable::PushConstant(..) => ResourceLocator::PushConstant,
+        }
+    }
 }
-struct EntryPointDeclartion<'a> {
-    func_id: u32,
-    name: &'a str,
-    exec_model: ExecutionModel,
+#[derive(Default, Debug, Clone)]
+pub struct Function {
+    pub accessed_vars: IntSet<VariableId>,
+    pub callees: IntSet<InstrId>,
+}
+pub struct EntryPointDeclartion<'a> {
+    pub func_id: FunctionId,
+    pub name: &'a str,
+    pub exec_model: ExecutionModel,
 }
 
 
@@ -75,20 +149,23 @@ struct EntryPointDeclartion<'a> {
 #[derive(Default)]
 pub struct ReflectIntermediate<'a> {
     entry_point_declrs: Vec<EntryPointDeclartion<'a>>,
+    spec_consts: Vec<SpecConstant<'a>>,
+    vars: Vec<Variable>,
+
     name_map: HashMap<(InstrId, Option<u32>), &'a str>,
-    deco_map: HashMap<(InstrId, Option<u32>, Decoration), &'a [u32]>,
+    deco_map: HashMap<(InstrId, Option<u32>, u32), &'a [u32]>,
     ty_map: IntMap<TypeId, Type>,
-    var_map: IntMap<VariableId, Variable>,
+    var_map: IntMap<VariableId, usize>,
     const_map: IntMap<ConstantId, Constant<'a>>,
-    spec_const_map: IntMap<SpecConstantId, SpecConstant<'a>>,
     ptr_map: IntMap<TypeId, TypeId>,
     func_map: IntMap<FunctionId, Function>,
+    rsc_map: HashMap<ResourceLocator, InstrId>,
 }
 impl<'a> ReflectIntermediate<'a> {
     /// Check if a result (like a variable declaration result) or a memeber of a
     /// result (like a structure definition result) has the given decoration.
     pub fn contains_deco(&self, id: InstrId, member_idx: Option<u32>, deco: Decoration) -> bool {
-        self.deco_map.contains_key(&(id, member_idx, deco))
+        self.deco_map.contains_key(&(id, member_idx, deco as u32))
     }
     /// Get the single-word decoration of an instruction result.
     pub fn get_deco_u32(&self, id: InstrId, deco: Decoration) -> Option<u32> {
@@ -109,7 +186,7 @@ impl<'a> ReflectIntermediate<'a> {
     }
     /// Get the multi-word declaration of a instruction result.
     pub fn get_deco_list(&self, id: InstrId, deco: Decoration) -> Option<&'a [u32]> {
-        self.deco_map.get(&(id, None, deco))
+        self.deco_map.get(&(id, None, deco as u32))
             .cloned()
     }
     /// Get the multi-word declaration of a member of an instruction result.
@@ -119,7 +196,7 @@ impl<'a> ReflectIntermediate<'a> {
         member_idx: u32,
         deco: Decoration,
     ) -> Option<&'a [u32]> {
-        self.deco_map.get(&(id, Some(member_idx), deco))
+        self.deco_map.get(&(id, Some(member_idx), deco as u32))
             .cloned()
     }
     /// Get the location-component pair of an interface variable.
@@ -143,28 +220,44 @@ impl<'a> ReflectIntermediate<'a> {
             .unwrap_or(DescriptorBinding(0, 0))
     }
     /// Get the type identified by `ty_id`.
-    pub fn get_ty(&self, ty_id: TypeId) -> Option<Type> {
-        self.ty_map.get(&ty_id).cloned()
+    pub fn get_ty(&self, ty_id: TypeId) -> Option<&Type> {
+        self.ty_map.get(&ty_id)
     }
     /// Get the variable identified by `var_id`.
-    pub fn get_var(&self, var_id: VariableId) -> Option<Variable> {
-        self.var_map.get(&var_id).cloned()
+    pub fn get_var(&self, var_id: VariableId) -> Option<&Variable> {
+        let ivar = *self.var_map.get(&var_id)?;
+        let var = &self.vars[ivar];
+        Some(var)
     }
-    /// Get the constant identified by `const_id`.
-    pub fn get_const(&self, const_id: ConstantId) -> Option<Constant> {
-        self.const_map.get(&const_id).cloned()
-    }
-    /// Get the specialization constant identified by `spec_const_id`.
-    pub fn get_spec_const(&self, spec_const_id: SpecConstantId) -> Option<SpecConstant> {
-        self.spec_const_map.get(&spec_const_id).cloned()
+    /// Get the constant identified by `const_id`. Specialization constants are
+    /// also stored as constants. Array extents specified by specialization
+    /// constants are not statically known.
+    pub fn get_const(&self, const_id: ConstantId) -> Option<&Constant> {
+        self.const_map.get(&const_id)
     }
     /// Get the human-friendly name of an instruction result.
     pub fn get_name(&self, id: InstrId) -> Option<&'a str> {
-        self.name_map.get(&(id, None)).cloned()
+        self.name_map.get(&(id, None)).copied()
     }
     /// Get the human-friendly name of a member of an instruction result.
     pub fn get_member_name(&self, id: InstrId, member_idx: u32) -> Option<&'a str> {
-        self.name_map.get(&(id, Some(member_idx))).cloned()
+        self.name_map.get(&(id, Some(member_idx))).copied()
+    }
+    pub fn get_func(&self, func_id: FunctionId) -> Option<&Function> {
+        self.func_map.get(&func_id)
+    }
+    pub fn get_rsc_name(&self, rsc_locator: ResourceLocator) -> Option<&'a str> {
+        let instr_id = *self.rsc_map.get(&rsc_locator)?;
+        self.name_map.get(&(instr_id, None)).copied()
+    }
+    pub fn entry_point_declrs(&self) -> &[EntryPointDeclartion<'a>] {
+        &self.entry_point_declrs
+    }
+    pub fn spec_consts(&self) -> &[SpecConstant<'a>] {
+        &self.spec_consts
+    }
+    pub fn vars(&self) -> &[Variable] {
+        &self.vars
     }
     fn get_desc_access(&self, var_id: VariableId) -> Option<AccessType> {
         let read_only = self.contains_deco(var_id, None, Decoration::NonWritable);
@@ -262,14 +355,14 @@ impl<'a> ReflectIntermediate<'a> {
             OP_TYPE_VECTOR => {
                 let op = OpTypeVector::try_from(instr)?;
                 if let Some(Type::Scalar(scalar_ty)) = self.get_ty(op.scalar_ty_id) {
-                    let vec_ty = VectorType::new(scalar_ty, op.nscalar);
+                    let vec_ty = VectorType::new(scalar_ty.clone(), op.nscalar);
                     (op.ty_id, Type::Vector(vec_ty))
                 } else { return Err(Error::TY_NOT_FOUND); }
             },
             OP_TYPE_MATRIX => {
                 let op = OpTypeMatrix::try_from(instr)?;
                 if let Some(Type::Vector(vec_ty)) = self.get_ty(op.vec_ty_id) {
-                    let mat_ty = MatrixType::new(vec_ty, op.nvec);
+                    let mat_ty = MatrixType::new(vec_ty.clone(), op.nvec);
                     (op.ty_id, Type::Matrix(mat_ty))
                 } else { return Err(Error::TY_NOT_FOUND); }
             },
@@ -296,7 +389,7 @@ impl<'a> ReflectIntermediate<'a> {
             OP_TYPE_SAMPLED_IMAGE => {
                 let op = OpTypeSampledImage::try_from(instr)?;
                 if let Some(Type::Image(img_ty)) = self.get_ty(op.img_ty_id) {
-                    (op.ty_id, Type::SampledImage(img_ty))
+                    (op.ty_id, Type::SampledImage(img_ty.clone()))
                 } else { return Err(Error::TY_NOT_FOUND); }
             },
             OP_TYPE_ARRAY => {
@@ -308,6 +401,15 @@ impl<'a> ReflectIntermediate<'a> {
                 };
 
                 let nrepeat = self.const_map.get(&op.nrepeat_const_id)
+                    // Some notes about specialization constants.
+                    //
+                    // Using specialization constants for array sizes might lead
+                    // to UNDEFINED BEHAVIOR because structure size MUST be
+                    // definitive at compile time and CANNOT be specialized at
+                    // runtime according to Khronos members, but the default
+                    // behavior of `glslang` is to treat the specialization
+                    // constants as normal constants, then I would say...
+                    // probably it's fine to size array with them?
                     .and_then(|constant| {
                         if let Some(Type::Scalar(scalar_ty)) = self.get_ty(constant.ty_id) {
                             if scalar_ty.nbyte() == 4 && scalar_ty.is_uint() {
@@ -316,22 +418,6 @@ impl<'a> ReflectIntermediate<'a> {
                         }
                         None
                     })
-                    // This might lead to UNDEFINED BEHAVIOR because structure
-                    // size MUST be definitive at compile time and CANNOT be
-                    // specialized at runtime according to Khronos members, but
-                    // the default behavior of `glslang` is to treat the
-                    // specialization constants as normal constants, then I
-                    // would say... probably it's fine to size array with them?
-                    .or_else(|| self.spec_const_map.get(&op.nrepeat_const_id)
-                        .and_then(|constant| {
-                            if let Some(Type::Scalar(scalar_ty)) = self.get_ty(constant.ty_id) {
-                                if scalar_ty.nbyte() == 4 && scalar_ty.is_uint() {
-                                    return Some(constant.value[0]);
-                                }
-                            }
-                            None
-                        }
-                    ))
                     .ok_or(Error::CONST_NOT_FOUND)?;
                 let stride = self.get_deco_u32(op.ty_id, Decoration::ArrayStride)
                     .map(|x| x as usize);
@@ -365,7 +451,7 @@ impl<'a> ReflectIntermediate<'a> {
                 for (i, &member_ty_id) in op.member_ty_ids.iter().enumerate() {
                     let i = i as u32;
                     let mut member_ty = if let Some(member_ty) = self.get_ty(member_ty_id) {
-                        member_ty
+                        member_ty.clone()
                     } else {
                         return Ok(());
                     };
@@ -392,7 +478,11 @@ impl<'a> ReflectIntermediate<'a> {
                     } else { None };
                     if let Some(offset) = self.get_member_deco_u32(op.ty_id, i, Decoration::Offset)
                         .map(|x| x as usize) {
-                        let member = StructMember { name, offset, ty: member_ty };
+                        let member = StructMember {
+                            name,
+                            offset,
+                            ty: member_ty.clone()
+                        };
                         struct_ty.push_member(member)?;
                     } else {
                         // For shader input/output blocks there are no offset
@@ -426,7 +516,10 @@ impl<'a> ReflectIntermediate<'a> {
         if instr.opcode() == OP_CONSTANT {
             let op = OpConstant::try_from(instr)?;
             if let Vacant(entry) = self.const_map.entry(op.const_id) {
-                let constant = Constant { ty_id: op.ty_id, value: op.value };
+                let constant = Constant {
+                    ty_id: op.ty_id,
+                    value: op.value,
+                };
                 entry.insert(constant);
                 Ok(())
             } else { Err(Error::ID_COLLISION) }
@@ -436,56 +529,70 @@ impl<'a> ReflectIntermediate<'a> {
     }
     fn populate_one_spec_const(&mut self, instr: &Instr<'a>) -> Result<()> {
         use std::collections::hash_map::Entry::Vacant;
-        match instr.opcode() {
+        let (spec_const_id, constant, spec_const) = match instr.opcode() {
             OP_SPEC_CONSTANT_TRUE => {
-                let op = OpSpecConstant::try_from(instr)?;
+                let op = OpSpecConstantTrue::try_from(instr)?;
+                let constant = Constant {
+                    ty_id: op.ty_id,
+                    value: &[1],
+                };
                 let spec_id = self.get_deco_u32(op.spec_const_id, Decoration::SpecId)
                     .ok_or(Error::MISSING_DECO)?;
                 let spec_const = SpecConstant {
-                    ty_id: op.ty_id,
+                    ty_id: constant.ty_id,
                     value: &[1],
                     spec_id,
                 };
-                if let Vacant(entry) = self.spec_const_map.entry(op.spec_const_id) {
-                    entry.insert(spec_const);
-                } else { return Err(Error::ID_COLLISION) }
+                (op.spec_const_id, constant, spec_const)
             },
             OP_SPEC_CONSTANT_FALSE => {
-                let op = OpSpecConstant::try_from(instr)?;
+                let op = OpSpecConstantFalse::try_from(instr)?;
+                let constant = Constant {
+                    ty_id: op.ty_id,
+                    value: &[0],
+                };
                 let spec_id = self.get_deco_u32(op.spec_const_id, Decoration::SpecId)
                     .ok_or(Error::MISSING_DECO)?;
                 let spec_const = SpecConstant {
-                    ty_id: op.ty_id,
+                    ty_id: constant.ty_id,
                     value: &[0],
                     spec_id,
                 };
-                if let Vacant(entry) = self.spec_const_map.entry(op.spec_const_id) {
-                    entry.insert(spec_const);
-                } else { return Err(Error::ID_COLLISION) }
+                (op.spec_const_id, constant, spec_const)
             },
             OP_SPEC_CONSTANT => {
                 let op = OpSpecConstant::try_from(instr)?;
+                let constant = Constant {
+                    ty_id: op.ty_id,
+                    value: op.value,
+                };
                 let spec_id = self.get_deco_u32(op.spec_const_id, Decoration::SpecId)
                     .ok_or(Error::MISSING_DECO)?;
                 let spec_const = SpecConstant {
-                    ty_id: op.ty_id,
+                    ty_id: constant.ty_id,
                     value: op.value,
                     spec_id,
                 };
-                if let Vacant(entry) = self.spec_const_map.entry(op.spec_const_id) {
-                    entry.insert(spec_const);
-                } else { return Err(Error::ID_COLLISION) }
+                (op.spec_const_id, constant, spec_const)
             },
             // `SpecId` decorations will be specified to each of the
             // constituents so we don't have to worry about the composite of
             // them.
-            OP_SPEC_CONSTANT_COMPOSITE => {},
+            OP_SPEC_CONSTANT_COMPOSITE => return Ok(()),
             _ => return Err(Error::UNSUPPORTED_SPEC),
         };
+
+        if let Vacant(entry) = self.const_map.entry(spec_const_id) {
+            entry.insert(constant);
+        } else { return Err(Error::ID_COLLISION) }
+        let rsc_locator = ResourceLocator::SpecConstant(spec_const.spec_id);
+        self.rsc_map.insert(rsc_locator, spec_const_id);
+        self.spec_consts.push(spec_const);
+
         Ok(())
     }
     fn populate_one_var(&mut self, instr: &Instr<'a>) -> Result<()> {
-        fn extract_proto_ty<'a>(ty: Type) -> Result<(u32, Type)> {
+        fn extract_proto_ty<'a>(ty: &Type) -> Result<(u32, Type)> {
             match ty {
                 Type::Array(arr_ty) => {
                     // `nrepeat=None` is no longer considered invalid because of
@@ -496,7 +603,7 @@ impl<'a> ReflectIntermediate<'a> {
                     let proto_ty = arr_ty.proto_ty();
                     Ok((nrepeat, proto_ty.clone()))
                 },
-                _ => Ok((1, ty)),
+                _ => Ok((1, ty.clone())),
             }
         }
 
@@ -613,9 +720,11 @@ impl<'a> ReflectIntermediate<'a> {
         
         if let Some(var) = var {
             // Register variable.
-            if self.var_map.insert(op.alloc_id, var).is_some() {
+            if self.var_map.insert(op.alloc_id, self.vars.len()).is_some() {
                 return Err(Error::ID_COLLISION);
             }
+
+            self.vars.push(var);
         }
 
 
@@ -704,7 +813,7 @@ impl<'a> ReflectIntermediate<'a> {
         }
         Ok(())
     }
-    pub(crate) fn reflect<I: Inspector>(module: &'a SpirvBinary, inspector: I) -> Result<Self> {
+    pub(crate) fn reflect<I: Inspector>(instrs: Instrs<'a>, inspector: I) -> Result<Self> {
         fn skip_until_range_inclusive<'a>(
             instrs: &'_ mut Peekable<Instrs<'a>>,
             rng: RangeInclusive<u32>
@@ -720,7 +829,7 @@ impl<'a> ReflectIntermediate<'a> {
         }
         // Don't change the order. See _2.4 Logical Layout of a Module_ of the
         // SPIR-V specification for more information.
-        let mut instrs = module.instrs().peekable();
+        let mut instrs = instrs.peekable();
         let mut itm = ReflectIntermediate::default();
         skip_until_range_inclusive(&mut instrs, ENTRY_POINT_RANGE);
         itm.populate_entry_points(&mut instrs)?;
@@ -733,9 +842,10 @@ impl<'a> ReflectIntermediate<'a> {
         return Ok(itm);
     }
 }
+
 impl<'a> ReflectIntermediate<'a> {
     fn collect_fn_vars_impl(&self, func: FunctionId, vars: &mut Vec<VariableId>) {
-        if let Some(func) = self.func_map.get(&func) {
+        if let Some(func) = self.get_func(func) {
             vars.extend(func.accessed_vars.iter());
             for call in func.callees.iter() {
                 self.collect_fn_vars_impl(*call, vars);
@@ -758,29 +868,30 @@ impl<'a> ReflectIntermediate<'a> {
             // such null-references.
             if let Some(accessed_var) = self.get_var(accessed_var_id) {
                 let name = self.get_name(accessed_var_id);
-                manifest.insert_var(accessed_var, name)?;
+                manifest.insert_var(accessed_var.clone(), name)?;
             }
         }
         Ok(manifest)
     }
-    fn collect_entry_point_spec(&self, _func_id: FunctionId) -> Result<Specialization> {
+    fn collect_entry_point_spec(&self) -> Result<Specialization> {
         // TODO: (penguinlion) Report only specialization constants that have
         // been refered to by the specified function. (Do we actually need this?
         // It might not be an optimization in mind of engineering.)
         let mut spec = Specialization::default();
-        for (spec_const_id, spec_const) in self.spec_const_map.iter() {
+        for spec_const in self.spec_consts().iter() {
             let ty = self.get_ty(spec_const.ty_id)
                 .ok_or(Error::TY_NOT_FOUND)?;
-            let name = self.get_name(*spec_const_id);
-            spec.insert_spec_const(spec_const.spec_id, ty, name)?;
+            let rsc_locator = ResourceLocator::SpecConstant(spec_const.spec_id);
+            let name = self.get_rsc_name(rsc_locator);
+            spec.insert_spec_const(spec_const.spec_id, ty.clone(), name)?;
         }
         Ok(spec)
     }
     pub(crate) fn collect_entry_points(&self) -> Result<Vec<EntryPoint>> {
-        let mut entry_points = Vec::with_capacity(self.entry_point_declrs.len());
-        for entry_point_declr in self.entry_point_declrs.iter() {
+        let mut entry_points = Vec::with_capacity(self.entry_point_declrs().len());
+        for entry_point_declr in self.entry_point_declrs().iter() {
             let manifest = self.collect_entry_point_manifest(entry_point_declr.func_id)?;
-            let spec = self.collect_entry_point_spec(entry_point_declr.func_id)?;
+            let spec = self.collect_entry_point_spec()?;
             let entry_point = EntryPoint {
                 name: entry_point_declr.name.to_owned(),
                 exec_model: entry_point_declr.exec_model,
@@ -795,21 +906,18 @@ impl<'a> ReflectIntermediate<'a> {
     /// it's been used by any entry point.
     pub(crate) fn collect_module_as_entry_point(&self) -> Result<EntryPoint> {
         let mut manifest = Manifest::default();
-        for (accessed_var_id, accessed_var) in self.var_map.iter() {
-            let name = self.get_name(*accessed_var_id);
+        for accessed_var in self.vars().iter() {
+            let rsc_locator = accessed_var.rsc_locator();
+            let name = self.get_rsc_name(rsc_locator);
             manifest.insert_var(accessed_var.clone(), name)?;
         }
-        let mut spec = Specialization::default();
-        for (spec_const_id, spec_const) in self.spec_const_map.iter() {
-            let ty = self.get_ty(spec_const.ty_id)
-                .ok_or(Error::TY_NOT_FOUND)?;
-            let name = self.get_name(*spec_const_id);
-            spec.insert_spec_const(spec_const.spec_id, ty, name)?;
-        }
-        if self.entry_point_declrs.len() != 1 {
+        let spec = self.collect_entry_point_spec()?;
+
+        let entry_point_declrs = self.entry_point_declrs();
+        if entry_point_declrs.len() != 1 {
             return Err(Error::MULTI_ENTRY_POINTS);
         }
-        let entry_point_declr = &self.entry_point_declrs[0];
+        let entry_point_declr = &entry_point_declrs[0];
         let entry_point = EntryPoint {
             name: entry_point_declr.name.to_owned(),
             exec_model: entry_point_declr.exec_model,

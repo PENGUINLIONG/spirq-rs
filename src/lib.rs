@@ -87,7 +87,6 @@ use std::convert::TryInto;
 use std::fmt;
 use std::iter::FromIterator;
 use std::ops::Deref;
-use num_derive::FromPrimitive;
 use fnv::FnvHashMap as HashMap;
 use nohash_hasher::IntMap;
 use reflect::{ReflectIntermediate, Variable};
@@ -95,9 +94,10 @@ use inspect::{NopInspector, FnInspector};
 
 use parse::{Instrs, Instr};
 pub use ty::{Type, DescriptorType};
-pub use sym::*;
-pub use error::*;
+pub use sym::{Seg, Segs, Sym, Symbol};
+pub use error::{Error, Result};
 pub use spirv_headers::ExecutionModel;
+pub use reflect::{AccessType, InterfaceLocation, DescriptorBinding, SpecId};
 
 /// SPIR-V program binary.
 #[derive(Debug, Default, Clone)]
@@ -109,7 +109,9 @@ impl From<&[u32]> for SpirvBinary {
     fn from(x: &[u32]) -> Self { SpirvBinary(x.to_owned()) }
 }
 impl FromIterator<u32> for SpirvBinary {
-    fn from_iter<I: IntoIterator<Item=u32>>(iter: I) -> Self { SpirvBinary(iter.into_iter().collect::<Vec<u32>>()) }
+    fn from_iter<I: IntoIterator<Item=u32>>(iter: I) -> Self {
+        SpirvBinary(iter.into_iter().collect::<Vec<u32>>())
+    }
 }
 impl From<&[u8]> for SpirvBinary {
     fn from(x: &[u8]) -> Self {
@@ -141,7 +143,7 @@ impl SpirvBinary {
     /// Reflect the SPIR-V binary and extract all the entry points.
     pub fn reflect_vec(&self) -> Result<Vec<EntryPoint>> {
         let inspector = NopInspector();
-        reflect::ReflectIntermediate::reflect(&self, inspector)?
+        reflect::ReflectIntermediate::reflect(self.instrs(), inspector)?
             .collect_entry_points()
     }
     /// Similar to `reflect_vec` while you can inspect each instruction during
@@ -151,7 +153,7 @@ impl SpirvBinary {
         inspector: F
     ) -> Result<Vec<EntryPoint>> {
         let inspector = FnInspector::<F>(inspector);
-        reflect::ReflectIntermediate::reflect(&self, inspector)?
+        reflect::ReflectIntermediate::reflect(self.instrs(), inspector)?
             .collect_entry_points()
     }
     // Reflect the SPIR-V binary fast. This method returns the only entry point
@@ -164,7 +166,7 @@ impl SpirvBinary {
     // points or locations.
     pub fn reflect_fast(&self) -> Result<EntryPoint> {
         let inspector = NopInspector();
-        reflect::ReflectIntermediate::reflect(&self, inspector)?
+        reflect::ReflectIntermediate::reflect(self.instrs(), inspector)?
             .collect_module_as_entry_point()
     }
     /// Similar to `reflect_fast` while you can inspect each instruction during
@@ -174,7 +176,7 @@ impl SpirvBinary {
         inspector: F
     ) -> Result<EntryPoint> {
         let inspector = FnInspector::<F>(inspector);
-        reflect::ReflectIntermediate::reflect(&self, inspector)?
+        reflect::ReflectIntermediate::reflect(self.instrs(), inspector)?
             .collect_module_as_entry_point()
     }
     pub fn words(&self) -> &[u32] {
@@ -202,74 +204,36 @@ pub(crate) fn hash<H: std::hash::Hash>(h: &H) -> u64 {
 
 // Resource locationing.
 
-type SpecId = u32;
-
-/// Interface variable location and component.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Default, Clone, Copy)]
-pub struct InterfaceLocation(u32, u32);
-impl InterfaceLocation {
-    pub fn new(loc: u32, comp: u32) -> Self { InterfaceLocation(loc, comp) }
-
-    pub fn loc(&self) -> u32 { self.0 }
-    pub fn comp(&self) -> u32 { self.1 }
-    pub fn into_inner(self) -> (u32, u32) { (self.0, self.1) }
-}
-impl fmt::Display for InterfaceLocation {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "(loc={}, comp={})", self.0, self.1)
-    }
-}
-impl fmt::Debug for InterfaceLocation {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
-}
+type InterfaceLocationCode = u64;
 impl From<InterfaceLocation> for InterfaceLocationCode {
     fn from(x: InterfaceLocation) -> InterfaceLocationCode {
-        ((x.0 as u64) << 32) | (x.1 as u64)
+        ((x.loc() as u64) << 32) | (x.comp() as u64)
     }
 }
 impl From<InterfaceLocationCode> for InterfaceLocation {
     fn from(x: InterfaceLocationCode) -> InterfaceLocation {
-        InterfaceLocation((x >> 32) as u32, (x & 0xFFFFFFFF) as u32)
+        InterfaceLocation::new((x >> 32) as u32, (x & 0xFFFFFFFF) as u32)
     }
 }
-type InterfaceLocationCode = u64;
-
-/// Descriptor set and binding point carrier.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Default, Clone, Copy)]
-pub struct DescriptorBinding(u32, u32);
-impl DescriptorBinding {
-    pub fn new(desc_set: u32, bind_point: u32) -> Self { DescriptorBinding(desc_set, bind_point) }
-
-    pub fn set(&self) -> u32 { self.0 }
-    pub fn bind(&self) -> u32 { self.1 }
-    pub fn into_inner(self) -> (u32, u32) { (self.0, self.1) }
-}
-impl fmt::Display for DescriptorBinding {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f, "(set={}, bind={})", self.0, self.1)
-    }
-}
-impl fmt::Debug for DescriptorBinding {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
-}
+type DescriptorBindingCode = u64;
 impl From<DescriptorBinding> for DescriptorBindingCode {
     fn from(x: DescriptorBinding) -> DescriptorBindingCode {
-        ((x.0 as u64) << 32) | (x.1 as u64)
+        ((x.set() as u64) << 32) | (x.bind() as u64)
     }
 }
 impl From<DescriptorBindingCode> for DescriptorBinding {
     fn from(x: DescriptorBindingCode) -> DescriptorBinding {
-        DescriptorBinding((x >> 32) as u32, (x & 0xFFFFFFFF) as u32)
+        DescriptorBinding::new((x >> 32) as u32, (x & 0xFFFFFFFF) as u32)
     }
 }
-type DescriptorBindingCode = u64;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
-pub(crate) enum ResourceLocator {
+pub enum ResourceLocator {
     Input(InterfaceLocation),
     Output(InterfaceLocation),
     Descriptor(DescriptorBinding),
     PushConstant,
+    SpecConstant(SpecId),
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
@@ -326,32 +290,6 @@ pub struct MemberVariableResolution<'a> {
     pub offset: usize,
     /// Type of the resolution target.
     pub ty: &'a Type,
-}
-
-/// Access type of a variable.
-#[repr(u32)]
-#[derive(Debug, FromPrimitive, Clone, Copy, PartialEq, Eq)]
-pub enum AccessType {
-    /// The variable can be accessed by read.
-    ReadOnly = 1,
-    /// The variable can be accessed by write.
-    WriteOnly = 2,
-    /// The variable can be accessed by read or by write.
-    ReadWrite = 3,
-}
-impl std::ops::BitOr<AccessType> for AccessType {
-    type Output = AccessType;
-    fn bitor(self, rhs: AccessType) -> AccessType {
-        use num_traits::FromPrimitive;
-        AccessType::from_u32((self as u32) | (rhs as u32)).unwrap()
-    }
-}
-impl std::ops::BitAnd<AccessType> for AccessType {
-    type Output = AccessType;
-    fn bitand(self, rhs: AccessType) -> AccessType {
-        use num_traits::FromPrimitive;
-        AccessType::from_u32((self as u32) & (rhs as u32)).unwrap()
-    }
 }
 
 /// A set of information used to describe variable typing and routing.
@@ -720,7 +658,8 @@ impl Manifest {
         // `replaces`'s base binding MUST BE monotonically increamental.
         for (desc_ty, access) in replaces {
             let nbind = desc_ty.nbind();
-            self.insert_desc(DescriptorBinding(desc_bind.set(), replace_bind), desc_ty, access)?;
+            let desc_bind = DescriptorBinding::new(desc_bind.set(), replace_bind);
+            self.insert_desc(desc_bind, desc_ty, access)?;
             replace_bind += nbind;
         }
         Ok(())
