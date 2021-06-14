@@ -8,6 +8,7 @@
 - Removed unexpectedly exposed `Specialization` APIs.
 - Full coverage of GLSL data types.
 - Integrate `AccessType` as a part of `Descriptor`, for storage images and buffers.
+- Refactorized to a unified variable reference structure.
 
 ## v0.4.12
 
