@@ -9,7 +9,7 @@ use num_derive::FromPrimitive;
 use spirv_headers::{ExecutionModel, Decoration, Dim, StorageClass};
 use crate::ty::*;
 use crate::consts::*;
-use crate::{ResourceLocator, Manifest, EntryPoint, Specialization};
+use crate::{Manifest, EntryPoint, Specialization};
 use crate::parse::{Instrs, Instr};
 use crate::error::{Error, Result};
 use crate::instr::*;
@@ -90,6 +90,15 @@ impl fmt::Debug for InterfaceLocation {
 
 pub type SpecId = u32;
 
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
+pub enum Locator {
+    Input(InterfaceLocation),
+    Output(InterfaceLocation),
+    Descriptor(DescriptorBinding),
+    PushConstant,
+    SpecConstant(SpecId),
+}
+
 
 // Intermediate types used in reflection.
 
@@ -122,12 +131,12 @@ pub enum Variable {
     PushConstant(Type),
 }
 impl Variable {
-    fn rsc_locator(&self) -> ResourceLocator {
+    pub fn locator(&self) -> Locator {
         match self {
-            Variable::Input(location, ..) => ResourceLocator::Input(*location),
-            Variable::Output(location, ..) => ResourceLocator::Output(*location),
-            Variable::Descriptor(desc_bind, ..) => ResourceLocator::Descriptor(*desc_bind),
-            Variable::PushConstant(..) => ResourceLocator::PushConstant,
+            Variable::Input(location, ..) => Locator::Input(*location),
+            Variable::Output(location, ..) => Locator::Output(*location),
+            Variable::Descriptor(desc_bind, ..) => Locator::Descriptor(*desc_bind),
+            Variable::PushConstant(..) => Locator::PushConstant,
         }
     }
 }
@@ -159,7 +168,7 @@ pub struct ReflectIntermediate<'a> {
     const_map: IntMap<ConstantId, Constant<'a>>,
     ptr_map: IntMap<TypeId, TypeId>,
     func_map: IntMap<FunctionId, Function>,
-    rsc_map: HashMap<ResourceLocator, InstrId>,
+    rsc_map: HashMap<Locator, InstrId>,
 }
 impl<'a> ReflectIntermediate<'a> {
     /// Check if a result (like a variable declaration result) or a memeber of a
@@ -246,8 +255,8 @@ impl<'a> ReflectIntermediate<'a> {
     pub fn get_func(&self, func_id: FunctionId) -> Option<&Function> {
         self.func_map.get(&func_id)
     }
-    pub fn get_rsc_name(&self, rsc_locator: ResourceLocator) -> Option<&'a str> {
-        let instr_id = *self.rsc_map.get(&rsc_locator)?;
+    pub fn get_var_name(&self, locator: Locator) -> Option<&'a str> {
+        let instr_id = *self.rsc_map.get(&locator)?;
         self.name_map.get(&(instr_id, None)).copied()
     }
     pub fn entry_point_declrs(&self) -> &[EntryPointDeclartion<'a>] {
@@ -371,8 +380,8 @@ impl<'a> ReflectIntermediate<'a> {
                 let img_ty = if op.dim == Dim::DimSubpassData {
                     Type::SubpassData()
                 } else {
-                    // Only unit types allowed to be stored in storage images can
-                    // have given format.
+                    // Only unit types allowed to be stored in storage images
+                    // can have given format.
                     let unit_fmt = ImageUnitFormat::from_spv_def(
                         op.is_sampled, op.is_depth, op.color_fmt)?;
                     let arng = ImageArrangement::from_spv_def(
@@ -384,6 +393,8 @@ impl<'a> ReflectIntermediate<'a> {
             },
             OP_TYPE_SAMPLER => {
                 let op = OpTypeSampler::try_from(instr)?;
+                // Note that SPIR-V doesn't discriminate color and depth/stencil
+                // samplers. `sampler` and `samplerShadow` means the same thing.
                 (op.ty_id, Type::Sampler())
             },
             OP_TYPE_SAMPLED_IMAGE => {
@@ -585,8 +596,8 @@ impl<'a> ReflectIntermediate<'a> {
         if let Vacant(entry) = self.const_map.entry(spec_const_id) {
             entry.insert(constant);
         } else { return Err(Error::ID_COLLISION) }
-        let rsc_locator = ResourceLocator::SpecConstant(spec_const.spec_id);
-        self.rsc_map.insert(rsc_locator, spec_const_id);
+        let locator = Locator::SpecConstant(spec_const.spec_id);
+        self.rsc_map.insert(locator, spec_const_id);
         self.spec_consts.push(spec_const);
 
         Ok(())
@@ -881,8 +892,8 @@ impl<'a> ReflectIntermediate<'a> {
         for spec_const in self.spec_consts().iter() {
             let ty = self.get_ty(spec_const.ty_id)
                 .ok_or(Error::TY_NOT_FOUND)?;
-            let rsc_locator = ResourceLocator::SpecConstant(spec_const.spec_id);
-            let name = self.get_rsc_name(rsc_locator);
+            let locator = Locator::SpecConstant(spec_const.spec_id);
+            let name = self.get_var_name(locator);
             spec.insert_spec_const(spec_const.spec_id, ty.clone(), name)?;
         }
         Ok(spec)
@@ -907,8 +918,8 @@ impl<'a> ReflectIntermediate<'a> {
     pub(crate) fn collect_module_as_entry_point(&self) -> Result<EntryPoint> {
         let mut manifest = Manifest::default();
         for accessed_var in self.vars().iter() {
-            let rsc_locator = accessed_var.rsc_locator();
-            let name = self.get_rsc_name(rsc_locator);
+            let locator = accessed_var.locator();
+            let name = self.get_var_name(locator);
             manifest.insert_var(accessed_var.clone(), name)?;
         }
         let spec = self.collect_entry_point_spec()?;
