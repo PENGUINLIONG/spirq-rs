@@ -1,17 +1,17 @@
 use std::convert::TryFrom;
 use std::marker::PhantomData;
-use spirv_headers::{Decoration, Dim, StorageClass};
+use spirv_headers::{Dim, StorageClass};
 use super::{Error, Result};
 use super::parse::{Instr};
 
 pub use spirv_headers::{ExecutionModel, ImageFormat};
 
 pub type InstrId = u32;
-pub type FunctionId = u32;
-pub type TypeId = u32;
-pub type ResourceId = u32;
-pub type ConstantId = u32;
-pub type SpecConstantId = u32;
+pub type FunctionId = InstrId;
+pub type TypeId = InstrId;
+pub type VariableId = InstrId;
+pub type ConstantId = InstrId;
+pub type SpecConstantId = InstrId;
 
 pub type MemberIdx = u32;
 
@@ -57,13 +57,13 @@ define_ops!{
 
     OpDecorate {
         target_id: InstrId = read_u32(),
-        deco: Decoration = read_enum(),
+        deco: u32 = read_enum(),
         params: &'a [u32] = read_list(),
     }
     OpMemberDecorate {
         target_id: InstrId = read_u32(),
         member_idx: MemberIdx = read_u32(),
-        deco: Decoration = read_enum(),
+        deco: u32 = read_enum(),
         params: &'a [u32] = read_list(),
     }
 
@@ -91,7 +91,7 @@ define_ops!{
     }
     OpTypeImage {
         ty_id: TypeId = read_u32(),
-        unit_ty_id: TypeId = read_u32(),
+        scalar_ty_id: TypeId = read_u32(),
         dim: Dim = read_enum(),
         is_depth: u32 = read_u32(),
         is_array: bool = read_bool(),
@@ -149,7 +149,7 @@ define_ops!{
     }
     OpVariable {
         ty_id: TypeId = read_u32(),
-        alloc_id: ResourceId = read_u32(),
+        var_id: VariableId = read_u32(),
         store_cls: StorageClass = read_enum(),
     }
 
@@ -165,15 +165,15 @@ define_ops!{
     OpLoad {
         return_ty_id: TypeId = read_u32(),
         return_id: InstrId = read_u32(),
-        rsc_id: ResourceId = read_u32(),
+        var_id: VariableId = read_u32(),
     }
     OpStore {
-        rsc_id: ResourceId = read_u32(),
+        var_id: VariableId = read_u32(),
     }
     OpAccessChain {
-        rsc_ty_id: TypeId = read_u32(),
-        rsc_id: ResourceId = read_u32(),
-        accessed_rsc_id: ResourceId = read_u32(),
+        var_ty_id: TypeId = read_u32(),
+        var_id: VariableId = read_u32(),
+        accessed_var_id: VariableId = read_u32(),
     }
     OpTypeAccelerationStructureKHR {
         ty_id: TypeId = read_u32(),

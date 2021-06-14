@@ -62,13 +62,13 @@ fn test_vs_input_loc() {
     let locations = entry.inputs()
         .map(|x| x.location)
         .collect::<HashSet<_>>();
-    assert!(locations.contains(&InterfaceLocation(0, 0)));
-    assert!(locations.contains(&InterfaceLocation(0, 1)));
-    assert!(locations.contains(&InterfaceLocation(1, 0)));
-    assert!(locations.contains(&InterfaceLocation(3, 0)));
-    assert!(locations.contains(&InterfaceLocation(4, 2)));
-    assert!(!locations.contains(&InterfaceLocation(0, 2)));
-    assert!(!locations.contains(&InterfaceLocation(1, 1)));
+    assert!(locations.contains(&InterfaceLocation::new(0, 0)));
+    assert!(locations.contains(&InterfaceLocation::new(0, 1)));
+    assert!(locations.contains(&InterfaceLocation::new(1, 0)));
+    assert!(locations.contains(&InterfaceLocation::new(3, 0)));
+    assert!(locations.contains(&InterfaceLocation::new(4, 2)));
+    assert!(!locations.contains(&InterfaceLocation::new(0, 2)));
+    assert!(!locations.contains(&InterfaceLocation::new(1, 1)));
     // Test for consistency.
     for input in entry.inputs() {
         let resolved = entry.resolve_input(entry.get_input_name(input.location).unwrap()).unwrap();
@@ -97,13 +97,13 @@ fn test_fs_output_loc() {
     let locations = entry.outputs()
         .map(|x| x.location)
         .collect::<HashSet<_>>();
-    assert!(locations.contains(&InterfaceLocation(0, 0)));
-    assert!(locations.contains(&InterfaceLocation(0, 1)));
-    assert!(locations.contains(&InterfaceLocation(1, 0)));
-    assert!(locations.contains(&InterfaceLocation(3, 0)));
-    assert!(locations.contains(&InterfaceLocation(4, 2)));
-    assert!(!locations.contains(&InterfaceLocation(0, 2)));
-    assert!(!locations.contains(&InterfaceLocation(1, 1)));
+    assert!(locations.contains(&InterfaceLocation::new(0, 0)));
+    assert!(locations.contains(&InterfaceLocation::new(0, 1)));
+    assert!(locations.contains(&InterfaceLocation::new(1, 0)));
+    assert!(locations.contains(&InterfaceLocation::new(3, 0)));
+    assert!(locations.contains(&InterfaceLocation::new(4, 2)));
+    assert!(!locations.contains(&InterfaceLocation::new(0, 2)));
+    assert!(!locations.contains(&InterfaceLocation::new(1, 1)));
     // Test for consistency.
     for output in entry.outputs() {
         let resolved = entry.resolve_output(entry.get_output_name(output.location).unwrap()).unwrap();
@@ -173,30 +173,30 @@ fn test_desc_tys() {
     let desc_binds = entry.descs()
         .map(|x| x.desc_bind)
         .collect::<HashSet<_>>();
-    assert!(desc_binds.contains(&DescriptorBinding(0, 0)));
-    assert!(desc_binds.contains(&DescriptorBinding(0, 1)));
-    assert!(desc_binds.contains(&DescriptorBinding(1, 0)));
-    assert!(desc_binds.contains(&DescriptorBinding(3, 4)));
-    assert!(desc_binds.contains(&DescriptorBinding(3, 5)));
-    assert!(desc_binds.contains(&DescriptorBinding(1, 3)));
-    assert!(desc_binds.contains(&DescriptorBinding(0, 3)));
-    assert!(!desc_binds.contains(&DescriptorBinding(0, 2)));
+    assert!(desc_binds.contains(&DescriptorBinding::new(0, 0)));
+    assert!(desc_binds.contains(&DescriptorBinding::new(0, 1)));
+    assert!(desc_binds.contains(&DescriptorBinding::new(1, 0)));
+    assert!(desc_binds.contains(&DescriptorBinding::new(3, 4)));
+    assert!(desc_binds.contains(&DescriptorBinding::new(3, 5)));
+    assert!(desc_binds.contains(&DescriptorBinding::new(1, 3)));
+    assert!(desc_binds.contains(&DescriptorBinding::new(0, 3)));
+    assert!(!desc_binds.contains(&DescriptorBinding::new(0, 2)));
     // Test for consistency.
     for desc in entry.descs() {
         let resolved = entry.resolve_desc(entry.get_desc_name(desc.desc_bind).unwrap()).unwrap();
         assert_eq!(desc, resolved);
         assert_eq!(resolved.desc_ty, entry.get_desc(desc.desc_bind).unwrap());
-        if desc.desc_bind == DescriptorBinding(0, 3) {
+        if desc.desc_bind == DescriptorBinding::new(0, 3) {
             assert_eq!(entry.get_desc_access(desc.desc_bind).unwrap(), AccessType::ReadWrite);
-        } else if desc.desc_bind == DescriptorBinding(0, 1) {
+        } else if desc.desc_bind == DescriptorBinding::new(0, 1) {
             assert_eq!(entry.get_desc_access(desc.desc_bind).unwrap(), AccessType::ReadWrite);
-        } else if desc.desc_bind == DescriptorBinding(3, 5) {
+        } else if desc.desc_bind == DescriptorBinding::new(3, 5) {
             assert_eq!(entry.get_desc_access(desc.desc_bind).unwrap(), AccessType::WriteOnly);
         } else {
             assert_eq!(entry.get_desc_access(desc.desc_bind).unwrap(), AccessType::ReadOnly);
         }
 
-        if desc.desc_bind == DescriptorBinding(0, 0) {
+        if desc.desc_bind == DescriptorBinding::new(0, 0) {
             let members = desc
                 .member_var_res
                 .expect("did not resolve struct def as member");
@@ -209,7 +209,7 @@ fn test_desc_tys() {
                     members.ty
                 );
             }
-        } else if desc.desc_bind == DescriptorBinding(0, 3) {
+        } else if desc.desc_bind == DescriptorBinding::new(0, 3) {
             let members = desc
                 .member_var_res
                 .expect("did not resolve struct def as member");
@@ -270,7 +270,7 @@ fn test_dyn_multibind() {
             texture(arr[xx], vec2(0,0));
         }
     "#);
-    assert_eq!(entry.get_desc(DescriptorBinding(0, 0)).unwrap().nbind(), 0);
+    assert_eq!(entry.get_desc(DescriptorBinding::new(0, 0)).unwrap().nbind(), 0);
 }
 #[test]
 fn test_ray_tracing() {
@@ -288,6 +288,6 @@ fn test_ray_tracing() {
                 vec3(0, 0, 0), 100.0f, 0);
         }
     "#);
-    assert!(entry.get_desc(DescriptorBinding(0, 0)).unwrap().is_accel_struct());
+    assert!(entry.get_desc(DescriptorBinding::new(0, 0)).unwrap().is_accel_struct());
 }
 // TODO: (penguinliong) Comprehensive type testing.

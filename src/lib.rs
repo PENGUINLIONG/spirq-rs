@@ -87,17 +87,18 @@ use std::convert::TryInto;
 use std::fmt;
 use std::iter::FromIterator;
 use std::ops::Deref;
-use num_derive::FromPrimitive;
 use fnv::FnvHashMap as HashMap;
 use nohash_hasher::IntMap;
-use reflect::{ReflectIntermediate, Variable};
+use reflect::{ReflectIntermediate};
 use inspect::{NopInspector, FnInspector};
 
 use parse::{Instrs, Instr};
 pub use ty::{Type, DescriptorType};
-pub use sym::*;
-pub use error::*;
+pub use sym::{Seg, Segs, Sym, Symbol};
+pub use error::{Error, Result};
 pub use spirv_headers::ExecutionModel;
+pub use reflect::{AccessType, InterfaceLocation, DescriptorBinding, SpecId,
+    Locator, Variable};
 
 /// SPIR-V program binary.
 #[derive(Debug, Default, Clone)]
@@ -109,7 +110,9 @@ impl From<&[u32]> for SpirvBinary {
     fn from(x: &[u32]) -> Self { SpirvBinary(x.to_owned()) }
 }
 impl FromIterator<u32> for SpirvBinary {
-    fn from_iter<I: IntoIterator<Item=u32>>(iter: I) -> Self { SpirvBinary(iter.into_iter().collect::<Vec<u32>>()) }
+    fn from_iter<I: IntoIterator<Item=u32>>(iter: I) -> Self {
+        SpirvBinary(iter.into_iter().collect::<Vec<u32>>())
+    }
 }
 impl From<&[u8]> for SpirvBinary {
     fn from(x: &[u8]) -> Self {
@@ -141,7 +144,7 @@ impl SpirvBinary {
     /// Reflect the SPIR-V binary and extract all the entry points.
     pub fn reflect_vec(&self) -> Result<Vec<EntryPoint>> {
         let inspector = NopInspector();
-        reflect::ReflectIntermediate::reflect(&self, inspector)?
+        reflect::ReflectIntermediate::reflect(self.instrs(), inspector)?
             .collect_entry_points()
     }
     /// Similar to `reflect_vec` while you can inspect each instruction during
@@ -151,7 +154,7 @@ impl SpirvBinary {
         inspector: F
     ) -> Result<Vec<EntryPoint>> {
         let inspector = FnInspector::<F>(inspector);
-        reflect::ReflectIntermediate::reflect(&self, inspector)?
+        reflect::ReflectIntermediate::reflect(self.instrs(), inspector)?
             .collect_entry_points()
     }
     // Reflect the SPIR-V binary fast. This method returns the only entry point
@@ -164,7 +167,7 @@ impl SpirvBinary {
     // points or locations.
     pub fn reflect_fast(&self) -> Result<EntryPoint> {
         let inspector = NopInspector();
-        reflect::ReflectIntermediate::reflect(&self, inspector)?
+        reflect::ReflectIntermediate::reflect(self.instrs(), inspector)?
             .collect_module_as_entry_point()
     }
     /// Similar to `reflect_fast` while you can inspect each instruction during
@@ -174,7 +177,7 @@ impl SpirvBinary {
         inspector: F
     ) -> Result<EntryPoint> {
         let inspector = FnInspector::<F>(inspector);
-        reflect::ReflectIntermediate::reflect(&self, inspector)?
+        reflect::ReflectIntermediate::reflect(self.instrs(), inspector)?
             .collect_module_as_entry_point()
     }
     pub fn words(&self) -> &[u32] {
@@ -199,78 +202,6 @@ pub(crate) fn hash<H: std::hash::Hash>(h: &H) -> u64 {
     hasher.finish()
 }
 
-
-// Resource locationing.
-
-type SpecId = u32;
-
-/// Interface variable location and component.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Default, Clone, Copy)]
-pub struct InterfaceLocation(u32, u32);
-impl InterfaceLocation {
-    pub fn new(loc: u32, comp: u32) -> Self { InterfaceLocation(loc, comp) }
-
-    pub fn loc(&self) -> u32 { self.0 }
-    pub fn comp(&self) -> u32 { self.1 }
-    pub fn into_inner(self) -> (u32, u32) { (self.0, self.1) }
-}
-impl fmt::Display for InterfaceLocation {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "(loc={}, comp={})", self.0, self.1)
-    }
-}
-impl fmt::Debug for InterfaceLocation {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
-}
-impl From<InterfaceLocation> for InterfaceLocationCode {
-    fn from(x: InterfaceLocation) -> InterfaceLocationCode {
-        ((x.0 as u64) << 32) | (x.1 as u64)
-    }
-}
-impl From<InterfaceLocationCode> for InterfaceLocation {
-    fn from(x: InterfaceLocationCode) -> InterfaceLocation {
-        InterfaceLocation((x >> 32) as u32, (x & 0xFFFFFFFF) as u32)
-    }
-}
-type InterfaceLocationCode = u64;
-
-/// Descriptor set and binding point carrier.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Default, Clone, Copy)]
-pub struct DescriptorBinding(u32, u32);
-impl DescriptorBinding {
-    pub fn new(desc_set: u32, bind_point: u32) -> Self { DescriptorBinding(desc_set, bind_point) }
-
-    pub fn set(&self) -> u32 { self.0 }
-    pub fn bind(&self) -> u32 { self.1 }
-    pub fn into_inner(self) -> (u32, u32) { (self.0, self.1) }
-}
-impl fmt::Display for DescriptorBinding {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f, "(set={}, bind={})", self.0, self.1)
-    }
-}
-impl fmt::Debug for DescriptorBinding {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
-}
-impl From<DescriptorBinding> for DescriptorBindingCode {
-    fn from(x: DescriptorBinding) -> DescriptorBindingCode {
-        ((x.0 as u64) << 32) | (x.1 as u64)
-    }
-}
-impl From<DescriptorBindingCode> for DescriptorBinding {
-    fn from(x: DescriptorBindingCode) -> DescriptorBinding {
-        DescriptorBinding((x >> 32) as u32, (x & 0xFFFFFFFF) as u32)
-    }
-}
-type DescriptorBindingCode = u64;
-
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
-pub(crate) enum ResourceLocator {
-    Input(InterfaceLocation),
-    Output(InterfaceLocation),
-    Descriptor(DescriptorBinding),
-    PushConstant,
-}
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub(crate) enum ResolveKind {
@@ -328,86 +259,18 @@ pub struct MemberVariableResolution<'a> {
     pub ty: &'a Type,
 }
 
-/// Access type of a variable.
-#[repr(u32)]
-#[derive(Debug, FromPrimitive, Clone, Copy, PartialEq, Eq)]
-pub enum AccessType {
-    /// The variable can be accessed by read.
-    ReadOnly = 1,
-    /// The variable can be accessed by write.
-    WriteOnly = 2,
-    /// The variable can be accessed by read or by write.
-    ReadWrite = 3,
-}
-impl std::ops::BitOr<AccessType> for AccessType {
-    type Output = AccessType;
-    fn bitor(self, rhs: AccessType) -> AccessType {
-        use num_traits::FromPrimitive;
-        AccessType::from_u32((self as u32) | (rhs as u32)).unwrap()
-    }
-}
-impl std::ops::BitAnd<AccessType> for AccessType {
-    type Output = AccessType;
-    fn bitand(self, rhs: AccessType) -> AccessType {
-        use num_traits::FromPrimitive;
-        AccessType::from_u32((self as u32) & (rhs as u32)).unwrap()
-    }
-}
-
 /// A set of information used to describe variable typing and routing.
 #[derive(Default, Clone)]
 pub struct Manifest {
-    push_const_ty: Option<Type>,
-    input_map: IntMap<InterfaceLocationCode, Type>,
-    output_map: IntMap<InterfaceLocationCode, Type>,
-    desc_map: IntMap<DescriptorBindingCode, DescriptorType>,
-    var_name_map: HashMap<String, ResourceLocator>,
-    desc_access_map: IntMap<DescriptorBindingCode, AccessType>
+    var_map: HashMap<Locator, Variable>,
+    var_name_map: HashMap<String, Locator>,
 }
 impl Manifest {
-    fn merge_ivars(
-        self_ivar_map: &mut IntMap<InterfaceLocationCode, Type>,
-        other_ivar_map: &IntMap<InterfaceLocationCode, Type>,
-    ) -> Result<()> {
-        use std::collections::hash_map::Entry::{Vacant, Occupied};
-        for (location, ty) in other_ivar_map.iter() {
-            match self_ivar_map.entry(*location) {
-                Vacant(entry) => { entry.insert(ty.clone()); },
-                Occupied(entry) => if hash(entry.get()) != hash(ty) {
-                    return Err(Error::MismatchedManifest);
-                }
-            }
-        }
-        Ok(())
+    fn clear_inputs(&mut self) {
+        self.var_map.retain(|k, _| if let Locator::Input(_) = k { false } else { true });
     }
-    fn merge_push_const(&mut self, other: &Manifest) -> Result<()> {
-        if let Some(Type::Struct(dst_struct_ty)) = self.push_const_ty.as_mut() {
-            // Merge push constants scattered in different stages. This match
-            // must success.
-            if let Some(Type::Struct(src_struct_ty)) = other.push_const_ty.as_ref() {
-                dst_struct_ty.merge(&src_struct_ty)?;
-            }
-            // It's guaranteed to be interface uniform so we don't have to check
-            // the hash.
-        } else {
-            self.push_const_ty = other.push_const_ty.clone();
-        }
-        Ok(())
-    }
-    fn merge_descs(&mut self, other: &Manifest) -> Result<()> {
-        use std::collections::hash_map::Entry::{Vacant, Occupied};
-        for (desc_bind, desc_ty) in other.desc_map.iter() {
-            match self.desc_map.entry(*desc_bind) {
-                Vacant(entry) => { entry.insert(desc_ty.clone()); },
-                Occupied(entry) => {
-                    // Just regular descriptor types. Simply match the hashes.
-                    if hash(entry.get()) != hash(&desc_ty) {
-                        return Err(Error::MismatchedManifest);
-                    }
-                }
-            }
-        }
-        Ok(())
+    fn clear_outputs(&mut self) {
+        self.var_map.retain(|k, _| if let Locator::Output(_) = k { false } else { true });
     }
     fn merge_names(&mut self, other: &Manifest) -> Result<()> {
         use std::collections::hash_map::Entry::{Vacant, Occupied};
@@ -422,14 +285,60 @@ impl Manifest {
         }
         Ok(())
     }
-    fn merge_accesses(&mut self, other: &Manifest) -> Result<()> {
-        for (desc_bind, access) in other.desc_access_map.iter() {
-            if let Some(acc) = self.desc_access_map.get_mut(&desc_bind) {
-                use num_traits::FromPrimitive;
-                let access = *acc as u32 | *access as u32;
-                *acc = AccessType::from_u32(access).unwrap();
-            } else {
-                self.desc_access_map.insert(*desc_bind, *access);
+    fn merge_var(dst_var: &mut Variable, src_var: &Variable) -> Result<()> {
+        match (dst_var, src_var) {
+            (
+                Variable::PushConstant(Type::Struct(dst_struct_ty)),
+                Variable::PushConstant(Type::Struct(src_struct_ty)),
+            ) => {
+                // Merge push constants scattered in different stages. This
+                // match must succeed.
+                dst_struct_ty.merge(&src_struct_ty)?;
+                // It's guaranteed to be interface uniform so we don't have to
+                // check the hash.
+            },
+            (
+                Variable::Input(_, dst_ty),
+                Variable::Input(_, src_ty),
+            ) => {
+                if hash(dst_ty) != hash(src_ty) {
+                    return Err(Error::MismatchedManifest);
+                }
+            },
+            (
+                Variable::Output(_, dst_ty),
+                Variable::Output(_, src_ty),
+            ) => {
+                if hash(dst_ty) != hash(src_ty) {
+                    return Err(Error::MismatchedManifest);
+                }
+            },
+            (
+                Variable::Descriptor(_, dst_desc_ty, dst_access),
+                Variable::Descriptor(_, src_desc_ty, src_access),
+            ) => {
+                // Just regular descriptor types. Simply match the hashes.
+                if hash(dst_desc_ty) != hash(src_desc_ty) || dst_access != src_access {
+                    return Err(Error::MismatchedManifest);
+                }
+            },
+            _ => unreachable!(),
+        }
+        Ok(())
+    }
+    fn merge_vars(&mut self, other: &Manifest) -> Result<()> {
+        use std::collections::hash_map::Entry;
+        for src_var in other.var_map.values() {
+            let locator = src_var.locator();
+            match self.var_map.entry(locator) {
+                Entry::Vacant(entry) => {
+                    // Doesn't have a push constant in this manifest, so we
+                    // directly copy it.
+                    entry.insert(src_var.clone());
+                },
+                Entry::Occupied(mut entry) => {
+                    Self::merge_var(entry.get_mut(), src_var)?;
+                },
             }
         }
         Ok(())
@@ -439,12 +348,8 @@ impl Manifest {
     /// offset position in push constant block mismatches, the merge will fail
     /// and the `self` manifest will be corrupted.
     pub fn merge(&mut self, other: &Manifest) -> Result<()> {
-        Self::merge_ivars(&mut self.input_map, &other.input_map)?;
-        Self::merge_ivars(&mut self.output_map, &other.output_map)?;
-        self.merge_push_const(other)?;
-        self.merge_descs(other)?;
+        self.merge_vars(other)?;
         self.merge_names(other)?;
-        self.merge_accesses(other)?;
         Ok(())
     }
     /// Similar to `merge` but optionally the current input interface variables
@@ -458,68 +363,87 @@ impl Manifest {
         replace_out: bool,
     ) -> Result<()> {
         if replace_in {
-            self.input_map.clear();
-            self.input_map.extend(
-                other.input_map.iter()
-                    .map(|(x, y)| (*x, y.clone()))
-            );
+            self.clear_inputs();
         }
         if replace_out {
-            self.output_map.clear();
-            self.output_map.extend(
-                other.output_map.iter()
-                    .map(|(x, y)| (*x, y.clone()))
-            );
+            self.clear_outputs();
         }
-        self.merge_push_const(other)?;
-        self.merge_descs(other)?;
-        self.merge_accesses(other)?;
+        self.merge_vars(other)?;
         Ok(())
+    }
+    pub fn get_var<'a>(&'a self, locator: Locator) -> Option<&'a Variable> {
+        self.var_map.get(&locator)
     }
     /// Get the push constant type.
     pub fn get_push_const<'a>(&'a self) -> Option<&'a Type> {
-        self.push_const_ty.as_ref()
+        self.get_var(Locator::PushConstant)
+            .map(|x| {
+                if let Variable::PushConstant(ty) = x {
+                    ty
+                } else {
+                    unreachable!();
+                }
+            })
     }
     /// Get the input interface variable type.
     pub fn get_input<'a>(&'a self, location: InterfaceLocation) -> Option<&'a Type> {
-        self.input_map.get(&location.into())
+        self.get_var(Locator::Input(location))
+            .map(|x| {
+                if let Variable::Input(_, ty) = x {
+                    ty
+                } else {
+                    unreachable!();
+                }
+            })
     }
     /// Get the output interface variable type.
     pub fn get_output<'a>(&'a self, location: InterfaceLocation) -> Option<&'a Type> {
-        self.output_map.get(&location.into())
+        self.get_var(Locator::Output(location))
+            .map(|x| {
+                if let Variable::Output(_, ty) = x {
+                    ty
+                } else {
+                    unreachable!();
+                }
+            })
     }
     /// Get the descriptor type at the given descriptor binding point.
     pub fn get_desc<'a>(&'a self, desc_bind: DescriptorBinding) -> Option<&'a DescriptorType> {
-        self.desc_map.get(&desc_bind.into())
+        self.get_var(Locator::Descriptor(desc_bind))
+            .map(|x| {
+                if let Variable::Descriptor(_, desc_ty, _) = x {
+                    desc_ty
+                } else {
+                    unreachable!();
+                }
+            })
+    }
+    pub fn get_var_name<'a>(&'a self, locator: Locator) -> Option<&'a str> {
+        self.var_name_map.iter()
+            .find_map(|x| {
+                if *x.1 == locator {
+                    Some(x.0.as_ref())
+                } else {
+                    None
+                }
+            })
     }
     /// Get the name that also refers to the push constant block.
     pub fn get_push_const_name<'a>(&'a self) -> Option<&'a str> {
-        self.var_name_map.iter()
-            .find_map(|x| if let ResourceLocator::PushConstant = x.1 {
-                Some(x.0.as_ref())
-            } else { None })
+        self.get_var_name(Locator::PushConstant)
     }
     /// Get the name that also refers to the input at the given location.
     pub fn get_input_name<'a>(&'a self, location: InterfaceLocation) -> Option<&'a str> {
-        self.var_name_map.iter()
-            .find_map(|x| if let ResourceLocator::Input(loc) = x.1 {
-                if *loc == location { Some(x.0.as_ref()) } else { None }
-            } else { None })
+        self.get_var_name(Locator::Input(location))
     }
     /// Get the name that also refers to the output at the given location.
     pub fn get_output_name<'a>(&'a self, location: InterfaceLocation) -> Option<&'a str> {
-        self.var_name_map.iter()
-            .find_map(|x| if let ResourceLocator::Output(loc) = x.1 {
-                if *loc == location { Some(x.0.as_ref()) } else { None }
-            } else { None })
+        self.get_var_name(Locator::Output(location))
     }
     /// Get the name that also refers to the descriptor at the given descriptor
     /// binding.
     pub fn get_desc_name<'a>(&'a self, desc_bind: DescriptorBinding) -> Option<&'a str> {
-        self.var_name_map.iter()
-            .find_map(|x| if let ResourceLocator::Descriptor(db) = x.1 {
-                if *db == desc_bind { Some(x.0.as_ref()) } else { None }
-            } else { None })
+        self.get_var_name(Locator::Descriptor(desc_bind))
     }
     /// Get the valid access patterns of the descriptor at the given binding
     /// point. Currently only storage buffers and storage images can be accessed
@@ -529,41 +453,51 @@ impl Manifest {
     /// in SPIR-V. If a storage image is declared as `ReadWrite` but is only
     /// accessed by write, it is still considered a `ReadWrite` descriptor.
     pub fn get_desc_access(&self, desc_bind: DescriptorBinding) -> Option<AccessType> {
-        self.desc_access_map
-            .get(&desc_bind.into())
-            .map(|x| *x)
+        self.get_var(Locator::Descriptor(desc_bind))
+            .map(|x| {
+                if let Variable::Descriptor(_, _, access) = x {
+                    *access
+                } else {
+                    unreachable!();
+                }
+            })
     }
-    fn resolve_ivar<'a>(&self, map: &'a IntMap<InterfaceLocationCode, Type>, sym: &Sym, kind: ResolveKind) -> Option<InterfaceVariableResolution<'a>> {
+    fn resolve_ivar<'a>(&'a self, sym: &Sym, kind: ResolveKind) -> Option<InterfaceVariableResolution<'a>> {
         let mut segs = sym.segs();
         let location = match segs.next() {
             Some(Seg::Index(loc)) => {
                 if let Some(Seg::Index(comp)) = segs.next() {
                     InterfaceLocation::new(loc as u32, comp as u32)
-                } else { return None; }
+                } else {
+                    // Component must be specified, to be in consistent with
+                    // descriptor resolution. 
+                    return None;
+                }
             },
-            Some(Seg::Name(name)) => match self.var_name_map.get(name) {
-                Some(ResourceLocator::Input(location)) =>
-                    if kind == ResolveKind::Input { *location } else { return None; },
-
-                Some(ResourceLocator::Output(location)) =>
-                    if kind == ResolveKind::Output { *location } else { return None; },
-
-                _ => return None,
+            Some(Seg::Name(name)) => {
+                match self.var_name_map.get(name) {
+                    Some(Locator::Input(location)) if kind == ResolveKind::Input => *location,
+                    Some(Locator::Output(location)) if kind == ResolveKind::Output => *location,
+                    _ => return None,
+                }
             },
             _ => return None,
         };
-        if segs.next().is_some() { return None }
-        let ty = map.get(&location.into())?;
+        let ty = match kind {
+            ResolveKind::Input => self.get_input(location)?,
+            ResolveKind::Output => self.get_output(location)?
+        };
         let ivar_res = InterfaceVariableResolution { location, ty };
+        if segs.next().is_some() { return None }
         Some(ivar_res)
     }
     /// Get the metadata of a input variable identified by a symbol.
     pub fn resolve_input<S: AsRef<Sym>>(&self, sym: S) -> Option<InterfaceVariableResolution> {
-        self.resolve_ivar(&self.input_map, sym.as_ref(), ResolveKind::Input)
+        self.resolve_ivar(sym.as_ref(), ResolveKind::Input)
     }
     /// Get the metadata of a output variable identified by a symbol.
     pub fn resolve_output<S: AsRef<Sym>>(&self, sym: S) -> Option<InterfaceVariableResolution> {
-        self.resolve_ivar(&self.output_map, sym.as_ref(), ResolveKind::Output)
+        self.resolve_ivar(sym.as_ref(), ResolveKind::Output)
     }
     /// Get the metadata of a descriptor variable identified by a symbol.
     /// If the exact variable cannot be resolved, the descriptor part of the
@@ -574,16 +508,22 @@ impl Manifest {
             Some(Seg::Index(desc_set)) => {
                 if let Some(Seg::Index(bind_point)) = segs.next() {
                     DescriptorBinding::new(desc_set as u32, bind_point as u32)
-                } else { return None; }
+                } else {
+                    // Binding point must be specified so we know there are
+                    // always two segments leading structure field segments.
+                    return None;
+                }
             },
             Some(Seg::Name(name)) => {
-                if let Some(ResourceLocator::Descriptor(desc_bind)) = self.var_name_map.get(name) {
+                if let Some(Locator::Descriptor(desc_bind)) = self.var_name_map.get(name) {
                     *desc_bind
-                } else { return None; }
+                } else {
+                    return None;
+                }
             },
             _ => return None,
         };
-        let desc_ty = self.desc_map.get(&desc_bind.into())?;
+        let desc_ty = self.get_desc(desc_bind)?;
         let rem_sym = segs.remaining();
         let member_var_res = desc_ty.resolve(rem_sym);
         let desc_res = DescriptorResolution { desc_bind, desc_ty, member_var_res };
@@ -600,34 +540,49 @@ impl Manifest {
                 // used to identify push constants.
             },
             Some(Seg::Name(name)) => {
-                if let Some(ResourceLocator::PushConstant) = self.var_name_map.get(name) {
+                if let Some(Locator::PushConstant) = self.var_name_map.get(name) {
                 } else { return None; }
             },
             _ => return None,
         };
-        let ty = self.push_const_ty.as_ref()?;
+        let ty = self.get_push_const()?;
         let rem_sym = segs.remaining();
         let member_var_res = ty.resolve(rem_sym);
         let push_const_res = PushConstantResolution { ty, member_var_res };
         Some(push_const_res)
     }
+
+    // List all variables.
+    pub fn vars<'a>(&'a self) -> impl Iterator<Item=&'a Variable> {
+        self.var_map.values()
+    }
     /// List all input locations.
     pub fn inputs<'a>(&'a self) -> impl Iterator<Item=InterfaceVariableResolution<'a>> {
-        self.input_map.iter()
-            .map(|(&location, ty)| {
-                InterfaceVariableResolution {
-                    location: location.into(),
-                    ty
+        self.vars()
+            .filter_map(|x| {
+                if let Variable::Input(location, ty) = x {
+                    let ivar_res = InterfaceVariableResolution {
+                        location: *location,
+                        ty,
+                    };
+                    Some(ivar_res)
+                } else {
+                    None
                 }
             })
     }
     /// List all output locations in this manifest.
     pub fn outputs<'a>(&'a self) -> impl Iterator<Item=InterfaceVariableResolution<'a>> {
-        self.output_map.iter()
-            .map(|(&location, ty)|  {
-                InterfaceVariableResolution {
-                    location: location.into(),
-                    ty
+        self.vars()
+            .filter_map(|x| {
+                if let Variable::Output(location, ty) = x {
+                    let ivar_res = InterfaceVariableResolution {
+                        location: *location,
+                        ty,
+                    };
+                    Some(ivar_res)
+                } else {
+                    None
                 }
             })
     }
@@ -635,132 +590,92 @@ impl Manifest {
     /// to a buffer block, the outermost structure type will be filled in
     /// `member_var_res`.
     pub fn descs<'a>(&'a self) -> impl Iterator<Item=DescriptorResolution<'a>> {
-        self.desc_map.iter()
-            .map(|(&desc_bind, desc_ty)| {
-                DescriptorResolution {
-                    desc_bind: desc_bind.into(),
-                    desc_ty,
-                    member_var_res: desc_ty.resolve(""),
+        self.vars()
+            .filter_map(|x| {
+                if let Variable::Descriptor(desc_bind, desc_ty, _) = x {
+                    let ivar_res = DescriptorResolution {
+                        desc_bind: *desc_bind,
+                        desc_ty,
+                        member_var_res: desc_ty.resolve(""),
+                    };
+                    Some(ivar_res)
+                } else {
+                    None
                 }
             })
     }
 
-    fn insert_rsc_name(&mut self, name: &str, rsc_locator: ResourceLocator) -> Result<()> {
-        if self.var_name_map.insert(name.to_owned(), rsc_locator).is_some() {
+    fn insert_var_name(&mut self, name: &str, locator: Locator) -> Result<()> {
+        if self.var_name_map.insert(name.to_owned(), locator).is_some() {
             Err(Error::NAME_COLLISION)
         } else { Ok(()) }
     }
-    fn insert_input(&mut self, location: InterfaceLocation, ivar_ty: Type) -> Result<()> {
-        // Input variables can share locations (aliasing).
-        self.input_map.insert(location.into(), ivar_ty);
-        Ok(())
-    }
-    fn insert_output(&mut self, location: InterfaceLocation, ivar_ty: Type) -> Result<()> {
-        // Ouput variables can share locations (aliasing).
-        self.output_map.insert(location.into(), ivar_ty);
-        Ok(())
-    }
-    fn insert_desc(
-        &mut self,
-        desc_bind: DescriptorBinding,
-        desc_ty: DescriptorType,
-        access: AccessType,
-    ) -> Result<()> {
-        use std::collections::hash_map::Entry::{Vacant, Occupied};
-        fn combine_img_sampler(
-            nbind_samp: u32,
-            nbind_img: u32,
-            img_ty: &Type,
-            access_samp: AccessType,
-            access_img: AccessType,
-        ) -> Vec<(DescriptorType, AccessType)> {
-            use std::cmp::Ordering;
-            match nbind_samp.cmp(&nbind_img) {
-                Ordering::Equal => vec![
-                    (DescriptorType::SampledImage(nbind_img, img_ty.clone()), access_samp | access_img)
-                ],
-                Ordering::Less => vec![
-                    (DescriptorType::SampledImage(nbind_samp, img_ty.clone()), access_samp | access_img),
-                    (DescriptorType::Image(nbind_img - nbind_samp, img_ty.clone()), access_img),
-                ],
-                Ordering::Greater => vec![
-                    (DescriptorType::SampledImage(nbind_img, img_ty.clone()), access_samp | access_img),
-                    (DescriptorType::Sampler(nbind_samp - nbind_img), access_samp),
-                ],
-            }
-        }
-        // Allow override of resource access...?
-        self.desc_access_map.insert(desc_bind.into(), access);
-        // Descriptors cannot share bindings, but separate image and
-        // sampler can be fused implicitly into a
-        // `CombinedImageSampler` by sharing bindings.
-        let replaces = match self.desc_map.entry(desc_bind.into()) {
-            Vacant(entry) => {
-                entry.insert(desc_ty);
-                Vec::new()
-            },
-            Occupied(entry) => {
-                let replaces = match (entry.get(), &desc_ty) {
-                    (DescriptorType::Sampler(nbind_samp), DescriptorType::Image(nbind_img, img_ty)) => {
-                        let access_samp = self.desc_access_map[&desc_bind.into()];
-                        combine_img_sampler(*nbind_samp, *nbind_img, &img_ty, access_samp, access)
-                    },
-                    (DescriptorType::Image(nbind_img, img_ty), DescriptorType::Sampler(nbind_samp)) => {
-                        let access_img = self.desc_access_map[&desc_bind.into()];
-                        combine_img_sampler(*nbind_samp, *nbind_img, &img_ty, access, access_img)
-                    },
-                    _ => return Err(Error::DESC_BIND_COLLISION),
-                };
-                entry.remove();
-                replaces
-            },
-        };
-        // Insert replace items back to the manifest.
-        let mut replace_bind = desc_bind.bind();
-        // `replaces`'s base binding MUST BE monotonically increamental.
-        for (desc_ty, access) in replaces {
-            let nbind = desc_ty.nbind();
-            self.insert_desc(DescriptorBinding(desc_bind.set(), replace_bind), desc_ty, access)?;
-            replace_bind += nbind;
-        }
-        Ok(())
-    }
-    fn insert_push_const(&mut self, push_const_ty: Type) -> Result<()> {
-        if self.push_const_ty.is_none() {
-            self.push_const_ty = Some(push_const_ty);
-            Ok(())
-        } else { Err(Error::MULTI_PUSH_CONST) }
-    }
-    fn insert_var(
-        &mut self,
-        var: Variable,
-        name: Option<&str>,
-    ) -> Result<()> {
-        match var {
-            Variable::Input(location, ivar_ty) => {
-                self.insert_input(location, ivar_ty)?;
-                if let Some(name) = name {
-                    self.insert_rsc_name(name, ResourceLocator::Input(location))?;
+    fn insert_var(&mut self, var: Variable, name: Option<&str>) -> Result<()> {
+        use std::collections::hash_map::{Entry};
+        let locator = var.locator();
+        match &var {
+            Variable::Input(_, _) => {
+                // Input variables can share locations (aliasing).
+                match self.var_map.entry(locator) {
+                    Entry::Occupied(_) => return Err(Error::LOCATION_COLLISION),
+                    Entry::Vacant(entry) => { entry.insert(var); },
                 }
             },
-            Variable::Output(location, ivar_ty) => {
-                self.insert_output(location, ivar_ty)?;
-                if let Some(name) = name {
-                    self.insert_rsc_name(name, ResourceLocator::Output(location))?;
+            Variable::Output(_, _) => {
+                // Output variables can share locations (aliasing).
+                match self.var_map.entry(locator) {
+                    Entry::Occupied(_) => return Err(Error::LOCATION_COLLISION),
+                    Entry::Vacant(entry) => { entry.insert(var); },
                 }
             },
             Variable::Descriptor(desc_bind, desc_ty, access) => {
-                self.insert_desc(desc_bind, desc_ty, access)?;
-                if let Some(name) = name {
-                    self.insert_rsc_name(name, ResourceLocator::Descriptor(desc_bind))?;
+                // Descriptors cannot share bindings, but separate image and
+                // sampler can be fused implicitly into a
+                // `CombinedImageSampler` by sharing bindings.
+                match self.var_map.entry(locator) {
+                    Entry::Occupied(mut entry) => {
+                        if let Variable::Descriptor(_, cur_desc_ty, _) = entry.get() {
+                            let replace_desc_ty = match (cur_desc_ty, &desc_ty) {
+                                (DescriptorType::Sampler(nbind_samp), DescriptorType::Image(nbind_img, img_ty)) => {
+                                    if let Type::Image(img_ty) = img_ty {
+                                        if nbind_samp != nbind_img {
+                                            return Err(Error::SAMPLER_IMG_NBIND_MISMATCH);
+                                        }
+                                        let sampled_img_ty = ty::SampledImageType::new(img_ty.clone());
+                                        DescriptorType::SampledImage(*nbind_samp, Type::SampledImage(sampled_img_ty))
+                                    } else {
+                                        unreachable!();
+                                    }
+                                },
+                                (DescriptorType::Image(nbind_img, img_ty), DescriptorType::Sampler(nbind_samp)) => {
+                                    if let Type::Image(img_ty) = img_ty {
+                                        if nbind_samp != nbind_img {
+                                            return Err(Error::SAMPLER_IMG_NBIND_MISMATCH);
+                                        }
+                                        let sampled_img_ty = ty::SampledImageType::new(img_ty.clone());
+                                        DescriptorType::SampledImage(*nbind_samp, Type::SampledImage(sampled_img_ty))
+                                    } else {
+                                        unreachable!();
+                                    }
+                                },
+                                _ => return Err(Error::DESC_BIND_COLLISION),
+                            };
+                            let var = Variable::Descriptor(*desc_bind, replace_desc_ty, *access);
+                            entry.insert(var);
+                        }
+                    },
+                    Entry::Vacant(entry) => { entry.insert(var); },
                 }
             },
-            Variable::PushConstant(push_const_ty) => {
-                self.insert_push_const(push_const_ty)?;
-                if let Some(name) = name {
-                    self.insert_rsc_name(name, ResourceLocator::PushConstant)?;
+            Variable::PushConstant(_) => {
+                match self.var_map.entry(locator) {
+                    Entry::Occupied(_) => return Err(Error::MULTI_PUSH_CONST),
+                    Entry::Vacant(entry) => { entry.insert(var); },
                 }
             },
+        }
+        if let Some(name) = name {
+            self.insert_var_name(name, locator)?;
         }
         Ok(())
     }
@@ -847,27 +762,40 @@ impl Deref for EntryPoint {
 }
 impl fmt::Debug for EntryPoint {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        struct InterfaceLocationDebugHelper<'a>(&'a IntMap<InterfaceLocationCode, Type>);
+        struct InterfaceLocationDebugHelper<'a>(Vec<(InterfaceLocation, &'a Type)>);
         impl<'a> fmt::Debug for InterfaceLocationDebugHelper<'a> {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 f.debug_map()
-                    .entries(self.0.iter().map(|(k, v)| (InterfaceLocation::from(*k as InterfaceLocationCode), v)))
+                    .entries(self.0.iter().cloned())
                     .finish()
             }
         }
-        struct DescriptorBindingDebugHelper<'a>(&'a IntMap<DescriptorBindingCode, DescriptorType>);
+        struct DescriptorBindingDebugHelper<'a>(Vec<(DescriptorBinding, &'a DescriptorType)>);
         impl<'a> fmt::Debug for DescriptorBindingDebugHelper<'a> {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 f.debug_map()
-                    .entries(self.0.iter().map(|(k, v)| (DescriptorBinding::from(*k as DescriptorBindingCode), v)))
+                    .entries(self.0.iter().cloned())
                     .finish()
             }
         }
+        let push_const_ty = self.manifest.get_push_const();
+        let mut inputs = self.manifest.inputs()
+            .map(|x| (x.location, x.ty))
+            .collect::<Vec<_>>();
+        inputs.sort_by_key(|x| x.0);
+        let mut outputs = self.manifest.outputs()
+            .map(|x| (x.location, x.ty))
+            .collect::<Vec<_>>();
+        outputs.sort_by_key(|x| x.0);
+        let mut descs = self.manifest.descs()
+            .map(|x| (x.desc_bind, x.desc_ty))
+            .collect::<Vec<_>>();
+        descs.sort_by_key(|x| x.0);
         f.debug_struct(&self.name)
-            .field("push_const", &self.manifest.push_const_ty)
-            .field("inputs", &InterfaceLocationDebugHelper(&self.manifest.input_map))
-            .field("outputs", &InterfaceLocationDebugHelper(&self.manifest.output_map))
-            .field("descriptors", &DescriptorBindingDebugHelper(&self.manifest.desc_map))
+            .field("push_const", &push_const_ty)
+            .field("inputs", &InterfaceLocationDebugHelper(inputs))
+            .field("outputs", &InterfaceLocationDebugHelper(outputs))
+            .field("descriptors", &DescriptorBindingDebugHelper(descs))
             .field("spec_consts", &self.spec.spec_const_map)
             .finish()
     }

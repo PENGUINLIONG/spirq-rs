@@ -1,9 +1,9 @@
 collected spirvs: ["referential.frag"]
 spec_const#233 (w): i32
 spec_const#234 (h): i32
+input#(loc=2, comp=0) (color2): vec4<f32>
 input#(loc=0, comp=0) (color1): vec4<f32>
 input#(loc=1, comp=0) (multiplier): vec4<f32>
-input#(loc=2, comp=0) (color2): vec4<f32>
 output#(loc=0, comp=0) (color): vec4<f32>
 descriptor(set=0, bind=0) (unnamed):
    0                  s.b: u32
