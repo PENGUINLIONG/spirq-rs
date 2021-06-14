@@ -371,19 +371,23 @@ impl<'a> ReflectIntermediate<'a> {
             },
             OP_TYPE_IMAGE => {
                 let op = OpTypeImage::try_from(instr)?;
-                let img_ty = if op.dim == Dim::DimSubpassData {
-                    Type::SubpassData()
-                } else {
-                    // Only unit types allowed to be stored in storage images
-                    // can have given format.
-                    let unit_fmt = ImageUnitFormat::from_spv_def(
-                        op.is_sampled, op.is_depth, op.color_fmt)?;
-                    let arng = ImageArrangement::from_spv_def(
-                        op.dim, op.is_array, op.is_multisampled)?;
-                    let img_ty = ImageType::new(unit_fmt, arng);
-                    Type::Image(img_ty)
-                };
-                (op.ty_id, img_ty)
+                if let Some(Type::Scalar(scalar_ty)) = self.get_ty(op.scalar_ty_id) {
+                    let img_ty = if op.dim == Dim::DimSubpassData {
+                        let arng = SubpassDataArrangement::from_spv_def(op.is_multisampled)?;
+                        let subpass_data_ty = SubpassDataType::new(scalar_ty.clone(), arng);
+                        Type::SubpassData(subpass_data_ty)
+                    } else {
+                        // Only unit types allowed to be stored in storage images
+                        // can have given format.
+                        let unit_fmt = ImageUnitFormat::from_spv_def(
+                            op.is_sampled, op.is_depth, op.color_fmt)?;
+                        let arng = ImageArrangement::from_spv_def(
+                            op.dim, op.is_array, op.is_multisampled)?;
+                        let img_ty = ImageType::new(scalar_ty.clone(), unit_fmt, arng);
+                        Type::Image(img_ty)
+                    };
+                    (op.ty_id, img_ty)
+                } else { return Err(Error::TY_NOT_FOUND); }
             },
             OP_TYPE_SAMPLER => {
                 let op = OpTypeSampler::try_from(instr)?;
@@ -394,7 +398,8 @@ impl<'a> ReflectIntermediate<'a> {
             OP_TYPE_SAMPLED_IMAGE => {
                 let op = OpTypeSampledImage::try_from(instr)?;
                 if let Some(Type::Image(img_ty)) = self.get_ty(op.img_ty_id) {
-                    (op.ty_id, Type::SampledImage(img_ty.clone()))
+                    let sampled_img_ty = SampledImageType::new(img_ty.clone());
+                    (op.ty_id, Type::SampledImage(sampled_img_ty))
                 } else { return Err(Error::TY_NOT_FOUND); }
             },
             OP_TYPE_ARRAY => {
@@ -700,11 +705,11 @@ impl<'a> ReflectIntermediate<'a> {
                         let access = AccessType::ReadOnly;
                         Variable::Descriptor(desc_bind, desc_ty, access)
                     },
-                    Type::SubpassData() => {
+                    Type::SubpassData(_) => {
                         let input_attm_idx = self
                             .get_deco_u32(op.var_id, Decoration::InputAttachmentIndex)
                             .ok_or(Error::MISSING_DECO)?;
-                        let desc_ty = DescriptorType::InputAttachment(nbind, input_attm_idx);
+                        let desc_ty = DescriptorType::InputAttachment(nbind, ty.clone(), input_attm_idx);
                         let access = AccessType::ReadOnly;
                         Variable::Descriptor(desc_bind, desc_ty, access)
                     },

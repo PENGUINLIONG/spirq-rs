@@ -637,16 +637,26 @@ impl Manifest {
                         if let Variable::Descriptor(_, cur_desc_ty, _) = entry.get() {
                             let replace_desc_ty = match (cur_desc_ty, &desc_ty) {
                                 (DescriptorType::Sampler(nbind_samp), DescriptorType::Image(nbind_img, img_ty)) => {
-                                    if nbind_samp != nbind_img {
-                                        return Err(Error::SAMPLER_IMG_NBIND_MISMATCH);
+                                    if let Type::Image(img_ty) = img_ty {
+                                        if nbind_samp != nbind_img {
+                                            return Err(Error::SAMPLER_IMG_NBIND_MISMATCH);
+                                        }
+                                        let sampled_img_ty = ty::SampledImageType::new(img_ty.clone());
+                                        DescriptorType::SampledImage(*nbind_samp, Type::SampledImage(sampled_img_ty))
+                                    } else {
+                                        unreachable!();
                                     }
-                                    DescriptorType::SampledImage(*nbind_samp, img_ty.clone())
                                 },
                                 (DescriptorType::Image(nbind_img, img_ty), DescriptorType::Sampler(nbind_samp)) => {
-                                    if nbind_samp != nbind_img {
-                                        return Err(Error::SAMPLER_IMG_NBIND_MISMATCH);
+                                    if let Type::Image(img_ty) = img_ty {
+                                        if nbind_samp != nbind_img {
+                                            return Err(Error::SAMPLER_IMG_NBIND_MISMATCH);
+                                        }
+                                        let sampled_img_ty = ty::SampledImageType::new(img_ty.clone());
+                                        DescriptorType::SampledImage(*nbind_samp, Type::SampledImage(sampled_img_ty))
+                                    } else {
+                                        unreachable!();
                                     }
-                                    DescriptorType::SampledImage(*nbind_samp, img_ty.clone())
                                 },
                                 _ => return Err(Error::DESC_BIND_COLLISION),
                             };

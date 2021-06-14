@@ -9,11 +9,11 @@ collected spirvs: ["sampler-state.frag.hlsl"]
             (loc=0, comp=0): vec4<f32>,
         },
         descriptors: {
-            (set=0, bind=0): 1x sampler2D,
+            (set=0, bind=0): 1x texture2D<f32>,
             (set=0, bind=1): 1x sampler,
         },
         spec_consts: {},
     },
 ]
 SampleType: DescriptorResolution { desc_bind: (set=0, bind=1), desc_ty: 1x sampler, member_var_res: None }
-shaderTexture: DescriptorResolution { desc_bind: (set=0, bind=0), desc_ty: 1x sampler2D, member_var_res: None }
+shaderTexture: DescriptorResolution { desc_bind: (set=0, bind=0), desc_ty: 1x texture2D<f32>, member_var_res: None }

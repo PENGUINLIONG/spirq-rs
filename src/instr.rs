@@ -91,7 +91,7 @@ define_ops!{
     }
     OpTypeImage {
         ty_id: TypeId = read_u32(),
-        unit_ty_id: TypeId = read_u32(),
+        scalar_ty_id: TypeId = read_u32(),
         dim: Dim = read_enum(),
         is_depth: u32 = read_u32(),
         is_array: bool = read_bool(),

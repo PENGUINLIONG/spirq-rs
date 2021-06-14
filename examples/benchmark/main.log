@@ -1,0 +1,6 @@
+collected spirvs: ["uniform-pbr.frag", "uniform-pbr.vert"]
+reflection took 147.529us (10000 times avg)
+merging manifests took 15.064us (10000 times avg)
+enumerating input names took 0.086us (10000 times avg)
+enumerating output names took 0.061us (10000 times avg)
+walking descriptors took 4.652us (10000 times avg)
