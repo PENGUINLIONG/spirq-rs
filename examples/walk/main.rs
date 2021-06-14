@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use spirq::SpirvBinary;
 use std::path::Path;
 
@@ -35,7 +35,7 @@ fn main() {
 }
 
 
-fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> HashMap<String, SpirvBinary> {
+fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> BTreeMap<String, SpirvBinary> {
     use std::ffi::OsStr;
     use std::fs::{read_dir, File};
     use std::io::Read;
@@ -62,5 +62,5 @@ fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> HashMap<String, SpirvBinar
                 .unwrap();
             Some((name, spv))
         })
-        .collect::<HashMap<_, _>>()
+        .collect::<BTreeMap<_, _>>()
 }

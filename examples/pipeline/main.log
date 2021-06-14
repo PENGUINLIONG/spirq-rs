@@ -5,10 +5,10 @@ mat.fdsa.1: Some(MemberVariableResolution { offset: 80, ty: mat3x3<f32> })
 someImage: None
 imgggg: None
 -- buffer sizing:
-(set=0, bind=40): nbyte=None
-(set=1, bind=0): nbyte=Some(16)
-(set=0, bind=2): nbyte=None
 (set=0, bind=3): nbyte=None
 (set=0, bind=1): nbyte=Some(128)
+(set=0, bind=2): nbyte=None
+(set=1, bind=0): nbyte=Some(16)
 (set=0, bind=51): nbyte=None
 (set=0, bind=50): nbyte=None
+(set=0, bind=40): nbyte=None

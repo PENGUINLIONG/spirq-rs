@@ -1,4 +1,11 @@
-collected spirvs: ["miss", "ray-generation", "closest-hit"]
+collected spirvs: ["closest-hit", "miss", "ray-generation"]
+closest-hit: main {
+    push_const: None,
+    inputs: {},
+    outputs: {},
+    descriptors: {},
+    spec_consts: {},
+}
 miss: main {
     push_const: None,
     inputs: {},
@@ -15,12 +22,5 @@ ray-generation: main {
         (set=0, bind=1): 1x image2D<Rgba32f>,
         (set=0, bind=2): 1x rayParams { rayOrigin: vec3<f32>, rayDir: vec3<f32>, sbtOffset: u32, sbtStride: u32, missIndex: u32 },
     },
-    spec_consts: {},
-}
-closest-hit: main {
-    push_const: None,
-    inputs: {},
-    outputs: {},
-    descriptors: {},
     spec_consts: {},
 }
