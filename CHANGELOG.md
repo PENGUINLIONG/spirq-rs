@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.4.14
+
+- Fixed that multiple reference to a single variable in functions was not correctly allowed. (#62)
+
 ## v0.4.13
 
 - Fixed typo. (#55)
