@@ -3,7 +3,7 @@ use std::convert::{TryFrom};
 use std::iter::Peekable;
 use std::ops::RangeInclusive;
 use std::fmt;
-use fnv::FnvHashMap as HashMap;
+use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use nohash_hasher::{IntMap, IntSet};
 use num_derive::FromPrimitive;
 use spirv_headers::{ExecutionModel, Decoration, Dim, StorageClass};
@@ -870,6 +870,7 @@ impl<'a> ReflectIntermediate<'a> {
     fn collect_entry_point_manifest(&self, func_id: FunctionId) -> Result<Manifest> {
         let mut manifest = Manifest::default();
         let accessed_var_ids = self.collect_fn_vars(func_id);
+        let accessed_var_ids = accessed_var_ids.into_iter().collect::<HashSet<_>>();
         for accessed_var_id in accessed_var_ids {
             // Sometimes this process would meet interface variables without
             // locations. These are should built-ins otherwise the SPIR-V is
