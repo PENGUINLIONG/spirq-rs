@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.4.15
+
+- Fixed that variables declaration registration, which disallows descriptor resource names to be reflected. (@VirFunc)
+
 ## v0.4.14
 
 - Fixed that multiple reference to a single variable in functions was not correctly allowed. (#62)
