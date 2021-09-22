@@ -251,7 +251,7 @@ impl<'a> ReflectIntermediate<'a> {
     }
     pub fn get_var_name(&self, locator: Locator) -> Option<&'a str> {
         let instr_id = *self.declr_map.get(&locator)?;
-        self.name_map.get(&(instr_id, None)).copied()
+        self.get_name(instr_id)
     }
     pub fn entry_point_declrs(&self) -> &[EntryPointDeclartion<'a>] {
         &self.entry_point_declrs
@@ -733,7 +733,8 @@ impl<'a> ReflectIntermediate<'a> {
             if self.var_map.insert(op.var_id, self.vars.len()).is_some() {
                 return Err(Error::ID_COLLISION);
             }
-
+            let locator = var.locator();
+            self.declr_map.insert(locator, op.var_id);
             self.vars.push(var);
         }
 
