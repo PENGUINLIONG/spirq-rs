@@ -31,9 +31,9 @@ impl std::ops::BitOr<AccessType> for AccessType {
     type Output = AccessType;
     fn bitor(self, rhs: AccessType) -> AccessType {
         return match (self, rhs) {
-            (Self::ReadOnly, Self::WriteOnly) => Self::ReadWrite,
-            (Self::WriteOnly, Self::ReadOnly) => Self::ReadWrite,
-            (_, _) => self,
+            (Self::ReadOnly, Self::ReadOnly) => Self::ReadOnly,
+            (Self::WriteOnly, Self::WriteOnly) => Self::WriteOnly,
+            _ => Self::ReadWrite,
         }
     }
 }
