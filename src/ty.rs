@@ -1,11 +1,12 @@
 //! Structured representations of SPIR-V types.
 use std::collections::BTreeMap;
 use std::fmt;
-use spirv_headers::{Dim, ImageFormat};
 use crate::MemberVariableResolution;
 use crate::error::*;
 use crate::sym::{Sym, Seg, Symbol};
 use std::hash::{Hash, Hasher};
+
+pub use spirv_headers::{Dim, ImageFormat};
 
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub enum ScalarType {

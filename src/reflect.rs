@@ -4,9 +4,6 @@ use std::iter::Peekable;
 use std::ops::RangeInclusive;
 use std::fmt;
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
-use nohash_hasher::{IntMap, IntSet};
-use num_derive::FromPrimitive;
-use spirv_headers::{ExecutionModel, Decoration, Dim, StorageClass};
 use crate::ty::*;
 use crate::consts::*;
 use crate::{Manifest, EntryPoint, Specialization};
@@ -15,12 +12,13 @@ use crate::error::{Error, Result};
 use crate::instr::*;
 use crate::inspect::Inspector;
 
+pub use spirv_headers::{ExecutionModel, Decoration, StorageClass};
 
 // Public types.
 
 /// Access type of a variable.
 #[repr(u32)]
-#[derive(Debug, FromPrimitive, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AccessType {
     /// The variable can be accessed by read.
     ReadOnly = 1,
@@ -32,15 +30,25 @@ pub enum AccessType {
 impl std::ops::BitOr<AccessType> for AccessType {
     type Output = AccessType;
     fn bitor(self, rhs: AccessType) -> AccessType {
-        use num_traits::FromPrimitive;
-        AccessType::from_u32((self as u32) | (rhs as u32)).unwrap()
+        return match (self, rhs) {
+            (Self::ReadOnly, Self::WriteOnly) => Self::ReadWrite,
+            (Self::WriteOnly, Self::ReadOnly) => Self::ReadWrite,
+            (_, _) => self,
+        }
     }
 }
 impl std::ops::BitAnd<AccessType> for AccessType {
-    type Output = AccessType;
-    fn bitand(self, rhs: AccessType) -> AccessType {
-        use num_traits::FromPrimitive;
-        AccessType::from_u32((self as u32) & (rhs as u32)).unwrap()
+    type Output = Option<AccessType>;
+    fn bitand(self, rhs: AccessType) -> Option<AccessType> {
+        return match (self, rhs) {
+            (Self::ReadOnly, Self::ReadWrite) |
+                (Self::ReadWrite, Self::ReadOnly) |
+                (Self::ReadOnly, Self::ReadOnly) => Some(Self::ReadOnly),
+            (Self::WriteOnly, Self::ReadWrite) |
+                (Self::ReadWrite, Self::WriteOnly) |
+                (Self::WriteOnly, Self::WriteOnly) => Some(Self::WriteOnly),
+            (_, _) => None,
+        }
     }
 }
 
@@ -136,8 +144,8 @@ impl Variable {
 }
 #[derive(Default, Debug, Clone)]
 pub struct Function {
-    pub accessed_vars: IntSet<VariableId>,
-    pub callees: IntSet<InstrId>,
+    pub accessed_vars: HashSet<VariableId>,
+    pub callees: HashSet<InstrId>,
 }
 pub struct EntryPointDeclartion<'a> {
     pub func_id: FunctionId,
@@ -157,11 +165,11 @@ pub struct ReflectIntermediate<'a> {
 
     name_map: HashMap<(InstrId, Option<u32>), &'a str>,
     deco_map: HashMap<(InstrId, Option<u32>, u32), &'a [u32]>,
-    ty_map: IntMap<TypeId, Type>,
-    var_map: IntMap<VariableId, usize>,
-    const_map: IntMap<ConstantId, Constant<'a>>,
-    ptr_map: IntMap<TypeId, TypeId>,
-    func_map: IntMap<FunctionId, Function>,
+    ty_map: HashMap<TypeId, Type>,
+    var_map: HashMap<VariableId, usize>,
+    const_map: HashMap<ConstantId, Constant<'a>>,
+    ptr_map: HashMap<TypeId, TypeId>,
+    func_map: HashMap<FunctionId, Function>,
     declr_map: HashMap<Locator, InstrId>,
 }
 impl<'a> ReflectIntermediate<'a> {
@@ -764,7 +772,7 @@ impl<'a> ReflectIntermediate<'a> {
         instrs: &'_ mut Peekable<Instrs<'a>>,
         mut inspector: I
     ) -> Result<()> {
-        let mut access_chain_map = IntMap::default();
+        let mut access_chain_map = HashMap::default();
         let mut func_id: InstrId = !0;
 
         while let Some(instr) = instrs.peek() {
