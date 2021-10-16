@@ -88,7 +88,6 @@ use std::fmt;
 use std::iter::FromIterator;
 use std::ops::Deref;
 use fnv::FnvHashMap as HashMap;
-use nohash_hasher::IntMap;
 use reflect::{ReflectIntermediate};
 use inspect::{NopInspector, FnInspector};
 
@@ -96,9 +95,8 @@ use parse::{Instrs, Instr};
 pub use ty::{Type, DescriptorType};
 pub use sym::{Seg, Segs, Sym, Symbol};
 pub use error::{Error, Result};
-pub use spirv_headers::ExecutionModel;
 pub use reflect::{AccessType, InterfaceLocation, DescriptorBinding, SpecId,
-    Locator, Variable};
+    Locator, Variable, ExecutionModel};
 
 /// SPIR-V program binary.
 #[derive(Debug, Default, Clone)]
@@ -687,7 +685,7 @@ pub struct Specialization {
     /// Mapping from specialization constant names to their IDs.
     spec_const_name_map: HashMap<String, SpecId>,
     /// Mapping from specialization IDs to specialization constant types.
-    spec_const_map: IntMap<SpecId, Type>,
+    spec_const_map: HashMap<SpecId, Type>,
 }
 impl Specialization {
     pub fn resolve_spec_const<S: AsRef<Sym>>(&self, sym: S) -> Option<SpecConstantResolution> {
