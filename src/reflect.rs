@@ -47,6 +47,7 @@ impl std::ops::BitAnd<AccessType> for AccessType {
             (Self::WriteOnly, Self::ReadWrite) |
                 (Self::ReadWrite, Self::WriteOnly) |
                 (Self::WriteOnly, Self::WriteOnly) => Some(Self::WriteOnly),
+            (Self::ReadWrite, Self::ReadWrite) => Some(Self::ReadWrite),
             (_, _) => None,
         }
     }
