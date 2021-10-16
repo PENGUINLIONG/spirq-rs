@@ -1,5 +1,11 @@
 # Change Log
 
+## v0.4.16
+
+- Re-exported enums in `spirv_headers` for convenience.
+- Fixed potential panic in `AccessType` bit operations.
+- Removed dependency on `nohash-hasher`.
+
 ## v0.4.15
 
 - Fixed that variables declaration registration, which disallows descriptor resource names to be reflected. (@VirFunc)
