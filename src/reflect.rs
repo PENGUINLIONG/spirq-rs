@@ -432,7 +432,7 @@ impl<'a> ReflectIntermediate<'a> {
                     .and_then(|constant| {
                         if let Some(Type::Scalar(scalar_ty)) = self.get_ty(constant.ty_id) {
                             if scalar_ty.nbyte() == 4 && scalar_ty.is_uint() {
-                                return Some(constant.value[0]);
+                                return constant.value.iter().next().cloned();
                             }
                         }
                         None
