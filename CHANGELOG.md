@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.4.17
+
+- Improved support for specialization constants. (#67)
+
 ## v0.4.16
 
 - Re-exported enums in `spirv_headers` for convenience.
