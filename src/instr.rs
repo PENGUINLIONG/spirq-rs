@@ -145,7 +145,13 @@ define_ops!{
     OpSpecConstantComposite {
         ty_id: TypeId = read_u32(),
         spec_const_id: SpecConstantId = read_u32(),
-        value: &'a [u32] = read_list(),
+        value: &'a [SpecConstantId] = read_list(),
+    }
+    OpSpecConstantOp {
+        ty_id: TypeId = read_u32(),
+        spec_const_id: SpecConstantId = read_u32(),
+        opcode: u32 = read_u32(),
+        operands: &'a [u32] = read_list(),
     }
     OpVariable {
         ty_id: TypeId = read_u32(),

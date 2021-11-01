@@ -432,18 +432,42 @@ impl<'a> ReflectIntermediate<'a> {
                     .and_then(|constant| {
                         if let Some(Type::Scalar(scalar_ty)) = self.get_ty(constant.ty_id) {
                             if scalar_ty.nbyte() == 4 && scalar_ty.is_uint() {
-                                return Some(constant.value[0]);
+                                return constant.value.iter().next().cloned();
                             }
                         }
                         None
-                    })
-                    .ok_or(Error::CONST_NOT_FOUND)?;
+                    });
                 let stride = self.get_deco_u32(op.ty_id, Decoration::ArrayStride)
                     .map(|x| x as usize);
-                let arr_ty = if let Some(stride) = stride {
-                    ArrayType::new(&proto_ty, nrepeat, stride)
+
+                let arr_ty = if let Some(nrepeat) = nrepeat {
+                    if let Some(stride) = stride {
+                        ArrayType::new(&proto_ty, nrepeat, stride)
+                    } else {
+                        ArrayType::new_multibind(&proto_ty, nrepeat)
+                    }
                 } else {
-                    ArrayType::new_multibind(&proto_ty, nrepeat)
+                    // We expect the constant is registered but we failed to
+                    // find it. It's possible that the SPIR-V generated a
+                    // forward reference to a result of `OpCompositeExtract` to
+                    // get a component of a specialized composite. One example
+                    // is to use workgroup size to declare arrays.
+                    //
+                    // Such behavior is observed in `glslangValidator`, built
+                    // with glslang 11.1; but AFAIK no longer with glslang 11.5
+                    // in which `OpSpecConstantOp` with `OpCompositeExtract`
+                    // is generated instead.
+                    //
+                    // Either way, if array size is a specialized value, we have
+                    // no idea about the actual size of the array through static
+                    // analysis. To the most possible extent, we assume the
+                    // SPIR-V input is valid so we also assume any missing
+                    // reference points to a forward-referenced instruction.
+                    if let Some(stride) = stride {
+                        ArrayType::new_unsized(&proto_ty, stride)
+                    } else {
+                        ArrayType::new_unsized_multibind(&proto_ty)
+                    }
                 };
                 (op.ty_id, Type::Array(arr_ty))
             },
@@ -562,7 +586,7 @@ impl<'a> ReflectIntermediate<'a> {
                     value: &[1],
                     spec_id,
                 };
-                (op.spec_const_id, constant, spec_const)
+                (op.spec_const_id, constant, Some(spec_const))
             },
             OP_SPEC_CONSTANT_FALSE => {
                 let op = OpSpecConstantFalse::try_from(instr)?;
@@ -577,7 +601,7 @@ impl<'a> ReflectIntermediate<'a> {
                     value: &[0],
                     spec_id,
                 };
-                (op.spec_const_id, constant, spec_const)
+                (op.spec_const_id, constant, Some(spec_const))
             },
             OP_SPEC_CONSTANT => {
                 let op = OpSpecConstant::try_from(instr)?;
@@ -592,21 +616,54 @@ impl<'a> ReflectIntermediate<'a> {
                     value: op.value,
                     spec_id,
                 };
-                (op.spec_const_id, constant, spec_const)
+                (op.spec_const_id, constant, Some(spec_const))
             },
             // `SpecId` decorations will be specified to each of the
-            // constituents so we don't have to worry about the composite of
-            // them.
-            OP_SPEC_CONSTANT_COMPOSITE => return Ok(()),
+            // constituents so we don't have to register a `SpecConstant` for
+            // the composite of them. `SpecConstant` is registered only for
+            // those will be interacting with Vulkan.
+            OP_SPEC_CONSTANT_COMPOSITE => {
+                let op = OpSpecConstantComposite::try_from(instr)?;
+                let constant = Constant {
+                    ty_id: op.ty_id,
+                    // Empty value to annotate a specialization constant. We
+                    // have nothing like a `SpecId` to access such
+                    // specialization constant so it's unnecesary to resolve
+                    // it's default value. Same applies to `OpSpecConstantOp`.
+                    value: &[] as &'static [u32],
+                };
+                (op.spec_const_id, constant, None)
+            },
+            // Similar to `OpConstantComposite`, we don't register
+            // specialization constants for `OpSpecConstantOp` results, neither
+            // the validity of the operations because they are out of SPIR-Q's
+            // duty.
+            //
+            // NOTE: In some cases you might want to use specialized workgroup
+            // size to allocate shared memory or other on-chip memory with this,
+            // that's possible, but still be aware that specialization constants
+            // CANNOT be used to specify any STRUCTURED memory objects like UBO
+            // and SSBO, because the stride and offset decorations are
+            // precompiled as a part of the SPIR-V binary meta.
+            OP_SPEC_CONSTANT_OP => {
+                let op = OpSpecConstantOp::try_from(instr)?;
+                let constant = Constant {
+                    ty_id: op.ty_id,
+                    value: &[] as &'static [u32],
+                };
+                (op.spec_const_id, constant, None)
+            },
             _ => return Err(Error::UNSUPPORTED_SPEC),
         };
 
         if let Vacant(entry) = self.const_map.entry(spec_const_id) {
             entry.insert(constant);
         } else { return Err(Error::ID_COLLISION) }
-        let locator = Locator::SpecConstant(spec_const.spec_id);
-        self.declr_map.insert(locator, spec_const_id);
-        self.spec_consts.push(spec_const);
+        if let Some(spec_const) = spec_const {
+            let locator = Locator::SpecConstant(spec_const.spec_id);
+            self.declr_map.insert(locator, spec_const_id);
+            self.spec_consts.push(spec_const);
+        }
 
         Ok(())
     }
