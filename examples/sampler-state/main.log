@@ -1,21 +1,19 @@
-   Compiling spirq v0.3.0 (C:\Users\PENGUINLIONG\Repositories\spirq)
-    Finished dev [unoptimized + debuginfo] target(s) in 3.59s
-     Running `target\debug\examples\sampler-state.exe`
-[2020-01-18T22:48:20Z INFO  sampler_state] collected spirvs: ["sampler-state.frag.hlsl"]
-[2020-01-18T22:48:20Z INFO  sampler_state] [
-        TexturePixelShader {
-            push_const: None,
-            inputs: {
-                (loc=0, comp=0): vec2<f32>,
-            },
-            outputs: {
-                (loc=0, comp=0): vec4<f32>,
-            },
-            descriptors: {
-                (set=0, bind=0): 1x sampler2D*,
-                (set=0, bind=1): 1x sampler,
-            },
+collected spirvs: ["sampler-state.frag.hlsl"]
+[
+    TexturePixelShader {
+        push_const: None,
+        inputs: {
+            (loc=0, comp=0): vec2<f32>,
         },
-    ]
-[2020-01-18T22:48:20Z INFO  sampler_state] SampleType: DescriptorResolution { desc_bind: (set=0, bind=1), desc_ty: 1x sampler, member_var_res: None }
-[2020-01-18T22:48:20Z INFO  sampler_state] shaderTexture: DescriptorResolution { desc_bind: (set=0, bind=0), desc_ty: 1x sampler2D*, member_var_res: None }
+        outputs: {
+            (loc=0, comp=0): vec4<f32>,
+        },
+        descriptors: {
+            (set=0, bind=0): 1x texture2D<f32>,
+            (set=0, bind=1): 1x sampler,
+        },
+        spec_consts: {},
+    },
+]
+SampleType: DescriptorResolution { desc_bind: (set=0, bind=1), desc_ty: 1x sampler, member_var_res: None }
+shaderTexture: DescriptorResolution { desc_bind: (set=0, bind=0), desc_ty: 1x texture2D<f32>, member_var_res: None }

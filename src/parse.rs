@@ -38,10 +38,17 @@ pub struct Instr<'a> {
 }
 impl<'a> Instr<'a> {
     /// Get the opcode of the instruction.
-    pub fn opcode(&self) -> u32 { self.opcode }
+    ///
+    /// SPIR-Q doesn't rely on `spirv_headers::Op` so it won't break when the
+    /// incoming SPIR-V has extensions unknown to `spirv_headers`.
+    pub fn opcode(&self) -> u32 {
+        self.opcode as u32
+    }
     /// Get the word count of the instruction, including the first word
     /// containing the word count and opcode.
-    pub fn _word_count(&self) -> usize { self.operands.len() + 1 }
+    pub fn word_count(&self) -> usize {
+        self.operands.len() + 1
+    }
     /// Get an instruction operand reader. The reader does NO boundary checking
     /// so the user code MUST make sure the implementation follows the
     /// specification.
@@ -52,7 +59,10 @@ impl<'a> Instr<'a> {
 
 pub struct Operands<'a>(&'a [u32]);
 impl<'a> Operands<'a> {
-    pub fn read_bool(&mut self) -> Result<bool> { self.read_u32().map(|x| x != 0) }
+    pub fn read_bool(&mut self) -> Result<bool> {
+        self.read_u32()
+            .map(|x| x != 0)
+    }
     pub fn read_u32(&mut self) -> Result<u32> {
         if let Some(x) = self.0.first() {
             self.0 = &self.0[1..];
@@ -65,7 +75,9 @@ impl<'a> Operands<'a> {
         use std::os::raw::c_char;
         use std::ffi::CStr;
         let ptr = self.0.as_ptr() as *const c_char;
-        let char_slice = unsafe { std::slice::from_raw_parts(ptr, self.0.len() * 4) };
+        let char_slice = unsafe {
+            std::slice::from_raw_parts(ptr, self.0.len() * 4)
+        };
         if let Some(nul_pos) = char_slice.into_iter().position(|x| *x == 0) {
             let nword = nul_pos / 4 + 1;
             self.0 = &self.0[nword..];

@@ -27,17 +27,20 @@ impl Error {
     pub const FUNC_NOT_FOUND: Self = Self::CorruptedSpirv("cannot find a function");
     pub const BROKEN_ACCESS_CHAIN: Self = Self::CorruptedSpirv("pointer in access chain points to non-existing type");
     pub const ACCESS_CONFLICT: Self = Self::CorruptedSpirv("variable is both read-only and write-only");
+    pub const LOCATION_COLLISION: Self = Self::CorruptedSpirv("interface variable location cannot be shared");
 
     pub const UNSUPPORTED_TY: Self = Self::UnsupportedSpirv("unsupported type");
     pub const UNSUPPORTED_IMG_CFG: Self = Self::UnsupportedSpirv("unsupport image configuration");
     pub const UNSUPPORTED_SPEC: Self = Self::UnsupportedSpirv("unsupported specialization");
+    pub const MULTI_ENTRY_POINTS: Self = Self::UnsupportedSpirv("cannot fast reflect a module with multiple entry points");
+    pub const SAMPLER_IMG_NBIND_MISMATCH: Self = Self::UnsupportedSpirv("sampler and images doesn't pair up as sampled images");
 }
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use Error::*;
         match self {
             CorruptedSpirv(msg) => write!(f, "spirv binary is corrupted: {}", msg),
-            UnsupportedSpirv(msg) => write!(f, "spirv binary used unsupported feature: {}", msg),
+            UnsupportedSpirv(msg) => write!(f, "spirv binary is unsupported: {}", msg),
             MismatchedManifest => write!(f, "mismatched manifest cannot be merged"),
         }
     }

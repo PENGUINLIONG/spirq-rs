@@ -3,26 +3,12 @@ use spirq::SpirvBinary;
 use std::path::Path;
 
 fn main() {
-    let spvs = collect_spirv_binaries("assets/effects/spirv-spec");
+    let spvs = collect_spirv_binaries("assets/effects/ray-tracing");
     println!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
-    let frag = spvs["referential.frag"].reflect_vec().unwrap();
-    println!("{:#?}", frag);
-    let frag = &frag[0];
-    let check = |sym :&str| {
-        let desc_res = frag.resolve_desc(sym).unwrap();
-        println!("{}: {:?}", sym, desc_res);
-    };
-    check("0.0");
-    check("0.0.s");
-    check("0.0.cond");
-    check("0.0.s.b");
-    check("0.0.s.v");
-    check("0.0.s.v.0");
-    check("0.0.s.v.1");
-    check("0.0.s.v.2");
-    check("0.0.s.v.3");
-    check("0.0.s.v.4");
-    check("0.0.s.i");
+    for (name, spv) in spvs {
+        let module = spv.reflect_vec().unwrap();
+        println!("{}: {:#?}", name, &module[0]);
+    }
 }
 
 

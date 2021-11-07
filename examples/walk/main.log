@@ -1,23 +1,19 @@
-warning: unused manifest key: package.maintenance
-   Compiling spirq v0.4.1 (C:\Users\PENGUINLIONG\Repositories\spirq)
-    Finished dev [unoptimized + debuginfo] target(s) in 2.14s
-     Running `target\debug\examples\walk.exe`
-[2020-08-09T10:21:08Z INFO  walk] collected spirvs: ["referential.frag"]
-[2020-08-09T10:21:08Z INFO  walk] spec_const#233 (w): i32
-[2020-08-09T10:21:08Z INFO  walk] spec_const#234 (h): i32
-[2020-08-09T10:21:08Z INFO  walk] input#(loc=0, comp=0) (color1): vec4<f32>
-[2020-08-09T10:21:08Z INFO  walk] input#(loc=2, comp=0) (color2): vec4<f32>
-[2020-08-09T10:21:08Z INFO  walk] input#(loc=1, comp=0) (multiplier): vec4<f32>
-[2020-08-09T10:21:08Z INFO  walk] output#(loc=0, comp=0) (color): vec4<f32>
-[2020-08-09T10:21:08Z INFO  walk] descriptor(set=0, bind=0) ():
-[2020-08-09T10:21:08Z INFO  walk]    0        s.b: i32
-[2020-08-09T10:21:08Z INFO  walk]   16      s.v.0: vec4<f32>
-[2020-08-09T10:21:08Z INFO  walk]   32      s.v.1: vec4<f32>
-[2020-08-09T10:21:08Z INFO  walk]   48      s.v.2: vec4<f32>
-[2020-08-09T10:21:08Z INFO  walk]   64      s.v.3: vec4<f32>
-[2020-08-09T10:21:08Z INFO  walk]   80      s.v.4: vec4<f32>
-[2020-08-09T10:21:08Z INFO  walk]   16        s.v: [vec4<f32>; 5]
-[2020-08-09T10:21:08Z INFO  walk]   96        s.i: i32
-[2020-08-09T10:21:08Z INFO  walk]    0          s: { b: i32, v: [vec4<f32>; 5], i: i32 }
-[2020-08-09T10:21:08Z INFO  walk]  112       cond: i32
-[2020-08-09T10:21:08Z INFO  walk]    0           : { s: { b: i32, v: [vec4<f32>; 5], i: i32 }, cond: i32 }
+collected spirvs: ["referential.frag"]
+spec_const#233 (w): i32
+spec_const#234 (h): i32
+input#(loc=2, comp=0) (color2): vec4<f32>
+input#(loc=0, comp=0) (color1): vec4<f32>
+input#(loc=1, comp=0) (multiplier): vec4<f32>
+output#(loc=0, comp=0) (color): vec4<f32>
+descriptor(set=0, bind=0) (unnamed):
+   0                  s.b: u32
+  16                s.v.0: vec4<f32>
+  32                s.v.1: vec4<f32>
+  48                s.v.2: vec4<f32>
+  64                s.v.3: vec4<f32>
+  80                s.v.4: vec4<f32>
+  16                  s.v: [vec4<f32>; 5]
+  96                  s.i: i32
+   0                    s: S { b: u32, v: [vec4<f32>; 5], i: i32 }
+ 112                 cond: u32
+   0                     : blockName { s: S { b: u32, v: [vec4<f32>; 5], i: i32 }, cond: u32 }

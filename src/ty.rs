@@ -1,11 +1,12 @@
 //! Structured representations of SPIR-V types.
 use std::collections::BTreeMap;
 use std::fmt;
-use spirv_headers::{Dim, ImageFormat};
 use crate::MemberVariableResolution;
 use crate::error::*;
 use crate::sym::{Sym, Seg, Symbol};
 use std::hash::{Hash, Hasher};
+
+pub use spirv_headers::{Dim, ImageFormat};
 
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub enum ScalarType {
@@ -66,7 +67,7 @@ impl fmt::Debug for ScalarType {
         match self {
             Self::Boolean => write!(f, "bool"),
             Self::Signed(nbyte) => write!(f, "i{}", nbyte << 3),
-            Self::Unsigned(nbyte) => write!(f, "i{}", nbyte << 3),
+            Self::Unsigned(nbyte) => write!(f, "u{}", nbyte << 3),
             Self::Float(nbyte) => write!(f, "f{}", nbyte << 3),
         }
     }
@@ -167,6 +168,8 @@ pub enum ImageArrangement {
     Image2DArray,
     Image2DMSArray,
     CubeMapArray,
+    Image2DRect,
+    ImageBuffer,
 }
 impl ImageArrangement {
     /// Do note this dim is not the number of dimensions but a enumeration of
@@ -178,10 +181,13 @@ impl ImageArrangement {
             (Dim::Dim2D, false, false) => ImageArrangement::Image2D,
             (Dim::Dim2D, false, true) => ImageArrangement::Image2DMS,
             (Dim::Dim2D, true, false) => ImageArrangement::Image2DArray,
+            (Dim::Dim2D, true, true) => ImageArrangement::Image2DMSArray,
             (Dim::Dim3D, false, false) => ImageArrangement::Image3D,
             (Dim::Dim3D, true, false) => ImageArrangement::Image3D,
             (Dim::DimCube, false, false) => ImageArrangement::CubeMap,
             (Dim::DimCube, true, false) => ImageArrangement::CubeMapArray,
+            (Dim::DimRect, false, false) => ImageArrangement::Image2DRect,
+            (Dim::DimBuffer, false, false) => ImageArrangement::ImageBuffer,
             _ => return Err(Error::UNSUPPORTED_IMG_CFG),
         };
         Ok(arng)
@@ -191,12 +197,17 @@ impl ImageArrangement {
 
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct ImageType {
+    pub scalar_ty: ScalarType,
     pub unit_fmt: ImageUnitFormat,
     pub arng: ImageArrangement,
 }
 impl ImageType {
-    pub fn new(unit_fmt: ImageUnitFormat, arng: ImageArrangement) -> ImageType {
-        ImageType { unit_fmt, arng }
+    pub fn new(
+        scalar_ty: ScalarType,
+        unit_fmt: ImageUnitFormat,
+        arng: ImageArrangement,
+    ) -> ImageType {
+        ImageType { scalar_ty, unit_fmt, arng }
     }
 }
 impl fmt::Debug for ImageType {
@@ -213,16 +224,51 @@ impl fmt::Debug for ImageType {
             (Image2DArray, Color(fmt)) => write!(f, "image2DArray<{:?}>", fmt),
             (Image2DMSArray, Color(fmt)) => write!(f, "image2DMSArray<{:?}>", fmt),
             (CubeMapArray, Color(fmt)) => write!(f, "imageCubeArray<{:?}>", fmt),
-            
-            (Image1D, Sampled) => f.write_str("sampler1D"),
-            (Image2D, Sampled) => f.write_str("sampler2D"),
-            (Image2DMS, Sampled) => f.write_str("sampler2DMS"),
-            (Image3D, Sampled) => f.write_str("sampler3D"),
-            (CubeMap, Sampled) => f.write_str("samplerCube"),
-            (Image1DArray, Sampled) => f.write_str("sampler1DArray"),
-            (Image2DArray, Sampled) => f.write_str("sampler2DArray"),
-            (Image2DMSArray, Sampled) => f.write_str("sampler2DMSArray"),
-            (CubeMapArray, Sampled) => f.write_str("samplerCubeArray"),
+            (Image2DRect, Color(fmt)) => write!(f, "image2DRect<{:?}>", fmt),
+            (ImageBuffer, Color(fmt)) => write!(f, "imageBuffer<{:?}>", fmt),
+
+            (Image1D, Sampled) => write!(f, "texture1D<{:?}>", self.scalar_ty),
+            (Image2D, Sampled) => write!(f, "texture2D<{:?}>", self.scalar_ty),
+            (Image2DMS, Sampled) => write!(f, "texture2DMS<{:?}>", self.scalar_ty),
+            (Image3D, Sampled) => write!(f, "texture3D<{:?}>", self.scalar_ty),
+            (CubeMap, Sampled) => write!(f, "textureCube<{:?}>", self.scalar_ty),
+            (Image1DArray, Sampled) => write!(f, "texture1DArray<{:?}>", self.scalar_ty),
+            (Image2DArray, Sampled) => write!(f, "texture2DArray<{:?}>", self.scalar_ty),
+            (Image2DMSArray, Sampled) => write!(f, "texture2DMSArray<{:?}>", self.scalar_ty),
+            (CubeMapArray, Sampled) => write!(f, "textureCubeArray<{:?}>", self.scalar_ty),
+            (Image2DRect, Sampled) => write!(f, "texture2DRect<{:?}>", self.scalar_ty),
+            (ImageBuffer, Sampled) => write!(f, "textureBuffer<{:?}>", self.scalar_ty),
+            _ => Err(fmt::Error::default()),
+        }
+    }
+}
+
+
+#[derive(PartialEq, Eq, Hash, Clone)]
+pub struct SampledImageType {
+    img_ty: ImageType,
+}
+impl SampledImageType {
+    pub fn new(img_ty: ImageType) -> SampledImageType {
+        SampledImageType { img_ty }
+    }
+}
+impl fmt::Debug for SampledImageType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use ImageArrangement::*;
+        use ImageUnitFormat::*;
+        match (self.img_ty.arng, self.img_ty.unit_fmt) {
+            (Image1D, Sampled) => write!(f, "sampler1D<{:?}>", self.img_ty.scalar_ty),
+            (Image2D, Sampled) => write!(f, "sampler2D<{:?}>", self.img_ty.scalar_ty),
+            (Image2DMS, Sampled) => write!(f, "sampler2DMS<{:?}>", self.img_ty.scalar_ty),
+            (Image3D, Sampled) => write!(f, "sampler3D<{:?}>", self.img_ty.scalar_ty),
+            (CubeMap, Sampled) => write!(f, "samplerCube<{:?}>", self.img_ty.scalar_ty),
+            (Image1DArray, Sampled) => write!(f, "sampler1DArray<{:?}>", self.img_ty.scalar_ty),
+            (Image2DArray, Sampled) => write!(f, "sampler2DArray<{:?}>", self.img_ty.scalar_ty),
+            (Image2DMSArray, Sampled) => write!(f, "sampler2DMSArray<{:?}>", self.img_ty.scalar_ty),
+            (CubeMapArray, Sampled) => write!(f, "samplerCubeArray<{:?}>", self.img_ty.scalar_ty),
+            (Image2DRect, Sampled) => write!(f, "sampler2DRect<{:?}>", self.img_ty.scalar_ty),
+            (ImageBuffer, Sampled) => write!(f, "samplerBuffer<{:?}>", self.img_ty.scalar_ty),
 
             (Image1D, Depth) => f.write_str("sampler1DShadow"),
             (Image2D, Depth) => f.write_str("sampler2DShadow"),
@@ -230,7 +276,49 @@ impl fmt::Debug for ImageType {
             (Image1DArray, Depth) => f.write_str("sampler1DArrayShadow"),
             (Image2DArray, Depth) => f.write_str("sampler2DArrayShadow"),
             (CubeMapArray, Depth) => f.write_str("samplerCubeShadowArray"),
+            (Image2DRect, Depth) => write!(f, "sampler2DRectShadow"),
             _ => Err(fmt::Error::default()),
+        }
+    }
+}
+
+
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+pub enum SubpassDataArrangement {
+    SubpassData,
+    SubpassDataMS,
+}
+impl SubpassDataArrangement {
+    /// Do note this dim is not the number of dimensions but a enumeration of
+    /// values specified in SPIR-V specification.
+    pub fn from_spv_def(is_multisampled: bool) -> Result<SubpassDataArrangement> {
+        let arng = match is_multisampled {
+            false => SubpassDataArrangement::SubpassData,
+            true => SubpassDataArrangement::SubpassDataMS,
+        };
+        Ok(arng)
+    }
+}
+
+#[derive(PartialEq, Eq, Hash, Clone)]
+pub struct SubpassDataType {
+    pub scalar_ty: ScalarType,
+    pub arng: SubpassDataArrangement,
+}
+impl SubpassDataType {
+    pub fn new(scalar_ty: ScalarType, arng: SubpassDataArrangement) -> Self {
+        SubpassDataType { scalar_ty, arng }
+    }
+}
+impl fmt::Debug for SubpassDataType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.arng {
+            SubpassDataArrangement::SubpassData => {
+                write!(f, "subpassData<{:?}>", self.scalar_ty)
+            },
+            SubpassDataArrangement::SubpassDataMS => {
+                write!(f, "subpassDataMS<{:?}>", self.scalar_ty)
+            },
         }
     }
 }
@@ -434,15 +522,18 @@ pub enum Type {
     Image(ImageType),
     /// A sampled image externally combined with a sampler state. Such design is
     /// preferred in legacy OpenGL.
-    SampledImage(ImageType),
+    SampledImage(SampledImageType),
     /// Separable sampler state.
     Sampler(),
     /// Pixel store from input attachments.
-    SubpassData(),
+    SubpassData(SubpassDataType),
     /// Repetition of a single type.
     Array(ArrayType),
     /// Aggregation of types.
     Struct(StructType),
+    /// Acceleration structure for ray-tracing. Only available with
+    /// `RayTracingKHR` capability enabled.
+    AccelStruct(),
 }
 impl Type {
     pub fn nbyte(&self) -> Option<usize> {
@@ -454,9 +545,10 @@ impl Type {
             Image(_) => None,
             Sampler() => None,
             SampledImage(_) => None,
-            SubpassData() => None,
+            SubpassData(_) => None,
             Array(arr_ty) => Some(arr_ty.nbyte()),
             Struct(struct_ty) => Some(struct_ty.nbyte()),
+            AccelStruct() => None,
         }
     }
     pub fn resolve<S: AsRef<Sym>>(&self, sym: S) -> Option<MemberVariableResolution<'_>> {
@@ -505,6 +597,7 @@ impl Type {
         is_subpass_data -> SubpassData,
         is_arr -> Array,
         is_struct -> Struct,
+        is_accel_struct -> AccelStruct,
     }
 }
 impl fmt::Debug for Type {
@@ -515,10 +608,11 @@ impl fmt::Debug for Type {
             Type::Matrix(mat_ty) => mat_ty.fmt(f),
             Type::Image(img_ty) => write!(f, "{:?}", img_ty),
             Type::Sampler() => write!(f, "sampler"),
-            Type::SampledImage(img_ty) => img_ty.fmt(f),
-            Type::SubpassData() => write!(f, "subpassData"),
+            Type::SampledImage(sampled_img_ty) => sampled_img_ty.fmt(f),
+            Type::SubpassData(subpass_data_ty) => subpass_data_ty.fmt(f),
             Type::Array(arr_ty) => arr_ty.fmt(f),
             Type::Struct(struct_ty) => struct_ty.fmt(f),
+            Type::AccelStruct() => write!(f, "accelerationStructure"),
         }
     }
 }
@@ -532,9 +626,10 @@ pub enum DescriptorType {
     Image(u32, Type),
     Sampler(u32),
     SampledImage(u32, Type),
-    // Note that the second parameter is input attachment index, the first one
+    // Note that the third parameter is input attachment index, the first one
     // is the binding count.
-    InputAttachment(u32, u32),
+    InputAttachment(u32, Type, u32),
+    AccelStruct(u32),
 }
 impl DescriptorType {
     /// Get the size of buffer (in bytes) needed to contain all the data for
@@ -564,7 +659,8 @@ impl DescriptorType {
             Image(nbind, _) => *nbind,
             Sampler(nbind) => *nbind,
             SampledImage(nbind, _) => *nbind,
-            InputAttachment(nbind, _) => *nbind,
+            InputAttachment(nbind, _, _) => *nbind,
+            AccelStruct(nbind) => *nbind,
         }
     }
     /// Resolve a symbol WITHIN the descriptor type. The symbol should not
@@ -587,7 +683,8 @@ impl DescriptorType {
             Image(_, ty) => ty,
             Sampler(_) => &Type::Sampler(),
             SampledImage(_, ty) => ty,
-            InputAttachment(_, _) => &Type::SubpassData(),
+            InputAttachment(_, ty, _) => ty,
+            AccelStruct(_) => &Type::AccelStruct(),
         };
         Walk::new(ty)
     }
@@ -599,6 +696,7 @@ impl DescriptorType {
         is_sampler -> Sampler,
         is_sampled_img -> SampledImage,
         is_input_attm -> InputAttachment,
+        is_accel_struct -> AccelStruct,
     }
 }
 impl fmt::Debug for DescriptorType {
@@ -610,7 +708,8 @@ impl fmt::Debug for DescriptorType {
             Image(nbind, ty) => write!(f, "{}x {:?}", nbind, ty),
             Sampler(nbind) => write!(f, "{}x sampler", nbind),
             SampledImage(nbind, ty) => write!(f, "{}x {:?}", nbind, ty),
-            InputAttachment(nbind, idx) => write!(f, "{}x subpassData[{}]", nbind, idx),
+            InputAttachment(nbind, ty, input_attm_idx) => write!(f, "{}x {:?}[{}]", nbind, ty, input_attm_idx),
+            AccelStruct(nbind) => write!(f, "{}x accelerationStructure", nbind),
         }
     }
 }

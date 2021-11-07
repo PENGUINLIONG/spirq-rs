@@ -1,37 +1,32 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use spirq::SpirvBinary;
-use log::info;
 use std::path::Path;
 
 fn main() {
-    env_logger::init();
-
     let spvs = collect_spirv_binaries("assets/effects/hlsl");
-    info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
-    let frag = spvs["sampler-state.frag.hlsl"].reflect().unwrap();
-    info!("{:#?}", frag);
+    println!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
+    let frag = spvs["sampler-state.frag.hlsl"].reflect_vec().unwrap();
+    println!("{:#?}", frag);
     let frag = &frag[0];
     let check = |sym :&str| {
         let desc_res = frag.resolve_desc(sym).unwrap();
-        info!("{}: {:?}", sym, desc_res);
+        println!("{}: {:?}", sym, desc_res);
     };
     check("SampleType");
     check("shaderTexture");
 }
 
 
-fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> HashMap<String, SpirvBinary> {
+fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> BTreeMap<String, SpirvBinary> {
     use std::ffi::OsStr;
     use std::fs::{read_dir, File};
     use std::io::Read;
-    use log::warn;
 
     read_dir(path).unwrap()
         .filter_map(|x| match x {
             Ok(rv) => Some(rv.path()),
             Err(err) => {
-                warn!("cannot access to filesystem item: {}", err);
-                None
+                panic!("cannot access to filesystem item: {}", err);
             },
         })
         .filter_map(|x| {
@@ -49,5 +44,5 @@ fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> HashMap<String, SpirvBinar
                 .unwrap();
             Some((name, spv))
         })
-        .collect::<HashMap<_, _>>()
+        .collect::<BTreeMap<_, _>>()
 }

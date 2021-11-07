@@ -17,6 +17,21 @@ struct S {
     int i;
 };
 
+struct Object {
+    vec3 position;
+    uint type;
+    vec4 rotation;
+    vec3 half_size;
+    uint dummy;
+};
+
+struct Scene {
+    uint object_count;
+    Object object; // this works fine
+//    Object objects[10]; // this causes an error: "cannot find a suitable type"
+};
+
+
 layout(binding=0) uniform blockName {
     S s;
     bool cond;
@@ -26,11 +41,17 @@ void main()
 {
     vec4 scale = vec4(1.0, 1.0, 2.0, 1.0);
 
+    Scene scene;
+    scene.object_count = 5;
+
+    vec4 pixel = vec4(0, 0, 0, 1);
+    pixel.r = scene.object_count * 0.1;
+
     if (cond)
         color = color1 + s.v[2];
     else
         color = sqrt(color2) * scale;
 
     for (int i = 0; i < 4; ++i)
-        color *= multiplier;
+        color *= multiplier + pixel;
 }

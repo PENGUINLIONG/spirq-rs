@@ -1,9 +1,8 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashSet};
 use std::convert::TryFrom;
 use std::ops::Deref;
 use spirq::{Result, Error, SpirvBinary, Manifest, ExecutionModel};
 use spirq::EntryPoint;
-use log::info;
 use std::path::Path;
 
 #[derive(Clone, Default)]
@@ -33,23 +32,21 @@ impl Deref for Pipeline {
 }
 
 fn main() {
-    env_logger::init();
-
     let spvs = collect_spirv_binaries("assets/effects/uniform-pbr");
-    info!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
+    println!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
     let mut entry_points = spvs.values()
-        .map(|x| x.reflect().unwrap()[0].to_owned())
+        .map(|x| x.reflect_vec().unwrap()[0].to_owned())
         .collect::<Vec<_>>();
     entry_points.sort_by_key(|x| x.exec_model as u32);
     let pl = Pipeline::try_from(entry_points.as_ref()).unwrap();
 
     let pcheck = |sym :&str| {
         let push_const_res = pl.resolve_push_const(sym).unwrap();
-        info!("{}: {:?}", sym, push_const_res.member_var_res);
+        println!("{}: {:?}", sym, push_const_res.member_var_res);
     };
     let check = |sym :&str| {
         let desc_res = pl.resolve_desc(sym).unwrap();
-        info!("{}: {:?}", sym, desc_res.member_var_res);
+        println!("{}: {:?}", sym, desc_res.member_var_res);
     };
 
     pcheck(".model_view");
@@ -58,25 +55,23 @@ fn main() {
     check("someImage");
     check("imgggg");
 
-    info!("-- buffer sizing:");
+    println!("-- buffer sizing:");
     for desc_res in pl.descs() {
-        info!("{:?}: nbyte={:?}", desc_res.desc_bind, desc_res.desc_ty.nbyte());
+        println!("{:?}: nbyte={:?}", desc_res.desc_bind, desc_res.desc_ty.nbyte());
     }
 }
 
 
-fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> HashMap<String, SpirvBinary> {
+fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> BTreeMap<String, SpirvBinary> {
     use std::ffi::OsStr;
     use std::fs::{read_dir, File};
     use std::io::Read;
-    use log::warn;
 
     read_dir(path).unwrap()
         .filter_map(|x| match x {
             Ok(rv) => Some(rv.path()),
             Err(err) => {
-                warn!("cannot access to filesystem item: {}", err);
-                None
+                panic!("cannot access to filesystem item: {}", err);
             },
         })
         .filter_map(|x| {
@@ -94,5 +89,5 @@ fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> HashMap<String, SpirvBinar
                 .unwrap();
             Some((name, spv))
         })
-        .collect::<HashMap<_, _>>()
+        .collect::<BTreeMap<_, _>>()
 }

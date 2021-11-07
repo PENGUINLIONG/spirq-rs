@@ -1,6 +1,6 @@
 # SPIR-Q
 
-[![Build Status](https://travis-ci.org/PENGUINLIONG/spirq-rs.svg?branch=master)](https://travis-ci.org/PENGUINLIONG/spirq-rs)
+[![Build Status](https://travis-ci.com/PENGUINLIONG/spirq-rs.svg?branch=master)](https://travis-ci.com/PENGUINLIONG/spirq-rs)
 [![Crate](https://img.shields.io/crates/v/spirq)](https://crates.io/crates/spirq)
 [![Documentation](https://docs.rs/spirq/badge.svg)](https://docs.rs/spirq)
 
@@ -24,7 +24,9 @@ Please refer to the attached examples:
 * [walk](examples/walk/main.rs): Enumerate offsets, symbols and types of all descriptor variables.
 * [sampler-state](examples/sampler-state/main.rs): Separable sampler state support for HLSL-sourced SPIR-Vs.
 * [inspect](examples/inspect/main.rs): Customize shader reflection with your own inspector function.
-* [benchmark](examples/benchmark/main.rs): Feel how fast SPIR-Q can be. (The log was generated from a `debug` run.)
+* [benchmark](examples/benchmark/main.rs): Feel how fast SPIR-Q can be. (The log was generated from a `release` run.)
+* [ray-tracing](examples/ray-tracing/main.rs): Vulkan ray-tracing shader support.
+* [gallery](examples/gallery/main.rs): All data types in GLSL.
 
 Sample output are attached in the same directories as the code files.
 

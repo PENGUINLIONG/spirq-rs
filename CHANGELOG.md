@@ -1,5 +1,37 @@
 # Change Log
 
+## v0.4.17
+
+- Improved support for specialization constants. (#67)
+
+## v0.4.16
+
+- Re-exported enums in `spirv_headers` for convenience.
+- Fixed potential panic in `AccessType` bit operations.
+- Removed dependency on `nohash-hasher`.
+
+## v0.4.15
+
+- Fixed that variables declaration registration, which disallows descriptor resource names to be reflected. (@VirFunc)
+
+## v0.4.14
+
+- Fixed that multiple reference to a single variable in functions was not correctly allowed. (#62)
+
+## v0.4.13
+
+- Fixed typo. (#55)
+- Supported acceleration structure for ray-tracing.
+- Fast reflection support (reflect without variable dependency analysis).
+- Removed unexpectedly exposed `Specialization` APIs.
+- Full coverage of GLSL data types.
+- Integrate `AccessType` as a part of `Descriptor`, for storage images and buffers.
+- Refactorized to a unified variable reference structure.
+
+## v0.4.12
+
+- Relaxed validation of non-interface composite types. (#51)
+
 ## v0.4.11
 
 - Redefined `AccessType` as the validity of read or write accesses instead of actual loads/stores by functions. (#49)
