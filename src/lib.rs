@@ -738,6 +738,22 @@ impl Specialization {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct WorkgroupSize {
+    x: u32,
+    y: u32,
+    z: u32
+}
+impl Default for WorkgroupSize {
+    fn default() -> Self {
+        Self {
+            x: 1,
+            y: 1,
+            z: 1
+        }
+    }
+}
+
 
 // SPIR-V program entry points.
 
@@ -753,6 +769,8 @@ pub struct EntryPoint {
     pub manifest: Manifest,
     /// Specialization description of the entry point.
     pub spec: Specialization,
+    /// Compute shader workgroup size (if applicable).
+    pub workgroup_size: Option<WorkgroupSize>,
 }
 impl Deref for EntryPoint {
     type Target = Manifest;
@@ -795,6 +813,7 @@ impl fmt::Debug for EntryPoint {
             .field("outputs", &InterfaceLocationDebugHelper(outputs))
             .field("descriptors", &DescriptorBindingDebugHelper(descs))
             .field("spec_consts", &self.spec.spec_const_map)
+            .field("workgroup_size", &self.workgroup_size)
             .finish()
     }
 }

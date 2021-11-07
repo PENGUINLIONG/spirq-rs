@@ -6,7 +6,7 @@ use std::fmt;
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use crate::ty::*;
 use crate::consts::*;
-use crate::{Manifest, EntryPoint, Specialization};
+use crate::{Manifest, EntryPoint, Specialization, WorkgroupSize};
 use crate::parse::{Instrs, Instr};
 use crate::error::{Error, Result};
 use crate::instr::*;
@@ -153,7 +153,24 @@ pub struct EntryPointDeclartion<'a> {
     pub name: &'a str,
     pub exec_model: ExecutionModel,
 }
-
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum ExecutionMode {
+    /// Number of invocations of the geometry stage.
+    Invocations(u32),
+    /// 3-dimensional size of the compute shader workgroup.
+    LocalSize { x: u32, y: u32, z: u32 },
+    /// A hint to the compiler about most likely used workgroup size.
+    LocalSizeHint { x: u32, y: u32, z: u32 },
+    /// Same as `LocalSize`, but defined with specialization constants.
+    LocalSizeId { x: SpecId, y: SpecId, z: SpecId },
+    /// Same as `LocalSizeHint`, but defined with specialization constants.
+    LocalSizeHintId { x: SpecId, y: SpecId, z: SpecId },
+}
+pub struct ExecutionModeDeclaration {
+    pub func_id: FunctionId,
+    pub execution_mode: ExecutionMode,
+}
 
 
 // The actual reflection to take place.
@@ -161,6 +178,7 @@ pub struct EntryPointDeclartion<'a> {
 #[derive(Default)]
 pub struct ReflectIntermediate<'a> {
     entry_point_declrs: Vec<EntryPointDeclartion<'a>>,
+    execution_mode_declrs: Vec<ExecutionModeDeclaration>,
     spec_consts: Vec<SpecConstant<'a>>,
     vars: Vec<Variable>,
 
@@ -265,6 +283,9 @@ impl<'a> ReflectIntermediate<'a> {
     pub fn entry_point_declrs(&self) -> &[EntryPointDeclartion<'a>] {
         &self.entry_point_declrs
     }
+    pub fn execution_mode_declrs(&self) -> &[ExecutionModeDeclaration] {
+        &self.execution_mode_declrs
+    }
     pub fn spec_consts(&self) -> &[SpecConstant<'a>] {
         &self.spec_consts
     }
@@ -300,6 +321,53 @@ impl<'a> ReflectIntermediate<'a> {
             };
             self.entry_point_declrs.push(entry_point_declr);
             instrs.next();
+        }
+        Ok(())
+    }
+    fn populate_execution_modes(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>) -> Result<()> {
+        while let Some(instr) = instrs.peek() {
+            if instr.opcode() != OP_EXECUTION_MODE { break; }
+            let op = OpExecutionMode::try_from(instr)?;
+            let execution_mode = match op.execution_mode {
+                spirv_headers::ExecutionMode::Invocations => {
+                    ExecutionMode::Invocations(op.params[0])
+                },
+                spirv_headers::ExecutionMode::LocalSize => {
+                    ExecutionMode::LocalSize {
+                        x: op.params[0],
+                        y: op.params[1],
+                        z: op.params[2]
+                    }
+                },
+                spirv_headers::ExecutionMode::LocalSizeHint => {
+                    ExecutionMode::LocalSizeHint {
+                        x: op.params[0],
+                        y: op.params[1],
+                        z: op.params[2]
+                    }
+                },
+                spirv_headers::ExecutionMode::LocalSizeId => {
+                    ExecutionMode::LocalSizeId {
+                        x: op.params[0],
+                        y: op.params[1],
+                        z: op.params[2]
+                    }
+                },
+                spirv_headers::ExecutionMode::LocalSizeHintId => {
+                    ExecutionMode::LocalSizeHintId {
+                        x: op.params[0],
+                        y: op.params[1],
+                        z: op.params[2]
+                    }
+                }
+                // TODO: implement other execution modes support
+                _ => continue
+            };
+            let execution_mode_declr = ExecutionModeDeclaration {
+                func_id: op.func_id,
+                execution_mode
+            };
+            self.execution_mode_declrs.push(execution_mode_declr);
         }
         Ok(())
     }
@@ -910,6 +978,8 @@ impl<'a> ReflectIntermediate<'a> {
         let mut itm = ReflectIntermediate::default();
         skip_until_range_inclusive(&mut instrs, ENTRY_POINT_RANGE);
         itm.populate_entry_points(&mut instrs)?;
+        skip_until_range_inclusive(&mut instrs, EXECUTION_MODE_RANGE);
+        itm.populate_execution_modes(&mut instrs)?;
         skip_until_range_inclusive(&mut instrs, NAME_RANGE);
         itm.populate_names(&mut instrs)?;
         skip_until(&mut instrs, is_deco_op);
@@ -965,16 +1035,33 @@ impl<'a> ReflectIntermediate<'a> {
         }
         Ok(spec)
     }
+    fn determine_workgroup_size(&self, func_id: FunctionId) -> Option<WorkgroupSize> {
+        self.execution_mode_declrs.iter()
+            .filter_map(|declr | {
+                if declr.func_id == func_id {
+                    match declr.execution_mode {
+                        ExecutionMode::LocalSize { x, y, z } => Some(WorkgroupSize { x, y, z }),
+                        // TODO: implement ExecutionMode::LocalSizeId support
+                        _ => None
+                    }
+                } else {
+                    None
+                }
+            })
+            .next()
+    }
     pub(crate) fn collect_entry_points(&self) -> Result<Vec<EntryPoint>> {
         let mut entry_points = Vec::with_capacity(self.entry_point_declrs().len());
         for entry_point_declr in self.entry_point_declrs().iter() {
             let manifest = self.collect_entry_point_manifest(entry_point_declr.func_id)?;
             let spec = self.collect_entry_point_spec()?;
+            let workgroup_size = self.determine_workgroup_size(entry_point_declr.func_id);
             let entry_point = EntryPoint {
                 name: entry_point_declr.name.to_owned(),
                 exec_model: entry_point_declr.exec_model,
                 manifest,
                 spec,
+                workgroup_size,
             };
             entry_points.push(entry_point);
         }
@@ -1001,6 +1088,7 @@ impl<'a> ReflectIntermediate<'a> {
             exec_model: entry_point_declr.exec_model,
             manifest,
             spec,
+            workgroup_size: self.determine_workgroup_size(entry_point_declr.func_id),
         };
         Ok(entry_point)
     }
