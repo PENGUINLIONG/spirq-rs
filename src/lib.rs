@@ -740,9 +740,9 @@ impl Specialization {
 
 #[derive(Debug, Clone)]
 pub struct WorkgroupSize {
-    x: u32,
-    y: u32,
-    z: u32
+    pub x: u32,
+    pub y: u32,
+    pub z: u32
 }
 impl Default for WorkgroupSize {
     fn default() -> Self {
