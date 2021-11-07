@@ -368,6 +368,7 @@ impl<'a> ReflectIntermediate<'a> {
                 execution_mode
             };
             self.execution_mode_declrs.push(execution_mode_declr);
+            instrs.next();
         }
         Ok(())
     }
