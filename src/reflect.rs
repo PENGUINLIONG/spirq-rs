@@ -795,7 +795,7 @@ impl<'a> ReflectIntermediate<'a> {
                         .ok_or(Error::FUNC_NOT_FOUND)?;
                     func.callees.insert(op.func_id);
                 },
-                OP_LOAD => {
+                OP_LOAD | OP_ATOMIC_LOAD |  OP_ATOMIC_EXCHANGE..=OP_ATOMIC_XOR => {
                     let op = OpLoad::try_from(instr)?;
                     let mut var_id = op.var_id;
                     // Resolve access chain.
@@ -804,7 +804,7 @@ impl<'a> ReflectIntermediate<'a> {
                         .ok_or(Error::FUNC_NOT_FOUND)?;
                     func.accessed_vars.insert(var_id);
                 },
-                OP_STORE => {
+                OP_STORE | OP_ATOMIC_STORE => {
                     let op = OpStore::try_from(instr)?;
                     let mut var_id = op.var_id;
                     // Resolve access chain.

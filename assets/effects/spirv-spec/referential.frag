@@ -37,12 +37,18 @@ layout(binding=0) uniform blockName {
     bool cond;
 };
 
+layout(binding=1) buffer atomics {
+    uint x;
+};
+
 void main()
 {
     vec4 scale = vec4(1.0, 1.0, 2.0, 1.0);
 
     Scene scene;
     scene.object_count = 5;
+
+    atomicAdd(x, 5);
 
     vec4 pixel = vec4(0, 0, 0, 1);
     pixel.r = scene.object_count * 0.1;
