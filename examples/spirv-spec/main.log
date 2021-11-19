@@ -12,6 +12,7 @@ collected spirvs: ["referential.frag"]
         },
         descriptors: {
             (set=0, bind=0): 1x blockName { s: S { b: u32, v: [vec4<f32>; 5], i: i32 }, cond: u32 },
+            (set=0, bind=1): 1x atomics { x: u32 },
         },
         spec_consts: {
             233: i32,
