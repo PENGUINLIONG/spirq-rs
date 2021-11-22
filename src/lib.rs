@@ -744,22 +744,6 @@ impl Specialization {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct WorkgroupSize {
-    pub x: u32,
-    pub y: u32,
-    pub z: u32
-}
-impl Default for WorkgroupSize {
-    fn default() -> Self {
-        Self {
-            x: 1,
-            y: 1,
-            z: 1
-        }
-    }
-}
-
 
 // SPIR-V program entry points.
 
