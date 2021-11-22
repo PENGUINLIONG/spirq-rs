@@ -818,7 +818,6 @@ impl fmt::Debug for EntryPoint {
             .field("outputs", &InterfaceLocationDebugHelper(outputs))
             .field("descriptors", &DescriptorBindingDebugHelper(descs))
             .field("spec_consts", &self.spec.spec_const_map)
-            .field("workgroup_size", &self.workgroup_size)
             .finish()
     }
 }

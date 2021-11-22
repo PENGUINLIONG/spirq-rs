@@ -1,13 +1,12 @@
 //! Reflection procedures and types.
 use std::convert::{TryFrom};
-use std::f32::consts::E;
 use std::iter::Peekable;
 use std::ops::RangeInclusive;
 use std::fmt;
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use crate::ty::*;
 use crate::consts::*;
-use crate::{Manifest, EntryPoint, Specialization, WorkgroupSize};
+use crate::{Manifest, EntryPoint, Specialization};
 use crate::parse::{Instrs, Instr};
 use crate::error::{Error, Result};
 use crate::instr::*;
