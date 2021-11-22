@@ -1306,6 +1306,14 @@ impl<'a> ReflectIntermediate<'a> {
                 manifest.insert_var(accessed_var.clone(), name)?;
             }
         }
+        manifest.execution_modes = self.execution_mode_declrs.iter()
+            .filter_map(|declaration| {
+                if declaration.func_id == func_id {
+                    return Some(declaration.execution_mode.clone());
+                }
+                None
+            })
+            .collect();
         Ok(manifest)
     }
     fn collect_entry_point_spec(&self) -> Result<Specialization> {
