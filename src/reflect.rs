@@ -1,5 +1,6 @@
 //! Reflection procedures and types.
 use std::convert::{TryFrom};
+use std::f32::consts::E;
 use std::iter::Peekable;
 use std::ops::RangeInclusive;
 use std::fmt;
@@ -156,16 +157,195 @@ pub struct EntryPointDeclartion<'a> {
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum ExecutionMode {
-    /// Number of invocations of the geometry stage.
+    /// Number of times to invoke the geometry stage for each input primitive received.
+    /// The default is to run once for each input primitive. It is invalid to specify
+    /// a value greater than the target-dependent maximum.
+    ///
+    /// Only valid with the geometry execution model.
     Invocations(u32),
-    /// 3-dimensional size of the compute shader workgroup.
+    /// Requests the tesselation primitive generator to divide edges into a collection
+    /// of equal-sized segments.
+    ///
+    /// Only valid with one of the tessellation execution models.
+    SpacingEqual,
+    /// Requests the tessellation primitive generator to divide edges into an even number
+    /// of equal-length segments plus two additional shorter fractional segments.
+    ///
+    /// Only valid with one of the tessellation execution models.
+    SpacingFractionalEven,
+    /// Requests the tessellation primitive generator to divide edges into an odd number
+    /// of equal-length segments plus two additional shorter fractional segments.
+    ///
+    /// Only valid with one of the tessellation execution models.
+    SpacingFractionalOdd,
+    /// Requests the tessellation primitive generator to generate triangles in clockwise
+    /// order.
+    ///
+    /// Only valid with one of the tessellation execution models.
+    VertexOrderCw,
+    /// Requests the tessellation primitive generator to generate triangles in
+    /// counter-clockwise order.
+    ///
+    /// Only valid with one of the tessellation execution models.
+    VertexOrderCcw,
+    /// Pixels appear centered on whole-number pixel offsets. E.g., the coordinate (0.5, 0.5)
+    /// appears to move to (0.0, 0.0).
+    ///
+    /// Only valid with the fragment execution model.
+    /// If a fragment entry point does not have this set, pixels appear centered at offsets
+    /// of (0.5, 0.5) from whole numbers.
+    PixelCenterInteger,
+    /// Pixel coordinates appear to originate in the upper left, and increase toward the right
+    /// and downward.
+    ///
+    /// Only valid with the fragment execution model.
+    OriginUpperLeft,
+    /// Pixel coordinates appear to originate in the lower left, and increase toward the right
+    /// and upward.
+    ///
+    /// Only valid with the fragment execution model.
+    OriginLowerLeft,
+    /// Fragment tests are to be performed before fragment shader execution.
+    ///
+    /// Only valid with the fragment execution model.
+    EarlyFragmentTests,
+    /// Requests the tessellation primitive generator to generate a point for each distinct vertex
+    /// in the subdivided primitive, rather than to generate lines or triangles.
+    ///
+    /// Only valid with one of the tessellation execution models.
+    PointMode,
+    /// This stage will run in transform feedback-capturing mode and this module is responsible
+    /// for describing the transform-feedback setup.
+    ///
+    /// See the XfbBuffer, Offset, and XfbStride decorations.
+    Xfb,
+    /// This mode must be declared if this module potentially changes the fragment’s depth.
+    ///
+    /// Only valid with the fragment execution model.
+    DepthReplacing,
+    /// External optimizations may assume depth modifications will leave the fragment’s depth
+    /// as greater than or equal to the fragment’s interpolated depth value (given by the z
+    /// component of the FragCoord BuiltIn decorated variable).
+    ///
+    /// Only valid with the fragment execution model.
+    DepthGreater,
+    /// External optimizations may assume depth modifications leave the fragment’s depth less
+    /// than the fragment’s interpolated depth value, (given by the z component of the FragCoord
+    /// BuiltIn decorated variable).
+    ///
+    /// Only valid with the fragment execution model.
+    DepthLess,
+    /// External optimizations may assume this stage did not modify the fragment’s depth. However,
+    /// DepthReplacing mode must accurately represent depth modification.
+    ///
+    /// Only valid with the fragment execution model.
+    DepthUnchanged,
+    /// Indicates the work-group size in the x, y, and z dimensions.
+    ///
+    /// Only valid with the GLCompute or Kernel execution models.
     LocalSize { x: u32, y: u32, z: u32 },
-    /// A hint to the compiler about most likely used workgroup size.
+    /// A hint to the compiler, which indicates the most likely to be used work-group size in the
+    /// x, y, and z dimensions.
+    ///
+    /// Only valid with the Kernel execution model.
     LocalSizeHint { x: u32, y: u32, z: u32 },
-    /// Same as `LocalSize`, but defined with specialization constants.
+    /// Stage input primitive is points.
+    ///
+    /// Only valid with the geometry execution model.
+    InputPoints,
+    /// Stage input primitive is lines.
+    ///
+    /// Only valid with the geometry execution model.
+    InputLines,
+    /// Stage input primitive is lines adjacency.
+    ///
+    /// Only valid with the geometry execution model.
+    InputLinesAdjacency,
+    /// For a geometry stage, input primitive is triangles. For a tessellation stage,
+    /// requests the tessellation primitive generator to generate triangles.
+    ///
+    /// Only valid with the geometry or one of the tessellation execution models.
+    Triangles,
+    /// Geometry stage input primitive is triangles adjacency.
+    ///
+    /// Only valid with the geometry execution model.
+    InputTrianglesAdjacency,
+    /// Requests the tessellation primitive generator to generate quads.
+    ///
+    /// Only valid with one of the tessellation execution models.
+    Quads,
+    /// Requests the tessellation primitive generator to generate isolines.
+    ///
+    /// Only valid with one of the tessellation execution models.
+    Isolines,
+    /// For a geometry stage, the maximum number of vertices the shader will ever
+    /// emit in a single invocation. For a tessellation-control stage, the number
+    /// of vertices in the output patch produced by the tessellation control shader,
+    /// which also specifies the number of times the tessellation control shader is invoked.
+    ///
+    /// Only valid with the geometry or one of the tessellation execution models.
+    OutputVertices(u32),
+    /// Stage output primitive is points.
+    ///
+    /// Only valid with the geometry execution model.
+    OutputPoints,
+    /// Stage output primitive is line strip.
+    ///
+    /// Only valid with the geometry execution model.
+    OutputLineStrip,
+    /// Stage output primitive is triangle strip.
+    ///
+    /// Only valid with the geometry execution model.
+    OutputTriangleStrip,
+    /// A hint to the compiler, which indicates that most operations used in the entry point
+    /// are explicitly vectorized using a particular vector type. The 16 high-order bits of
+    /// Vector Type operand specify the number of components of the vector. The 16 low-order
+    /// bits of Vector Type operand specify the data type of the vector.
+    ///
+    /// These are the legal data type values:
+    /// 0 represents an 8-bit integer value.
+    /// 1 represents a 16-bit integer value.
+    /// 2 represents a 32-bit integer value.
+    /// 3 represents a 64-bit integer value.
+    /// 4 represents a 16-bit float value.
+    /// 5 represents a 32-bit float value.
+    /// 6 represents a 64-bit float value.
+    ///
+    /// Only valid with the Kernel execution model.
+    VecTypeHint(u32),
+    /// Indicates that floating-point-expressions contraction is disallowed.
+    ///
+    /// Only valid with the Kernel execution model.
+    ContractionOff,
+    /// Indicates that this entry point is a module initializer.
+    Initializer,
+    /// Indicates that this entry point is a module finalizer.
+    Finalizer,
+    /// Indicates that this entry point requires the specified Subgroup Size.
+    SubgroupSize(u32),
+    /// Indicates that this entry point requires the specified number of Subgroups Per
+    /// Workgroup.
+    SubgroupsPerWorkgroup(u32),
+    /// Indicates that this entry point requires the specified number of Subgroups Per
+    /// Workgroup.
+    ///
+    /// Specified as an Id.
+    SubgroupsPerWorkgroupId(SpecId),
+    /// Indicates the work-group size in the x, y, and z dimensions.
+    ///
+    /// Only valid with the GLCompute or Kernel execution models.
+    ///
+    /// Specified as Ids.
     LocalSizeId { x: SpecId, y: SpecId, z: SpecId },
-    /// Same as `LocalSizeHint`, but defined with specialization constants.
+    /// A hint to the compiler, which indicates the most likely to be used work-group size
+    /// in the x, y, and z dimensions.
+    ///
+    /// Only valid with the Kernel execution model.
+    ///
+    /// Specified as an Id.
     LocalSizeHintId { x: SpecId, y: SpecId, z: SpecId },
+    PostDepthCoverage,
+    StencilRefReplacingEXT,
 }
 pub struct ExecutionModeDeclaration {
     pub func_id: FunctionId,
@@ -332,6 +512,51 @@ impl<'a> ReflectIntermediate<'a> {
                 spirv_headers::ExecutionMode::Invocations => {
                     ExecutionMode::Invocations(op.params[0])
                 },
+                spirv_headers::ExecutionMode::SpacingEqual => {
+                    ExecutionMode::SpacingEqual
+                },
+                spirv_headers::ExecutionMode::SpacingFractionalEven => {
+                    ExecutionMode::SpacingFractionalEven
+                },
+                spirv_headers::ExecutionMode::SpacingFractionalOdd => {
+                    ExecutionMode::SpacingFractionalOdd
+                },
+                spirv_headers::ExecutionMode::VertexOrderCw => {
+                    ExecutionMode::VertexOrderCw
+                },
+                spirv_headers::ExecutionMode::VertexOrderCcw => {
+                    ExecutionMode::VertexOrderCcw
+                },
+                spirv_headers::ExecutionMode::PixelCenterInteger => {
+                    ExecutionMode::PixelCenterInteger
+                },
+                spirv_headers::ExecutionMode::OriginUpperLeft => {
+                    ExecutionMode::OriginUpperLeft
+                },
+                spirv_headers::ExecutionMode::OriginLowerLeft => {
+                    ExecutionMode::OriginLowerLeft
+                },
+                spirv_headers::ExecutionMode::EarlyFragmentTests => {
+                    ExecutionMode::EarlyFragmentTests
+                },
+                spirv_headers::ExecutionMode::PointMode => {
+                    ExecutionMode::PointMode
+                },
+                spirv_headers::ExecutionMode::Xfb => {
+                    ExecutionMode::Xfb
+                },
+                spirv_headers::ExecutionMode::DepthReplacing => {
+                    ExecutionMode::DepthReplacing
+                },
+                spirv_headers::ExecutionMode::DepthGreater => {
+                    ExecutionMode::DepthGreater
+                },
+                spirv_headers::ExecutionMode::DepthLess => {
+                    ExecutionMode::DepthLess
+                },
+                spirv_headers::ExecutionMode::DepthUnchanged => {
+                    ExecutionMode::DepthUnchanged
+                },
                 spirv_headers::ExecutionMode::LocalSize => {
                     ExecutionMode::LocalSize {
                         x: op.params[0],
@@ -346,6 +571,60 @@ impl<'a> ReflectIntermediate<'a> {
                         z: op.params[2]
                     }
                 },
+                spirv_headers::ExecutionMode::InputPoints => {
+                    ExecutionMode::InputPoints
+                },
+                spirv_headers::ExecutionMode::InputLines => {
+                    ExecutionMode::InputLines
+                },
+                spirv_headers::ExecutionMode::InputLinesAdjacency => {
+                    ExecutionMode::InputLinesAdjacency
+                },
+                spirv_headers::ExecutionMode::Triangles => {
+                    ExecutionMode::Triangles
+                },
+                spirv_headers::ExecutionMode::InputTrianglesAdjacency => {
+                    ExecutionMode::InputTrianglesAdjacency
+                },
+                spirv_headers::ExecutionMode::Quads => {
+                    ExecutionMode::Quads
+                },
+                spirv_headers::ExecutionMode::Isolines => {
+                    ExecutionMode::Isolines
+                },
+                spirv_headers::ExecutionMode::OutputVertices => {
+                    ExecutionMode::OutputVertices(op.params[0])
+                },
+                spirv_headers::ExecutionMode::OutputPoints => {
+                    ExecutionMode::OutputPoints
+                },
+                spirv_headers::ExecutionMode::OutputLineStrip => {
+                    ExecutionMode::OutputLineStrip
+                },
+                spirv_headers::ExecutionMode::OutputTriangleStrip => {
+                    ExecutionMode::OutputTriangleStrip
+                },
+                spirv_headers::ExecutionMode::VecTypeHint => {
+                    ExecutionMode::VecTypeHint(op.params[0])
+                },
+                spirv_headers::ExecutionMode::ContractionOff => {
+                    ExecutionMode::ContractionOff
+                },
+                spirv_headers::ExecutionMode::Initializer => {
+                    ExecutionMode::Initializer
+                },
+                spirv_headers::ExecutionMode::Finalizer => {
+                    ExecutionMode::Finalizer
+                },
+                spirv_headers::ExecutionMode::SubgroupSize => {
+                    ExecutionMode::SubgroupSize(op.params[0])
+                },
+                spirv_headers::ExecutionMode::SubgroupsPerWorkgroup => {
+                    ExecutionMode::SubgroupsPerWorkgroup(op.params[0])
+                },
+                spirv_headers::ExecutionMode::SubgroupsPerWorkgroupId => {
+                    ExecutionMode::SubgroupsPerWorkgroupId(op.params[0])
+                },
                 spirv_headers::ExecutionMode::LocalSizeId => {
                     ExecutionMode::LocalSizeId {
                         x: op.params[0],
@@ -359,9 +638,17 @@ impl<'a> ReflectIntermediate<'a> {
                         y: op.params[1],
                         z: op.params[2]
                     }
+                },
+                spirv_headers::ExecutionMode::PostDepthCoverage => {
+                    ExecutionMode::PostDepthCoverage
+                },
+                spirv_headers::ExecutionMode::StencilRefReplacingEXT => {
+                    ExecutionMode::StencilRefReplacingEXT
+                },
+                mode => {
+                    eprintln!("unsupported execution mode {:?}, skipping", mode);
+                    continue
                 }
-                // TODO: implement other execution modes support
-                _ => continue
             };
             let execution_mode_declr = ExecutionModeDeclaration {
                 func_id: op.func_id,
@@ -1036,33 +1323,16 @@ impl<'a> ReflectIntermediate<'a> {
         }
         Ok(spec)
     }
-    fn determine_workgroup_size(&self, func_id: FunctionId) -> Option<WorkgroupSize> {
-        self.execution_mode_declrs.iter()
-            .filter_map(|declr | {
-                if declr.func_id == func_id {
-                    match declr.execution_mode {
-                        ExecutionMode::LocalSize { x, y, z } => Some(WorkgroupSize { x, y, z }),
-                        // TODO: implement ExecutionMode::LocalSizeId support
-                        _ => None
-                    }
-                } else {
-                    None
-                }
-            })
-            .next()
-    }
     pub(crate) fn collect_entry_points(&self) -> Result<Vec<EntryPoint>> {
         let mut entry_points = Vec::with_capacity(self.entry_point_declrs().len());
         for entry_point_declr in self.entry_point_declrs().iter() {
             let manifest = self.collect_entry_point_manifest(entry_point_declr.func_id)?;
             let spec = self.collect_entry_point_spec()?;
-            let workgroup_size = self.determine_workgroup_size(entry_point_declr.func_id);
             let entry_point = EntryPoint {
                 name: entry_point_declr.name.to_owned(),
                 exec_model: entry_point_declr.exec_model,
                 manifest,
                 spec,
-                workgroup_size,
             };
             entry_points.push(entry_point);
         }
@@ -1084,12 +1354,19 @@ impl<'a> ReflectIntermediate<'a> {
             return Err(Error::MULTI_ENTRY_POINTS);
         }
         let entry_point_declr = &entry_point_declrs[0];
+        manifest.execution_modes = self.execution_mode_declrs.iter()
+            .filter_map(|declaration| {
+                if declaration.func_id == entry_point_declr.func_id {
+                    return Some(declaration.execution_mode.clone());
+                }
+                None
+            })
+            .collect();
         let entry_point = EntryPoint {
             name: entry_point_declr.name.to_owned(),
             exec_model: entry_point_declr.exec_model,
             manifest,
             spec,
-            workgroup_size: self.determine_workgroup_size(entry_point_declr.func_id),
         };
         Ok(entry_point)
     }

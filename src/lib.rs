@@ -97,6 +97,7 @@ pub use sym::{Seg, Segs, Sym, Symbol};
 pub use error::{Error, Result};
 pub use reflect::{AccessType, InterfaceLocation, DescriptorBinding, SpecId,
     Locator, Variable, ExecutionModel};
+use crate::reflect::ExecutionMode;
 
 /// SPIR-V program binary.
 #[derive(Debug, Default, Clone)]
@@ -260,6 +261,7 @@ pub struct MemberVariableResolution<'a> {
 /// A set of information used to describe variable typing and routing.
 #[derive(Default, Clone)]
 pub struct Manifest {
+    execution_modes: Vec<ExecutionMode>,
     var_map: HashMap<Locator, Variable>,
     var_name_map: HashMap<String, Locator>,
 }
@@ -677,6 +679,11 @@ impl Manifest {
         }
         Ok(())
     }
+
+    /// List all declared execution modes the entry point will execute in.
+    pub fn execution_modes(&self) -> &Vec<ExecutionMode> {
+        &self.execution_modes
+    }
 }
 
 /// Entry point specialization descriptions.
@@ -769,8 +776,6 @@ pub struct EntryPoint {
     pub manifest: Manifest,
     /// Specialization description of the entry point.
     pub spec: Specialization,
-    /// Compute shader workgroup size (if applicable).
-    pub workgroup_size: Option<WorkgroupSize>,
 }
 impl Deref for EntryPoint {
     type Target = Manifest;
