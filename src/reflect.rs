@@ -1265,7 +1265,6 @@ impl<'a> ReflectIntermediate<'a> {
         let mut itm = ReflectIntermediate::default();
         skip_until_range_inclusive(&mut instrs, ENTRY_POINT_RANGE);
         itm.populate_entry_points(&mut instrs)?;
-        skip_until_range_inclusive(&mut instrs, EXECUTION_MODE_RANGE);
         itm.populate_execution_modes(&mut instrs)?;
         skip_until_range_inclusive(&mut instrs, NAME_RANGE);
         itm.populate_names(&mut instrs)?;

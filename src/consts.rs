@@ -7,7 +7,6 @@ pub const OP_ENTRY_POINT: OpCode = Op::EntryPoint as u32;
 pub const ENTRY_POINT_RANGE: RangeInclusive<OpCode> = OP_ENTRY_POINT..=OP_ENTRY_POINT;
 
 pub const OP_EXECUTION_MODE: OpCode = Op::ExecutionMode as u32;
-pub const EXECUTION_MODE_RANGE: RangeInclusive<OpCode> = OP_EXECUTION_MODE..=OP_EXECUTION_MODE;
 
 pub const OP_NAME: OpCode = Op::Name as u32;
 pub const OP_MEMBER_NAME: OpCode = Op::MemberName as u32;
