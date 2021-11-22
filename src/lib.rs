@@ -96,8 +96,7 @@ pub use ty::{Type, DescriptorType};
 pub use sym::{Seg, Segs, Sym, Symbol};
 pub use error::{Error, Result};
 pub use reflect::{AccessType, InterfaceLocation, DescriptorBinding, SpecId,
-    Locator, Variable, ExecutionModel};
-use crate::reflect::ExecutionMode;
+    Locator, Variable, ExecutionMode, ExecutionModel};
 
 /// SPIR-V program binary.
 #[derive(Debug, Default, Clone)]
