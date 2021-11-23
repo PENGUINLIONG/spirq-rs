@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 use std::marker::PhantomData;
-use spirv_headers::{Dim, StorageClass};
+use spirv_headers::{Dim, ExecutionMode, StorageClass};
 use super::{Error, Result};
 use super::parse::{Instr};
 
@@ -43,6 +43,12 @@ define_ops!{
         exec_model: ExecutionModel = read_enum(),
         func_id: FunctionId = read_u32(),
         name: &'a str = read_str(),
+    }
+
+    OpExecutionMode {
+        func_id: FunctionId = read_u32(),
+        execution_mode: ExecutionMode = read_enum(),
+        params: &'a [u32] = read_list(),
     }
 
     OpName {

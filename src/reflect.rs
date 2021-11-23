@@ -153,7 +153,171 @@ pub struct EntryPointDeclartion<'a> {
     pub name: &'a str,
     pub exec_model: ExecutionModel,
 }
-
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum ExecutionMode {
+    /// Number of times to invoke the geometry stage for each input primitive received.
+    /// The default is to run once for each input primitive. It is invalid to specify
+    /// a value greater than the target-dependent maximum.
+    ///
+    /// Only valid with the geometry execution model.
+    Invocations(u32),
+    /// Requests the tesselation primitive generator to divide edges into a collection
+    /// of equal-sized segments.
+    ///
+    /// Only valid with one of the tessellation execution models.
+    SpacingEqual,
+    /// Requests the tessellation primitive generator to divide edges into an even number
+    /// of equal-length segments plus two additional shorter fractional segments.
+    ///
+    /// Only valid with one of the tessellation execution models.
+    SpacingFractionalEven,
+    /// Requests the tessellation primitive generator to divide edges into an odd number
+    /// of equal-length segments plus two additional shorter fractional segments.
+    ///
+    /// Only valid with one of the tessellation execution models.
+    SpacingFractionalOdd,
+    /// Requests the tessellation primitive generator to generate triangles in clockwise
+    /// order.
+    ///
+    /// Only valid with one of the tessellation execution models.
+    VertexOrderCw,
+    /// Requests the tessellation primitive generator to generate triangles in
+    /// counter-clockwise order.
+    ///
+    /// Only valid with one of the tessellation execution models.
+    VertexOrderCcw,
+    /// Pixels appear centered on whole-number pixel offsets. E.g., the coordinate (0.5, 0.5)
+    /// appears to move to (0.0, 0.0).
+    ///
+    /// Only valid with the fragment execution model.
+    /// If a fragment entry point does not have this set, pixels appear centered at offsets
+    /// of (0.5, 0.5) from whole numbers.
+    PixelCenterInteger,
+    /// Pixel coordinates appear to originate in the upper left, and increase toward the right
+    /// and downward.
+    ///
+    /// Only valid with the fragment execution model.
+    OriginUpperLeft,
+    /// Pixel coordinates appear to originate in the lower left, and increase toward the right
+    /// and upward.
+    ///
+    /// Only valid with the fragment execution model.
+    OriginLowerLeft,
+    /// Fragment tests are to be performed before fragment shader execution.
+    ///
+    /// Only valid with the fragment execution model.
+    EarlyFragmentTests,
+    /// Requests the tessellation primitive generator to generate a point for each distinct vertex
+    /// in the subdivided primitive, rather than to generate lines or triangles.
+    ///
+    /// Only valid with one of the tessellation execution models.
+    PointMode,
+    /// This stage will run in transform feedback-capturing mode and this module is responsible
+    /// for describing the transform-feedback setup.
+    ///
+    /// See the XfbBuffer, Offset, and XfbStride decorations.
+    Xfb,
+    /// This mode must be declared if this module potentially changes the fragment’s depth.
+    ///
+    /// Only valid with the fragment execution model.
+    DepthReplacing,
+    /// External optimizations may assume depth modifications will leave the fragment’s depth
+    /// as greater than or equal to the fragment’s interpolated depth value (given by the z
+    /// component of the FragCoord BuiltIn decorated variable).
+    ///
+    /// Only valid with the fragment execution model.
+    DepthGreater,
+    /// External optimizations may assume depth modifications leave the fragment’s depth less
+    /// than the fragment’s interpolated depth value, (given by the z component of the FragCoord
+    /// BuiltIn decorated variable).
+    ///
+    /// Only valid with the fragment execution model.
+    DepthLess,
+    /// External optimizations may assume this stage did not modify the fragment’s depth. However,
+    /// DepthReplacing mode must accurately represent depth modification.
+    ///
+    /// Only valid with the fragment execution model.
+    DepthUnchanged,
+    /// Indicates the work-group size in the x, y, and z dimensions.
+    ///
+    /// Only valid with the GLCompute or Kernel execution models.
+    LocalSize { x: u32, y: u32, z: u32 },
+    /// Stage input primitive is points.
+    ///
+    /// Only valid with the geometry execution model.
+    InputPoints,
+    /// Stage input primitive is lines.
+    ///
+    /// Only valid with the geometry execution model.
+    InputLines,
+    /// Stage input primitive is lines adjacency.
+    ///
+    /// Only valid with the geometry execution model.
+    InputLinesAdjacency,
+    /// For a geometry stage, input primitive is triangles. For a tessellation stage,
+    /// requests the tessellation primitive generator to generate triangles.
+    ///
+    /// Only valid with the geometry or one of the tessellation execution models.
+    Triangles,
+    /// Geometry stage input primitive is triangles adjacency.
+    ///
+    /// Only valid with the geometry execution model.
+    InputTrianglesAdjacency,
+    /// Requests the tessellation primitive generator to generate quads.
+    ///
+    /// Only valid with one of the tessellation execution models.
+    Quads,
+    /// Requests the tessellation primitive generator to generate isolines.
+    ///
+    /// Only valid with one of the tessellation execution models.
+    Isolines,
+    /// For a geometry stage, the maximum number of vertices the shader will ever
+    /// emit in a single invocation. For a tessellation-control stage, the number
+    /// of vertices in the output patch produced by the tessellation control shader,
+    /// which also specifies the number of times the tessellation control shader is invoked.
+    ///
+    /// Only valid with the geometry or one of the tessellation execution models.
+    OutputVertices(u32),
+    /// Stage output primitive is points.
+    ///
+    /// Only valid with the geometry execution model.
+    OutputPoints,
+    /// Stage output primitive is line strip.
+    ///
+    /// Only valid with the geometry execution model.
+    OutputLineStrip,
+    /// Stage output primitive is triangle strip.
+    ///
+    /// Only valid with the geometry execution model.
+    OutputTriangleStrip,
+    /// Indicates that this entry point is a module initializer.
+    Initializer,
+    /// Indicates that this entry point is a module finalizer.
+    Finalizer,
+    /// Indicates that this entry point requires the specified Subgroup Size.
+    SubgroupSize(u32),
+    /// Indicates that this entry point requires the specified number of Subgroups Per
+    /// Workgroup.
+    SubgroupsPerWorkgroup(u32),
+    /// Indicates that this entry point requires the specified number of Subgroups Per
+    /// Workgroup.
+    ///
+    /// Specified as an Id.
+    SubgroupsPerWorkgroupId(SpecId),
+    /// Indicates the work-group size in the x, y, and z dimensions.
+    ///
+    /// Only valid with the GLCompute or Kernel execution models.
+    ///
+    /// Specified as Ids.
+    LocalSizeId { x: SpecId, y: SpecId, z: SpecId },
+    PostDepthCoverage,
+    StencilRefReplacingEXT,
+}
+pub struct ExecutionModeDeclaration {
+    pub func_id: FunctionId,
+    pub execution_mode: ExecutionMode,
+}
 
 
 // The actual reflection to take place.
@@ -161,6 +325,7 @@ pub struct EntryPointDeclartion<'a> {
 #[derive(Default)]
 pub struct ReflectIntermediate<'a> {
     entry_point_declrs: Vec<EntryPointDeclartion<'a>>,
+    execution_mode_declrs: Vec<ExecutionModeDeclaration>,
     spec_consts: Vec<SpecConstant<'a>>,
     vars: Vec<Variable>,
 
@@ -265,6 +430,9 @@ impl<'a> ReflectIntermediate<'a> {
     pub fn entry_point_declrs(&self) -> &[EntryPointDeclartion<'a>] {
         &self.entry_point_declrs
     }
+    pub fn execution_mode_declrs(&self) -> &[ExecutionModeDeclaration] {
+        &self.execution_mode_declrs
+    }
     pub fn spec_consts(&self) -> &[SpecConstant<'a>] {
         &self.spec_consts
     }
@@ -299,6 +467,141 @@ impl<'a> ReflectIntermediate<'a> {
                 name: op.name,
             };
             self.entry_point_declrs.push(entry_point_declr);
+            instrs.next();
+        }
+        Ok(())
+    }
+    fn populate_execution_modes(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>) -> Result<()> {
+        while let Some(instr) = instrs.peek() {
+            if instr.opcode() != OP_EXECUTION_MODE { break; }
+            let op = OpExecutionMode::try_from(instr)?;
+            let execution_mode = match op.execution_mode {
+                spirv_headers::ExecutionMode::Invocations => {
+                    ExecutionMode::Invocations(op.params[0])
+                },
+                spirv_headers::ExecutionMode::SpacingEqual => {
+                    ExecutionMode::SpacingEqual
+                },
+                spirv_headers::ExecutionMode::SpacingFractionalEven => {
+                    ExecutionMode::SpacingFractionalEven
+                },
+                spirv_headers::ExecutionMode::SpacingFractionalOdd => {
+                    ExecutionMode::SpacingFractionalOdd
+                },
+                spirv_headers::ExecutionMode::VertexOrderCw => {
+                    ExecutionMode::VertexOrderCw
+                },
+                spirv_headers::ExecutionMode::VertexOrderCcw => {
+                    ExecutionMode::VertexOrderCcw
+                },
+                spirv_headers::ExecutionMode::PixelCenterInteger => {
+                    ExecutionMode::PixelCenterInteger
+                },
+                spirv_headers::ExecutionMode::OriginUpperLeft => {
+                    ExecutionMode::OriginUpperLeft
+                },
+                spirv_headers::ExecutionMode::OriginLowerLeft => {
+                    ExecutionMode::OriginLowerLeft
+                },
+                spirv_headers::ExecutionMode::EarlyFragmentTests => {
+                    ExecutionMode::EarlyFragmentTests
+                },
+                spirv_headers::ExecutionMode::PointMode => {
+                    ExecutionMode::PointMode
+                },
+                spirv_headers::ExecutionMode::Xfb => {
+                    ExecutionMode::Xfb
+                },
+                spirv_headers::ExecutionMode::DepthReplacing => {
+                    ExecutionMode::DepthReplacing
+                },
+                spirv_headers::ExecutionMode::DepthGreater => {
+                    ExecutionMode::DepthGreater
+                },
+                spirv_headers::ExecutionMode::DepthLess => {
+                    ExecutionMode::DepthLess
+                },
+                spirv_headers::ExecutionMode::DepthUnchanged => {
+                    ExecutionMode::DepthUnchanged
+                },
+                spirv_headers::ExecutionMode::LocalSize => {
+                    ExecutionMode::LocalSize {
+                        x: op.params[0],
+                        y: op.params[1],
+                        z: op.params[2]
+                    }
+                },
+                spirv_headers::ExecutionMode::InputPoints => {
+                    ExecutionMode::InputPoints
+                },
+                spirv_headers::ExecutionMode::InputLines => {
+                    ExecutionMode::InputLines
+                },
+                spirv_headers::ExecutionMode::InputLinesAdjacency => {
+                    ExecutionMode::InputLinesAdjacency
+                },
+                spirv_headers::ExecutionMode::Triangles => {
+                    ExecutionMode::Triangles
+                },
+                spirv_headers::ExecutionMode::InputTrianglesAdjacency => {
+                    ExecutionMode::InputTrianglesAdjacency
+                },
+                spirv_headers::ExecutionMode::Quads => {
+                    ExecutionMode::Quads
+                },
+                spirv_headers::ExecutionMode::Isolines => {
+                    ExecutionMode::Isolines
+                },
+                spirv_headers::ExecutionMode::OutputVertices => {
+                    ExecutionMode::OutputVertices(op.params[0])
+                },
+                spirv_headers::ExecutionMode::OutputPoints => {
+                    ExecutionMode::OutputPoints
+                },
+                spirv_headers::ExecutionMode::OutputLineStrip => {
+                    ExecutionMode::OutputLineStrip
+                },
+                spirv_headers::ExecutionMode::OutputTriangleStrip => {
+                    ExecutionMode::OutputTriangleStrip
+                },
+                spirv_headers::ExecutionMode::Initializer => {
+                    ExecutionMode::Initializer
+                },
+                spirv_headers::ExecutionMode::Finalizer => {
+                    ExecutionMode::Finalizer
+                },
+                spirv_headers::ExecutionMode::SubgroupSize => {
+                    ExecutionMode::SubgroupSize(op.params[0])
+                },
+                spirv_headers::ExecutionMode::SubgroupsPerWorkgroup => {
+                    ExecutionMode::SubgroupsPerWorkgroup(op.params[0])
+                },
+                spirv_headers::ExecutionMode::SubgroupsPerWorkgroupId => {
+                    ExecutionMode::SubgroupsPerWorkgroupId(op.params[0])
+                },
+                spirv_headers::ExecutionMode::LocalSizeId => {
+                    ExecutionMode::LocalSizeId {
+                        x: op.params[0],
+                        y: op.params[1],
+                        z: op.params[2]
+                    }
+                },
+                spirv_headers::ExecutionMode::PostDepthCoverage => {
+                    ExecutionMode::PostDepthCoverage
+                },
+                spirv_headers::ExecutionMode::StencilRefReplacingEXT => {
+                    ExecutionMode::StencilRefReplacingEXT
+                },
+                mode => {
+                    eprintln!("unsupported execution mode {:?}, skipping", mode);
+                    continue
+                }
+            };
+            let execution_mode_declr = ExecutionModeDeclaration {
+                func_id: op.func_id,
+                execution_mode
+            };
+            self.execution_mode_declrs.push(execution_mode_declr);
             instrs.next();
         }
         Ok(())
@@ -910,6 +1213,7 @@ impl<'a> ReflectIntermediate<'a> {
         let mut itm = ReflectIntermediate::default();
         skip_until_range_inclusive(&mut instrs, ENTRY_POINT_RANGE);
         itm.populate_entry_points(&mut instrs)?;
+        itm.populate_execution_modes(&mut instrs)?;
         skip_until_range_inclusive(&mut instrs, NAME_RANGE);
         itm.populate_names(&mut instrs)?;
         skip_until(&mut instrs, is_deco_op);
@@ -965,16 +1269,28 @@ impl<'a> ReflectIntermediate<'a> {
         }
         Ok(spec)
     }
+    fn collect_execution_modes(&self, func_id: FunctionId) -> Vec<ExecutionMode> {
+        self.execution_mode_declrs.iter()
+            .filter_map(|declaration| {
+                if declaration.func_id == func_id {
+                    return Some(declaration.execution_mode.clone());
+                }
+                None
+            })
+            .collect()
+    }
     pub(crate) fn collect_entry_points(&self) -> Result<Vec<EntryPoint>> {
         let mut entry_points = Vec::with_capacity(self.entry_point_declrs().len());
         for entry_point_declr in self.entry_point_declrs().iter() {
             let manifest = self.collect_entry_point_manifest(entry_point_declr.func_id)?;
             let spec = self.collect_entry_point_spec()?;
+            let execution_modes = self.collect_execution_modes(entry_point_declr.func_id);
             let entry_point = EntryPoint {
                 name: entry_point_declr.name.to_owned(),
                 exec_model: entry_point_declr.exec_model,
                 manifest,
                 spec,
+                execution_modes,
             };
             entry_points.push(entry_point);
         }
@@ -996,11 +1312,13 @@ impl<'a> ReflectIntermediate<'a> {
             return Err(Error::MULTI_ENTRY_POINTS);
         }
         let entry_point_declr = &entry_point_declrs[0];
+        let execution_modes = self.collect_execution_modes(entry_point_declr.func_id);
         let entry_point = EntryPoint {
             name: entry_point_declr.name.to_owned(),
             exec_model: entry_point_declr.exec_model,
             manifest,
             spec,
+            execution_modes,
         };
         Ok(entry_point)
     }

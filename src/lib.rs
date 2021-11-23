@@ -96,7 +96,7 @@ pub use ty::{Type, DescriptorType};
 pub use sym::{Seg, Segs, Sym, Symbol};
 pub use error::{Error, Result};
 pub use reflect::{AccessType, InterfaceLocation, DescriptorBinding, SpecId,
-    Locator, Variable, ExecutionModel};
+    Locator, Variable, ExecutionMode, ExecutionModel};
 
 /// SPIR-V program binary.
 #[derive(Debug, Default, Clone)]
@@ -753,6 +753,8 @@ pub struct EntryPoint {
     pub manifest: Manifest,
     /// Specialization description of the entry point.
     pub spec: Specialization,
+    /// Execution modes the entry point will execute in.
+    pub execution_modes: Vec<ExecutionMode>,
 }
 impl Deref for EntryPoint {
     type Target = Manifest;
@@ -795,6 +797,7 @@ impl fmt::Debug for EntryPoint {
             .field("outputs", &InterfaceLocationDebugHelper(outputs))
             .field("descriptors", &DescriptorBindingDebugHelper(descs))
             .field("spec_consts", &self.spec.spec_const_map)
+            .field("execution_modes", &self.execution_modes)
             .finish()
     }
 }
