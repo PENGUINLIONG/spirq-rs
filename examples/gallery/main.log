@@ -116,4 +116,7 @@ main {
         (set=16, bind=0): 1x accelerationStructure,
     },
     spec_consts: {},
+    execution_modes: [
+        OriginUpperLeft,
+    ],
 }

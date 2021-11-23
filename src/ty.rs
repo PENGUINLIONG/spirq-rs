@@ -509,6 +509,7 @@ macro_rules! declr_ty_accessor {
 
 
 #[derive(PartialEq, Eq, Hash, Clone)]
+// #[non_exhaustive] // TODO: (penguinliong) For SPIR-Q v0.5.
 pub enum Type {
     /// A single value, which can be a signed or unsigned integer, a floating
     /// point number, or a boolean value.
@@ -620,6 +621,7 @@ impl fmt::Debug for Type {
 
 /// Structured representation of descriptor types.
 #[derive(PartialEq, Eq, Hash, Clone)]
+// #[non_exhaustive] // TODO: (penguinliong) For SPIR-Q v0.5.
 pub enum DescriptorType {
     UniformBuffer(u32, Type),
     StorageBuffer(u32, Type),

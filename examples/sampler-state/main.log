@@ -13,6 +13,9 @@ collected spirvs: ["sampler-state.frag.hlsl"]
             (set=0, bind=1): 1x sampler,
         },
         spec_consts: {},
+        execution_modes: [
+            OriginUpperLeft,
+        ],
     },
 ]
 SampleType: DescriptorResolution { desc_bind: (set=0, bind=1), desc_ty: 1x sampler, member_var_res: None }
