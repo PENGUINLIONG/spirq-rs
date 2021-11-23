@@ -260,7 +260,6 @@ pub struct MemberVariableResolution<'a> {
 /// A set of information used to describe variable typing and routing.
 #[derive(Default, Clone)]
 pub struct Manifest {
-    execution_modes: Vec<ExecutionMode>,
     var_map: HashMap<Locator, Variable>,
     var_name_map: HashMap<String, Locator>,
 }
@@ -678,11 +677,6 @@ impl Manifest {
         }
         Ok(())
     }
-
-    /// List all declared execution modes the entry point will execute in.
-    pub fn execution_modes(&self) -> &Vec<ExecutionMode> {
-        &self.execution_modes
-    }
 }
 
 /// Entry point specialization descriptions.
@@ -759,6 +753,8 @@ pub struct EntryPoint {
     pub manifest: Manifest,
     /// Specialization description of the entry point.
     pub spec: Specialization,
+    /// Execution modes the entry point will execute in.
+    pub execution_modes: Vec<ExecutionMode>,
 }
 impl Deref for EntryPoint {
     type Target = Manifest;
@@ -801,6 +797,7 @@ impl fmt::Debug for EntryPoint {
             .field("outputs", &InterfaceLocationDebugHelper(outputs))
             .field("descriptors", &DescriptorBindingDebugHelper(descs))
             .field("spec_consts", &self.spec.spec_const_map)
+            .field("execution_modes", &self.execution_modes)
             .finish()
     }
 }

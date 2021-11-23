@@ -1253,14 +1253,6 @@ impl<'a> ReflectIntermediate<'a> {
                 manifest.insert_var(accessed_var.clone(), name)?;
             }
         }
-        manifest.execution_modes = self.execution_mode_declrs.iter()
-            .filter_map(|declaration| {
-                if declaration.func_id == func_id {
-                    return Some(declaration.execution_mode.clone());
-                }
-                None
-            })
-            .collect();
         Ok(manifest)
     }
     fn collect_entry_point_spec(&self) -> Result<Specialization> {
@@ -1277,16 +1269,28 @@ impl<'a> ReflectIntermediate<'a> {
         }
         Ok(spec)
     }
+    fn collect_execution_modes(&self, func_id: FunctionId) -> Vec<ExecutionMode> {
+        self.execution_mode_declrs.iter()
+            .filter_map(|declaration| {
+                if declaration.func_id == func_id {
+                    return Some(declaration.execution_mode.clone());
+                }
+                None
+            })
+            .collect()
+    }
     pub(crate) fn collect_entry_points(&self) -> Result<Vec<EntryPoint>> {
         let mut entry_points = Vec::with_capacity(self.entry_point_declrs().len());
         for entry_point_declr in self.entry_point_declrs().iter() {
             let manifest = self.collect_entry_point_manifest(entry_point_declr.func_id)?;
             let spec = self.collect_entry_point_spec()?;
+            let execution_modes = self.collect_execution_modes(entry_point_declr.func_id);
             let entry_point = EntryPoint {
                 name: entry_point_declr.name.to_owned(),
                 exec_model: entry_point_declr.exec_model,
                 manifest,
                 spec,
+                execution_modes,
             };
             entry_points.push(entry_point);
         }
@@ -1308,19 +1312,13 @@ impl<'a> ReflectIntermediate<'a> {
             return Err(Error::MULTI_ENTRY_POINTS);
         }
         let entry_point_declr = &entry_point_declrs[0];
-        manifest.execution_modes = self.execution_mode_declrs.iter()
-            .filter_map(|declaration| {
-                if declaration.func_id == entry_point_declr.func_id {
-                    return Some(declaration.execution_mode.clone());
-                }
-                None
-            })
-            .collect();
+        let execution_modes = self.collect_execution_modes(entry_point_declr.func_id);
         let entry_point = EntryPoint {
             name: entry_point_declr.name.to_owned(),
             exec_model: entry_point_declr.exec_model,
             manifest,
             spec,
+            execution_modes,
         };
         Ok(entry_point)
     }
