@@ -592,10 +592,7 @@ impl<'a> ReflectIntermediate<'a> {
                 spirv_headers::ExecutionMode::StencilRefReplacingEXT => {
                     ExecutionMode::StencilRefReplacingEXT
                 },
-                mode => {
-                    eprintln!("unsupported execution mode {:?}, skipping", mode);
-                    continue
-                }
+                _ => { return Err(Error::UNSUPPORTED_EXEC_MODE); }
             };
             let execution_mode_declr = ExecutionModeDeclaration {
                 func_id: op.func_id,

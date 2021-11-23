@@ -17,3 +17,6 @@ descriptor(set=0, bind=0) (unnamed):
    0                    s: S { b: u32, v: [vec4<f32>; 5], i: i32 }
  112                 cond: u32
    0                     : blockName { s: S { b: u32, v: [vec4<f32>; 5], i: i32 }, cond: u32 }
+descriptor(set=0, bind=1) (unnamed):
+   0                    x: u32
+   0                     : atomics { x: u32 }

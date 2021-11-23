@@ -29,7 +29,9 @@ impl Error {
     pub const ACCESS_CONFLICT: Self = Self::CorruptedSpirv("variable is both read-only and write-only");
     pub const LOCATION_COLLISION: Self = Self::CorruptedSpirv("interface variable location cannot be shared");
 
+    // TODO: (penguinliong) Mechanism to ignore unsupported features.
     pub const UNSUPPORTED_TY: Self = Self::UnsupportedSpirv("unsupported type");
+    pub const UNSUPPORTED_EXEC_MODE: Self = Self::UnsupportedSpirv("unsupported execution mode");
     pub const UNSUPPORTED_IMG_CFG: Self = Self::UnsupportedSpirv("unsupported image configuration");
     pub const UNSUPPORTED_SPEC: Self = Self::UnsupportedSpirv("unsupported specialization");
     pub const MULTI_ENTRY_POINTS: Self = Self::UnsupportedSpirv("cannot fast reflect a module with multiple entry points");

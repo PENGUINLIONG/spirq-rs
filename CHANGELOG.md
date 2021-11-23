@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.4.18
+
+- Supported entry-point execution mode reflection. (#72)
+- Fixed that atomically accessed resources are not correctly reflected. (#70)
+
 ## v0.4.17
 
 - Improved support for specialization constants. (#67)

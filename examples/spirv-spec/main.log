@@ -18,6 +18,9 @@ collected spirvs: ["referential.frag"]
             233: i32,
             234: i32,
         },
+        execution_modes: [
+            OriginUpperLeft,
+        ],
     },
 ]
 0.0: DescriptorResolution { desc_bind: (set=0, bind=0), desc_ty: 1x blockName { s: S { b: u32, v: [vec4<f32>; 5], i: i32 }, cond: u32 }, member_var_res: Some(MemberVariableResolution { offset: 0, ty: blockName { s: S { b: u32, v: [vec4<f32>; 5], i: i32 }, cond: u32 } }) }
