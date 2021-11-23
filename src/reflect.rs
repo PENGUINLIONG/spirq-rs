@@ -243,11 +243,6 @@ pub enum ExecutionMode {
     ///
     /// Only valid with the GLCompute or Kernel execution models.
     LocalSize { x: u32, y: u32, z: u32 },
-    /// A hint to the compiler, which indicates the most likely to be used work-group size in the
-    /// x, y, and z dimensions.
-    ///
-    /// Only valid with the Kernel execution model.
-    LocalSizeHint { x: u32, y: u32, z: u32 },
     /// Stage input primitive is points.
     ///
     /// Only valid with the geometry execution model.
@@ -296,26 +291,6 @@ pub enum ExecutionMode {
     ///
     /// Only valid with the geometry execution model.
     OutputTriangleStrip,
-    /// A hint to the compiler, which indicates that most operations used in the entry point
-    /// are explicitly vectorized using a particular vector type. The 16 high-order bits of
-    /// Vector Type operand specify the number of components of the vector. The 16 low-order
-    /// bits of Vector Type operand specify the data type of the vector.
-    ///
-    /// These are the legal data type values:
-    /// 0 represents an 8-bit integer value.
-    /// 1 represents a 16-bit integer value.
-    /// 2 represents a 32-bit integer value.
-    /// 3 represents a 64-bit integer value.
-    /// 4 represents a 16-bit float value.
-    /// 5 represents a 32-bit float value.
-    /// 6 represents a 64-bit float value.
-    ///
-    /// Only valid with the Kernel execution model.
-    VecTypeHint(u32),
-    /// Indicates that floating-point-expressions contraction is disallowed.
-    ///
-    /// Only valid with the Kernel execution model.
-    ContractionOff,
     /// Indicates that this entry point is a module initializer.
     Initializer,
     /// Indicates that this entry point is a module finalizer.
@@ -336,13 +311,6 @@ pub enum ExecutionMode {
     ///
     /// Specified as Ids.
     LocalSizeId { x: SpecId, y: SpecId, z: SpecId },
-    /// A hint to the compiler, which indicates the most likely to be used work-group size
-    /// in the x, y, and z dimensions.
-    ///
-    /// Only valid with the Kernel execution model.
-    ///
-    /// Specified as an Id.
-    LocalSizeHintId { x: SpecId, y: SpecId, z: SpecId },
     PostDepthCoverage,
     StencilRefReplacingEXT,
 }
@@ -563,13 +531,6 @@ impl<'a> ReflectIntermediate<'a> {
                         z: op.params[2]
                     }
                 },
-                spirv_headers::ExecutionMode::LocalSizeHint => {
-                    ExecutionMode::LocalSizeHint {
-                        x: op.params[0],
-                        y: op.params[1],
-                        z: op.params[2]
-                    }
-                },
                 spirv_headers::ExecutionMode::InputPoints => {
                     ExecutionMode::InputPoints
                 },
@@ -603,12 +564,6 @@ impl<'a> ReflectIntermediate<'a> {
                 spirv_headers::ExecutionMode::OutputTriangleStrip => {
                     ExecutionMode::OutputTriangleStrip
                 },
-                spirv_headers::ExecutionMode::VecTypeHint => {
-                    ExecutionMode::VecTypeHint(op.params[0])
-                },
-                spirv_headers::ExecutionMode::ContractionOff => {
-                    ExecutionMode::ContractionOff
-                },
                 spirv_headers::ExecutionMode::Initializer => {
                     ExecutionMode::Initializer
                 },
@@ -626,13 +581,6 @@ impl<'a> ReflectIntermediate<'a> {
                 },
                 spirv_headers::ExecutionMode::LocalSizeId => {
                     ExecutionMode::LocalSizeId {
-                        x: op.params[0],
-                        y: op.params[1],
-                        z: op.params[2]
-                    }
-                },
-                spirv_headers::ExecutionMode::LocalSizeHintId => {
-                    ExecutionMode::LocalSizeHintId {
                         x: op.params[0],
                         y: op.params[1],
                         z: op.params[2]
