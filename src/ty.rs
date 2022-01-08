@@ -246,7 +246,7 @@ impl fmt::Debug for ImageType {
 
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct SampledImageType {
-    img_ty: ImageType,
+    pub img_ty: ImageType,
 }
 impl SampledImageType {
     pub fn new(img_ty: ImageType) -> SampledImageType {
