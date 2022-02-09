@@ -185,7 +185,7 @@ fn test_desc_tys() {
     for desc in entry.descs() {
         let resolved = entry.resolve_desc(entry.get_desc_name(desc.desc_bind).unwrap()).unwrap();
         assert_eq!(desc, resolved);
-        assert_eq!(resolved.desc_ty, entry.get_desc(desc.desc_bind).unwrap());
+        assert_eq!(resolved.desc_rsc, entry.get_desc(desc.desc_bind).unwrap());
         if desc.desc_bind == DescriptorBinding::new(0, 3) {
             assert_eq!(entry.get_desc_access(desc.desc_bind).unwrap(), AccessType::ReadWrite);
         } else if desc.desc_bind == DescriptorBinding::new(0, 1) {
@@ -288,6 +288,6 @@ fn test_ray_tracing() {
                 vec3(0, 0, 0), 100.0f, 0);
         }
     "#);
-    assert!(entry.get_desc(DescriptorBinding::new(0, 0)).unwrap().is_accel_struct());
+    assert!(entry.get_desc(DescriptorBinding::new(0, 0)).unwrap().desc_ty == DescriptorType::AccelStruct);
 }
 // TODO: (penguinliong) Comprehensive type testing.

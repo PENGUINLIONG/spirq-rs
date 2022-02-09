@@ -73,6 +73,9 @@ define_ops!{
         params: &'a [u32] = read_list(),
     }
 
+    OpTypeVoid {
+        ty_id: TypeId = read_u32(),
+    }
     OpTypeBool {
         ty_id: TypeId = read_u32(),
     }
