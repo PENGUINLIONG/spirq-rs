@@ -306,7 +306,7 @@
                 ),
                 desc_bind: (set=4, bind=0),
                 desc_ty: CombinedImageSampler,
-                ty: sampler1D<Some(i32)>,
+                ty: sampler1D<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -315,7 +315,7 @@
                 ),
                 desc_bind: (set=4, bind=1),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2D<Some(i32)>,
+                ty: sampler2D<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -324,7 +324,7 @@
                 ),
                 desc_bind: (set=4, bind=2),
                 desc_ty: CombinedImageSampler,
-                ty: sampler3D<Some(i32)>,
+                ty: sampler3D<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -333,7 +333,7 @@
                 ),
                 desc_bind: (set=4, bind=3),
                 desc_ty: CombinedImageSampler,
-                ty: samplerCube<Some(i32)>,
+                ty: samplerCube<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -342,7 +342,7 @@
                 ),
                 desc_bind: (set=4, bind=4),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2DRect<Some(i32)>,
+                ty: sampler2DRect<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -351,7 +351,7 @@
                 ),
                 desc_bind: (set=4, bind=5),
                 desc_ty: CombinedImageSampler,
-                ty: sampler1DArray<Some(i32)>,
+                ty: sampler1DArray<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -360,7 +360,7 @@
                 ),
                 desc_bind: (set=4, bind=6),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2DArray<Some(i32)>,
+                ty: sampler2DArray<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -369,7 +369,7 @@
                 ),
                 desc_bind: (set=4, bind=7),
                 desc_ty: CombinedImageSampler,
-                ty: samplerCubeArray<Some(i32)>,
+                ty: samplerCubeArray<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -378,7 +378,7 @@
                 ),
                 desc_bind: (set=4, bind=8),
                 desc_ty: UniformTexelBuffer,
-                ty: samplerBuffer<Some(i32)>,
+                ty: samplerBuffer<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -387,7 +387,7 @@
                 ),
                 desc_bind: (set=4, bind=9),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2DMS<Some(i32)>,
+                ty: sampler2DMS<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -396,7 +396,7 @@
                 ),
                 desc_bind: (set=4, bind=10),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2DMSArray<Some(i32)>,
+                ty: sampler2DMSArray<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -405,7 +405,7 @@
                 ),
                 desc_bind: (set=5, bind=0),
                 desc_ty: CombinedImageSampler,
-                ty: sampler1D<Some(u32)>,
+                ty: sampler1D<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -414,7 +414,7 @@
                 ),
                 desc_bind: (set=5, bind=1),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2D<Some(u32)>,
+                ty: sampler2D<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -423,7 +423,7 @@
                 ),
                 desc_bind: (set=5, bind=2),
                 desc_ty: CombinedImageSampler,
-                ty: sampler3D<Some(u32)>,
+                ty: sampler3D<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -432,7 +432,7 @@
                 ),
                 desc_bind: (set=5, bind=3),
                 desc_ty: CombinedImageSampler,
-                ty: samplerCube<Some(u32)>,
+                ty: samplerCube<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -441,7 +441,7 @@
                 ),
                 desc_bind: (set=5, bind=4),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2DRect<Some(u32)>,
+                ty: sampler2DRect<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -450,7 +450,7 @@
                 ),
                 desc_bind: (set=5, bind=5),
                 desc_ty: CombinedImageSampler,
-                ty: sampler1DArray<Some(u32)>,
+                ty: sampler1DArray<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -459,7 +459,7 @@
                 ),
                 desc_bind: (set=5, bind=6),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2DArray<Some(u32)>,
+                ty: sampler2DArray<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -468,7 +468,7 @@
                 ),
                 desc_bind: (set=5, bind=7),
                 desc_ty: CombinedImageSampler,
-                ty: samplerCubeArray<Some(u32)>,
+                ty: samplerCubeArray<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -477,7 +477,7 @@
                 ),
                 desc_bind: (set=5, bind=8),
                 desc_ty: UniformTexelBuffer,
-                ty: samplerBuffer<Some(u32)>,
+                ty: samplerBuffer<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -486,7 +486,7 @@
                 ),
                 desc_bind: (set=5, bind=9),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2DMS<Some(u32)>,
+                ty: sampler2DMS<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -495,7 +495,7 @@
                 ),
                 desc_bind: (set=5, bind=10),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2DMSArray<Some(u32)>,
+                ty: sampler2DMSArray<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -504,7 +504,7 @@
                 ),
                 desc_bind: (set=6, bind=0),
                 desc_ty: CombinedImageSampler,
-                ty: sampler1D<Some(f32)>,
+                ty: sampler1D<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -513,7 +513,7 @@
                 ),
                 desc_bind: (set=6, bind=1),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2D<Some(f32)>,
+                ty: sampler2D<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -522,7 +522,7 @@
                 ),
                 desc_bind: (set=6, bind=2),
                 desc_ty: CombinedImageSampler,
-                ty: sampler3D<Some(f32)>,
+                ty: sampler3D<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -531,7 +531,7 @@
                 ),
                 desc_bind: (set=6, bind=3),
                 desc_ty: CombinedImageSampler,
-                ty: samplerCube<Some(f32)>,
+                ty: samplerCube<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -540,7 +540,7 @@
                 ),
                 desc_bind: (set=6, bind=4),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2DRect<Some(f32)>,
+                ty: sampler2DRect<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -549,7 +549,7 @@
                 ),
                 desc_bind: (set=6, bind=5),
                 desc_ty: CombinedImageSampler,
-                ty: sampler1DArray<Some(f32)>,
+                ty: sampler1DArray<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -558,7 +558,7 @@
                 ),
                 desc_bind: (set=6, bind=6),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2DArray<Some(f32)>,
+                ty: sampler2DArray<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -567,7 +567,7 @@
                 ),
                 desc_bind: (set=6, bind=7),
                 desc_ty: CombinedImageSampler,
-                ty: samplerCubeArray<Some(f32)>,
+                ty: samplerCubeArray<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -576,7 +576,7 @@
                 ),
                 desc_bind: (set=6, bind=8),
                 desc_ty: UniformTexelBuffer,
-                ty: samplerBuffer<Some(f32)>,
+                ty: samplerBuffer<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -585,7 +585,7 @@
                 ),
                 desc_bind: (set=6, bind=9),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2DMS<Some(f32)>,
+                ty: sampler2DMS<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -594,7 +594,7 @@
                 ),
                 desc_bind: (set=6, bind=10),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2DMSArray<Some(f32)>,
+                ty: sampler2DMSArray<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -603,7 +603,7 @@
                 ),
                 desc_bind: (set=7, bind=0),
                 desc_ty: CombinedImageSampler,
-                ty: sampler1DShadow,
+                ty: sampler1DShadow<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -612,7 +612,7 @@
                 ),
                 desc_bind: (set=7, bind=1),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2DShadow,
+                ty: sampler2DShadow<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -621,7 +621,7 @@
                 ),
                 desc_bind: (set=7, bind=2),
                 desc_ty: CombinedImageSampler,
-                ty: samplerCubeShadow,
+                ty: samplerCubeShadow<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -630,7 +630,7 @@
                 ),
                 desc_bind: (set=7, bind=3),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2DRectShadow,
+                ty: sampler2DRectShadow<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -639,7 +639,7 @@
                 ),
                 desc_bind: (set=7, bind=4),
                 desc_ty: CombinedImageSampler,
-                ty: sampler1DArrayShadow,
+                ty: sampler1DArrayShadow<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -648,7 +648,7 @@
                 ),
                 desc_bind: (set=7, bind=5),
                 desc_ty: CombinedImageSampler,
-                ty: sampler2DArrayShadow,
+                ty: sampler2DArrayShadow<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -657,7 +657,7 @@
                 ),
                 desc_bind: (set=7, bind=6),
                 desc_ty: CombinedImageSampler,
-                ty: samplerCubeShadowArray,
+                ty: samplerCubeShadowArray<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -684,7 +684,7 @@
                 ),
                 desc_bind: (set=9, bind=0),
                 desc_ty: SampledImage,
-                ty: texture1D<Some(i32)>,
+                ty: texture1D<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -693,7 +693,7 @@
                 ),
                 desc_bind: (set=9, bind=1),
                 desc_ty: SampledImage,
-                ty: texture2D<Some(i32)>,
+                ty: texture2D<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -702,7 +702,7 @@
                 ),
                 desc_bind: (set=9, bind=2),
                 desc_ty: SampledImage,
-                ty: texture3D<Some(i32)>,
+                ty: texture3D<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -711,7 +711,7 @@
                 ),
                 desc_bind: (set=9, bind=3),
                 desc_ty: SampledImage,
-                ty: textureCube<Some(i32)>,
+                ty: textureCube<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -720,7 +720,7 @@
                 ),
                 desc_bind: (set=9, bind=4),
                 desc_ty: SampledImage,
-                ty: texture2DRect<Some(i32)>,
+                ty: texture2DRect<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -729,7 +729,7 @@
                 ),
                 desc_bind: (set=9, bind=5),
                 desc_ty: SampledImage,
-                ty: texture1DArray<Some(i32)>,
+                ty: texture1DArray<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -738,7 +738,7 @@
                 ),
                 desc_bind: (set=9, bind=6),
                 desc_ty: SampledImage,
-                ty: texture2DArray<Some(i32)>,
+                ty: texture2DArray<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -747,7 +747,7 @@
                 ),
                 desc_bind: (set=9, bind=7),
                 desc_ty: SampledImage,
-                ty: textureCubeArray<Some(i32)>,
+                ty: textureCubeArray<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -756,7 +756,7 @@
                 ),
                 desc_bind: (set=9, bind=8),
                 desc_ty: UniformTexelBuffer,
-                ty: textureBuffer<Some(i32)>,
+                ty: textureBuffer<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -765,7 +765,7 @@
                 ),
                 desc_bind: (set=9, bind=9),
                 desc_ty: SampledImage,
-                ty: texture2DMS<Some(i32)>,
+                ty: texture2DMS<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -774,7 +774,7 @@
                 ),
                 desc_bind: (set=9, bind=10),
                 desc_ty: SampledImage,
-                ty: texture2DMSArray<Some(i32)>,
+                ty: texture2DMSArray<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -783,7 +783,7 @@
                 ),
                 desc_bind: (set=10, bind=0),
                 desc_ty: SampledImage,
-                ty: texture1D<Some(u32)>,
+                ty: texture1D<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -792,7 +792,7 @@
                 ),
                 desc_bind: (set=10, bind=1),
                 desc_ty: SampledImage,
-                ty: texture2D<Some(u32)>,
+                ty: texture2D<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -801,7 +801,7 @@
                 ),
                 desc_bind: (set=10, bind=2),
                 desc_ty: SampledImage,
-                ty: texture3D<Some(u32)>,
+                ty: texture3D<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -810,7 +810,7 @@
                 ),
                 desc_bind: (set=10, bind=3),
                 desc_ty: SampledImage,
-                ty: textureCube<Some(u32)>,
+                ty: textureCube<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -819,7 +819,7 @@
                 ),
                 desc_bind: (set=10, bind=4),
                 desc_ty: SampledImage,
-                ty: texture2DRect<Some(u32)>,
+                ty: texture2DRect<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -828,7 +828,7 @@
                 ),
                 desc_bind: (set=10, bind=5),
                 desc_ty: SampledImage,
-                ty: texture1DArray<Some(u32)>,
+                ty: texture1DArray<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -837,7 +837,7 @@
                 ),
                 desc_bind: (set=10, bind=6),
                 desc_ty: SampledImage,
-                ty: texture2DArray<Some(u32)>,
+                ty: texture2DArray<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -846,7 +846,7 @@
                 ),
                 desc_bind: (set=10, bind=7),
                 desc_ty: SampledImage,
-                ty: textureCubeArray<Some(u32)>,
+                ty: textureCubeArray<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -855,7 +855,7 @@
                 ),
                 desc_bind: (set=10, bind=8),
                 desc_ty: UniformTexelBuffer,
-                ty: textureBuffer<Some(u32)>,
+                ty: textureBuffer<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -864,7 +864,7 @@
                 ),
                 desc_bind: (set=10, bind=9),
                 desc_ty: SampledImage,
-                ty: texture2DMS<Some(u32)>,
+                ty: texture2DMS<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -873,7 +873,7 @@
                 ),
                 desc_bind: (set=10, bind=10),
                 desc_ty: SampledImage,
-                ty: texture2DMSArray<Some(u32)>,
+                ty: texture2DMSArray<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -882,7 +882,7 @@
                 ),
                 desc_bind: (set=12, bind=0),
                 desc_ty: SampledImage,
-                ty: texture1D<Some(f32)>,
+                ty: texture1D<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -891,7 +891,7 @@
                 ),
                 desc_bind: (set=12, bind=1),
                 desc_ty: SampledImage,
-                ty: texture2D<Some(f32)>,
+                ty: texture2D<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -900,7 +900,7 @@
                 ),
                 desc_bind: (set=12, bind=2),
                 desc_ty: SampledImage,
-                ty: texture3D<Some(f32)>,
+                ty: texture3D<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -909,7 +909,7 @@
                 ),
                 desc_bind: (set=12, bind=3),
                 desc_ty: SampledImage,
-                ty: textureCube<Some(f32)>,
+                ty: textureCube<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -918,7 +918,7 @@
                 ),
                 desc_bind: (set=12, bind=4),
                 desc_ty: SampledImage,
-                ty: texture2DRect<Some(f32)>,
+                ty: texture2DRect<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -927,7 +927,7 @@
                 ),
                 desc_bind: (set=12, bind=5),
                 desc_ty: SampledImage,
-                ty: texture1DArray<Some(f32)>,
+                ty: texture1DArray<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -936,7 +936,7 @@
                 ),
                 desc_bind: (set=12, bind=6),
                 desc_ty: SampledImage,
-                ty: texture2DArray<Some(f32)>,
+                ty: texture2DArray<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -945,7 +945,7 @@
                 ),
                 desc_bind: (set=12, bind=7),
                 desc_ty: SampledImage,
-                ty: textureCubeArray<Some(f32)>,
+                ty: textureCubeArray<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -954,7 +954,7 @@
                 ),
                 desc_bind: (set=12, bind=8),
                 desc_ty: UniformTexelBuffer,
-                ty: textureBuffer<Some(f32)>,
+                ty: textureBuffer<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -963,7 +963,7 @@
                 ),
                 desc_bind: (set=12, bind=9),
                 desc_ty: SampledImage,
-                ty: texture2DMS<Some(f32)>,
+                ty: texture2DMS<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -972,7 +972,7 @@
                 ),
                 desc_bind: (set=12, bind=10),
                 desc_ty: SampledImage,
-                ty: texture2DMSArray<Some(f32)>,
+                ty: texture2DMSArray<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -1003,7 +1003,7 @@
                 desc_ty: InputAttachment(
                     0,
                 ),
-                ty: subpassData<Some(i32)>,
+                ty: subpassData<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -1014,7 +1014,7 @@
                 desc_ty: InputAttachment(
                     1,
                 ),
-                ty: subpassDataMS<Some(i32)>,
+                ty: subpassDataMS<i32>,
                 nbind: 1,
             },
             Descriptor {
@@ -1025,7 +1025,7 @@
                 desc_ty: InputAttachment(
                     2,
                 ),
-                ty: subpassData<Some(u32)>,
+                ty: subpassData<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -1036,7 +1036,7 @@
                 desc_ty: InputAttachment(
                     3,
                 ),
-                ty: subpassDataMS<Some(u32)>,
+                ty: subpassDataMS<u32>,
                 nbind: 1,
             },
             Descriptor {
@@ -1047,7 +1047,7 @@
                 desc_ty: InputAttachment(
                     4,
                 ),
-                ty: subpassData<Some(f32)>,
+                ty: subpassData<f32>,
                 nbind: 1,
             },
             Descriptor {
@@ -1058,7 +1058,7 @@
                 desc_ty: InputAttachment(
                     5,
                 ),
-                ty: subpassDataMS<Some(f32)>,
+                ty: subpassDataMS<f32>,
                 nbind: 1,
             },
             Descriptor {

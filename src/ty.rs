@@ -224,6 +224,14 @@ impl fmt::Debug for ImageType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use ImageArrangement::*;
         use ImageUnitFormat::*;
+        let scalar_ty = || -> String {
+            let scalar_ty = self.scalar_ty.as_ref();
+            if let Some(scalar_ty) = scalar_ty {
+                format!("{:?}", scalar_ty)
+            } else {
+                "void".to_owned()
+            }
+        };
         match (self.arng, self.unit_fmt) {
             (Image1D, Color(fmt)) => write!(f, "image1D<{:?}>", fmt),
             (Image2D, Color(fmt)) => write!(f, "image2D<{:?}>", fmt),
@@ -237,17 +245,17 @@ impl fmt::Debug for ImageType {
             (Image2DRect, Color(fmt)) => write!(f, "image2DRect<{:?}>", fmt),
             (ImageBuffer, Color(fmt)) => write!(f, "imageBuffer<{:?}>", fmt),
 
-            (Image1D, Sampled) => write!(f, "texture1D<{:?}>", self.scalar_ty),
-            (Image2D, Sampled) => write!(f, "texture2D<{:?}>", self.scalar_ty),
-            (Image2DMS, Sampled) => write!(f, "texture2DMS<{:?}>", self.scalar_ty),
-            (Image3D, Sampled) => write!(f, "texture3D<{:?}>", self.scalar_ty),
-            (CubeMap, Sampled) => write!(f, "textureCube<{:?}>", self.scalar_ty),
-            (Image1DArray, Sampled) => write!(f, "texture1DArray<{:?}>", self.scalar_ty),
-            (Image2DArray, Sampled) => write!(f, "texture2DArray<{:?}>", self.scalar_ty),
-            (Image2DMSArray, Sampled) => write!(f, "texture2DMSArray<{:?}>", self.scalar_ty),
-            (CubeMapArray, Sampled) => write!(f, "textureCubeArray<{:?}>", self.scalar_ty),
-            (Image2DRect, Sampled) => write!(f, "texture2DRect<{:?}>", self.scalar_ty),
-            (ImageBuffer, Sampled) => write!(f, "textureBuffer<{:?}>", self.scalar_ty),
+            (Image1D, Sampled) => write!(f, "texture1D<{}>", scalar_ty()),
+            (Image2D, Sampled) => write!(f, "texture2D<{}>", scalar_ty()),
+            (Image2DMS, Sampled) => write!(f, "texture2DMS<{}>", scalar_ty()),
+            (Image3D, Sampled) => write!(f, "texture3D<{}>", scalar_ty()),
+            (CubeMap, Sampled) => write!(f, "textureCube<{}>", scalar_ty()),
+            (Image1DArray, Sampled) => write!(f, "texture1DArray<{}>", scalar_ty()),
+            (Image2DArray, Sampled) => write!(f, "texture2DArray<{}>", scalar_ty()),
+            (Image2DMSArray, Sampled) => write!(f, "texture2DMSArray<{}>", scalar_ty()),
+            (CubeMapArray, Sampled) => write!(f, "textureCubeArray<{}>", scalar_ty()),
+            (Image2DRect, Sampled) => write!(f, "texture2DRect<{}>", scalar_ty()),
+            (ImageBuffer, Sampled) => write!(f, "textureBuffer<{}>", scalar_ty()),
             _ => Err(fmt::Error::default()),
         }
     }
@@ -267,26 +275,34 @@ impl fmt::Debug for SampledImageType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use ImageArrangement::*;
         use ImageUnitFormat::*;
+        let scalar_ty = {
+            let scalar_ty = self.img_ty.scalar_ty.as_ref();
+            if let Some(scalar_ty) = scalar_ty {
+                format!("{:?}", scalar_ty)
+            } else {
+                "void".to_owned()
+            }
+        };
         match (self.img_ty.arng, self.img_ty.unit_fmt) {
-            (Image1D, Sampled) => write!(f, "sampler1D<{:?}>", self.img_ty.scalar_ty),
-            (Image2D, Sampled) => write!(f, "sampler2D<{:?}>", self.img_ty.scalar_ty),
-            (Image2DMS, Sampled) => write!(f, "sampler2DMS<{:?}>", self.img_ty.scalar_ty),
-            (Image3D, Sampled) => write!(f, "sampler3D<{:?}>", self.img_ty.scalar_ty),
-            (CubeMap, Sampled) => write!(f, "samplerCube<{:?}>", self.img_ty.scalar_ty),
-            (Image1DArray, Sampled) => write!(f, "sampler1DArray<{:?}>", self.img_ty.scalar_ty),
-            (Image2DArray, Sampled) => write!(f, "sampler2DArray<{:?}>", self.img_ty.scalar_ty),
-            (Image2DMSArray, Sampled) => write!(f, "sampler2DMSArray<{:?}>", self.img_ty.scalar_ty),
-            (CubeMapArray, Sampled) => write!(f, "samplerCubeArray<{:?}>", self.img_ty.scalar_ty),
-            (Image2DRect, Sampled) => write!(f, "sampler2DRect<{:?}>", self.img_ty.scalar_ty),
-            (ImageBuffer, Sampled) => write!(f, "samplerBuffer<{:?}>", self.img_ty.scalar_ty),
+            (Image1D, Sampled) => write!(f, "sampler1D<{}>", scalar_ty),
+            (Image2D, Sampled) => write!(f, "sampler2D<{}>", scalar_ty),
+            (Image2DMS, Sampled) => write!(f, "sampler2DMS<{}>", scalar_ty),
+            (Image3D, Sampled) => write!(f, "sampler3D<{}>", scalar_ty),
+            (CubeMap, Sampled) => write!(f, "samplerCube<{}>", scalar_ty),
+            (Image1DArray, Sampled) => write!(f, "sampler1DArray<{}>", scalar_ty),
+            (Image2DArray, Sampled) => write!(f, "sampler2DArray<{}>", scalar_ty),
+            (Image2DMSArray, Sampled) => write!(f, "sampler2DMSArray<{}>", scalar_ty),
+            (CubeMapArray, Sampled) => write!(f, "samplerCubeArray<{}>", scalar_ty),
+            (Image2DRect, Sampled) => write!(f, "sampler2DRect<{}>", scalar_ty),
+            (ImageBuffer, Sampled) => write!(f, "samplerBuffer<{}>", scalar_ty),
 
-            (Image1D, Depth) => f.write_str("sampler1DShadow"),
-            (Image2D, Depth) => f.write_str("sampler2DShadow"),
-            (CubeMap, Depth) => f.write_str("samplerCubeShadow"),
-            (Image1DArray, Depth) => f.write_str("sampler1DArrayShadow"),
-            (Image2DArray, Depth) => f.write_str("sampler2DArrayShadow"),
-            (CubeMapArray, Depth) => f.write_str("samplerCubeShadowArray"),
-            (Image2DRect, Depth) => write!(f, "sampler2DRectShadow"),
+            (Image1D, Depth) => write!(f, "sampler1DShadow<{}>", scalar_ty),
+            (Image2D, Depth) => write!(f, "sampler2DShadow<{}>", scalar_ty),
+            (CubeMap, Depth) => write!(f, "samplerCubeShadow<{}>", scalar_ty),
+            (Image1DArray, Depth) => write!(f, "sampler1DArrayShadow<{}>", scalar_ty),
+            (Image2DArray, Depth) => write!(f, "sampler2DArrayShadow<{}>", scalar_ty),
+            (CubeMapArray, Depth) => write!(f, "samplerCubeShadowArray<{}>", scalar_ty),
+            (Image2DRect, Depth) => write!(f, "sampler2DRectShadow<{}>", scalar_ty),
             _ => Err(fmt::Error::default()),
         }
     }
@@ -326,12 +342,20 @@ impl SubpassDataType {
 }
 impl fmt::Debug for SubpassDataType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let scalar_ty = {
+            let scalar_ty = self.scalar_ty.as_ref();
+            if let Some(scalar_ty) = scalar_ty {
+                format!("{:?}", scalar_ty)
+            } else {
+                "void".to_owned()
+            }
+        };
         match self.arng {
             SubpassDataArrangement::SubpassData => {
-                write!(f, "subpassData<{:?}>", self.scalar_ty)
+                write!(f, "subpassData<{}>", scalar_ty)
             },
             SubpassDataArrangement::SubpassDataMS => {
-                write!(f, "subpassDataMS<{:?}>", self.scalar_ty)
+                write!(f, "subpassDataMS<{}>", scalar_ty)
             },
         }
     }
