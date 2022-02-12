@@ -226,7 +226,7 @@ pub struct EntryPointDeclartion<'a> {
     pub name: &'a str,
     pub exec_model: ExecutionModel,
 }
-#[derive(Debug, Clone)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 #[non_exhaustive]
 pub enum ExecutionMode {
     /// Number of times to invoke the geometry stage for each input primitive
@@ -403,7 +403,7 @@ pub struct ExecutionModeDeclaration {
 }
 
 /// Entry point specialization descriptions.
-#[derive(Clone, Hash, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Specialization {
     pub name: Option<String>,
     /// Specialization constant ID.

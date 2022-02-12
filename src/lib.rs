@@ -111,7 +111,7 @@ impl SpirvBinary {
 // SPIR-V program entry points.
 
 /// Representing an entry point described in a SPIR-V.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct EntryPoint {
     /// Entry point execution model.
     pub exec_model: ExecutionModel,
