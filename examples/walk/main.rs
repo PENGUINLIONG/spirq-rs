@@ -11,6 +11,7 @@ fn main() {
         .ref_all_rscs(true)
         .reflect()
         .unwrap();
+    println!("{:?}", entry_points);
     for var in entry_points[0].vars.iter() {
         println!("{:?}", var);
         for route in var.walk() {

@@ -66,7 +66,7 @@ use std::iter::FromIterator;
 pub use error::{Error, Result};
 pub use reflect::{ReflectConfig, InterfaceLocation, DescriptorBinding,
     DescriptorType, Variable, Locator, AccessType, ExecutionMode,
-    ExecutionModel, Specialization};
+    ExecutionModel};
 
 /// SPIR-V program binary.
 #[derive(Debug, Default, Clone)]
@@ -117,12 +117,12 @@ pub struct EntryPoint {
     pub exec_model: ExecutionModel,
     /// Name of the entry point.
     pub name: String,
-    /// Variables that contains input, output and descriptor type information.
+    /// Variables that contains specialization constant, input, output and
+    /// descriptor type information.
+    ///
     /// Note that it is possible that multiple resources are bound to a same
     /// `Locator` so this is not a map.
     pub vars: Vec<Variable>,
-    /// Specialization description of the entry point.
-    pub specs: Vec<Specialization>,
     /// Execution modes the entry point will execute in, including predefined
     /// compute shader local sizes and specialization constant IDs of local
     /// sizes.
@@ -134,7 +134,6 @@ impl fmt::Debug for EntryPoint {
             .field("exec_model", &self.exec_model)
             .field("name", &self.name)
             .field("vars", &self.vars)
-            .field("specs", &self.specs)
             .field("exec_modes", &self.exec_modes)
             .finish()
     }

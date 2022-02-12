@@ -7,7 +7,7 @@ Finally, SPIR-Q v0.5 has come! The new APIs has breaking changes and is NOT comp
 - Symbol API is completely removed for simplicity;
 - `DescriptorType` is now a separated enum from `Type` and adheres to `VkDescriptorType`;
 - `AccessType` is now marked only on storage buffers and images;
-- Descriptor resources, push constants and interface variables are now provided with unified `Variable` API;
+- Descriptor resources, push constants, interface variables and push constants are now provided with unified `Variable` API;
 - Debug names are now part of `Variable`, `Specialization`, `StructMember` and `StructType`.
 
 

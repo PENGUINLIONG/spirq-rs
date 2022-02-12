@@ -113,9 +113,9 @@ fn test_spec_consts() {
         layout(constant_id=235) const float c = 0;
         void main() { gl_Position = vec4(a,b,c,0); EmitVertex(); EndPrimitive(); }
     "#);
-    let spec_ids = entry.specs
+    let spec_ids = entry.vars
         .into_iter()
-        .map(|x| x.spec_id)
+        .filter_map(|x| x.spec_id())
         .collect::<HashSet<_>>();
     assert!(spec_ids.contains(&233));
     assert!(spec_ids.contains(&234));

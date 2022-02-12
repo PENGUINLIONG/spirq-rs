@@ -1,4 +1,5 @@
 collected spirvs: ["gallery.frag", "spirv-spec.frag"]
+[main { exec_model: Fragment, name: "main", vars: [Descriptor { name: None, desc_bind: (set=0, bind=0), desc_ty: UniformBuffer, ty: blockName { s: S { b: u32, v: [vec4<f32>; 5], i: i32 }, cond: u32 }, nbind: 1 }, Output { name: Some("color"), location: (loc=0, comp=0), ty: vec4<f32> }, Input { name: Some("color1"), location: (loc=0, comp=0), ty: vec4<f32> }, Input { name: Some("color2"), location: (loc=2, comp=0), ty: vec4<f32> }, Input { name: Some("multiplier"), location: (loc=1, comp=0), ty: vec4<f32> }], exec_modes: [OriginUpperLeft] }]
 Descriptor { name: None, desc_bind: (set=0, bind=0), desc_ty: UniformBuffer, ty: blockName { s: S { b: u32, v: [vec4<f32>; 5], i: i32 }, cond: u32 }, nbind: 1 }
 - MemberVariableRouting { sym: [s, b], offset: 0, ty: u32 }
 - MemberVariableRouting { sym: [s, v, 0], offset: 16, ty: vec4<f32> }
