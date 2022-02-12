@@ -9,16 +9,24 @@
 //! ## How-to
 //!
 //! ```ignore
-//! // Load SPIR-V data into `[u32]` buffer `spv_words`.
-//! let spv: SpirvBinary = spv_words.into();
-//! let entries = spv.reflect_vec().unwrap();
-//! // All extracted entry point data are available in `entries`.
+//! let entry_points = ReflectConfig::new()
+//!     // Load SPIR-V data into `[u32]` buffer `spv_words`.
+//!     .spv(spv_words)
+//!     // Set this true if you want to reflect all resources no matter it's
+//!     // used by an entry point or not.
+//!     .ref_all_rscs(true)
+//!     // Combine sampled image and separated sampler states if they are bound
+//!     // to the same binding point.
+//!     .combine_img_samplers(true)
+//!     // Do the work.
+//!     .reflect()
+//!     .unwrap();
+//! // All extracted entry point data are available in `entry_points` now.
 //! ```
 //!
 //! By calling [`reflect`] of the wrapper type [`SpirvBinary`], every entry
 //! point in the binary are analyzed and reported as one or more
-//! [`EntryPoint`]s. Each entry point has a [`Manifest`] that supports queries
-//! from allocation requirement to fine-grained typing details.
+//! [`EntryPoint`]s with all the types and bindings/locations.
 //!
 //! ## Size calculation
 //!
@@ -27,36 +35,6 @@
 //! to contain an instance of a type. However, SPIR-Q cannot handle dynamically-
 //! sized arrays, and it will treat such arrays as zero-sized. The user has to
 //! handle such SSBO-like themselves via [`Type`] APIs.
-//!
-//! ## Symbol resolution
-//!
-//! SPIR-Q uses a very simple solution to help you locate any metadata including
-//! input/output variables, descriptors and variables defined inside those
-//! descriptors. We call it a [`Symbol`]. A symbol is a dot-separated list of
-//! identifiers. Identifiers can be an index or a name literal (or empty for the
-//! push constant block.)
-//!
-//! Input/output variables are referred to by their locations. The following
-//! are examples of input/output variable symbols:
-//!
-//! ```ignore
-//! 1
-//! aTexCoord
-//! vWorldPosition
-//! 1.2 // ERROR: I/O variables cannot be nested.
-//! gl_Position // WARNING: Built-in variables are ignored during reflection.
-//! ```
-//!
-//! Descriptors have to be referred to with both the descriptor set number and
-//! its binding point number specified. The following are valid symbols for
-//! descriptor variables:
-//!
-//! ```ignore
-//! 0.1 // Refering to the descriptor at set 0 on binding 1.
-//! light.0 // Refering to the first member of block 'light'.
-//! 1.0.bones.4 // Refering to the 5th element of array member `bones` in descriptor `1.0`.
-//! .modelview // Push constants can be referred to by either an empty identifier or its variable name.
-//! ```
 //!
 //! Note: It should be noted that descriptor multibinds are treated like single-
 //! binds because although they use the same syntax as arrays, they are not
@@ -68,10 +46,8 @@
 //!
 //! [`SpirvBinary`]: struct.SpirvBinary.html
 //! [`EntryPoint`]: struct.EntryPoint.html
-//! [`reflect`]: struct.SpirvBinary.html#method.reflect
-//! [`Manifest`]: struct.Manifest.html
+//! [`reflect`]: reflect/struct.ReflectConfig.html#method.reflect
 //! [`Type`]: ty/enum.Type.html
-//! [`Symbol`]: sym/struct.Symbol.html
 mod consts;
 mod instr;
 mod inspect;

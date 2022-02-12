@@ -150,8 +150,8 @@ pub enum Variable {
         /// For more information about dynamic multi-binding, please refer to
         /// Vulkan extension `VK_EXT_descriptor_indexing`, GLSL extension
         /// `GL_EXT_nonuniform_qualifier` and SPIR-V extension
-        /// `SPV_EXT_descriptor_indexing`. Dynamic multi-binding is only supported
-        /// in Vulkan 1.2.
+        /// `SPV_EXT_descriptor_indexing`. Dynamic multi-binding is only
+        /// supported in Vulkan 1.2.
         nbind: u32,
     },
     /// Push constant.
@@ -198,29 +198,31 @@ pub struct EntryPointDeclartion<'a> {
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum ExecutionMode {
-    /// Number of times to invoke the geometry stage for each input primitive received.
-    /// The default is to run once for each input primitive. It is invalid to specify
-    /// a value greater than the target-dependent maximum.
+    /// Number of times to invoke the geometry stage for each input primitive
+    /// received. The default is to run once for each input primitive. It is
+    /// invalid to specify a value greater than the target-dependent maximum.
     ///
     /// Only valid with the geometry execution model.
     Invocations(u32),
-    /// Requests the tesselation primitive generator to divide edges into a collection
-    /// of equal-sized segments.
+    /// Requests the tesselation primitive generator to divide edges into a
+    /// collection of equal-sized segments.
     ///
     /// Only valid with one of the tessellation execution models.
     SpacingEqual,
-    /// Requests the tessellation primitive generator to divide edges into an even number
-    /// of equal-length segments plus two additional shorter fractional segments.
+    /// Requests the tessellation primitive generator to divide edges into an
+    /// even number of equal-length segments plus two additional shorter
+    /// fractional segments.
     ///
     /// Only valid with one of the tessellation execution models.
     SpacingFractionalEven,
-    /// Requests the tessellation primitive generator to divide edges into an odd number
-    /// of equal-length segments plus two additional shorter fractional segments.
+    /// Requests the tessellation primitive generator to divide edges into an
+    /// odd number of equal-length segments plus two additional shorter
+    /// fractional segments.
     ///
     /// Only valid with one of the tessellation execution models.
     SpacingFractionalOdd,
-    /// Requests the tessellation primitive generator to generate triangles in clockwise
-    /// order.
+    /// Requests the tessellation primitive generator to generate triangles in
+    /// clockwise order.
     ///
     /// Only valid with one of the tessellation execution models.
     VertexOrderCw,
@@ -229,20 +231,20 @@ pub enum ExecutionMode {
     ///
     /// Only valid with one of the tessellation execution models.
     VertexOrderCcw,
-    /// Pixels appear centered on whole-number pixel offsets. E.g., the coordinate (0.5, 0.5)
-    /// appears to move to (0.0, 0.0).
+    /// Pixels appear centered on whole-number pixel offsets. E.g., the
+    /// coordinate (0.5, 0.5) appears to move to (0.0, 0.0).
     ///
     /// Only valid with the fragment execution model.
-    /// If a fragment entry point does not have this set, pixels appear centered at offsets
-    /// of (0.5, 0.5) from whole numbers.
+    /// If a fragment entry point does not have this set, pixels appear centered
+    /// at offsets of (0.5, 0.5) from whole numbers.
     PixelCenterInteger,
-    /// Pixel coordinates appear to originate in the upper left, and increase toward the right
-    /// and downward.
+    /// Pixel coordinates appear to originate in the upper left, and increase
+    /// toward the right and downward.
     ///
     /// Only valid with the fragment execution model.
     OriginUpperLeft,
-    /// Pixel coordinates appear to originate in the lower left, and increase toward the right
-    /// and upward.
+    /// Pixel coordinates appear to originate in the lower left, and increase
+    /// toward the right and upward.
     ///
     /// Only valid with the fragment execution model.
     OriginLowerLeft,
@@ -250,34 +252,38 @@ pub enum ExecutionMode {
     ///
     /// Only valid with the fragment execution model.
     EarlyFragmentTests,
-    /// Requests the tessellation primitive generator to generate a point for each distinct vertex
-    /// in the subdivided primitive, rather than to generate lines or triangles.
+    /// Requests the tessellation primitive generator to generate a point for
+    /// each distinct vertex in the subdivided primitive, rather than to
+    /// generate lines or triangles.
     ///
     /// Only valid with one of the tessellation execution models.
     PointMode,
-    /// This stage will run in transform feedback-capturing mode and this module is responsible
-    /// for describing the transform-feedback setup.
+    /// This stage will run in transform feedback-capturing mode and this module
+    /// is responsible for describing the transform-feedback setup.
     ///
     /// See the XfbBuffer, Offset, and XfbStride decorations.
     Xfb,
-    /// This mode must be declared if this module potentially changes the fragment’s depth.
+    /// This mode must be declared if this module potentially changes the
+    /// fragment’s depth.
     ///
     /// Only valid with the fragment execution model.
     DepthReplacing,
-    /// External optimizations may assume depth modifications will leave the fragment’s depth
-    /// as greater than or equal to the fragment’s interpolated depth value (given by the z
-    /// component of the FragCoord BuiltIn decorated variable).
+    /// External optimizations may assume depth modifications will leave the
+    /// fragment’s depth as greater than or equal to the fragment’s interpolated
+    /// depth value (given by the z component of the FragCoord BuiltIn decorated
+    /// variable).
     ///
     /// Only valid with the fragment execution model.
     DepthGreater,
-    /// External optimizations may assume depth modifications leave the fragment’s depth less
-    /// than the fragment’s interpolated depth value, (given by the z component of the FragCoord
-    /// BuiltIn decorated variable).
+    /// External optimizations may assume depth modifications leave the
+    /// fragment’s depth less than the fragment’s interpolated depth value,
+    /// (given by the z component of the FragCoord BuiltIn decorated variable).
     ///
     /// Only valid with the fragment execution model.
     DepthLess,
-    /// External optimizations may assume this stage did not modify the fragment’s depth. However,
-    /// DepthReplacing mode must accurately represent depth modification.
+    /// External optimizations may assume this stage did not modify the
+    /// fragment’s depth. However, DepthReplacing mode must accurately represent
+    /// depth modification.
     ///
     /// Only valid with the fragment execution model.
     DepthUnchanged,
@@ -297,10 +303,12 @@ pub enum ExecutionMode {
     ///
     /// Only valid with the geometry execution model.
     InputLinesAdjacency,
-    /// For a geometry stage, input primitive is triangles. For a tessellation stage,
-    /// requests the tessellation primitive generator to generate triangles.
+    /// For a geometry stage, input primitive is triangles. For a tessellation
+    /// stage, requests the tessellation primitive generator to generate
+    /// triangles.
     ///
-    /// Only valid with the geometry or one of the tessellation execution models.
+    /// Only valid with the geometry or one of the tessellation execution
+    /// models.
     Triangles,
     /// Geometry stage input primitive is triangles adjacency.
     ///
@@ -314,12 +322,14 @@ pub enum ExecutionMode {
     ///
     /// Only valid with one of the tessellation execution models.
     Isolines,
-    /// For a geometry stage, the maximum number of vertices the shader will ever
-    /// emit in a single invocation. For a tessellation-control stage, the number
-    /// of vertices in the output patch produced by the tessellation control shader,
-    /// which also specifies the number of times the tessellation control shader is invoked.
+    /// For a geometry stage, the maximum number of vertices the shader will
+    /// ever emit in a single invocation. For a tessellation-control stage, the
+    /// number of vertices in the output patch produced by the tessellation
+    /// control shader, which also specifies the number of times the
+    /// tessellation control shader is invoked.
     ///
-    /// Only valid with the geometry or one of the tessellation execution models.
+    /// Only valid with the geometry or one of the tessellation execution
+    /// models.
     OutputVertices(u32),
     /// Stage output primitive is points.
     ///
@@ -339,11 +349,11 @@ pub enum ExecutionMode {
     Finalizer,
     /// Indicates that this entry point requires the specified Subgroup Size.
     SubgroupSize(u32),
-    /// Indicates that this entry point requires the specified number of Subgroups Per
-    /// Workgroup.
+    /// Indicates that this entry point requires the specified number of
+    /// Subgroups Per Workgroup.
     SubgroupsPerWorkgroup(u32),
-    /// Indicates that this entry point requires the specified number of Subgroups Per
-    /// Workgroup.
+    /// Indicates that this entry point requires the specified number of
+    /// Subgroups Per Workgroup.
     ///
     /// Specified as an Id.
     SubgroupsPerWorkgroupId(SpecId),
