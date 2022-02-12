@@ -64,9 +64,9 @@ use std::fmt;
 use std::iter::FromIterator;
 
 pub use error::{Error, Result};
-pub use reflect::{InterfaceLocation, DescriptorBinding, DescriptorType, SpecId,
-    Locator, Variable, ExecutionMode, ExecutionModel, Specialization,
-    ReflectConfig, AccessType};
+pub use reflect::{ReflectConfig, InterfaceLocation, DescriptorBinding,
+    DescriptorType, Variable, Locator, AccessType, ExecutionMode,
+    ExecutionModel, Specialization};
 
 /// SPIR-V program binary.
 #[derive(Debug, Default, Clone)]

@@ -1,3 +1,4 @@
+//!  SPIR-V instruction parser.
 use num_traits::FromPrimitive;
 use super::{Error, Result};
 

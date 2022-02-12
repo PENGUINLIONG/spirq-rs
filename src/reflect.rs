@@ -56,8 +56,10 @@ impl fmt::Debug for InterfaceLocation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (self as &dyn fmt::Display).fmt(f) }
 }
 
+/// Specialization constant ID.
 pub type SpecId = u32;
 
+/// Variable locator.
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub enum Locator {
     Input(InterfaceLocation),
@@ -70,8 +72,9 @@ pub enum Locator {
 
 // Intermediate types used in reflection.
 
+/// Reflection intermediate of specialization constants.
 #[derive(Debug, Clone)]
-pub struct SpecConstant<'a> {
+pub struct SpecializationIntermediate<'a> {
     /// Type of specialization constant.
     pub ty_id: TypeId,
     /// Default value of specialization constant.
@@ -80,8 +83,9 @@ pub struct SpecConstant<'a> {
     /// It is used to identify specialization constants for graphics libraries.
     pub spec_id: SpecId,
 }
+/// Reflection intermediate of constants.
 #[derive(Debug, Clone)]
-pub struct Constant<'a> {
+pub struct ConstantIntermediate<'a> {
     /// Type of constant.
     pub ty_id: InstrId,
     /// Defined value of constant.
@@ -117,6 +121,8 @@ pub enum DescriptorType {
     AccelStruct(),
 }
 
+/// A SPIR-V variable - interface variables, descriptor resources and push
+/// constants.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Variable {
     /// Input interface variable.
@@ -216,16 +222,18 @@ impl Variable {
         self.ty().walk()
     }
 }
+/// Function reflection intermediate.
 #[derive(Default, Debug, Clone)]
-pub struct Function {
+pub struct FunctionIntermediate {
     pub accessed_vars: HashSet<VariableId>,
     pub callees: HashSet<InstrId>,
 }
-pub struct EntryPointDeclartion<'a> {
+struct EntryPointDeclartion<'a> {
     pub func_id: FunctionId,
     pub name: &'a str,
     pub exec_model: ExecutionModel,
 }
+/// SPIR-V execution mode.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 #[non_exhaustive]
 pub enum ExecutionMode {
@@ -397,7 +405,7 @@ pub enum ExecutionMode {
     PostDepthCoverage,
     StencilRefReplacingEXT,
 }
-pub struct ExecutionModeDeclaration {
+struct ExecutionModeDeclaration {
     pub func_id: FunctionId,
     pub execution_mode: ExecutionMode,
 }
@@ -454,20 +462,21 @@ impl std::ops::BitAnd<AccessType> for AccessType {
 
 // The actual reflection to take place.
 
+/// SPIR-V reflection intermediate.
 #[derive(Default)]
 pub struct ReflectIntermediate<'a> {
     entry_point_declrs: Vec<EntryPointDeclartion<'a>>,
     execution_mode_declrs: Vec<ExecutionModeDeclaration>,
-    spec_consts: Vec<SpecConstant<'a>>,
+    spec_consts: Vec<SpecializationIntermediate<'a>>,
     vars: Vec<Variable>,
 
     name_map: HashMap<(InstrId, Option<u32>), &'a str>,
     deco_map: HashMap<(InstrId, Option<u32>, u32), &'a [u32]>,
     ty_map: HashMap<TypeId, Type>,
     var_map: HashMap<VariableId, usize>,
-    const_map: HashMap<ConstantId, Constant<'a>>,
+    const_map: HashMap<ConstantId, ConstantIntermediate<'a>>,
     ptr_map: HashMap<TypeId, TypeId>,
-    func_map: HashMap<FunctionId, Function>,
+    func_map: HashMap<FunctionId, FunctionIntermediate>,
     declr_map: HashMap<Locator, InstrId>,
 }
 impl<'a> ReflectIntermediate<'a> {
@@ -541,7 +550,7 @@ impl<'a> ReflectIntermediate<'a> {
     /// Get the constant identified by `const_id`. Specialization constants are
     /// also stored as constants. Array extents specified by specialization
     /// constants are not statically known.
-    pub fn get_const(&self, const_id: ConstantId) -> Option<&Constant> {
+    pub fn get_const(&self, const_id: ConstantId) -> Option<&ConstantIntermediate> {
         self.const_map.get(&const_id)
     }
     /// Get the human-friendly name of an instruction result.
@@ -552,24 +561,12 @@ impl<'a> ReflectIntermediate<'a> {
     pub fn get_member_name(&self, id: InstrId, member_idx: u32) -> Option<&'a str> {
         self.name_map.get(&(id, Some(member_idx))).copied()
     }
-    pub fn get_func(&self, func_id: FunctionId) -> Option<&Function> {
+    pub fn get_func(&self, func_id: FunctionId) -> Option<&FunctionIntermediate> {
         self.func_map.get(&func_id)
     }
     pub fn get_var_name(&self, locator: Locator) -> Option<&'a str> {
         let instr_id = *self.declr_map.get(&locator)?;
         self.get_name(instr_id)
-    }
-    pub fn entry_point_declrs(&self) -> &[EntryPointDeclartion<'a>] {
-        &self.entry_point_declrs
-    }
-    pub fn execution_mode_declrs(&self) -> &[ExecutionModeDeclaration] {
-        &self.execution_mode_declrs
-    }
-    pub fn spec_consts(&self) -> &[SpecConstant<'a>] {
-        &self.spec_consts
-    }
-    pub fn vars(&self) -> &[Variable] {
-        &self.vars
     }
     fn get_desc_access(&self, var_id: VariableId) -> Option<AccessType> {
         let read_only = self.contains_deco(var_id, None, Decoration::NonWritable);
@@ -998,7 +995,7 @@ impl<'a> ReflectIntermediate<'a> {
         if instr.opcode() == OP_CONSTANT {
             let op = OpConstant::try_from(instr)?;
             if let Vacant(entry) = self.const_map.entry(op.const_id) {
-                let constant = Constant {
+                let constant = ConstantIntermediate {
                     ty_id: op.ty_id,
                     value: op.value,
                 };
@@ -1014,13 +1011,13 @@ impl<'a> ReflectIntermediate<'a> {
         let (spec_const_id, constant, spec_const) = match instr.opcode() {
             OP_SPEC_CONSTANT_TRUE => {
                 let op = OpSpecConstantTrue::try_from(instr)?;
-                let constant = Constant {
+                let constant = ConstantIntermediate {
                     ty_id: op.ty_id,
                     value: &[1],
                 };
                 let spec_id = self.get_deco_u32(op.spec_const_id, Decoration::SpecId)
                     .ok_or(Error::MISSING_DECO)?;
-                let spec_const = SpecConstant {
+                let spec_const = SpecializationIntermediate {
                     ty_id: constant.ty_id,
                     value: &[1],
                     spec_id,
@@ -1029,13 +1026,13 @@ impl<'a> ReflectIntermediate<'a> {
             },
             OP_SPEC_CONSTANT_FALSE => {
                 let op = OpSpecConstantFalse::try_from(instr)?;
-                let constant = Constant {
+                let constant = ConstantIntermediate {
                     ty_id: op.ty_id,
                     value: &[0],
                 };
                 let spec_id = self.get_deco_u32(op.spec_const_id, Decoration::SpecId)
                     .ok_or(Error::MISSING_DECO)?;
-                let spec_const = SpecConstant {
+                let spec_const = SpecializationIntermediate {
                     ty_id: constant.ty_id,
                     value: &[0],
                     spec_id,
@@ -1044,13 +1041,13 @@ impl<'a> ReflectIntermediate<'a> {
             },
             OP_SPEC_CONSTANT => {
                 let op = OpSpecConstant::try_from(instr)?;
-                let constant = Constant {
+                let constant = ConstantIntermediate {
                     ty_id: op.ty_id,
                     value: op.value,
                 };
                 let spec_id = self.get_deco_u32(op.spec_const_id, Decoration::SpecId)
                     .ok_or(Error::MISSING_DECO)?;
-                let spec_const = SpecConstant {
+                let spec_const = SpecializationIntermediate {
                     ty_id: constant.ty_id,
                     value: op.value,
                     spec_id,
@@ -1058,12 +1055,13 @@ impl<'a> ReflectIntermediate<'a> {
                 (op.spec_const_id, constant, Some(spec_const))
             },
             // `SpecId` decorations will be specified to each of the
-            // constituents so we don't have to register a `SpecConstant` for
-            // the composite of them. `SpecConstant` is registered only for
-            // those will be interacting with Vulkan.
+            // constituents so we don't have to register a
+            // `SpecializationIntermediate` for the composite of them.
+            // `SpecializationIntermediate` is registered only for those will be
+            // interacting with Vulkan.
             OP_SPEC_CONSTANT_COMPOSITE => {
                 let op = OpSpecConstantComposite::try_from(instr)?;
-                let constant = Constant {
+                let constant = ConstantIntermediate {
                     ty_id: op.ty_id,
                     // Empty value to annotate a specialization constant. We
                     // have nothing like a `SpecId` to access such
@@ -1086,7 +1084,7 @@ impl<'a> ReflectIntermediate<'a> {
             // precompiled as a part of the SPIR-V binary meta.
             OP_SPEC_CONSTANT_OP => {
                 let op = OpSpecConstantOp::try_from(instr)?;
-                let constant = Constant {
+                let constant = ConstantIntermediate {
                     ty_id: op.ty_id,
                     value: &[] as &'static [u32],
                 };
@@ -1378,6 +1376,7 @@ impl<'a> ReflectIntermediate<'a> {
     }
 }
 
+/// Reflection configuration builder.
 #[derive(Default, Clone)]
 pub struct ReflectConfig {
     spv: SpirvBinary,
@@ -1459,7 +1458,7 @@ impl<'a> ReflectIntermediate<'a> {
         // been refered to by the specified function. (Do we actually need this?
         // It might not be an optimization in mind of engineering.)
         let mut specs = Vec::new();
-        for spec_const in self.spec_consts().iter() {
+        for spec_const in self.spec_consts.iter() {
             let ty = self.get_ty(spec_const.ty_id)
                 .ok_or(Error::TY_NOT_FOUND)?;
             let locator = Locator::SpecConstant(spec_const.spec_id);
@@ -1562,8 +1561,8 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
 
 impl<'a> ReflectIntermediate<'a> {
     pub fn collect_entry_points(&self, cfg: &ReflectConfig) -> Result<Vec<EntryPoint>> {
-        let mut entry_points = Vec::with_capacity(self.entry_point_declrs().len());
-        for entry_point_declr in self.entry_point_declrs().iter() {
+        let mut entry_points = Vec::with_capacity(self.entry_point_declrs.len());
+        for entry_point_declr in self.entry_point_declrs.iter() {
             let mut vars = if cfg.ref_all_rscs {
                 self.vars.clone()
             } else {
