@@ -117,7 +117,7 @@ pub enum DescriptorType {
     AccelStruct(),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Variable {
     /// Input interface variable.
     Input {
@@ -138,6 +138,7 @@ pub enum Variable {
     /// Descriptor resource.
     Descriptor {
         name: Option<String>,
+        // Binding point of descriptor resource.
         desc_bind: DescriptorBinding,
         /// Descriptor resource type matching `VkDescriptorType`.
         desc_ty: DescriptorType,
@@ -162,6 +163,25 @@ pub enum Variable {
     },
 }
 impl Variable {
+    /// Debug name of this variable.
+    pub fn name(&self) -> Option<&str> {
+        match self {
+            Variable::Input { name, .. } => name.as_ref().map(|x| x as &str),
+            Variable::Output { name, .. } => name.as_ref().map(|x| x as &str),
+            Variable::Descriptor { name, .. } => name.as_ref().map(|x| x as &str),
+            Variable::PushConstant { name, .. } => name.as_ref().map(|x| x as &str),
+        }
+    }
+    /// Remove name of the variable.
+    pub fn clear_name(&mut self) {
+        match self {
+            Variable::Input { name, .. } => *name = None,
+            Variable::Output { name, .. } => *name = None,
+            Variable::Descriptor { name, .. } => *name = None,
+            Variable::PushConstant { name, .. } => *name = None,
+        }
+    }
+    /// Locator of the variable.
     pub fn locator(&self) -> Locator {
         match self {
             Variable::Input { location, .. } => Locator::Input(*location),
@@ -170,6 +190,13 @@ impl Variable {
             Variable::PushConstant { .. } => Locator::PushConstant,
         }
     }
+    /// Descriptor type if it's a descriptor resource.
+    pub fn desc_ty(&self) -> Option<DescriptorType> {
+        if let Variable::Descriptor { desc_ty, .. } = self {
+            Some(desc_ty.clone())
+        } else { None }
+    }
+    /// Concrete type of the variable.
     pub fn ty(&self) -> &Type {
         match self {
             Variable::Input { ty, .. } => ty,
@@ -178,9 +205,13 @@ impl Variable {
             Variable::PushConstant { ty, .. } => ty,
         }
     }
+    /// Number of bindings at the binding point it it's a descriptor resource.
     pub fn nbind(&self) -> Option<u32> {
-        if let Variable::Descriptor { nbind, .. } = self { Some(*nbind) } else { None }
+        if let Variable::Descriptor { nbind, .. } = self {
+            Some(*nbind)
+        } else { None }
     }
+    /// Enumerate variable members in post-order.
     pub fn walk<'a>(&'a self) -> Walk<'a> {
         self.ty().walk()
     }
