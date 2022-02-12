@@ -16,11 +16,28 @@ It should be noted that SPIR-V is targeting at Vulkan so OpenCL binaries are not
 
 ## Usage
 
-Please refer to the attached examples:
+```rust
+use spirq::*;
+let entry_points = ReflectConfig::new()
+    // Load SPIR-V data into `[u32]` buffer `spv_words`.
+    .spv(spv_words)
+    // Set this true if you want to reflect all resources no matter it's
+    // used by an entry point or not.
+    .ref_all_rscs(true)
+    // Combine sampled image and separated sampler states if they are bound
+    // to the same binding point.
+    .combine_img_samplers(true)
+    // Do the work.
+    .reflect()
+    .unwrap();
+// All extracted entry point data are available in `entry_points` now.
+```
 
-* [walk](examples/walk/main.rs): Enumerate offsets, symbols and types of all descriptor variables.
-* [inspect](examples/inspect/main.rs): Customize shader reflection with your own inspector function.
-* [gallery](examples/gallery/main.rs): All data types in GLSL.
+Please also refer to the attached examples:
+
+* [walk](examples/walk): Enumerate offsets, symbols and types of all descriptor variables.
+* [inspect](examples/inspect): Customize shader reflection with your own inspector function.
+* [gallery](examples/gallery): All data types in GLSL.
 
 Sample output are attached in the same directories as the code files.
 
