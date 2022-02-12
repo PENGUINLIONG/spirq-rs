@@ -1,19 +1,21 @@
 use std::collections::BTreeMap;
-use spirq::SpirvBinary;
+use spirq::ReflectConfig;
 use std::path::Path;
 use spirv_headers::Op;
 use num_traits::FromPrimitive;
 
 fn main() {
-    let spvs = collect_spirv_binaries("assets/effects/uniform-pbr");
+    let spvs = collect_spirv_binaries("assets");
 
     println!("collected spirvs: {:?}", spvs.iter().map(|x| x.0.as_ref()).collect::<Vec<&str>>());
     let mut cur_func_name = String::new();
     let mut nfunc = 0;
     let mut nload = 0;
     let mut nstore = 0;
-    let _vert = spvs["uniform-pbr.vert"]
-        .reflect_vec_inspect(|itm, instr| {
+    ReflectConfig::new()
+        .spv(spvs.get("spirv-spec.frag").unwrap() as &[u8])
+        .ref_all_rscs(true)
+        .reflect_inspect(|itm, instr| {
             match Op::from_u32(instr.opcode()).unwrap() {
                 Op::Function => {
                     let mut operands = instr.operands();
@@ -44,7 +46,7 @@ fn main() {
 }
 
 
-fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> BTreeMap<String, SpirvBinary> {
+fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> BTreeMap<String, Vec<u8>> {
     use std::ffi::OsStr;
     use std::fs::{read_dir, File};
     use std::io::Read;
@@ -64,12 +66,11 @@ fn collect_spirv_binaries<P: AsRef<Path>>(path: P) -> BTreeMap<String, SpirvBina
                 buf.len() & 3 != 0 {
                 return None;
             }
-            let spv = buf.into();
             let name = x.file_stem()
                 .and_then(OsStr::to_str)
                 .map(ToOwned::to_owned)
                 .unwrap();
-            Some((name, spv))
+            Some((name, buf))
         })
         .collect::<BTreeMap<_, _>>()
 }

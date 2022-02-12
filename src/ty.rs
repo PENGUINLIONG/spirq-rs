@@ -1,9 +1,8 @@
 //! Structured representations of SPIR-V types.
-use std::collections::BTreeMap;
 use std::fmt;
-use crate::MemberVariableResolution;
+use std::hash::Hash;
 use crate::error::*;
-use std::hash::{Hash, Hasher};
+use crate::walk::Walk;
 
 use spirv_headers::Dim;
 pub use spirv_headers::{ImageFormat};
@@ -544,141 +543,6 @@ impl fmt::Debug for Type {
             Type::Array(arr_ty) => arr_ty.fmt(f),
             Type::Struct(struct_ty) => struct_ty.fmt(f),
             Type::AccelStruct() => write!(f, "accelerationStructure"),
-        }
-    }
-}
-
-
-
-/// Access type of a variable.
-#[repr(u32)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum AccessType {
-    /// The variable can be accessed by read.
-    ReadOnly = 1,
-    /// The variable can be accessed by write.
-    WriteOnly = 2,
-    /// The variable can be accessed by read or by write.
-    ReadWrite = 3,
-}
-impl std::ops::BitOr<AccessType> for AccessType {
-    type Output = AccessType;
-    fn bitor(self, rhs: AccessType) -> AccessType {
-        return match (self, rhs) {
-            (Self::ReadOnly, Self::ReadOnly) => Self::ReadOnly,
-            (Self::WriteOnly, Self::WriteOnly) => Self::WriteOnly,
-            _ => Self::ReadWrite,
-        }
-    }
-}
-impl std::ops::BitAnd<AccessType> for AccessType {
-    type Output = Option<AccessType>;
-    fn bitand(self, rhs: AccessType) -> Option<AccessType> {
-        return match (self, rhs) {
-            (Self::ReadOnly, Self::ReadWrite) |
-                (Self::ReadWrite, Self::ReadOnly) |
-                (Self::ReadOnly, Self::ReadOnly) => Some(Self::ReadOnly),
-            (Self::WriteOnly, Self::ReadWrite) |
-                (Self::ReadWrite, Self::WriteOnly) |
-                (Self::WriteOnly, Self::WriteOnly) => Some(Self::WriteOnly),
-            (Self::ReadWrite, Self::ReadWrite) => Some(Self::ReadWrite),
-            (_, _) => None,
-        }
-    }
-}
-
-pub struct MemberVariableRouting<'a> {
-    pub sym: Vec<u32>,
-    pub offset: usize,
-    pub ty: &'a Type,
-}
-
-struct WalkFrame<'a> {
-    sym_stem: Option<Vec<u32>>,
-    base_offset: usize,
-    ty: &'a Type,
-    i: usize,
-}
-pub struct Walk<'a> {
-    inner: Vec<WalkFrame<'a>>,
-}
-impl<'a> Walk<'a> {
-    pub fn new(ty: &'a Type) -> Walk<'a> {
-        let frame = WalkFrame {
-            sym_stem: None,
-            base_offset: 0,
-            ty: ty,
-            i: 0,
-        };
-        Walk { inner: vec![frame] }
-    }
-}
-impl<'a> Iterator for Walk<'a> {
-    type Item = MemberVariableRouting<'a>;
-    fn next(&mut self) -> Option<MemberVariableRouting<'a>> {
-        fn get_child_ty_offset_seg<'a>(ty: &'a Type, i: usize) -> Option<(&'a Type, usize)> {
-            match ty {
-                Type::Struct(struct_ty) => {
-                    let member = struct_ty.members.get(i)?;
-                    Some((&member.ty, member.offset))
-                },
-                Type::Array(arr_ty) => {
-                    // Unsized buffer are treated as 0-sized.
-                    if i < arr_ty.nrepeat.unwrap_or(0) as usize {
-                        Some((&arr_ty.proto_ty, arr_ty.stride() * i))
-                    } else { None }
-                },
-                _ => None,
-            }
-        }
-        enum LoopEnd<'a> {
-            Push(WalkFrame<'a>),
-            PopReturn(MemberVariableRouting<'a>),
-        }
-        loop {
-            // If used, this field will be filled with the next frame to be
-            // pushed at the back of the walk stack; or the last frame will be
-            // popped if the field is kept `None`.
-            let loop_end = if let Some(frame) = self.inner.last_mut() {
-                if let Some((child_ty, offset)) = get_child_ty_offset_seg(frame.ty, frame.i) {
-                    frame.i += 1; // Step member.
-                    let sym = if let Some(sym_stem) = &frame.sym_stem {
-                        let mut sym = sym_stem.clone();
-                        sym.push(frame.i as u32);
-                        sym
-                    } else { vec![frame.i as u32] };
-                    let offset = frame.base_offset + offset;
-                    let ty = child_ty;
-                    if child_ty.is_struct() || child_ty.is_arr() {
-                        // Found composite type, step into it.
-                        LoopEnd::Push(WalkFrame { sym_stem: Some(sym), base_offset: offset, ty, i: 0 })
-                    } else {
-                        // Return directly if it's not a composite type.
-                        return Some(MemberVariableRouting { sym, offset, ty });
-                    }
-                } else {
-                    // Here can be reached only when the first frame's type is
-                    // neither an array nor a struct; or a later frame's
-                    // composite type's elements has been exhausted.
-                    let ty = frame.ty;
-                    let offset = frame.base_offset;
-                    let sym = frame.sym_stem.clone().unwrap_or_default();
-                    LoopEnd::PopReturn(MemberVariableRouting { sym, offset, ty })
-                }
-            } else {
-                // We have exhausted all types we have, including the root type
-                // of walk.
-                return None;
-            };
-            match loop_end {
-                LoopEnd::Push(frame) => {
-                    self.inner.push(frame)
-                },
-                LoopEnd::PopReturn(route) => {
-                    self.inner.pop();
-                    return Some(route);
-                }
-            }
         }
     }
 }

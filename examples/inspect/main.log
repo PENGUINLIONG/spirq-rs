@@ -1,15 +1,19 @@
-collected spirvs: ["uniform-pbr.frag", "uniform-pbr.vert"]
+collected spirvs: ["gallery.frag", "spirv-spec.frag"]
 entered function main
+found a store instruction
+found a load instruction
 found a load instruction
 found a load instruction
 found a store instruction
 found a load instruction
 found a load instruction
 found a store instruction
-found a load instruction
 found a store instruction
 found a load instruction
+found a load instruction
+found a load instruction
+found a store instruction
 found a load instruction
 found a store instruction
 left function main
-7 load instructions and 4 store instructions in 1 functions of this shader file
+9 load instructions and 6 store instructions in 1 functions of this shader file

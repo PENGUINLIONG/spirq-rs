@@ -6,11 +6,12 @@ use std::fmt;
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use crate::ty::*;
 use crate::consts::*;
-use crate::{EntryPoint, Specialization};
+use crate::{EntryPoint, SpirvBinary};
 use crate::parse::{Instrs, Instr};
 use crate::error::{Error, Result};
 use crate::instr::*;
-use crate::inspect::Inspector;
+use crate::inspect::{Inspector, NopInspector, FnInspector};
+use crate::walk::Walk;
 
 use spirv_headers::Dim;
 pub use spirv_headers::{ExecutionModel, Decoration, StorageClass};
@@ -181,7 +182,7 @@ impl Variable {
         if let Variable::Descriptor { nbind, .. } = self { Some(*nbind) } else { None }
     }
     pub fn walk<'a>(&'a self) -> Walk<'a> {
-        Walk::new(self.ty())
+        self.ty().walk()
     }
 }
 #[derive(Default, Debug, Clone)]
@@ -359,6 +360,55 @@ pub struct ExecutionModeDeclaration {
     pub func_id: FunctionId,
     pub execution_mode: ExecutionMode,
 }
+
+/// Entry point specialization descriptions.
+#[derive(Clone, Hash, Debug)]
+pub struct Specialization {
+    pub name: Option<String>,
+    /// Specialization constant ID.
+    pub spec_id: SpecId,
+    /// Type of specialization constant.
+    pub ty: Type,
+}
+
+
+/// Access type of a variable.
+#[repr(u32)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum AccessType {
+    /// The variable can be accessed by read.
+    ReadOnly = 1,
+    /// The variable can be accessed by write.
+    WriteOnly = 2,
+    /// The variable can be accessed by read or by write.
+    ReadWrite = 3,
+}
+impl std::ops::BitOr<AccessType> for AccessType {
+    type Output = AccessType;
+    fn bitor(self, rhs: AccessType) -> AccessType {
+        return match (self, rhs) {
+            (Self::ReadOnly, Self::ReadOnly) => Self::ReadOnly,
+            (Self::WriteOnly, Self::WriteOnly) => Self::WriteOnly,
+            _ => Self::ReadWrite,
+        }
+    }
+}
+impl std::ops::BitAnd<AccessType> for AccessType {
+    type Output = Option<AccessType>;
+    fn bitand(self, rhs: AccessType) -> Option<AccessType> {
+        return match (self, rhs) {
+            (Self::ReadOnly, Self::ReadWrite) |
+                (Self::ReadWrite, Self::ReadOnly) |
+                (Self::ReadOnly, Self::ReadOnly) => Some(Self::ReadOnly),
+            (Self::WriteOnly, Self::ReadWrite) |
+                (Self::ReadWrite, Self::WriteOnly) |
+                (Self::WriteOnly, Self::WriteOnly) => Some(Self::WriteOnly),
+            (Self::ReadWrite, Self::ReadWrite) => Some(Self::ReadWrite),
+            (_, _) => None,
+        }
+    }
+}
+
 
 
 // The actual reflection to take place.
@@ -1126,7 +1176,13 @@ impl<'a> ReflectIntermediate<'a> {
                         Variable::Descriptor { name, desc_bind, desc_ty, ty: ty.clone(), nbind }
                     },
                     Type::SampledImage(_) => {
-                        let desc_ty = DescriptorType::CombinedImageSampler();
+                        let desc_ty = if let Type::SampledImage(sampled_img_ty) = &ty {
+                            if sampled_img_ty.img_ty.arng == ImageArrangement::ImageBuffer {
+                                DescriptorType::UniformTexelBuffer()
+                            } else {
+                                DescriptorType::CombinedImageSampler()
+                            }
+                        } else { unreachable!(); };
                         Variable::Descriptor { name, desc_bind, desc_ty, ty: ty.clone(), nbind }
                     },
                     Type::SubpassData(_) => {
@@ -1246,7 +1302,11 @@ impl<'a> ReflectIntermediate<'a> {
         }
         Ok(())
     }
-    pub(crate) fn reflect<I: Inspector>(instrs: Instrs<'a>, inspector: I) -> Result<Self> {
+    pub(crate) fn reflect<I: Inspector>(
+        instrs: Instrs<'a>,
+        cfg: &ReflectConfig,
+        inspector: I
+    ) -> Result<Vec<EntryPoint>> {
         fn skip_until_range_inclusive<'a>(
             instrs: &'_ mut Peekable<Instrs<'a>>,
             rng: RangeInclusive<u32>
@@ -1273,7 +1333,55 @@ impl<'a> ReflectIntermediate<'a> {
         itm.populate_decos(&mut instrs)?;
         itm.populate_defs(&mut instrs)?;
         itm.populate_access(&mut instrs, inspector)?;
-        return Ok(itm);
+        itm.collect_entry_points(cfg)
+    }
+}
+
+#[derive(Default, Clone)]
+pub struct ReflectConfig {
+    spv: SpirvBinary,
+    ref_all_rscs: bool,
+    combine_img_samplers: bool,
+}
+impl ReflectConfig {
+    pub fn new() -> Self { Default::default() }
+
+    /// SPIR-V binary to be reflected.
+    pub fn spv<Spv: Into<SpirvBinary>>(&mut self, x: Spv) -> &mut Self {
+        self.spv = x.into();
+        self
+    }
+    /// Reference all defined resources even the resource is not used by an
+    /// entry point. Otherwise and by default, only the referenced resources are
+    /// assigned to entry points.
+    ///
+    /// Can be faster for modules with only entry point; slower for multiple
+    /// entry points.
+    pub fn ref_all_rscs(&mut self, x: bool) -> &mut Self {
+        self.ref_all_rscs = x;
+        self
+    }
+    /// Combine images and samplers sharing a same binding point to combined
+    /// image sampler descriptors.
+    ///
+    /// Faster when disabled, but useful for modules derived from HLSL.
+    pub fn combine_img_samplers(&mut self, x: bool) -> &mut Self {
+        self.combine_img_samplers = x;
+        self
+    }
+
+    /// Reflect the SPIR-V binary and extract all entry points.
+    pub fn reflect(&self) -> Result<Vec<EntryPoint>> {
+        let inspector = NopInspector();
+        ReflectIntermediate::reflect(Instrs::new(self.spv.words()), self, inspector)
+    }
+    /// Reflect the SPIR-V binary and extract all entry points with an inspector
+    /// for customized reflection subroutines.
+    pub fn reflect_inspect<F>(&self, inspector: F) -> Result<Vec<EntryPoint>>
+        where F: FnMut(&ReflectIntermediate<'_>, &Instr<'_>)
+    {
+        let inspector = FnInspector::<F>(inspector);
+        ReflectIntermediate::reflect(Instrs::new(self.spv.words()), self, inspector)
     }
 }
 
@@ -1334,10 +1442,95 @@ impl<'a> ReflectIntermediate<'a> {
             })
             .collect()
     }
-    pub(crate) fn collect_entry_points(&self) -> Result<Vec<EntryPoint>> {
+}
+
+/// Merge `DescriptorType::SampledImage` and `DescriptorType::Sampler` if
+/// they are bound to a same binding point with a same number of bindings.
+fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
+    let mut samplers = Vec::<Variable>::new();
+    let mut imgs = Vec::<Variable>::new();
+    let mut out_vars = Vec::<Variable>::new();
+
+    for var in vars {
+        if let Variable::Descriptor { desc_ty, .. } = &var {
+            match desc_ty {
+                DescriptorType::Sampler() => {
+                    samplers.push(var);
+                    continue;
+                },
+                DescriptorType::SampledImage() => {
+                    imgs.push(var);
+                    continue;
+                },
+                _ => {},
+            }
+        } 
+        out_vars.push(var);
+    }
+
+    for sampler_var in samplers {
+        let (sampler_desc_bind, sampler_nbind) = {
+            if let Variable::Descriptor { desc_bind, nbind, .. } = sampler_var {
+                (desc_bind, nbind)
+            } else { unreachable!(); }
+        };
+
+        let mut combined_imgs = Vec::new();
+        imgs = imgs.drain(..)
+            .filter_map(|var| {
+                let succ =
+                    var.locator() == Locator::Descriptor(sampler_desc_bind) &&
+                    var.nbind() == Some(sampler_nbind);
+                if succ {
+                    combined_imgs.push(var);
+                    None
+                } else {
+                    Some(var)
+                }
+            })
+            .collect();
+
+        if combined_imgs.is_empty() {
+            // If the sampler can be combined with no texture, just put it
+            // back.
+            out_vars.push(sampler_var);
+        } else {
+            // For any texture that can be combined with this sampler,
+            // create a new combined image sampler.
+            for img_var in combined_imgs {
+                if let Variable::Descriptor { name, ty, .. } = img_var {
+                    if let Type::Image(img_ty) = ty {
+                        let out_var = Variable::Descriptor {
+                            name,
+                            desc_bind: sampler_desc_bind,
+                            desc_ty: DescriptorType::CombinedImageSampler(),
+                            ty: Type::SampledImage(SampledImageType::new(img_ty)),
+                            nbind: sampler_nbind,
+                        };
+                        out_vars.push(out_var);
+                    } else { unreachable!(); }
+                } else { unreachable!(); }
+            }
+        }
+    }
+
+    out_vars.extend(imgs);
+
+    out_vars
+}
+
+impl<'a> ReflectIntermediate<'a> {
+    pub fn collect_entry_points(&self, cfg: &ReflectConfig) -> Result<Vec<EntryPoint>> {
         let mut entry_points = Vec::with_capacity(self.entry_point_declrs().len());
         for entry_point_declr in self.entry_point_declrs().iter() {
-            let vars = self.collect_entry_point_vars(entry_point_declr.func_id)?;
+            let mut vars = if cfg.ref_all_rscs {
+                self.vars.clone()
+            } else {
+                self.collect_entry_point_vars(entry_point_declr.func_id)?
+            };
+            if cfg.combine_img_samplers {
+                vars = combine_img_samplers(vars);
+            }
             let specs = self.collect_entry_point_specs()?;
             let exec_modes = self.collect_exec_modes(entry_point_declr.func_id);
             let entry_point = EntryPoint {
@@ -1350,26 +1543,5 @@ impl<'a> ReflectIntermediate<'a> {
             entry_points.push(entry_point);
         }
         Ok(entry_points)
-    }
-    /// Collect resources discovered in this reflection session, no matter if
-    /// it's been used by any entry point.
-    pub(crate) fn collect_module_as_entry_point(&self) -> Result<EntryPoint> {
-        let vars = self.vars().iter().cloned().collect();
-        let specs = self.collect_entry_point_specs()?;
-
-        let entry_point_declrs = self.entry_point_declrs();
-        if entry_point_declrs.len() != 1 {
-            return Err(Error::MULTI_ENTRY_POINTS);
-        }
-        let entry_point_declr = &entry_point_declrs[0];
-        let exec_modes = self.collect_exec_modes(entry_point_declr.func_id);
-        let entry_point = EntryPoint {
-            name: entry_point_declr.name.to_owned(),
-            exec_model: entry_point_declr.exec_model,
-            vars,
-            specs,
-            exec_modes,
-        };
-        Ok(entry_point)
     }
 }
