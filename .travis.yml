@@ -15,12 +15,9 @@ env:
 script:
   - cargo build --verbose --lib
   - cargo test --verbose
-  - cargo run --example query
-  - cargo run --example pipeline
-  - cargo run --example sampler-state
+  - cargo run --example gallery
+  - cargo run --example inspect
   - cargo run --example walk
-  - cargo run --example spirv-spec
-  - cargo run --example benchmark
 #  - cargo fmt -- --check
 cache: cargo
 git:

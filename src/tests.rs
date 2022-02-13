@@ -1,11 +1,15 @@
 use inline_spirv::*;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use super::*;
 
 macro_rules! gen_entries(
     ($stage:ident, $src:expr, $lang:ident) => {{
         static SPV: &'static [u32] = inline_spirv!($src, $stage, $lang, vulkan1_2);
-        SPV.iter().copied().collect::<SpirvBinary>().reflect_vec().unwrap()
+        ReflectConfig::new()
+            .spv(SPV)
+            .combine_img_samplers(true)
+            .reflect()
+            .unwrap()
     }}
 );
 macro_rules! gen_one_entry(
@@ -29,10 +33,7 @@ fn test_basic_shader_stage() {
         ($stage:ident, $exec_model:ident) => {{
             let entry = gen_one_entry!($stage, "#version 450 core\nvoid main() {}");
             assert_eq!(entry.exec_model, ExecutionModel::$exec_model, "shader stage execution model mismatched");
-            assert!(entry.spec.spec_consts().next().is_none(), "unexpected specialization");
-            assert!(entry.inputs().next().is_none(), "unexpected input");
-            assert!(entry.outputs().next().is_none(), "unexpected output");
-            assert!(entry.descs().next().is_none(), "unexpected descriptor binding");
+            assert!(entry.vars.is_empty(), "unexpected specialization");
         }}
     );
     x!(vert, Vertex);
@@ -59,8 +60,9 @@ fn test_vs_input_loc() {
         in uvec2 e;
         void main() { gl_Position = vec4(a, b) + c + vec4(d) + vec4(e,0,0); }
     "#);
-    let locations = entry.inputs()
-        .map(|x| x.location)
+    let locations = entry.vars
+        .into_iter()
+        .filter_map(|x| if let Variable::Input { location, .. } = x { Some(location) } else { None })
         .collect::<HashSet<_>>();
     assert!(locations.contains(&InterfaceLocation::new(0, 0)));
     assert!(locations.contains(&InterfaceLocation::new(0, 1)));
@@ -69,12 +71,6 @@ fn test_vs_input_loc() {
     assert!(locations.contains(&InterfaceLocation::new(4, 2)));
     assert!(!locations.contains(&InterfaceLocation::new(0, 2)));
     assert!(!locations.contains(&InterfaceLocation::new(1, 1)));
-    // Test for consistency.
-    for input in entry.inputs() {
-        let resolved = entry.resolve_input(entry.get_input_name(input.location).unwrap()).unwrap();
-        assert_eq!(input, resolved);
-        assert_eq!(resolved.ty, entry.get_input(input.location).unwrap());
-    }
 }
 #[test]
 fn test_fs_output_loc() {
@@ -94,8 +90,9 @@ fn test_fs_output_loc() {
         out uvec2 e;
         void main() { a = 0; b = vec3(0,0,0); c = vec4(0,0,0,0); d = uvec4(0,0,0,0); e = uvec2(0,0); }
     "#);
-    let locations = entry.outputs()
-        .map(|x| x.location)
+    let locations = entry.vars
+        .into_iter()
+        .filter_map(|x| if let Variable::Output { location, .. } = x { Some(location) } else { None })
         .collect::<HashSet<_>>();
     assert!(locations.contains(&InterfaceLocation::new(0, 0)));
     assert!(locations.contains(&InterfaceLocation::new(0, 1)));
@@ -104,12 +101,6 @@ fn test_fs_output_loc() {
     assert!(locations.contains(&InterfaceLocation::new(4, 2)));
     assert!(!locations.contains(&InterfaceLocation::new(0, 2)));
     assert!(!locations.contains(&InterfaceLocation::new(1, 1)));
-    // Test for consistency.
-    for output in entry.outputs() {
-        let resolved = entry.resolve_output(entry.get_output_name(output.location).unwrap()).unwrap();
-        assert_eq!(output, resolved);
-        assert_eq!(resolved.ty, entry.get_output(output.location).unwrap());
-    }
 }
 #[test]
 fn test_spec_consts() {
@@ -122,8 +113,9 @@ fn test_spec_consts() {
         layout(constant_id=235) const float c = 0;
         void main() { gl_Position = vec4(a,b,c,0); EmitVertex(); EndPrimitive(); }
     "#);
-    let spec_ids = entry.spec.spec_consts()
-        .map(|x| x.spec_id)
+    let spec_ids = entry.vars
+        .into_iter()
+        .filter_map(|x| x.spec_id())
         .collect::<HashSet<_>>();
     assert!(spec_ids.contains(&233));
     assert!(spec_ids.contains(&234));
@@ -131,14 +123,6 @@ fn test_spec_consts() {
     assert!(!spec_ids.contains(&0));
     assert!(!spec_ids.contains(&1));
     assert!(!spec_ids.contains(&236));
-    // Test for consistency.
-    for spec_const in entry.spec.spec_consts() {
-        let resolved = entry.spec.resolve_spec_const(
-            entry.spec.get_spec_const_name(spec_const.spec_id).unwrap()
-        ).unwrap();
-        assert_eq!(spec_const, resolved);
-        assert_eq!(spec_const.ty, entry.spec.get_spec_const(spec_const.spec_id).unwrap());
-    }
 }
 #[test]
 fn test_desc_tys() {
@@ -156,77 +140,41 @@ fn test_desc_tys() {
         uniform sampler2D c;
         layout(rgba32f, set=3, binding=4) readonly
         uniform image2D d;
-        layout(input_attachment_index=0, set=1, binding=3)
+        layout(input_attachment_index=3, set=1, binding=3)
         uniform subpassInput e;
-        layout(std430, binding=3)
-        buffer F {
-            vec4 f;
-        } ff;
+        layout(binding=3)
+        uniform samplerBuffer f;
         layout(rgba32f, set=3, binding=5) writeonly
         uniform image2D g;
         void main() {
             bb.b = 0.0;
-            ff.f = vec4(aa.a,0,0,0) + bb.b * texture(c, vec2(0,0)) + subpassLoad(e) + imageLoad(d, ivec2(0,0));
-            imageStore(g, ivec2(0,0), vec4(0,0,0,0));
+            vec4 x = texelFetch(f, 0) + vec4(aa.a,0,0,0) + bb.b * texture(c, vec2(0,0)) + subpassLoad(e) + imageLoad(d, ivec2(0,0));
+            imageStore(g, ivec2(0,0), x);
         }
     "#);
-    let desc_binds = entry.descs()
-        .map(|x| x.desc_bind)
-        .collect::<HashSet<_>>();
-    assert!(desc_binds.contains(&DescriptorBinding::new(0, 0)));
-    assert!(desc_binds.contains(&DescriptorBinding::new(0, 1)));
-    assert!(desc_binds.contains(&DescriptorBinding::new(1, 0)));
-    assert!(desc_binds.contains(&DescriptorBinding::new(3, 4)));
-    assert!(desc_binds.contains(&DescriptorBinding::new(3, 5)));
-    assert!(desc_binds.contains(&DescriptorBinding::new(1, 3)));
-    assert!(desc_binds.contains(&DescriptorBinding::new(0, 3)));
-    assert!(!desc_binds.contains(&DescriptorBinding::new(0, 2)));
-    // Test for consistency.
-    for desc in entry.descs() {
-        let resolved = entry.resolve_desc(entry.get_desc_name(desc.desc_bind).unwrap()).unwrap();
-        assert_eq!(desc, resolved);
-        assert_eq!(resolved.desc_ty, entry.get_desc(desc.desc_bind).unwrap());
-        if desc.desc_bind == DescriptorBinding::new(0, 3) {
-            assert_eq!(entry.get_desc_access(desc.desc_bind).unwrap(), AccessType::ReadWrite);
-        } else if desc.desc_bind == DescriptorBinding::new(0, 1) {
-            assert_eq!(entry.get_desc_access(desc.desc_bind).unwrap(), AccessType::ReadWrite);
-        } else if desc.desc_bind == DescriptorBinding::new(3, 5) {
-            assert_eq!(entry.get_desc_access(desc.desc_bind).unwrap(), AccessType::WriteOnly);
-        } else {
-            assert_eq!(entry.get_desc_access(desc.desc_bind).unwrap(), AccessType::ReadOnly);
-        }
-
-        if desc.desc_bind == DescriptorBinding::new(0, 0) {
-            let members = desc
-                .member_var_res
-                .expect("did not resolve struct def as member");
-            if let crate::Type::Struct(s) = members.ty {
-                assert_eq!(s.name().expect("name was not populated for struct"), "A");
-            } else {
-                assert!(
-                    false,
-                    "expected a uniform struct definition, got {:?}",
-                    members.ty
-                );
-            }
-        } else if desc.desc_bind == DescriptorBinding::new(0, 3) {
-            let members = desc
-                .member_var_res
-                .expect("did not resolve struct def as member");
-            if let crate::Type::Struct(s) = members.ty {
-                assert_eq!(
-                    s.name().expect("name was not populated for buffer struct"),
-                    "F"
-                );
-            } else {
-                assert!(
-                    false,
-                    "expected a buffer struct definition, got {:?}",
-                    members.ty
-                );
-            }
-        }
-    }
+    let desc_binds = entry.vars
+        .into_iter()
+        .filter_map(|x| {
+            if let Variable::Descriptor { desc_bind, desc_ty, .. } = x {
+                Some((desc_bind, desc_ty))
+            } else { None }
+        })
+        .collect::<HashMap<_, _>>();
+    assert!(desc_binds.contains_key(&DescriptorBinding::new(0, 0)));
+    assert_eq!(*desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(), DescriptorType::UniformBuffer());
+    assert!(desc_binds.contains_key(&DescriptorBinding::new(0, 1)));
+    assert_eq!(*desc_binds.get(&DescriptorBinding::new(0, 1)).unwrap(), DescriptorType::StorageBuffer(AccessType::ReadWrite));
+    assert!(desc_binds.contains_key(&DescriptorBinding::new(1, 0)));
+    assert_eq!(*desc_binds.get(&DescriptorBinding::new(1, 0)).unwrap(), DescriptorType::CombinedImageSampler());
+    assert!(desc_binds.contains_key(&DescriptorBinding::new(3, 4)));
+    assert_eq!(*desc_binds.get(&DescriptorBinding::new(3, 4)).unwrap(), DescriptorType::StorageImage(AccessType::ReadOnly));
+    assert!(desc_binds.contains_key(&DescriptorBinding::new(3, 5)));
+    assert_eq!(*desc_binds.get(&DescriptorBinding::new(3, 5)).unwrap(), DescriptorType::StorageImage(AccessType::WriteOnly));
+    assert!(desc_binds.contains_key(&DescriptorBinding::new(1, 3)));
+    assert_eq!(*desc_binds.get(&DescriptorBinding::new(1, 3)).unwrap(), DescriptorType::InputAttachment(3));
+    assert!(desc_binds.contains_key(&DescriptorBinding::new(0, 3)));
+    assert_eq!(*desc_binds.get(&DescriptorBinding::new(0, 3)).unwrap(), DescriptorType::UniformTexelBuffer());
+    assert!(!desc_binds.contains_key(&DescriptorBinding::new(0, 2)));
 }
 #[test]
 fn test_push_consts() {
@@ -238,11 +186,11 @@ fn test_push_consts() {
         } aa;
         void main() { gl_Position = vec4(aa.a,0,0,0); }
     "#);
-    let resolved = entry.resolve_push_const(
-        entry.get_push_const_name().unwrap()
-    ).unwrap();
-    assert_eq!(entry.get_push_const().unwrap(), resolved.ty);
-    assert_eq!(entry.get_push_const().unwrap().resolve(""), resolved.member_var_res);
+    entry.vars
+        .into_iter()
+        .filter_map(|x| { if let Variable::PushConstant { .. } = x { Some(()) } else { None } })
+        .next()
+        .unwrap();
 }
 #[test]
 fn test_implicit_sampled_img() {
@@ -262,15 +210,27 @@ fn test_dyn_multibind() {
         #extension GL_EXT_nonuniform_qualifier: enable
         
         layout(binding = 0, set = 0)
-        uniform sampler2D arr[];
-        layout(location=0)
-        in flat int xx;
+        uniform sampler2D arr_dyn[];
+        layout(binding = 1, set = 0)
+        uniform sampler2D arr[5];
+
+        layout(location = 0)
+        in flat uint xx;
 
         void main() {
-            texture(arr[xx], vec2(0,0));
+            texture(arr[0], vec2(0,0)) + texture(arr_dyn[xx], vec2(0,0));
         }
     "#);
-    assert_eq!(entry.get_desc(DescriptorBinding::new(0, 0)).unwrap().nbind(), 0);
+    let descs = entry.vars
+        .into_iter()
+        .filter_map(|x| {
+            if let Variable::Descriptor { desc_bind, nbind, .. } = x {
+                Some((desc_bind, nbind))
+            } else { None }
+        })
+        .collect::<HashMap<_, _>>();
+    assert_eq!(*descs.get(&DescriptorBinding::new(0, 0)).unwrap(), 0);
+    assert_eq!(*descs.get(&DescriptorBinding::new(0, 1)).unwrap(), 5);
 }
 #[test]
 fn test_ray_tracing() {
@@ -288,6 +248,54 @@ fn test_ray_tracing() {
                 vec3(0, 0, 0), 100.0f, 0);
         }
     "#);
-    assert!(entry.get_desc(DescriptorBinding::new(0, 0)).unwrap().is_accel_struct());
+    let desc_binds = entry.vars
+        .into_iter()
+        .filter_map(|x| {
+            if let Variable::Descriptor { desc_bind, desc_ty, .. } = x {
+                Some((desc_bind, desc_ty))
+            } else { None }
+        })
+        .collect::<HashMap<_, _>>();
+    assert_eq!(*desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(), DescriptorType::AccelStruct());
 }
-// TODO: (penguinliong) Comprehensive type testing.
+#[test]
+fn test_combine_image_sampler() {
+    let entry = gen_one_entry_hlsl!(frag, r#"
+        [[vk::binding(0, 0)]]
+        Texture2D shaderTexture;
+        [[vk::binding(1, 0)]]
+        SamplerState SampleType;
+
+        [[vk::binding(1, 1)]]
+        Texture2D shaderTexture2;
+        [[vk::binding(1, 1)]]
+        SamplerState SampleType2;
+
+        struct PixelInputType
+        {
+            float4 position : SV_POSITION;
+            float2 tex : TEXCOORD0;
+        };
+
+        float4 main(PixelInputType input) : SV_TARGET
+        {
+            float4 textureColor, textureColor2;
+
+            textureColor = shaderTexture.Sample(SampleType, input.tex) + shaderTexture2.Sample(SampleType2, input.tex);
+
+            return textureColor;
+        }
+    "#);
+    let desc_binds = entry.vars
+        .into_iter()
+        .filter_map(|x| {
+            if let Variable::Descriptor { desc_bind, desc_ty, .. } = x {
+                Some((desc_bind, desc_ty))
+            } else { None }
+        })
+        .collect::<HashMap<_, _>>();
+    assert_eq!(desc_binds.len(), 3);
+    assert_eq!(*desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(), DescriptorType::SampledImage());
+    assert_eq!(*desc_binds.get(&DescriptorBinding::new(0, 1)).unwrap(), DescriptorType::Sampler());
+    assert_eq!(*desc_binds.get(&DescriptorBinding::new(1, 1)).unwrap(), DescriptorType::CombinedImageSampler());
+}

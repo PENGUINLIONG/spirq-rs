@@ -16,17 +16,28 @@ It should be noted that SPIR-V is targeting at Vulkan so OpenCL binaries are not
 
 ## Usage
 
-Please refer to the attached examples:
+```rust
+use spirq::*;
+let entry_points = ReflectConfig::new()
+    // Load SPIR-V data into `[u32]` buffer `spv_words`.
+    .spv(spv_words)
+    // Set this true if you want to reflect all resources no matter it's
+    // used by an entry point or not.
+    .ref_all_rscs(true)
+    // Combine sampled image and separated sampler states if they are bound
+    // to the same binding point.
+    .combine_img_samplers(true)
+    // Do the work.
+    .reflect()
+    .unwrap();
+// All extracted entry point data are available in `entry_points` now.
+```
 
-* [query](examples/query/main.rs): Query separate entry points in SPIR-V binaries.
-* [pipeline](examples/pipeline/main.rs): Query a (conceptual) pipeline built from multiple shader modules.
-* [spirv-spec](examples/spirv-spec/main.rs): Reflection of an example fragment shader program, which can be found in section 1.10 of the SPIR-V specification.
-* [walk](examples/walk/main.rs): Enumerate offsets, symbols and types of all descriptor variables.
-* [sampler-state](examples/sampler-state/main.rs): Separable sampler state support for HLSL-sourced SPIR-Vs.
-* [inspect](examples/inspect/main.rs): Customize shader reflection with your own inspector function.
-* [benchmark](examples/benchmark/main.rs): Feel how fast SPIR-Q can be. (The log was generated from a `release` run.)
-* [ray-tracing](examples/ray-tracing/main.rs): Vulkan ray-tracing shader support.
-* [gallery](examples/gallery/main.rs): All data types in GLSL.
+Please also refer to the attached examples:
+
+* [walk](examples/walk): Enumerate offsets, symbols and types of all descriptor variables.
+* [inspect](examples/inspect): Customize shader reflection with your own inspector function.
+* [gallery](examples/gallery): All data types in GLSL.
 
 Sample output are attached in the same directories as the code files.
 

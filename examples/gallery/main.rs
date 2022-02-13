@@ -1,14 +1,17 @@
-use spirq::SpirvBinary;
+use spirq::ReflectConfig;
 use std::path::Path;
 
 fn main() {
     let spv = build_spirv_binary("assets/gallery.frag.spv").unwrap();
-    let entry = spv.reflect_fast().unwrap();
-    println!("{:#?}", &entry);
+    let entry_points = ReflectConfig::new()
+        .spv(spv)
+        .ref_all_rscs(true)
+        .reflect()
+        .unwrap();
+    println!("{:#?}", &entry_points);
 }
 
-
-fn build_spirv_binary<P: AsRef<Path>>(path: P) -> Option<SpirvBinary> {
+fn build_spirv_binary<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
     use std::ffi::OsStr;
     use std::fs::File;
     use std::io::Read;
@@ -24,6 +27,5 @@ fn build_spirv_binary<P: AsRef<Path>>(path: P) -> Option<SpirvBinary> {
         }
         f.read_to_end(&mut buf).ok()?;
     }
-    let spv = buf.into();
-    Some(spv)
+    Some(buf)
 }
