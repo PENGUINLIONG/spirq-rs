@@ -361,50 +361,65 @@ impl fmt::Debug for SubpassDataType {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+pub enum ArrayBound {
+    /// Count of elements in the array.
+    Sized(u32),
+    /// Specialization constant ID, but unsized until specified at runtime.
+    Specialized(u32),
+    /// Specialization constant ID and the default size.
+    SpecializedDefault(u32, u32),
+    Unsized,
+}
+
+impl ArrayBound {
+    pub const SINGLE_UNSPECIALIZED: Self = Self::Sized(1);
+
+    /// Count of elements.
+    /// 
+    /// If the number of elements is specified as a specialized constant, the default size is
+    /// returned.
+    pub fn size_or_default(self) -> u32 {
+        match self {
+            ArrayBound::Sized(sz) => sz ,
+            ArrayBound::SpecializedDefault(_, def) =>  def,
+            ArrayBound::Specialized(_) | ArrayBound::Unsized => 0,
+        }
+    }
+}
+
+impl Default for ArrayBound {
+    fn default() -> Self {
+        Self::Unsized
+    }
+}
 
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct ArrayType {
     pub(crate) proto_ty: Box<Type>,
-    nrepeat: Option<u32>,
+    nrepeat: ArrayBound,
     stride: Option<usize>,
 }
 impl ArrayType {
-    pub(crate) fn new_multibind(proto_ty: &Type, nrepeat: u32) -> ArrayType {
+    pub(crate) fn new_multibind(proto_ty: &Type, nrepeat: ArrayBound) -> ArrayType {
         ArrayType {
             proto_ty: Box::new(proto_ty.clone()),
-            nrepeat: Some(nrepeat),
+            nrepeat,
             stride: None,
         }
     }
-    pub(crate) fn new_unsized_multibind(proto_ty: &Type) -> ArrayType {
+    pub(crate) fn new(proto_ty: &Type, nrepeat: ArrayBound, stride: usize) -> ArrayType {
         ArrayType {
             proto_ty: Box::new(proto_ty.clone()),
-            nrepeat: None,
-            stride: None,
-        }
-    }
-    pub fn new(proto_ty: &Type, nrepeat: u32, stride: usize) -> ArrayType {
-        ArrayType {
-            proto_ty: Box::new(proto_ty.clone()),
-            nrepeat: Some(nrepeat),
+            nrepeat,
             stride: Some(stride),
         }
     }
-    pub fn new_unsized(proto_ty: &Type, stride: usize) -> ArrayType {
-        ArrayType {
-            proto_ty: Box::new(proto_ty.clone()),
-            nrepeat: None,
-            stride: Some(stride)
-        }
-    }
 
-    /// Get the minimum size of the array type. If the number of elements is not
-    /// given until runtime, 0 is returned.
+    /// Get the minimum size of the array type. If the number of elements is
+    /// specified as a specialized constant, the default size is returned.
     pub fn nbyte(&self) -> usize {
-        match (self.stride, self.nrepeat) {
-            (Some(stride), Some(nrepeat)) => stride * nrepeat as usize,
-            _ => 0,
-        }
+        self.stride.unwrap_or_default() * self.nrepeat().size_or_default() as usize
     }
     pub fn proto_ty(&self) -> &Type {
         &self.proto_ty
@@ -413,13 +428,14 @@ impl ArrayType {
         // Multibind which makes the `stride` be `None` is used internally only.
         self.stride.unwrap()
     }
-    pub fn nrepeat(&self) -> Option<u32> {
-        self.nrepeat.clone()
+
+    pub fn nrepeat(&self) -> ArrayBound {
+        self.nrepeat
     }
 }
 impl fmt::Debug for ArrayType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let Some(nrepeat) = self.nrepeat {
+        if let ArrayBound::Sized(nrepeat) | ArrayBound::SpecializedDefault(_, nrepeat) = self.nrepeat {
             write!(f, "[{:?}; {}]", self.proto_ty, nrepeat)
         } else {
             write!(f, "[{:?}]", self.proto_ty)

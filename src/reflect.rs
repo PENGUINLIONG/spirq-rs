@@ -90,6 +90,8 @@ pub struct ConstantIntermediate<'a> {
     pub ty_id: InstrId,
     /// Defined value of constant.
     pub value: &'a [u32],
+    /// Specialization, if this constant can be specialized at runtime.
+    pub spec: Option<SpecConstantIntermediate<'a>>,
 }
 
 /// Descriptor type matching `VkDescriptorType`.
@@ -151,7 +153,7 @@ pub enum Variable {
         /// The concrete SPIR-V type definition of descriptor resource.
         ty: Type,
         /// Number of bindings at the binding point. All descriptors can have
-        /// multiple binding points. If the multi-binding is dynamic, 0 will be
+        /// multiple binding points. If the multi-binding is dynamic, 0 may be
         /// returned.
         ///
         /// For more information about dynamic multi-binding, please refer to
@@ -159,7 +161,7 @@ pub enum Variable {
         /// `GL_EXT_nonuniform_qualifier` and SPIR-V extension
         /// `SPV_EXT_descriptor_indexing`. Dynamic multi-binding is only
         /// supported in Vulkan 1.2.
-        nbind: u32,
+        nbind: ArrayBound,
     },
     /// Push constant.
     PushConstant {
@@ -230,7 +232,7 @@ impl Variable {
         }
     }
     /// Number of bindings at the binding point it it's a descriptor resource.
-    pub fn nbind(&self) -> Option<u32> {
+    pub fn nbind(&self) -> Option<ArrayBound> {
         if let Variable::Descriptor { nbind, .. } = self {
             Some(*nbind)
         } else { None }
@@ -874,43 +876,28 @@ impl<'a> ReflectIntermediate<'a> {
                     // probably it's fine to size array with them?
                     .and_then(|constant| {
                         if let Some(Type::Scalar(scalar_ty)) = self.get_ty(constant.ty_id) {
-                            if scalar_ty.nbyte() == 4 && scalar_ty.is_uint() {
-                                return constant.value.iter().next().cloned();
-                            }
+                            let nrepeat = if scalar_ty.nbyte() == 4 && scalar_ty.is_uint() {
+                                constant.value.iter().next().cloned()
+                            } else {
+                                None
+                            };
+                            Some(match (&constant.spec, nrepeat) {
+                                (Some(spec), Some(nrepeat)) => ArrayBound::SpecializedDefault(spec.spec_id, nrepeat),
+                                (Some(spec), None) => ArrayBound::Specialized(spec.spec_id),
+                                (None, Some(nrepeat)) => ArrayBound::Sized(nrepeat),
+                                (None, None) => ArrayBound::Unsized,
+                            })
+                        } else {
+                            None
                         }
-                        None
-                    });
+                    })
+                    .unwrap_or_default();
                 let stride = self.get_deco_u32(op.ty_id, Decoration::ArrayStride)
                     .map(|x| x as usize);
-
-                let arr_ty = if let Some(nrepeat) = nrepeat {
-                    if let Some(stride) = stride {
-                        ArrayType::new(&proto_ty, nrepeat, stride)
-                    } else {
-                        ArrayType::new_multibind(&proto_ty, nrepeat)
-                    }
+                let arr_ty = if let Some(stride) = stride {
+                    ArrayType::new(&proto_ty, nrepeat, stride)
                 } else {
-                    // We expect the constant is registered but we failed to
-                    // find it. It's possible that the SPIR-V generated a
-                    // forward reference to a result of `OpCompositeExtract` to
-                    // get a component of a specialized composite. One example
-                    // is to use workgroup size to declare arrays.
-                    //
-                    // Such behavior is observed in `glslangValidator`, built
-                    // with glslang 11.1; but AFAIK no longer with glslang 11.5
-                    // in which `OpSpecConstantOp` with `OpCompositeExtract`
-                    // is generated instead.
-                    //
-                    // Either way, if array size is a specialized value, we have
-                    // no idea about the actual size of the array through static
-                    // analysis. To the most possible extent, we assume the
-                    // SPIR-V input is valid so we also assume any missing
-                    // reference points to a forward-referenced instruction.
-                    if let Some(stride) = stride {
-                        ArrayType::new_unsized(&proto_ty, stride)
-                    } else {
-                        ArrayType::new_unsized_multibind(&proto_ty)
-                    }
+                    ArrayType::new_multibind(&proto_ty, nrepeat)
                 };
                 (op.ty_id, Type::Array(arr_ty))
             },
@@ -924,9 +911,9 @@ impl<'a> ReflectIntermediate<'a> {
                 let stride = self.get_deco_u32(op.ty_id, Decoration::ArrayStride)
                     .map(|x| x as usize);
                 let arr_ty = if let Some(stride) = stride {
-                    ArrayType::new_unsized(&proto_ty, stride)
+                    ArrayType::new(&proto_ty, ArrayBound::Unsized,  stride)
                 } else {
-                    ArrayType::new_unsized_multibind(&proto_ty)
+                    ArrayType::new_multibind(&proto_ty, ArrayBound::Unsized)
                 };
                 (op.ty_id, Type::Array(arr_ty))
             },
@@ -1005,6 +992,7 @@ impl<'a> ReflectIntermediate<'a> {
                 let constant = ConstantIntermediate {
                     ty_id: op.ty_id,
                     value: op.value,
+                    spec: None,
                 };
                 entry.insert(constant);
                 Ok(())
@@ -1013,53 +1001,53 @@ impl<'a> ReflectIntermediate<'a> {
             Ok(())
         }
     }
-    fn populate_one_spec_const(&mut self, instr: &Instr<'a>) -> Result<()> {
+    fn  populate_one_spec_const(&mut self, instr: &Instr<'a>) -> Result<()> {
         use std::collections::hash_map::Entry::Vacant;
-        let (spec_const_id, constant, spec_const) = match instr.opcode() {
+        let (spec_const_id, constant) = match instr.opcode() {
             OP_SPEC_CONSTANT_TRUE => {
                 let op = OpSpecConstantTrue::try_from(instr)?;
+                let spec_id = self.get_deco_u32(op.spec_const_id, Decoration::SpecId)
+                    .ok_or(Error::MISSING_DECO)?;
                 let constant = ConstantIntermediate {
                     ty_id: op.ty_id,
                     value: &[1],
+                    spec: Some(SpecConstantIntermediate {
+                        ty_id: op.ty_id,
+                        value: &[1],
+                        spec_id,
+                    }),
                 };
-                let spec_id = self.get_deco_u32(op.spec_const_id, Decoration::SpecId)
-                    .ok_or(Error::MISSING_DECO)?;
-                let spec_const = SpecConstantIntermediate {
-                    ty_id: constant.ty_id,
-                    value: &[1],
-                    spec_id,
-                };
-                (op.spec_const_id, constant, Some(spec_const))
+                (op.spec_const_id, constant)
             },
             OP_SPEC_CONSTANT_FALSE => {
                 let op = OpSpecConstantFalse::try_from(instr)?;
+                let spec_id = self.get_deco_u32(op.spec_const_id, Decoration::SpecId)
+                    .ok_or(Error::MISSING_DECO)?;
                 let constant = ConstantIntermediate {
                     ty_id: op.ty_id,
                     value: &[0],
+                    spec: Some(SpecConstantIntermediate {
+                        ty_id: op.ty_id,
+                        value: &[0],
+                        spec_id,
+                    }),
                 };
-                let spec_id = self.get_deco_u32(op.spec_const_id, Decoration::SpecId)
-                    .ok_or(Error::MISSING_DECO)?;
-                let spec_const = SpecConstantIntermediate {
-                    ty_id: constant.ty_id,
-                    value: &[0],
-                    spec_id,
-                };
-                (op.spec_const_id, constant, Some(spec_const))
+                (op.spec_const_id, constant)
             },
             OP_SPEC_CONSTANT => {
                 let op = OpSpecConstant::try_from(instr)?;
+                let spec_id = self.get_deco_u32(op.spec_const_id, Decoration::SpecId)
+                    .ok_or(Error::MISSING_DECO)?;
                 let constant = ConstantIntermediate {
                     ty_id: op.ty_id,
                     value: op.value,
+                    spec: Some(SpecConstantIntermediate {
+                        ty_id: op.ty_id,
+                        value: op.value,
+                        spec_id,
+                    }),
                 };
-                let spec_id = self.get_deco_u32(op.spec_const_id, Decoration::SpecId)
-                    .ok_or(Error::MISSING_DECO)?;
-                let spec_const = SpecConstantIntermediate {
-                    ty_id: constant.ty_id,
-                    value: op.value,
-                    spec_id,
-                };
-                (op.spec_const_id, constant, Some(spec_const))
+                (op.spec_const_id, constant)
             },
             // `SpecId` decorations will be specified to each of the
             // constituents so we don't have to register a
@@ -1075,8 +1063,9 @@ impl<'a> ReflectIntermediate<'a> {
                     // specialization constant so it's unnecesary to resolve
                     // it's default value. Same applies to `OpSpecConstantOp`.
                     value: &[] as &'static [u32],
+                    spec: None,
                 };
-                (op.spec_const_id, constant, None)
+                (op.spec_const_id, constant)
             },
             // Similar to `OpConstantComposite`, we don't register
             // specialization constants for `OpSpecConstantOp` results, neither
@@ -1094,36 +1083,37 @@ impl<'a> ReflectIntermediate<'a> {
                 let constant = ConstantIntermediate {
                     ty_id: op.ty_id,
                     value: &[] as &'static [u32],
+                    spec: None,
                 };
-                (op.spec_const_id, constant, None)
+                (op.spec_const_id, constant)
             },
             _ => return Err(Error::UNSUPPORTED_SPEC),
         };
 
+        let spec_const = constant.spec.clone();
         if let Vacant(entry) = self.const_map.entry(spec_const_id) {
             entry.insert(constant);
         } else { return Err(Error::ID_COLLISION) }
         if let Some(spec_const) = spec_const {
             let locator = Locator::SpecConstant(spec_const.spec_id);
             self.declr_map.insert(locator, spec_const_id);
-            self.spec_consts.push(spec_const);
+            self.spec_consts.push(spec_const.clone());
         }
 
         Ok(())
     }
     fn populate_one_var(&mut self, instr: &Instr<'a>) -> Result<()> {
-        fn extract_proto_ty<'a>(ty: &Type) -> Result<(u32, Type)> {
+        fn extract_proto_ty<'a>(ty: &Type) -> Result<(ArrayBound, Type)> {
             match ty {
                 Type::Array(arr_ty) => {
                     // `nrepeat=None` is no longer considered invalid because of
                     // the adoption of `SPV_EXT_descriptor_indexing`. This
                     // shader extension has been supported in Vulkan 1.2.
-                    let nrepeat = arr_ty.nrepeat()
-                        .unwrap_or(0);
+                    let nrepeat = arr_ty.nrepeat();
                     let proto_ty = arr_ty.proto_ty();
                     Ok((nrepeat, proto_ty.clone()))
                 },
-                _ => Ok((1, ty.clone())),
+                _ => Ok((ArrayBound::SINGLE_UNSPECIALIZED, ty.clone())),
             }
         }
 

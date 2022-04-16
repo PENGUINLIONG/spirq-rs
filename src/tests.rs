@@ -229,8 +229,37 @@ fn test_dyn_multibind() {
             } else { None }
         })
         .collect::<HashMap<_, _>>();
-    assert_eq!(*descs.get(&DescriptorBinding::new(0, 0)).unwrap(), 0);
-    assert_eq!(*descs.get(&DescriptorBinding::new(0, 1)).unwrap(), 5);
+    assert_eq!(*descs.get(&DescriptorBinding::new(0, 0)).unwrap(), ty::ArrayBound::Unsized);
+    assert_eq!(*descs.get(&DescriptorBinding::new(0, 1)).unwrap(), ty::ArrayBound::Sized(5));
+}
+#[test]
+fn test_spec_const_arrays() {
+    let entry = gen_one_entry!(frag, r#"
+        #version 450 core
+        
+        layout(constant_id = 3)
+        const uint NUM = 42;
+        layout(binding = 0, set = 0)
+        uniform sampler2D arr_spec[NUM];
+
+        layout(location = 0)
+        in flat uint xx;
+
+        void main() {
+            for (uint i = 0; i < NUM; i++) {
+                texture(arr_spec[i], vec2(0,0));
+            }
+        }
+    "#);
+    let descs = entry.vars
+        .into_iter()
+        .filter_map(|x| {
+            if let Variable::Descriptor { desc_bind, nbind, .. } = x {
+                Some((desc_bind, nbind))
+            } else { None }
+        })
+        .collect::<HashMap<_, _>>();
+    assert_eq!(*descs.get(&DescriptorBinding::new(0, 0)).unwrap(), ty::ArrayBound::SpecializedDefault(3, 42));
 }
 #[test]
 fn test_ray_tracing() {
