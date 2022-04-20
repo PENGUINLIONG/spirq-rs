@@ -107,7 +107,7 @@ impl ConstantValue {
             _ => Err(Error::SPEC_TY_MISMATCHED),
         }
     }
-    fn to_f32(&self) -> Result<f32> {
+    fn _to_f32(&self) -> Result<f32> {
         if let ConstantValue::F32(x) = self {
             Ok(*x)
         } else {
