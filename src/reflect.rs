@@ -66,9 +66,9 @@ pub enum ConstantValue {
     /// Signed integer.
     I32(i32),
     /// Signless 32-bit integer. Note that 'signless' is not 'unsigned'. It
-    /// means that SPIR-V integers don't have
-    /// any sign semantics themselves, the significance of the sign-bit depends
-    /// on the signess of the operation applied to it.
+    /// means that SPIR-V integers don't have any sign semantics themselves, the
+    /// significance of the sign-bit depends on the signess of the operation
+    /// applied to it.
     U32(u32),
     /// Signed 32-bit floating-point number.
     F32(f32),
@@ -86,28 +86,28 @@ impl From<f32> for ConstantValue {
     fn from(x: f32) -> Self { ConstantValue::F32(x) }
 }
 impl ConstantValue {
-    pub fn to_bool(&self) -> Result<bool> {
+    fn _to_bool(&self) -> Result<bool> {
         if let ConstantValue::Bool(x) = self {
             Ok(*x)
         } else {
             Err(Error::SPEC_TY_MISMATCHED)
         }
     }
-    pub fn to_s32(&self) -> Result<i32> {
+    fn to_s32(&self) -> Result<i32> {
         match self {
             ConstantValue::I32(x) => Ok(*x),
             ConstantValue::U32(x) => Ok(unsafe { transmute::<u32, i32>(*x) }),
             _ => Err(Error::SPEC_TY_MISMATCHED),
         }
     }
-    pub fn to_u32(&self) -> Result<u32> {
+    fn to_u32(&self) -> Result<u32> {
         match self {
             ConstantValue::I32(x) => Ok(unsafe { transmute::<i32, u32>(*x) }),
             ConstantValue::U32(x) => Ok(*x),
             _ => Err(Error::SPEC_TY_MISMATCHED),
         }
     }
-    pub fn to_f32(&self) -> Result<f32> {
+    fn to_f32(&self) -> Result<f32> {
         if let ConstantValue::F32(x) = self {
             Ok(*x)
         } else {
@@ -115,7 +115,7 @@ impl ConstantValue {
         }
     }
 
-    pub fn ty(&self) -> Type {
+    fn ty(&self) -> Type {
         match self {
             Self::Bool(_) => Type::Scalar(ScalarType::Boolean),
             Self::I32(_) => Type::Scalar(ScalarType::Signed(4)),
