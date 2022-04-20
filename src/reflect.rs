@@ -1279,8 +1279,8 @@ impl<'a> ReflectIntermediate<'a> {
             },
             // `SpecId` decorations will be specified to each of the
             // constituents so we don't have to register a
-            // `SpecConstantIntermediate` for the composite of them.
-            // `SpecConstantIntermediate` is registered only for those will be
+            // `ConstantIntermediate` for the composite of them.
+            // `ConstantIntermediate` is registered only for those will be
             // interacting with Vulkan.
             OP_SPEC_CONSTANT_COMPOSITE => {
                 //let op = OpSpecConstantComposite::try_from(instr)?;
@@ -1295,17 +1295,6 @@ impl<'a> ReflectIntermediate<'a> {
                 //(op.spec_const_id, constant)
                 return Ok(());
             },
-            // Similar to `OpConstantComposite`, we don't register
-            // specialization constants for `OpSpecConstantOp` results, neither
-            // the validity of the operations because they are out of SPIR-Q's
-            // duty.
-            //
-            // NOTE: In some cases you might want to use specialized workgroup
-            // size to allocate shared memory or other on-chip memory with this,
-            // that's possible, but still be aware that specialization constants
-            // CANNOT be used to specify any STRUCTURED memory objects like UBO
-            // and SSBO, because the stride and offset decorations are
-            // precompiled as a part of the SPIR-V binary meta.
             OP_SPEC_CONSTANT_OP => self.populate_one_spec_const_op(instr),
             _ => return Err(Error::UNSUPPORTED_SPEC),
         }
