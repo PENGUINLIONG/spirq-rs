@@ -23,12 +23,15 @@ impl Error {
     pub const BROKEN_NESTED_TY: Self = Self::CorruptedSpirv("nested type member violated the specification");
     pub const BROKEN_ACCESS_CHAIN: Self = Self::CorruptedSpirv("pointer in access chain points to non-existing type");
     pub const ACCESS_CONFLICT: Self = Self::CorruptedSpirv("variable is both read-only and write-only");
+    pub const SPEC_DIV_BY_ZERO: Self = Self::CorruptedSpirv("specialized constexpr contains division by zero");
+    pub const SPEC_TY_MISMATCHED: Self = Self::CorruptedSpirv("specialized constexpr param type mismatched");
 
     // TODO: (penguinliong) Mechanism to ignore unsupported features.
     pub const UNSUPPORTED_TY: Self = Self::UnsupportedSpirv("unsupported type");
     pub const UNSUPPORTED_EXEC_MODE: Self = Self::UnsupportedSpirv("unsupported execution mode");
     pub const UNSUPPORTED_IMG_CFG: Self = Self::UnsupportedSpirv("unsupported image configuration");
     pub const UNSUPPORTED_SPEC: Self = Self::UnsupportedSpirv("unsupported specialization");
+    pub const UNSUPPORTED_CONST_TY: Self = Self::UnsupportedSpirv("unsupported constant type");
 }
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

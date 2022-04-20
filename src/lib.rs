@@ -66,7 +66,7 @@ use std::iter::FromIterator;
 pub use error::{Error, Result};
 pub use reflect::{ReflectConfig, InterfaceLocation, DescriptorBinding,
     DescriptorType, Variable, Locator, AccessType, ExecutionMode,
-    ExecutionModel};
+    ExecutionModel, ConstantValue};
 
 /// SPIR-V program binary.
 #[derive(Debug, Default, Clone)]

@@ -57,7 +57,8 @@ impl<'a> Iterator for Walk<'a> {
                     Some((&member.ty, member.offset, seg))
                 },
                 Type::Array(arr_ty) => {
-                    if i < arr_ty.nrepeat().size_or_default() as usize {
+                    // Unsized buffer are treated as 0-sized.
+                    if i < arr_ty.nrepeat().unwrap_or_default() as usize {
                         Some((&arr_ty.proto_ty, arr_ty.stride() * i, Seg::Index(i)))
                     } else { None }
                 },

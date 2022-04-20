@@ -229,66 +229,67 @@ fn test_dyn_multibind() {
             } else { None }
         })
         .collect::<HashMap<_, _>>();
-    assert_eq!(*descs.get(&DescriptorBinding::new(0, 0)).unwrap(), ty::ArrayBound::Unsized);
-    assert_eq!(*descs.get(&DescriptorBinding::new(0, 1)).unwrap(), ty::ArrayBound::Sized(5));
+    assert_eq!(*descs.get(&DescriptorBinding::new(0, 0)).unwrap(), 0);
+    assert_eq!(*descs.get(&DescriptorBinding::new(0, 1)).unwrap(), 5);
 }
 #[test]
 fn test_spec_const_arrays() {
-    let entry = gen_one_entry!(frag, r#"
+    static SPV: &'static [u32] = inline_spirv!(r#"
         #version 450 core
-        
+
+        layout(constant_id = 2)
+        const uint OFFSET = 2;
         layout(constant_id = 3)
         const uint NUM = 42;
+        layout(constant_id = 4)
+        const int PERMUTATION = 12;
+
         layout(binding = 0, set = 0)
-        uniform sampler2D arr_spec[NUM];
+        uniform sampler2D arr_spec[NUM * PERMUTATION + 1];
+
+        layout(binding = 1, set = 0, std140)
+        uniform Param {
+            vec4 padding;
+            vec4 trailing_array[NUM];
+        } u;
 
         layout(location = 0)
         in flat uint xx;
 
         void main() {
             for (uint i = 0; i < NUM; i++) {
-                texture(arr_spec[i], vec2(0,0));
+                texture(arr_spec[i], vec2(0,0)) + u.padding;
             }
         }
-    "#);
-    let descs = entry.vars
-        .into_iter()
+    "#, frag, vulkan1_2);
+    let entries = ReflectConfig::new()
+        .spv(SPV)
+        .combine_img_samplers(true)
+        .specialize(3, ConstantValue::U32(7))
+        .specialize(4, ConstantValue::I32(9))
+        .reflect()
+        .unwrap();
+    assert_eq!(entries.len(), 1, "expected 1 entry point, found {}", entries.len());
+    let entry = entries[0].clone();
+    let spec_consts = entry.vars
+        .iter()
         .filter_map(|x| {
-            if let Variable::Descriptor { desc_bind, nbind, .. } = x {
-                Some((desc_bind, nbind))
+            if let Variable::SpecConstant { spec_id, ty, .. } = x {
+                Some((spec_id, ty.clone()))
             } else { None }
         })
         .collect::<HashMap<_, _>>();
-    assert_eq!(*descs.get(&DescriptorBinding::new(0, 0)).unwrap(), ty::ArrayBound::SpecializedDefault(3, 42));
-}
-#[test]
-fn test_spec_unsized_const_arrays() {
-    let entry = gen_one_entry!(frag, r#"
-        #version 450 core
-        
-        layout(constant_id = 3)
-        const int NUM = 42; // NOTE THE "int" and also NEVER DO THIS
-        layout(binding = 0, set = 0)
-        uniform sampler2D arr_spec[NUM];
-
-        layout(location = 0)
-        in flat uint xx;
-
-        void main() {
-            for (uint i = 0; i < NUM; i++) {
-                texture(arr_spec[i], vec2(0,0));
-            }
-        }
-    "#);
     let descs = entry.vars
-        .into_iter()
+        .iter()
         .filter_map(|x| {
-            if let Variable::Descriptor { desc_bind, nbind, .. } = x {
-                Some((desc_bind, nbind))
+            if let Variable::Descriptor { desc_bind, nbind, ty, .. } = x {
+                Some((desc_bind, (*nbind, ty.nbyte())))
             } else { None }
         })
         .collect::<HashMap<_, _>>();
-    assert_eq!(*descs.get(&DescriptorBinding::new(0, 0)).unwrap(), ty::ArrayBound::Specialized(3));
+    assert_eq!(*spec_consts.get(&2).unwrap(), ty::Type::Scalar(ty::ScalarType::Unsigned(4)));
+    assert_eq!(*descs.get(&DescriptorBinding::new(0, 0)).unwrap(), (64, None));
+    assert_eq!(*descs.get(&DescriptorBinding::new(0, 1)).unwrap(), (1, Some(128)));
 }
 #[test]
 fn test_ray_tracing() {
