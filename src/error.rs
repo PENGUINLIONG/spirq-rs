@@ -2,7 +2,7 @@
 use std::fmt;
 use std::error;
 
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub enum Error {
     CorruptedSpirv(&'static str),
     UnsupportedSpirv(&'static str),

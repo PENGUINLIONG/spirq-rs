@@ -219,4 +219,12 @@ define_ops!{
         a_id: SpecConstantId = read_u32(),
         b_id: SpecConstantId = read_u32(),
     }
+    OpSpecConstantTertiaryOpCommonSPQ {
+        ty_id: TypeId = read_u32(),
+        spec_const_id: SpecConstantId = read_u32(),
+        opcode: u32 = read_u32(),
+        a_id: SpecConstantId = read_u32(),
+        b_id: SpecConstantId = read_u32(),
+        c_id: SpecConstantId = read_u32(),
+    }
 }

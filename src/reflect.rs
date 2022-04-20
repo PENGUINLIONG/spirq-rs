@@ -101,6 +101,12 @@ impl From<f64> for ConstantValue {
     fn from(x: f64) -> Self { ConstantValue::F64(x) }
 }
 impl ConstantValue {
+    fn to_bool(&self) -> Result<bool> {
+        match self {
+            ConstantValue::Bool(x) => Ok(*x),
+            _ => Err(Error::SPEC_TY_MISMATCHED),
+        }
+    }
     fn to_s32(&self) -> Result<i32> {
         match self {
             ConstantValue::I32(x) => Ok(*x),
@@ -112,6 +118,20 @@ impl ConstantValue {
         match self {
             ConstantValue::I32(x) => Ok(unsafe { transmute::<i32, u32>(*x) }),
             ConstantValue::U32(x) => Ok(*x),
+            _ => Err(Error::SPEC_TY_MISMATCHED),
+        }
+    }
+    fn to_s64(&self) -> Result<i64> {
+        match self {
+            ConstantValue::I64(x) => Ok(*x),
+            ConstantValue::U64(x) => Ok(unsafe { transmute::<u64, i64>(*x) }),
+            _ => Err(Error::SPEC_TY_MISMATCHED),
+        }
+    }
+    fn to_u64(&self) -> Result<u64> {
+        match self {
+            ConstantValue::I64(x) => Ok(unsafe { transmute::<i64, u64>(*x) }),
+            ConstantValue::U64(x) => Ok(*x),
             _ => Err(Error::SPEC_TY_MISMATCHED),
         }
     }
@@ -1102,6 +1122,34 @@ impl<'a> ReflectIntermediate<'a> {
     fn populate_one_spec_const_op(&mut self, instr: &Instr<'a>) -> Result<()> {
         let op = OpSpecConstantHeadSPQ::try_from(instr)?;
         match op.opcode {
+            OP_SCONVERT => {
+                let op = OpSpecConstantUnaryOpCommonSPQ::try_from(instr)?;
+                if let Type::Scalar(ScalarType::Signed(4)) = self.get_ty(op.ty_id)? {
+                    let a = self.get_const(op.a_id)?.value.to_s64()?;
+                    let constant = ConstantIntermediate {
+                        value: ConstantValue::from(a as i32),
+                        spec_id: None,
+                    };
+                    self.put_const(op.spec_const_id, constant)
+                } else {
+                    // We only support casting s64 to s32.
+                    Ok(())
+                }
+            },
+            OP_UCONVERT => {
+                let op = OpSpecConstantUnaryOpCommonSPQ::try_from(instr)?;
+                if let Type::Scalar(ScalarType::Unsigned(4)) = self.get_ty(op.ty_id)? {
+                    let a = self.get_const(op.a_id)?.value.to_u64()?;
+                    let constant = ConstantIntermediate {
+                        value: ConstantValue::from(a as u32),
+                        spec_id: None,
+                    };
+                    self.put_const(op.spec_const_id, constant)
+                } else {
+                    // We only support casting u64 to u32.
+                    Ok(())
+                }
+            },
             OP_SNEGATE => {
                 let op = OpSpecConstantUnaryOpCommonSPQ::try_from(instr)?;
                 let a = self.get_const(op.a_id)?.value.to_s32()?;
@@ -1252,7 +1300,32 @@ impl<'a> ReflectIntermediate<'a> {
                 };
                 self.put_const(op.spec_const_id, constant)
             },
-            _ => return Err(Error::UNSUPPORTED_SPEC),
+            OP_SELECT => {
+                let op = OpSpecConstantTertiaryOpCommonSPQ::try_from(instr)?;
+                let a = self.get_const(op.a_id)?.value.to_bool()?;
+                let b = self.get_const(op.b_id)?.value;
+                let c = self.get_const(op.c_id)?.value;
+                let constant = ConstantIntermediate {
+                    value: if a { b } else { c },
+                    spec_id: None,
+                };
+                self.put_const(op.spec_const_id, constant)
+            }
+            OP_FCONVERT |
+            OP_VECTOR_SHUFFLE | OP_COMPOSITE_EXTRACT | OP_COMPOSITE_INSERT |
+            OP_LOGICAL_OR | OP_LOGICAL_AND | OP_LOGICAL_NOT |
+            OP_LOGICAL_EQUAL | OP_LOGICAL_NOT_EQUAL |
+            OP_IEQUAL | OP_INOT_EQUAL |
+            OP_ULESS_THAN | OP_SLESS_THAN |
+            OP_UGREATER_THAN | OP_SGREATER_THAN |
+            OP_ULESS_THAN_EQUAL | OP_SLESS_THAN_EQUAL |
+            OP_UGREATER_THAN_EQUAL | OP_SGREATER_THAN_EQUAL |
+            OP_QUANTIZE_TO_F16 => {
+                // Maybe these ops can be supported in the future, but seems
+                // unnecessary ATM.
+                Ok(())
+            },
+            _ => Err(Error::UNSUPPORTED_SPEC),
         }
     }
     fn populate_one_spec_const(&mut self, instr: &Instr<'a>, cfg: &ReflectConfig) -> Result<()> {
@@ -1293,10 +1366,19 @@ impl<'a> ReflectIntermediate<'a> {
                 //    spec_id: None,
                 //};
                 //(op.spec_const_id, constant)
-                return Ok(());
+                Ok(())
             },
-            OP_SPEC_CONSTANT_OP => self.populate_one_spec_const_op(instr),
-            _ => return Err(Error::UNSUPPORTED_SPEC),
+            OP_SPEC_CONSTANT_OP => {
+                let res = self.populate_one_spec_const_op(instr);
+                // Tolerate unfound constants during constant capture. The
+                // absence of constant is only critical when it's used as array
+                // size.
+                if res == Err(Error::CONST_NOT_FOUND) {
+                    return Ok(())
+                }
+                res
+            },
+            _ => Err(Error::UNSUPPORTED_SPEC),
         }
     }
     fn populate_one_var(&mut self, instr: &Instr<'a>) -> Result<()> {
