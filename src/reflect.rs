@@ -63,7 +63,7 @@ pub type SpecId = u32;
 pub enum ConstantValue {
     /// Logical boolean value.
     Bool(bool),
-    /// Signed integer.
+    /// Signed 32-bit integer.
     I32(i32),
     /// Signless 32-bit integer. Note that 'signless' is not 'unsigned'. It
     /// means that SPIR-V integers don't have any sign semantics themselves, the
@@ -72,6 +72,12 @@ pub enum ConstantValue {
     U32(u32),
     /// Signed 32-bit floating-point number.
     F32(f32),
+    /// Signed 64-bit integer.
+    I64(i64),
+    /// Signless 64-bit integer.
+    U64(u64),
+    /// Signed 64-bit floating-point number.
+    F64(f64),
 }
 impl From<bool> for ConstantValue {
     fn from(x: bool) -> Self { ConstantValue::Bool(x) }
@@ -85,14 +91,16 @@ impl From<i32> for ConstantValue {
 impl From<f32> for ConstantValue {
     fn from(x: f32) -> Self { ConstantValue::F32(x) }
 }
+impl From<u64> for ConstantValue {
+    fn from(x: u64) -> Self { ConstantValue::U64(x) }
+}
+impl From<i64> for ConstantValue {
+    fn from(x: i64) -> Self { ConstantValue::I64(x) }
+}
+impl From<f64> for ConstantValue {
+    fn from(x: f64) -> Self { ConstantValue::F64(x) }
+}
 impl ConstantValue {
-    fn _to_bool(&self) -> Result<bool> {
-        if let ConstantValue::Bool(x) = self {
-            Ok(*x)
-        } else {
-            Err(Error::SPEC_TY_MISMATCHED)
-        }
-    }
     fn to_s32(&self) -> Result<i32> {
         match self {
             ConstantValue::I32(x) => Ok(*x),
@@ -107,13 +115,6 @@ impl ConstantValue {
             _ => Err(Error::SPEC_TY_MISMATCHED),
         }
     }
-    fn _to_f32(&self) -> Result<f32> {
-        if let ConstantValue::F32(x) = self {
-            Ok(*x)
-        } else {
-            Err(Error::SPEC_TY_MISMATCHED)
-        }
-    }
 
     fn ty(&self) -> Type {
         match self {
@@ -121,6 +122,9 @@ impl ConstantValue {
             Self::I32(_) => Type::Scalar(ScalarType::Signed(4)),
             Self::U32(_) => Type::Scalar(ScalarType::Unsigned(4)),
             Self::F32(_) => Type::Scalar(ScalarType::Float(4)),
+            Self::I64(_) => Type::Scalar(ScalarType::Signed(8)),
+            Self::U64(_) => Type::Scalar(ScalarType::Unsigned(8)),
+            Self::F64(_) => Type::Scalar(ScalarType::Float(8)),
         }
     }
 }
@@ -637,6 +641,52 @@ impl<'a> ReflectIntermediate<'a> {
             _ => Err(Error::ID_COLLISION),
         }
     }
+    fn put_bool_const(
+        &mut self,
+        const_id: ConstantId,
+        value: bool,
+        spec_id: Option<SpecId>,
+    ) -> Result<()> {
+        let constant = ConstantIntermediate {
+            value: ConstantValue::Bool(value),
+            spec_id,
+        };
+        self.put_const(const_id, constant)
+    }
+    fn put_lit_const(
+        &mut self,
+        const_id: ConstantId,
+        ty_id: TypeId,
+        value: &'_[u32],
+        spec_id: Option<SpecId>,
+    ) -> Result<()> {
+        let value = match self.get_ty(ty_id)? {
+            Type::Scalar(ScalarType::Unsigned(4)) if value.len() == 1 => {
+                ConstantValue::U32(unsafe { transmute(value[0]) })
+            },
+            Type::Scalar(ScalarType::Signed(4)) if value.len() == 1 => {
+                ConstantValue::I32(unsafe { transmute(value[0]) })
+            },
+            Type::Scalar(ScalarType::Float(4)) if value.len() == 1 => {
+                ConstantValue::F32(unsafe { transmute(value[0]) })
+            },
+            Type::Scalar(ScalarType::Unsigned(8)) if value.len() == 2 => {
+                ConstantValue::U64(unsafe { transmute([value[0], value[1]]) })
+            },
+            Type::Scalar(ScalarType::Signed(8)) if value.len() == 2 => {
+                ConstantValue::I64(unsafe { transmute([value[0], value[1]]) })
+            },
+            Type::Scalar(ScalarType::Float(8)) if value.len() == 2 => {
+                ConstantValue::F64(unsafe { transmute([value[0], value[1]]) })
+            },
+            _ => return Err(Error::UNSUPPORTED_CONST_TY),
+        };
+        let constant = ConstantIntermediate {
+            value,
+            spec_id,
+        };
+        self.put_const(const_id, constant)
+    }
     /// Get the human-friendly name of an instruction result.
     pub fn get_name(&self, id: InstrId) -> Option<&'a str> {
         self.name_map.get(&(id, None)).copied()
@@ -1041,37 +1091,11 @@ impl<'a> ReflectIntermediate<'a> {
         }
     }
     fn populate_one_const(&mut self, instr: &Instr<'a>) -> Result<()> {
+        let op = OpConstantScalarCommonSPQ::try_from(instr)?;
         match instr.opcode() {
-            OP_CONSTANT_TRUE => {
-                let op = OpConstantTrue::try_from(instr)?;
-                let constant = ConstantIntermediate {
-                    value: ConstantValue::Bool(true),
-                    spec_id: None,
-                };
-                self.put_const(op.const_id, constant)
-            },
-            OP_CONSTANT_FALSE => {
-                let op = OpConstantTrue::try_from(instr)?;
-                let constant = ConstantIntermediate {
-                    value: ConstantValue::Bool(false),
-                    spec_id: None,
-                };
-                self.put_const(op.const_id, constant)
-            },
-            OP_CONSTANT => {
-                let op = OpConstant::try_from(instr)?;
-                let value = match self.get_ty(op.ty_id)? {
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(unsafe { transmute(op.value[0]) }),
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::I32(unsafe { transmute(op.value[0]) }),
-                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(unsafe { transmute(op.value[0]) }),
-                    _ => return Err(Error::UNSUPPORTED_CONST_TY),
-                };
-                let constant = ConstantIntermediate {
-                    value,
-                    spec_id: None,
-                };
-                self.put_const(op.const_id, constant)
-            },
+            OP_CONSTANT_TRUE => self.put_bool_const(op.const_id, true, None),
+            OP_CONSTANT_FALSE => self.put_bool_const(op.const_id, false, None),
+            OP_CONSTANT => self.put_lit_const(op.const_id, op.ty_id, op.value, None),
             _ => Ok(()),
         }
     }
@@ -1234,31 +1258,24 @@ impl<'a> ReflectIntermediate<'a> {
     fn populate_one_spec_const(&mut self, instr: &Instr<'a>, cfg: &ReflectConfig) -> Result<()> {
         match instr.opcode() {
             OP_SPEC_CONSTANT_TRUE | OP_SPEC_CONSTANT_FALSE | OP_SPEC_CONSTANT => {
-                let op = OpSpecConstantScalarCommonSPQ::try_from(instr)?;
-                let spec_id = self.get_deco_u32(op.spec_const_id, Decoration::SpecId)
+                let op = OpConstantScalarCommonSPQ::try_from(instr)?;
+                let spec_id = self.get_deco_u32(op.const_id, Decoration::SpecId)
                     .ok_or(Error::MISSING_DECO)?;
 
-                let value = if let Some(x) = cfg.spec_values.get(&spec_id) {
-                    x.clone()
+                if let Some(x) = cfg.spec_values.get(&spec_id) {
+                    let constant = ConstantIntermediate {
+                        value: x.clone(),
+                        spec_id: None,
+                    };
+                    self.put_const(op.const_id, constant)
                 } else {
                     match instr.opcode() {
-                        OP_SPEC_CONSTANT_TRUE => ConstantValue::Bool(true),
-                        OP_SPEC_CONSTANT_FALSE => ConstantValue::Bool(true),
-                        OP_SPEC_CONSTANT => match self.get_ty(op.ty_id)? {
-                            Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(unsafe { transmute(op.value[0]) }),
-                            Type::Scalar(ScalarType::Signed(4)) => ConstantValue::I32(unsafe { transmute(op.value[0]) }),
-                            Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(unsafe { transmute(op.value[0]) }),
-                            _ => return Err(Error::UNSUPPORTED_SPEC),
-                        },
+                        OP_SPEC_CONSTANT_TRUE => self.put_bool_const(op.const_id, true, Some(spec_id)),
+                        OP_SPEC_CONSTANT_FALSE => self.put_bool_const(op.const_id, false, Some(spec_id)),
+                        OP_SPEC_CONSTANT => self.put_lit_const(op.const_id, op.ty_id, op.value, Some(spec_id)),
                         _ => unreachable!(),
                     }
-                };
-
-                let constant = ConstantIntermediate {
-                    value,
-                    spec_id: Some(spec_id),
-                };
-                self.put_const(op.spec_const_id, constant)
+                }
             },
             // `SpecId` decorations will be specified to each of the
             // constituents so we don't have to register a

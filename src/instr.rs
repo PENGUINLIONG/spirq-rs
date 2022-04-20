@@ -196,9 +196,9 @@ define_ops!{
         ty_id: TypeId = read_u32(),
     }
 
-    OpSpecConstantScalarCommonSPQ {
+    OpConstantScalarCommonSPQ {
         ty_id: TypeId = read_u32(),
-        spec_const_id: ConstantId = read_u32(),
+        const_id: ConstantId = read_u32(),
         value: &'a [u32] = read_list(),
     }
     OpSpecConstantHeadSPQ {

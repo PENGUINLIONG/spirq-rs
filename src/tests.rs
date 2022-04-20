@@ -237,6 +237,8 @@ fn test_spec_const_arrays() {
     static SPV: &'static [u32] = inline_spirv!(r#"
         #version 450 core
 
+        layout(constant_id = 1)
+        const double DOUBLE_NUM = 3.0;
         layout(constant_id = 2)
         const uint OFFSET = 2;
         layout(constant_id = 3)
@@ -265,6 +267,7 @@ fn test_spec_const_arrays() {
     let entries = ReflectConfig::new()
         .spv(SPV)
         .combine_img_samplers(true)
+        .specialize(1, ConstantValue::F64(4.0))
         .specialize(3, ConstantValue::U32(7))
         .specialize(4, ConstantValue::I32(9))
         .reflect()
@@ -287,6 +290,7 @@ fn test_spec_const_arrays() {
             } else { None }
         })
         .collect::<HashMap<_, _>>();
+    assert_eq!(spec_consts.len(), 1);
     assert_eq!(*spec_consts.get(&2).unwrap(), ty::Type::Scalar(ty::ScalarType::Unsigned(4)));
     assert_eq!(*descs.get(&DescriptorBinding::new(0, 0)).unwrap(), (64, None));
     assert_eq!(*descs.get(&DescriptorBinding::new(0, 1)).unwrap(), (1, Some(128)));
