@@ -1,5 +1,6 @@
 use inline_spirv::*;
 use std::collections::{HashMap, HashSet};
+use std::convert::TryFrom;
 use super::*;
 
 macro_rules! gen_entries(
@@ -231,6 +232,71 @@ fn test_dyn_multibind() {
         .collect::<HashMap<_, _>>();
     assert_eq!(*descs.get(&DescriptorBinding::new(0, 0)).unwrap(), 0);
     assert_eq!(*descs.get(&DescriptorBinding::new(0, 1)).unwrap(), 5);
+}
+#[test]
+fn test_spec_const_arrays() {
+    static SPV: &'static [u32] = inline_spirv!(r#"
+        #version 450 core
+
+        layout(constant_id = 1)
+        const double DOUBLE_NUM = 3.0;
+        layout(constant_id = 2)
+        const uint OFFSET = 2;
+        layout(constant_id = 3)
+        const uint NUM = 42;
+        layout(constant_id = 4)
+        const int PERMUTATION = 12;
+
+        layout(binding = 0, set = 0)
+        uniform sampler2D arr_spec[NUM * PERMUTATION + 1];
+
+        layout(binding = 1, set = 0, std140)
+        uniform Param {
+            vec4 padding;
+            vec4 trailing_array[NUM];
+        } u;
+
+        layout(location = 0)
+        in flat uint xx;
+
+        void main() {
+            for (uint i = 0; i < NUM; i++) {
+                texture(arr_spec[i], vec2(0,0)) + u.padding;
+            }
+        }
+    "#, frag, vulkan1_2);
+    let double_num_buf: [u8; 8] = f64::to_ne_bytes(4.0 as f64);
+    let num_buf: &'static [u32] = &[7];
+    let entries = ReflectConfig::new()
+        .spv(SPV)
+        .combine_img_samplers(true)
+        .specialize(1, ConstantValue::from(double_num_buf))
+        .specialize(3, ConstantValue::try_from(num_buf).unwrap())
+        .specialize(4, ConstantValue::from(9 as i32))
+        .reflect()
+        .unwrap();
+    assert_eq!(entries.len(), 1, "expected 1 entry point, found {}", entries.len());
+    let entry = entries[0].clone();
+    let spec_consts = entry.vars
+        .iter()
+        .filter_map(|x| {
+            if let Variable::SpecConstant { spec_id, ty, .. } = x {
+                Some((spec_id, ty.clone()))
+            } else { None }
+        })
+        .collect::<HashMap<_, _>>();
+    let descs = entry.vars
+        .iter()
+        .filter_map(|x| {
+            if let Variable::Descriptor { desc_bind, nbind, ty, .. } = x {
+                Some((desc_bind, (*nbind, ty.nbyte())))
+            } else { None }
+        })
+        .collect::<HashMap<_, _>>();
+    assert_eq!(spec_consts.len(), 1);
+    assert_eq!(*spec_consts.get(&2).unwrap(), ty::Type::Scalar(ty::ScalarType::Unsigned(4)));
+    assert_eq!(*descs.get(&DescriptorBinding::new(0, 0)).unwrap(), (64, None));
+    assert_eq!(*descs.get(&DescriptorBinding::new(0, 1)).unwrap(), (1, Some(128)));
 }
 #[test]
 fn test_ray_tracing() {

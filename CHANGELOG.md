@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.5.1
+
+- Supported reflection-time specialization constant expression evaluation. (#77)
+
 ## v0.5.0
 
 Finally, SPIR-Q v0.5 has come! The new APIs has breaking changes and is NOT compatible with the usage before. Please refer to the documentation for detail.

@@ -133,6 +133,14 @@ define_ops!{
         store_cls: StorageClass = read_enum(),
         target_ty_id: TypeId = read_u32(),
     }
+    OpConstantTrue {
+        ty_id: TypeId = read_u32(),
+        const_id: ConstantId = read_u32(),
+    }
+    OpConstantFalse {
+        ty_id: TypeId = read_u32(),
+        const_id: ConstantId = read_u32(),
+    }
     OpConstant {
         ty_id: TypeId = read_u32(),
         const_id: ConstantId = read_u32(),
@@ -155,12 +163,6 @@ define_ops!{
         ty_id: TypeId = read_u32(),
         spec_const_id: SpecConstantId = read_u32(),
         value: &'a [SpecConstantId] = read_list(),
-    }
-    OpSpecConstantOp {
-        ty_id: TypeId = read_u32(),
-        spec_const_id: SpecConstantId = read_u32(),
-        opcode: u32 = read_u32(),
-        operands: &'a [u32] = read_list(),
     }
     OpVariable {
         ty_id: TypeId = read_u32(),
@@ -192,5 +194,37 @@ define_ops!{
     }
     OpTypeAccelerationStructureKHR {
         ty_id: TypeId = read_u32(),
+    }
+
+    OpConstantScalarCommonSPQ {
+        ty_id: TypeId = read_u32(),
+        const_id: ConstantId = read_u32(),
+        value: &'a [u32] = read_list(),
+    }
+    OpSpecConstantHeadSPQ {
+        ty_id: TypeId = read_u32(),
+        spec_const_id: SpecConstantId = read_u32(),
+        opcode: u32 = read_u32(),
+    }
+    OpSpecConstantUnaryOpCommonSPQ {
+        ty_id: TypeId = read_u32(),
+        spec_const_id: SpecConstantId = read_u32(),
+        opcode: u32 = read_u32(),
+        a_id: SpecConstantId = read_u32(),
+    }
+    OpSpecConstantBinaryOpCommonSPQ {
+        ty_id: TypeId = read_u32(),
+        spec_const_id: SpecConstantId = read_u32(),
+        opcode: u32 = read_u32(),
+        a_id: SpecConstantId = read_u32(),
+        b_id: SpecConstantId = read_u32(),
+    }
+    OpSpecConstantTertiaryOpCommonSPQ {
+        ty_id: TypeId = read_u32(),
+        spec_const_id: SpecConstantId = read_u32(),
+        opcode: u32 = read_u32(),
+        a_id: SpecConstantId = read_u32(),
+        b_id: SpecConstantId = read_u32(),
+        c_id: SpecConstantId = read_u32(),
     }
 }

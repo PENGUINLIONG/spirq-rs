@@ -361,7 +361,6 @@ impl fmt::Debug for SubpassDataType {
     }
 }
 
-
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct ArrayType {
     pub(crate) proto_ty: Box<Type>,
@@ -401,10 +400,7 @@ impl ArrayType {
     /// Get the minimum size of the array type. If the number of elements is not
     /// given until runtime, 0 is returned.
     pub fn nbyte(&self) -> usize {
-        match (self.stride, self.nrepeat) {
-            (Some(stride), Some(nrepeat)) => stride * nrepeat as usize,
-            _ => 0,
-        }
+        self.stride.unwrap_or_default() * self.nrepeat().unwrap_or_default() as usize
     }
     pub fn proto_ty(&self) -> &Type {
         &self.proto_ty

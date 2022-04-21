@@ -2,7 +2,7 @@
 use std::fmt;
 use std::error;
 
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub enum Error {
     CorruptedSpirv(&'static str),
     UnsupportedSpirv(&'static str),
@@ -17,16 +17,22 @@ impl Error {
     pub const NAME_COLLISION: Self = Self::CorruptedSpirv("item can only be named once");
     pub const DECO_COLLISION: Self = Self::CorruptedSpirv("item can only be decorated of a kind once");
     pub const MISSING_DECO: Self = Self::CorruptedSpirv("missing decoration");
-    pub const TY_NOT_FOUND: Self = Self::CorruptedSpirv("cannot find a suitable type");
+    pub const TY_NOT_FOUND: Self = Self::CorruptedSpirv("cannot find a type");
+    pub const CONST_NOT_FOUND: Self = Self::CorruptedSpirv("cannot find a constant");
     pub const FUNC_NOT_FOUND: Self = Self::CorruptedSpirv("cannot find a function");
+    pub const BROKEN_NESTED_TY: Self = Self::CorruptedSpirv("nested type member violated the specification");
     pub const BROKEN_ACCESS_CHAIN: Self = Self::CorruptedSpirv("pointer in access chain points to non-existing type");
     pub const ACCESS_CONFLICT: Self = Self::CorruptedSpirv("variable is both read-only and write-only");
+    pub const SPEC_DIV_BY_ZERO: Self = Self::CorruptedSpirv("specialized constexpr contains division by zero");
+    pub const SPEC_TY_MISMATCHED: Self = Self::CorruptedSpirv("specialized constexpr param type mismatched");
 
     // TODO: (penguinliong) Mechanism to ignore unsupported features.
     pub const UNSUPPORTED_TY: Self = Self::UnsupportedSpirv("unsupported type");
     pub const UNSUPPORTED_EXEC_MODE: Self = Self::UnsupportedSpirv("unsupported execution mode");
     pub const UNSUPPORTED_IMG_CFG: Self = Self::UnsupportedSpirv("unsupported image configuration");
     pub const UNSUPPORTED_SPEC: Self = Self::UnsupportedSpirv("unsupported specialization");
+    pub const UNSUPPORTED_CONST_TY: Self = Self::UnsupportedSpirv("unsupported constant type");
+    pub const UNSUPPORTED_CONST_VALUE: Self = Self::UnsupportedSpirv("unsupported constant value");
 }
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
