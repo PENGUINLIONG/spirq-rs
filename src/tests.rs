@@ -1,5 +1,6 @@
 use inline_spirv::*;
 use std::collections::{HashMap, HashSet};
+use std::convert::TryFrom;
 use super::*;
 
 macro_rules! gen_entries(
@@ -264,12 +265,14 @@ fn test_spec_const_arrays() {
             }
         }
     "#, frag, vulkan1_2);
+    let double_num_buf: [u8; 8] = f64::to_ne_bytes(4.0 as f64);
+    let num_buf: &'static [u32] = &[7];
     let entries = ReflectConfig::new()
         .spv(SPV)
         .combine_img_samplers(true)
-        .specialize(1, ConstantValue::F64(4.0))
-        .specialize(3, ConstantValue::U32(7))
-        .specialize(4, ConstantValue::I32(9))
+        .specialize(1, ConstantValue::from(double_num_buf))
+        .specialize(3, ConstantValue::try_from(num_buf).unwrap())
+        .specialize(4, ConstantValue::from(9 as i32))
         .reflect()
         .unwrap();
     assert_eq!(entries.len(), 1, "expected 1 entry point, found {}", entries.len());

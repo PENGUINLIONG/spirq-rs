@@ -32,6 +32,7 @@ impl Error {
     pub const UNSUPPORTED_IMG_CFG: Self = Self::UnsupportedSpirv("unsupported image configuration");
     pub const UNSUPPORTED_SPEC: Self = Self::UnsupportedSpirv("unsupported specialization");
     pub const UNSUPPORTED_CONST_TY: Self = Self::UnsupportedSpirv("unsupported constant type");
+    pub const UNSUPPORTED_CONST_VALUE: Self = Self::UnsupportedSpirv("unsupported constant value");
 }
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

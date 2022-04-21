@@ -3,7 +3,6 @@ use std::convert::{TryFrom};
 use std::iter::Peekable;
 use std::ops::RangeInclusive;
 use std::fmt;
-use std::mem::transmute;
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use crate::ty::*;
 use crate::consts::*;
@@ -59,93 +58,96 @@ impl fmt::Debug for InterfaceLocation {
 
 /// Specialization constant ID.
 pub type SpecId = u32;
-#[derive(Clone, Copy, Debug)]
-pub enum ConstantValue {
-    /// Logical boolean value.
-    Bool(bool),
-    /// Signed 32-bit integer.
-    I32(i32),
-    /// Signless 32-bit integer. Note that 'signless' is not 'unsigned'. It
-    /// means that SPIR-V integers don't have any sign semantics themselves, the
-    /// significance of the sign-bit depends on the signess of the operation
-    /// applied to it.
-    U32(u32),
-    /// Signed 32-bit floating-point number.
-    F32(f32),
-    /// Signed 64-bit integer.
-    I64(i64),
-    /// Signless 64-bit integer.
-    U64(u64),
-    /// Signed 64-bit floating-point number.
-    F64(f64),
+#[derive(Default, Clone, Copy, Debug)]
+pub struct ConstantValue {
+    buf: [u8; 8],
+}
+impl TryFrom<&[u32]> for ConstantValue {
+    type Error = Error;
+    fn try_from(x: &[u32]) -> Result<Self> {
+        let mut buf: [u8; 8] = [0; 8];
+        match x.len() {
+            1 => {
+                let bytes = u32::to_ne_bytes(x[0]);
+                (&mut buf[0..4]).copy_from_slice(&bytes);
+            },
+            2 => {
+                let lower_bytes = u32::to_ne_bytes(x[0]);
+                let upper_bytes = u32::to_ne_bytes(x[1]);
+                (&mut buf[0..4]).copy_from_slice(&lower_bytes);
+                (&mut buf[4..8]).copy_from_slice(&upper_bytes);
+            },
+            _ => return Err(Error::UNSUPPORTED_CONST_VALUE),
+        }
+        Ok(ConstantValue { buf })
+    }
+}
+impl TryFrom<&[u8]> for ConstantValue {
+    type Error = Error;
+    fn try_from(x: &[u8]) -> Result<Self> {
+        let mut buf: [u8; 8] = [0; 8];
+        match x.len() {
+            4 => (&mut buf[0..4]).copy_from_slice(&x),
+            8 => (&mut buf[0..8]).copy_from_slice(&x),
+            _ => return Err(Error::UNSUPPORTED_CONST_VALUE),
+        }
+        Ok(ConstantValue { buf })
+    }
+}
+impl From<[u8; 4]> for ConstantValue {
+    fn from(x: [u8; 4]) -> Self {
+        let mut out = ConstantValue::default();
+        out.buf[0..4].copy_from_slice(&x);
+        out
+    }
+}
+impl From<[u8; 8]> for ConstantValue {
+    fn from(x: [u8; 8]) -> Self {
+        let mut out = ConstantValue::default();
+        out.buf[0..8].copy_from_slice(&x);
+        out
+    }
 }
 impl From<bool> for ConstantValue {
-    fn from(x: bool) -> Self { ConstantValue::Bool(x) }
+    fn from(x: bool) -> Self {
+        let mut out = ConstantValue::default();
+        out.buf[0] = if x { 1 } else { 0 };
+        out
+    }
 }
 impl From<u32> for ConstantValue {
-    fn from(x: u32) -> Self { ConstantValue::U32(x) }
+    fn from(x: u32) -> Self { Self::from(u32::to_ne_bytes(x)) }
 }
 impl From<i32> for ConstantValue {
-    fn from(x: i32) -> Self { ConstantValue::I32(x) }
+    fn from(x: i32) -> Self { Self::from(i32::to_ne_bytes(x)) }
 }
 impl From<f32> for ConstantValue {
-    fn from(x: f32) -> Self { ConstantValue::F32(x) }
+    fn from(x: f32) -> Self { Self::from(f32::to_ne_bytes(x)) }
 }
 impl From<u64> for ConstantValue {
-    fn from(x: u64) -> Self { ConstantValue::U64(x) }
+    fn from(x: u64) -> Self { Self::from(u64::to_ne_bytes(x)) }
 }
 impl From<i64> for ConstantValue {
-    fn from(x: i64) -> Self { ConstantValue::I64(x) }
+    fn from(x: i64) -> Self { Self::from(i64::to_ne_bytes(x)) }
 }
 impl From<f64> for ConstantValue {
-    fn from(x: f64) -> Self { ConstantValue::F64(x) }
+    fn from(x: f64) -> Self { Self::from(f64::to_ne_bytes(x)) }
 }
 impl ConstantValue {
-    fn to_bool(&self) -> Result<bool> {
-        match self {
-            ConstantValue::Bool(x) => Ok(*x),
-            _ => Err(Error::SPEC_TY_MISMATCHED),
-        }
+    fn to_bool(&self) -> bool {
+        self.to_u64() != 0
     }
-    fn to_s32(&self) -> Result<i32> {
-        match self {
-            ConstantValue::I32(x) => Ok(*x),
-            ConstantValue::U32(x) => Ok(unsafe { transmute::<u32, i32>(*x) }),
-            _ => Err(Error::SPEC_TY_MISMATCHED),
-        }
+    fn to_s32(&self) -> i32 {
+        self.to_s64() as i32
     }
-    fn to_u32(&self) -> Result<u32> {
-        match self {
-            ConstantValue::I32(x) => Ok(unsafe { transmute::<i32, u32>(*x) }),
-            ConstantValue::U32(x) => Ok(*x),
-            _ => Err(Error::SPEC_TY_MISMATCHED),
-        }
+    fn to_u32(&self) -> u32 {
+        self.to_u64() as u32
     }
-    fn to_s64(&self) -> Result<i64> {
-        match self {
-            ConstantValue::I64(x) => Ok(*x),
-            ConstantValue::U64(x) => Ok(unsafe { transmute::<u64, i64>(*x) }),
-            _ => Err(Error::SPEC_TY_MISMATCHED),
-        }
+    fn to_s64(&self) -> i64 {
+        i64::from_ne_bytes(self.buf)
     }
-    fn to_u64(&self) -> Result<u64> {
-        match self {
-            ConstantValue::I64(x) => Ok(unsafe { transmute::<i64, u64>(*x) }),
-            ConstantValue::U64(x) => Ok(*x),
-            _ => Err(Error::SPEC_TY_MISMATCHED),
-        }
-    }
-
-    fn ty(&self) -> Type {
-        match self {
-            Self::Bool(_) => Type::Scalar(ScalarType::Boolean),
-            Self::I32(_) => Type::Scalar(ScalarType::Signed(4)),
-            Self::U32(_) => Type::Scalar(ScalarType::Unsigned(4)),
-            Self::F32(_) => Type::Scalar(ScalarType::Float(4)),
-            Self::I64(_) => Type::Scalar(ScalarType::Signed(8)),
-            Self::U64(_) => Type::Scalar(ScalarType::Unsigned(8)),
-            Self::F64(_) => Type::Scalar(ScalarType::Float(8)),
-        }
+    fn to_u64(&self) -> u64 {
+        u64::from_ne_bytes(self.buf)
     }
 }
 
@@ -165,6 +167,8 @@ pub enum Locator {
 /// Reflection intermediate of constants and specialization constant.
 #[derive(Debug, Clone)]
 pub struct ConstantIntermediate {
+    /// Type of constant.
+    pub ty: Type,
     /// Defined value of constant, or default value of specialization constant.
     pub value: ConstantValue,
     /// Specialization constant ID, notice that this is NOT an instruction ID.
@@ -661,47 +665,15 @@ impl<'a> ReflectIntermediate<'a> {
             _ => Err(Error::ID_COLLISION),
         }
     }
-    fn put_bool_const(
-        &mut self,
-        const_id: ConstantId,
-        value: bool,
-        spec_id: Option<SpecId>,
-    ) -> Result<()> {
-        let constant = ConstantIntermediate {
-            value: ConstantValue::Bool(value),
-            spec_id,
-        };
-        self.put_const(const_id, constant)
-    }
     fn put_lit_const(
         &mut self,
         const_id: ConstantId,
         ty_id: TypeId,
-        value: &'_[u32],
+        value: ConstantValue,
         spec_id: Option<SpecId>,
     ) -> Result<()> {
-        let value = match self.get_ty(ty_id)? {
-            Type::Scalar(ScalarType::Unsigned(4)) if value.len() == 1 => {
-                ConstantValue::U32(unsafe { transmute(value[0]) })
-            },
-            Type::Scalar(ScalarType::Signed(4)) if value.len() == 1 => {
-                ConstantValue::I32(unsafe { transmute(value[0]) })
-            },
-            Type::Scalar(ScalarType::Float(4)) if value.len() == 1 => {
-                ConstantValue::F32(unsafe { transmute(value[0]) })
-            },
-            Type::Scalar(ScalarType::Unsigned(8)) if value.len() == 2 => {
-                ConstantValue::U64(unsafe { transmute([value[0], value[1]]) })
-            },
-            Type::Scalar(ScalarType::Signed(8)) if value.len() == 2 => {
-                ConstantValue::I64(unsafe { transmute([value[0], value[1]]) })
-            },
-            Type::Scalar(ScalarType::Float(8)) if value.len() == 2 => {
-                ConstantValue::F64(unsafe { transmute([value[0], value[1]]) })
-            },
-            _ => return Err(Error::UNSUPPORTED_CONST_TY),
-        };
         let constant = ConstantIntermediate {
+            ty: self.get_ty(ty_id)?.clone(),
             value,
             spec_id,
         };
@@ -1023,7 +995,7 @@ impl<'a> ReflectIntermediate<'a> {
                     // constants as normal constants, then I would say...
                     // probably it's fine to size array with them?
                     .value
-                    .to_u32()?;
+                    .to_u32();
                 let stride = self.get_deco_u32(op.ty_id, Decoration::ArrayStride)
                     .map(|x| x as usize);
 
@@ -1113,9 +1085,15 @@ impl<'a> ReflectIntermediate<'a> {
     fn populate_one_const(&mut self, instr: &Instr<'a>) -> Result<()> {
         let op = OpConstantScalarCommonSPQ::try_from(instr)?;
         match instr.opcode() {
-            OP_CONSTANT_TRUE => self.put_bool_const(op.const_id, true, None),
-            OP_CONSTANT_FALSE => self.put_bool_const(op.const_id, false, None),
-            OP_CONSTANT => self.put_lit_const(op.const_id, op.ty_id, op.value, None),
+            OP_CONSTANT_TRUE => {
+                self.put_lit_const(op.const_id, op.ty_id, ConstantValue::from(true), None)
+            },
+            OP_CONSTANT_FALSE => {
+                self.put_lit_const(op.const_id, op.ty_id, ConstantValue::from(false), None)
+            },
+            OP_CONSTANT => {
+                self.put_lit_const(op.const_id, op.ty_id, ConstantValue::try_from(op.value)?, None)
+            },
             _ => Ok(()),
         }
     }
@@ -1124,192 +1102,126 @@ impl<'a> ReflectIntermediate<'a> {
         match op.opcode {
             OP_SCONVERT => {
                 let op = OpSpecConstantUnaryOpCommonSPQ::try_from(instr)?;
-                if let Type::Scalar(ScalarType::Signed(4)) = self.get_ty(op.ty_id)? {
-                    let a = self.get_const(op.a_id)?.value.to_s64()?;
-                    let constant = ConstantIntermediate {
-                        value: ConstantValue::from(a as i32),
-                        spec_id: None,
-                    };
-                    self.put_const(op.spec_const_id, constant)
-                } else {
-                    // We only support casting s64 to s32.
-                    Ok(())
-                }
+                let a = self.get_const(op.a_id)?.value;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(a), None)
             },
             OP_UCONVERT => {
                 let op = OpSpecConstantUnaryOpCommonSPQ::try_from(instr)?;
-                if let Type::Scalar(ScalarType::Unsigned(4)) = self.get_ty(op.ty_id)? {
-                    let a = self.get_const(op.a_id)?.value.to_u64()?;
-                    let constant = ConstantIntermediate {
-                        value: ConstantValue::from(a as u32),
-                        spec_id: None,
-                    };
-                    self.put_const(op.spec_const_id, constant)
-                } else {
-                    // We only support casting u64 to u32.
-                    Ok(())
-                }
+                let a = self.get_const(op.a_id)?.value;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(a), None)
             },
             OP_SNEGATE => {
                 let op = OpSpecConstantUnaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_s32()?;
-                let constant = ConstantIntermediate {
-                    value: a.overflowing_neg().0.into(),
-                    spec_id: None,
-                };
-                self.put_const(op.spec_const_id, constant)
+                let a = self.get_const(op.a_id)?.value.to_s32();
+                let value = a.overflowing_neg().0;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
             },
             OP_NOT => {
                 let op = OpSpecConstantUnaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32()?;
-                let constant = ConstantIntermediate {
-                    value: (!a).into(),
-                    spec_id: None,
-                };
-                self.put_const(op.spec_const_id, constant)
+                let a = self.get_const(op.a_id)?.value.to_u32();
+                let value = a.overflowing_neg().0;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
             },
             OP_IADD => {
                 let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32()?;
-                let b = self.get_const(op.b_id)?.value.to_u32()?;
-                let constant = ConstantIntermediate {
-                    value: a.overflowing_add(b).0.into(),
-                    spec_id: None,
-                };
-                self.put_const(op.spec_const_id, constant)
+                let a = self.get_const(op.a_id)?.value.to_u32();
+                let b = self.get_const(op.b_id)?.value.to_u32();
+                let value = a.overflowing_add(b).0;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
             },
             OP_ISUB => {
                 let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32()?;
-                let b = self.get_const(op.b_id)?.value.to_u32()?;
-                let constant = ConstantIntermediate {
-                    value: a.overflowing_sub(b).0.into(),
-                    spec_id: None,
-                };
-                self.put_const(op.spec_const_id, constant)
+                let a = self.get_const(op.a_id)?.value.to_u32();
+                let b = self.get_const(op.b_id)?.value.to_u32();
+                let value = a.overflowing_sub(b).0;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
             },
             OP_IMUL => {
                 let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32()?;
-                let b = self.get_const(op.b_id)?.value.to_u32()?;
-                let constant = ConstantIntermediate {
-                    value: a.overflowing_mul(b).0.into(),
-                    spec_id: None,
-                };
-                self.put_const(op.spec_const_id, constant)
+                let a = self.get_const(op.a_id)?.value.to_u32();
+                let b = self.get_const(op.b_id)?.value.to_u32();
+                let value = a.overflowing_mul(b).0;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
             },
             OP_UDIV => {
                 let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32()?;
-                let b = self.get_const(op.b_id)?.value.to_u32()?;
-                let constant = ConstantIntermediate {
-                    value: a.overflowing_div(b).0.into(),
-                    spec_id: None,
-                };
-                self.put_const(op.spec_const_id, constant)
+                let a = self.get_const(op.a_id)?.value.to_u32();
+                let b = self.get_const(op.b_id)?.value.to_u32();
+                let value = a.overflowing_div(b).0;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
             },
             OP_SDIV => {
                 let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_s32()?;
-                let b = self.get_const(op.b_id)?.value.to_s32()?;
-                let constant = ConstantIntermediate {
-                    value: a.overflowing_div(b).0.into(),
-                    spec_id: None,
-                };
-                self.put_const(op.spec_const_id, constant)
+                let a = self.get_const(op.a_id)?.value.to_s32();
+                let b = self.get_const(op.b_id)?.value.to_s32();
+                let value = a.overflowing_div(b).0;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
             },
             OP_UMOD => {
                 let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32()?;
-                let b = self.get_const(op.b_id)?.value.to_u32()?;
-                let constant = ConstantIntermediate {
-                    value: a.overflowing_rem_euclid(b).0.into(),
-                    spec_id: None,
-                };
-                self.put_const(op.spec_const_id, constant)
+                let a = self.get_const(op.a_id)?.value.to_u32();
+                let b = self.get_const(op.b_id)?.value.to_u32();
+                let value = a.overflowing_rem_euclid(b).0;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
             },
             OP_SREM => {
                 let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_s32()?;
-                let b = self.get_const(op.b_id)?.value.to_s32()?;
-                let constant = ConstantIntermediate {
-                    value: a.overflowing_rem(b).0.into(),
-                    spec_id: None,
-                };
-                self.put_const(op.spec_const_id, constant)
+                let a = self.get_const(op.a_id)?.value.to_s32();
+                let b = self.get_const(op.b_id)?.value.to_s32();
+                let value = a.overflowing_rem(b).0;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
             },
             OP_SMOD => {
                 let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_s32()?;
-                let b = self.get_const(op.b_id)?.value.to_s32()?;
-                let constant = ConstantIntermediate {
-                    value: a.overflowing_rem_euclid(b).0.into(),
-                    spec_id: None,
-                };
-                self.put_const(op.spec_const_id, constant)
+                let a = self.get_const(op.a_id)?.value.to_s32();
+                let b = self.get_const(op.b_id)?.value.to_s32();
+                let value = a.overflowing_rem_euclid(b).0;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
             },
             OP_SHIFT_RIGHT_LOGICAL => {
                 let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32()?;
-                let b = self.get_const(op.b_id)?.value.to_u32()?;
-                let constant = ConstantIntermediate {
-                    value: a.overflowing_shr(b).0.into(),
-                    spec_id: None,
-                };
-                self.put_const(op.spec_const_id, constant)
+                let a = self.get_const(op.a_id)?.value.to_u32();
+                let b = self.get_const(op.b_id)?.value.to_u32();
+                let value = a.overflowing_shr(b).0;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
             },
             // Rust don't have a arithmetic shift.
             //OP_SHIFT_RIGHT_ARITHMETIC => {}
             OP_SHIFT_LEFT_LOGICAL => {
                 let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32()?;
-                let b = self.get_const(op.b_id)?.value.to_u32()?;
-                let constant = ConstantIntermediate {
-                    value: a.overflowing_shl(b).0.into(),
-                    spec_id: None,
-                };
-                self.put_const(op.spec_const_id, constant)
+                let a = self.get_const(op.a_id)?.value.to_u32();
+                let b = self.get_const(op.b_id)?.value.to_u32();
+                let value = a.overflowing_shl(b).0;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
             },
             OP_BITWISE_OR => {
                 let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32()?;
-                let b = self.get_const(op.b_id)?.value.to_u32()?;
-                let constant = ConstantIntermediate {
-                    value: (a | b).into(),
-                    spec_id: None,
-                };
-                self.put_const(op.spec_const_id, constant)
+                let a = self.get_const(op.a_id)?.value.to_u32();
+                let b = self.get_const(op.b_id)?.value.to_u32();
+                let value = a | b;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
             },
             OP_BITWISE_XOR => {
                 let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32()?;
-                let b = self.get_const(op.b_id)?.value.to_u32()?;
-                let constant = ConstantIntermediate {
-                    value: (a ^ b).into(),
-                    spec_id: None,
-                };
-                self.put_const(op.spec_const_id, constant)
+                let a = self.get_const(op.a_id)?.value.to_u32();
+                let b = self.get_const(op.b_id)?.value.to_u32();
+                let value = a ^ b;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
             },
             OP_BITWISE_AND => {
                 let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32()?;
-                let b = self.get_const(op.b_id)?.value.to_u32()?;
-                let constant = ConstantIntermediate {
-                    value: (a & b).into(),
-                    spec_id: None,
-                };
-                self.put_const(op.spec_const_id, constant)
+                let a = self.get_const(op.a_id)?.value.to_u32();
+                let b = self.get_const(op.b_id)?.value.to_u32();
+                let value = a & b;
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
             },
             OP_SELECT => {
                 let op = OpSpecConstantTertiaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_bool()?;
+                let a = self.get_const(op.a_id)?.value.to_bool();
                 let b = self.get_const(op.b_id)?.value;
                 let c = self.get_const(op.c_id)?.value;
-                let constant = ConstantIntermediate {
-                    value: if a { b } else { c },
-                    spec_id: None,
-                };
-                self.put_const(op.spec_const_id, constant)
+                let value = if a { b } else { c };
+                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
             }
             OP_FCONVERT |
             OP_VECTOR_SHUFFLE | OP_COMPOSITE_EXTRACT | OP_COMPOSITE_INSERT |
@@ -1336,16 +1248,18 @@ impl<'a> ReflectIntermediate<'a> {
                     .ok_or(Error::MISSING_DECO)?;
 
                 if let Some(x) = cfg.spec_values.get(&spec_id) {
-                    let constant = ConstantIntermediate {
-                        value: x.clone(),
-                        spec_id: None,
-                    };
-                    self.put_const(op.const_id, constant)
+                    self.put_lit_const(op.const_id, op.ty_id, x.clone(), None)
                 } else {
                     match instr.opcode() {
-                        OP_SPEC_CONSTANT_TRUE => self.put_bool_const(op.const_id, true, Some(spec_id)),
-                        OP_SPEC_CONSTANT_FALSE => self.put_bool_const(op.const_id, false, Some(spec_id)),
-                        OP_SPEC_CONSTANT => self.put_lit_const(op.const_id, op.ty_id, op.value, Some(spec_id)),
+                        OP_SPEC_CONSTANT_TRUE => {
+                            self.put_lit_const(op.const_id, op.ty_id, ConstantValue::from(true), Some(spec_id))
+                        },
+                        OP_SPEC_CONSTANT_FALSE => {
+                            self.put_lit_const(op.const_id, op.ty_id, ConstantValue::from(false), Some(spec_id))
+                        },
+                        OP_SPEC_CONSTANT => {
+                            self.put_lit_const(op.const_id, op.ty_id, ConstantValue::try_from(op.value)?, Some(spec_id))
+                        },
                         _ => unreachable!(),
                     }
                 }
@@ -1748,7 +1662,7 @@ impl<'a> ReflectIntermediate<'a> {
                 let spec = Variable::SpecConstant {
                     name: name.map(|x| x.to_owned()),
                     spec_id: spec_id,
-                    ty: constant.value.ty(),
+                    ty: constant.ty.clone(),
                 };
                 vars.push(spec);
             }
