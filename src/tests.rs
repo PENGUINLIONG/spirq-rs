@@ -365,3 +365,33 @@ fn test_combine_image_sampler() {
     assert_eq!(*desc_binds.get(&DescriptorBinding::new(0, 1)).unwrap(), DescriptorType::Sampler());
     assert_eq!(*desc_binds.get(&DescriptorBinding::new(1, 1)).unwrap(), DescriptorType::CombinedImageSampler());
 }
+#[test]
+fn test_old_store_buf() {
+    let entry = {
+        static SPV: &'static [u32] = inline_spirv!(r#"
+            #version 460 core
+            layout(set=0, binding=0) buffer X {
+                uint a[];
+            } xs[2];
+            void main() {
+            }
+        "#, comp, glsl, vulkan1_0);
+        ReflectConfig::new()
+            .spv(SPV)
+            .ref_all_rscs(true)
+            .reflect()
+            .unwrap()
+            .first()
+            .unwrap()
+            .clone()
+    };
+    let desc_binds = entry.vars
+        .into_iter()
+        .filter_map(|x| {
+            if let Variable::Descriptor { desc_bind, desc_ty, .. } = x {
+                Some((desc_bind, desc_ty))
+            } else { None }
+        })
+        .collect::<HashMap<_, _>>();
+    assert_eq!(*desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(), DescriptorType::StorageBuffer(AccessType::ReadWrite));
+}
