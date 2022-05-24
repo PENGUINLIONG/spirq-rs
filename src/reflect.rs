@@ -982,6 +982,11 @@ impl<'a> ReflectIntermediate<'a> {
             },
             OP_TYPE_ARRAY => {
                 let op = OpTypeArray::try_from(instr)?;
+                // FIXME: Workaround old storage buffers.
+                if self.contains_deco(op.proto_ty_id, None, Decoration::BufferBlock) {
+                    let key = (op.ty_id, None, Decoration::BufferBlock as u32);
+                    let _ = self.deco_map.insert(key, &[] as &'static [u32]);
+                }
                 let proto_ty = if let Ok(x) = self.get_ty(op.proto_ty_id) { x } else { return Ok(()); };
 
                 let nrepeat = self.get_const(op.nrepeat_const_id)?
