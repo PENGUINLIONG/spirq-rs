@@ -1080,6 +1080,12 @@ impl<'a> ReflectIntermediate<'a> {
                     return Err(Error::ID_COLLISION)
                 } else { return Ok(()) }
             },
+            OP_TYPE_FORWARD_POINTER => {
+                let op = OpTypeForwardPointer::try_from(instr)?;
+                if self.ty_map.insert(op.ty_id, Type::DeviceAddress()).is_some() {
+                    return Err(Error::ID_COLLISION);
+                } else { return Ok(()); }
+            }
             OP_TYPE_ACCELERATION_STRUCTURE_KHR => {
                 let op = OpTypeAccelerationStructureKHR::try_from(instr)?;
                 self.put_ty(op.ty_id, Type::AccelStruct())
@@ -1459,7 +1465,7 @@ impl<'a> ReflectIntermediate<'a> {
         // instructions here.
         while let Some(instr) = instrs.peek() {
             let opcode = instr.opcode();
-            if TYPE_RANGE.contains(&opcode) || opcode == OP_TYPE_ACCELERATION_STRUCTURE_KHR {
+            if is_ty_op(opcode) {
                 self.populate_one_ty(instr)?;
             } else if opcode == OP_VARIABLE {
                 self.populate_one_var(instr)?;

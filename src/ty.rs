@@ -486,7 +486,7 @@ macro_rules! declr_ty_accessor {
 
 
 #[derive(PartialEq, Eq, Hash, Clone)]
-// #[non_exhaustive] // TODO: (penguinliong) For SPIR-Q v0.5.
+#[non_exhaustive]
 pub enum Type {
     /// Literally nothing. You shouldn't find this in reflection results.
     Void(),
@@ -514,6 +514,9 @@ pub enum Type {
     /// Acceleration structure for ray-tracing. Only available with
     /// `RayTracingKHR` capability enabled.
     AccelStruct(),
+    /// Forward-declared pointers. Usually used for bindless resources with the
+    /// `buffer_reference` extension. See `VK_KHR_buffer_device_address`.
+    DeviceAddress(),
 }
 impl Type {
     pub fn nbyte(&self) -> Option<usize> {
@@ -530,6 +533,7 @@ impl Type {
             Array(arr_ty) => Some(arr_ty.nbyte()),
             Struct(struct_ty) => Some(struct_ty.nbyte()),
             AccelStruct() => None,
+            DeviceAddress() => Some(8),
         }
     }
     // Iterate over all entries in the type tree.
@@ -563,6 +567,7 @@ impl fmt::Debug for Type {
             Type::Array(arr_ty) => arr_ty.fmt(f),
             Type::Struct(struct_ty) => struct_ty.fmt(f),
             Type::AccelStruct() => write!(f, "accelerationStructure"),
+            Type::DeviceAddress() => write!(f, "uint64_t"),
         }
     }
 }

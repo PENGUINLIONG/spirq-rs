@@ -133,6 +133,10 @@ define_ops!{
         store_cls: StorageClass = read_enum(),
         target_ty_id: TypeId = read_u32(),
     }
+    OpTypeForwardPointer {
+        ty_id: TypeId = read_u32(),
+        store_cls: StorageClass = read_enum(),
+    }
     OpConstantTrue {
         ty_id: TypeId = read_u32(),
         const_id: ConstantId = read_u32(),

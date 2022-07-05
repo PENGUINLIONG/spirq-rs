@@ -44,10 +44,18 @@ pub const OP_TYPE_ARRAY: OpCode = Op::TypeArray as u32;
 pub const OP_TYPE_RUNTIME_ARRAY: OpCode = Op::TypeRuntimeArray as u32;
 pub const OP_TYPE_STRUCT: OpCode = Op::TypeStruct as u32;
 pub const OP_TYPE_POINTER: OpCode = Op::TypePointer as u32;
-// Don't need this: Not a resource type. But kept for the range.
+pub const OP_TYPE_FORWARD_POINTER: OpCode = Op::TypeForwardPointer as u32;
 pub const OP_TYPE_FUNCTION: OpCode = Op::TypeFunction as u32;
 pub const OP_TYPE_ACCELERATION_STRUCTURE_KHR: OpCode = Op::TypeAccelerationStructureKHR as u32;
-pub const TYPE_RANGE: RangeInclusive<OpCode> = OP_TYPE_VOID..=OP_TYPE_FUNCTION;
+
+pub fn is_ty_op(op: u32) -> bool {
+    match op {
+        OP_TYPE_VOID..=OP_TYPE_FUNCTION => true,
+        OP_TYPE_ACCELERATION_STRUCTURE_KHR => true,
+        OP_TYPE_FORWARD_POINTER => true,
+        _ => false,
+    }
+}
 
 pub const OP_CONSTANT_TRUE: OpCode = Op::ConstantTrue as u32;
 pub const OP_CONSTANT_FALSE: OpCode = Op::ConstantFalse as u32;
