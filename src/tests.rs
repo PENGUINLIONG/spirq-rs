@@ -395,3 +395,31 @@ fn test_old_store_buf() {
         .collect::<HashMap<_, _>>();
     assert_eq!(*desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(), DescriptorType::StorageBuffer(AccessType::ReadWrite));
 }
+#[test]
+fn test_linked_list() {
+    let _entry = gen_one_entry!(rgen, r#"
+        #version 460 core
+        #extension GL_EXT_ray_tracing : require
+        #extension GL_EXT_nonuniform_qualifier : enable
+        #extension GL_EXT_buffer_reference2 : require
+        #extension GL_EXT_scalar_block_layout : enable
+        #extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+        layout(buffer_reference) buffer blockType;
+
+        layout(buffer_reference, std430, buffer_reference_align = 16) buffer blockType {
+            int x;
+            blockType next;
+        };
+        
+        layout(binding = 0, std430) buffer rootBlock {
+            blockType root;
+        } r;
+        
+        void main()
+        {
+            blockType b = r.root;
+            b = b.next.next.next.next.next;
+        }
+    "#);
+}

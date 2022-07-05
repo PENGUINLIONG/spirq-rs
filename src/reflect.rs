@@ -1078,7 +1078,27 @@ impl<'a> ReflectIntermediate<'a> {
                 let op = OpTypePointer::try_from(instr)?;
                 if self.ptr_map.insert(op.ty_id, op.target_ty_id).is_some() {
                     return Err(Error::ID_COLLISION)
-                } else { return Ok(()) }
+                }
+
+                if let Ok(pointee_ty) = self.get_ty(op.target_ty_id) {
+                    let ty = Type::DevicePointer(PointerType::new(pointee_ty));
+                    use std::collections::hash_map::Entry;
+                    match self.ty_map.entry(op.ty_id) {
+                        Entry::Vacant(entry) => {
+                            entry.insert(ty);
+                        },
+                        Entry::Occupied(mut entry) => {
+                            if !entry.get().is_devaddr() {
+                                return Err(Error::ID_COLLISION);
+                            }
+                            entry.insert(ty);
+                        }
+                    } 
+                } else {
+                    // Ignore unknown types. Currently only funtion pointers can
+                    // step into this.
+                }
+                return Ok(());
             },
             OP_TYPE_FORWARD_POINTER => {
                 let op = OpTypeForwardPointer::try_from(instr)?;
