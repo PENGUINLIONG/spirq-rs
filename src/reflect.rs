@@ -1078,8 +1078,34 @@ impl<'a> ReflectIntermediate<'a> {
                 let op = OpTypePointer::try_from(instr)?;
                 if self.ptr_map.insert(op.ty_id, op.target_ty_id).is_some() {
                     return Err(Error::ID_COLLISION)
-                } else { return Ok(()) }
+                }
+
+                if let Ok(pointee_ty) = self.get_ty(op.target_ty_id) {
+                    let ty = Type::DevicePointer(PointerType::new(pointee_ty));
+                    use std::collections::hash_map::Entry;
+                    match self.ty_map.entry(op.ty_id) {
+                        Entry::Vacant(entry) => {
+                            entry.insert(ty);
+                        },
+                        Entry::Occupied(mut entry) => {
+                            if !entry.get().is_devaddr() {
+                                return Err(Error::ID_COLLISION);
+                            }
+                            entry.insert(ty);
+                        }
+                    } 
+                } else {
+                    // Ignore unknown types. Currently only funtion pointers can
+                    // step into this.
+                }
+                return Ok(());
             },
+            OP_TYPE_FORWARD_POINTER => {
+                let op = OpTypeForwardPointer::try_from(instr)?;
+                if self.ty_map.insert(op.ty_id, Type::DeviceAddress()).is_some() {
+                    return Err(Error::ID_COLLISION);
+                } else { return Ok(()); }
+            }
             OP_TYPE_ACCELERATION_STRUCTURE_KHR => {
                 let op = OpTypeAccelerationStructureKHR::try_from(instr)?;
                 self.put_ty(op.ty_id, Type::AccelStruct())
@@ -1459,7 +1485,7 @@ impl<'a> ReflectIntermediate<'a> {
         // instructions here.
         while let Some(instr) = instrs.peek() {
             let opcode = instr.opcode();
-            if TYPE_RANGE.contains(&opcode) || opcode == OP_TYPE_ACCELERATION_STRUCTURE_KHR {
+            if is_ty_op(opcode) {
                 self.populate_one_ty(instr)?;
             } else if opcode == OP_VARIABLE {
                 self.populate_one_var(instr)?;

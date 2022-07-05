@@ -470,6 +470,25 @@ impl fmt::Debug for StructType {
     }
 }
 
+#[derive(PartialEq, Eq, Clone, Hash)]
+pub struct PointerType {
+    pub pointee_ty: Box<Type>,
+}
+impl PointerType {
+    pub(crate) fn new(pointee_ty: &Type) -> PointerType {
+        PointerType {
+            pointee_ty: Box::new(pointee_ty.clone()),
+        }
+    }
+}
+impl fmt::Debug for PointerType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str("<pointer> { ")?;
+        write!(f, "{:?}", *self.pointee_ty)?;
+        f.write_str(" }")
+    }
+}
+
 
 macro_rules! declr_ty_accessor {
     ([$e:ident] $($name:ident -> $ty:ident,)+) => {
@@ -486,7 +505,7 @@ macro_rules! declr_ty_accessor {
 
 
 #[derive(PartialEq, Eq, Hash, Clone)]
-// #[non_exhaustive] // TODO: (penguinliong) For SPIR-Q v0.5.
+#[non_exhaustive]
 pub enum Type {
     /// Literally nothing. You shouldn't find this in reflection results.
     Void(),
@@ -514,6 +533,12 @@ pub enum Type {
     /// Acceleration structure for ray-tracing. Only available with
     /// `RayTracingKHR` capability enabled.
     AccelStruct(),
+    /// Forward-declared pointer but the type of pointed data is unknown.
+    /// Usually used for GPU linked lists. See `VK_KHR_buffer_device_address`.
+    DeviceAddress(),
+    /// Forward-declared pointer. Usually used for bindless resources with the
+    /// `buffer_reference` extension. See `VK_KHR_buffer_device_address`.
+    DevicePointer(PointerType),
 }
 impl Type {
     pub fn nbyte(&self) -> Option<usize> {
@@ -530,6 +555,8 @@ impl Type {
             Array(arr_ty) => Some(arr_ty.nbyte()),
             Struct(struct_ty) => Some(struct_ty.nbyte()),
             AccelStruct() => None,
+            DeviceAddress() => Some(8),
+            DevicePointer(_) => Some(8),
         }
     }
     // Iterate over all entries in the type tree.
@@ -547,6 +574,8 @@ impl Type {
         is_arr -> Array,
         is_struct -> Struct,
         is_accel_struct -> AccelStruct,
+        is_devaddr -> DeviceAddress,
+        is_devptr -> DevicePointer,
     }
 }
 impl fmt::Debug for Type {
@@ -563,6 +592,8 @@ impl fmt::Debug for Type {
             Type::Array(arr_ty) => arr_ty.fmt(f),
             Type::Struct(struct_ty) => struct_ty.fmt(f),
             Type::AccelStruct() => write!(f, "accelerationStructure"),
+            Type::DeviceAddress() => write!(f, "uint64_t"),
+            Type::DevicePointer(ptr_ty) => ptr_ty.fmt(f),
         }
     }
 }
