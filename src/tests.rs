@@ -423,3 +423,21 @@ fn test_linked_list() {
         }
     "#);
 }
+#[test]
+fn test_issue_84() {
+    let _entry: EntryPoint = gen_one_entry!(comp, r#"
+        #version 450
+
+        struct Foo {
+            mat4 matrix;
+        };
+
+        layout(set = 0, binding = 0) uniform FooData {
+            Foo data;
+        } u_foo_data;
+
+        void main() {
+            Foo f = u_foo_data.data;
+        }
+    "#);
+}
