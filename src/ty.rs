@@ -512,6 +512,18 @@ macro_rules! declr_ty_accessor {
         )+
     }
 }
+macro_rules! declr_ty_downcast {
+    ([$e:ident] $($name:ident -> $ty:ident($inner_ty:ident),)+) => {
+        $(
+            pub fn $name(&self) -> Option<&$inner_ty> {
+                match self {
+                    $e::$ty(x) => Some(x),
+                    _ => None
+                }
+            }
+        )+
+    }
+}
 
 
 #[derive(PartialEq, Eq, Hash, Clone)]
@@ -586,6 +598,18 @@ impl Type {
         is_accel_struct -> AccelStruct,
         is_devaddr -> DeviceAddress,
         is_devptr -> DevicePointer,
+    }
+    declr_ty_downcast! {
+        [Type]
+        as_scalar -> Scalar(ScalarType),
+        as_vec -> Vector(VectorType),
+        as_mat -> Matrix(MatrixType),
+        as_img -> Image(ImageType),
+        as_sampled_img -> SampledImage(SampledImageType),
+        as_subpass_data -> SubpassData(SubpassDataType),
+        as_arr -> Array(ArrayType),
+        as_struct -> Struct(StructType),
+        as_devptr -> DevicePointer(PointerType),
     }
     fn mutate_impl<F: Fn(Type) -> Type>(self, f: Rc<F>) -> Type {
         use Type::*;
