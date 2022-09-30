@@ -28,6 +28,7 @@ fn main() {
         let entry_points = ReflectConfig::new()
             .spv(spv)
             .ref_all_rscs(true)
+            .gen_unique_names(true)
             .reflect()
             .unwrap();
         println!("{:#?}", &entry_points);

@@ -21,7 +21,7 @@ fn main() {
                     let mut operands = instr.operands();
                     let _ty_id = operands.read_u32().unwrap();
                     let func_id = operands.read_u32().unwrap();
-                    cur_func_name = itm.get_name(func_id).unwrap().to_owned();
+                    cur_func_name = itm.get_name(func_id).unwrap();
                     println!("entered function {}", cur_func_name);
                     nfunc += 1;
                 },
