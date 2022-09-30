@@ -2,6 +2,7 @@ use inline_spirv::*;
 use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
 use super::*;
+use super::ty;
 
 macro_rules! gen_entries(
     ($stage:ident, $src:expr, $lang:ident) => {{
@@ -9,6 +10,7 @@ macro_rules! gen_entries(
         ReflectConfig::new()
             .spv(SPV)
             .combine_img_samplers(true)
+            .ref_all_rscs(true)
             .reflect()
             .unwrap()
     }}
@@ -422,4 +424,89 @@ fn test_linked_list() {
             b = b.next.next.next.next.next;
         }
     "#);
+}
+#[test]
+fn test_issue_84() {
+    let _entry: EntryPoint = gen_one_entry!(comp, r#"
+        #version 450
+
+        struct Foo {
+            mat4 matrix;
+        };
+
+        layout(set = 0, binding = 0) uniform FooData {
+            Foo data;
+        } u_foo_data;
+
+        void main() {
+            Foo f = u_foo_data.data;
+        }
+    "#);
+}
+#[test]
+fn test_matrix_stride() {
+    let entry: EntryPoint = gen_one_entry!(comp, r#"
+        #version 450
+        layout(set=0, binding=0, std140) uniform _0 {
+            layout(row_major) mat2x2 a;
+            layout(column_major) mat4x4 b;
+        };
+        layout(set=0, binding=1, std430) buffer _1 {
+            layout(row_major) mat2x2 c;
+            layout(column_major) mat4x4 d;
+        };
+        layout(set=0, binding=2, std140) uniform _2 {
+            mat2x2 e;
+        };
+        layout(set=0, binding=3, std430) buffer _3 {
+            mat2x2 f;
+        };
+        void main() {
+        }
+    "#);
+    for var in entry.vars {
+        if let Variable::Descriptor { desc_bind, ty, .. } = var {
+            match desc_bind.bind() {
+                0 => {
+                    let struct_ty = ty.as_struct().unwrap();
+                    {
+                        assert!(struct_ty.members[0].offset == 0);
+                        let mat_ty = struct_ty.members[0].ty.as_mat().unwrap();
+                        assert!(mat_ty.stride == Some(16));
+                    }
+                    {
+                        assert!(struct_ty.members[1].offset == 32);
+                        let mat_ty = struct_ty.members[1].ty.as_mat().unwrap();
+                        assert!(mat_ty.stride == Some(16));
+                    }
+                },
+                1 => {
+                    let struct_ty = ty.as_struct().unwrap();
+                    {
+                        assert!(struct_ty.members[0].offset == 0);
+                        let mat_ty = struct_ty.members[0].ty.as_mat().unwrap();
+                        assert!(mat_ty.stride == Some(8));
+                    }
+                    {
+                        assert!(struct_ty.members[1].offset == 16);
+                        let mat_ty = struct_ty.members[1].ty.as_mat().unwrap();
+                        assert!(mat_ty.stride == Some(16));
+                    }
+                },
+                2 => {
+                    let struct_ty = ty.as_struct().unwrap();
+                    assert!(struct_ty.members[0].offset == 0);
+                    let mat_ty = struct_ty.members[0].ty.as_mat().unwrap();
+                    assert!(mat_ty.stride == Some(16));
+                },
+                3 => {
+                    let struct_ty = ty.as_struct().unwrap();
+                    assert!(struct_ty.members[0].offset == 0);
+                    let mat_ty = struct_ty.members[0].ty.as_mat().unwrap();
+                    assert!(mat_ty.stride == Some(8));
+                },
+                _ => {},
+            }
+        }
+    }
 }

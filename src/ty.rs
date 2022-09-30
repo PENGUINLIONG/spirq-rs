@@ -1,6 +1,7 @@
 //! Structured representations of SPIR-V types.
 use std::fmt;
 use std::hash::Hash;
+use std::rc::Rc;
 use crate::error::*;
 use crate::walk::Walk;
 
@@ -75,14 +76,18 @@ impl fmt::Debug for ScalarType {
 
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct VectorType {
+    /// Vector scalar type.
     pub scalar_ty: ScalarType,
+    /// Number of scalar components in the vector.
     pub nscalar: u32,
 }
 impl VectorType {
     pub fn new(scalar_ty: ScalarType, nscalar: u32) -> VectorType {
         VectorType { scalar_ty: scalar_ty, nscalar: nscalar }
     }
-    pub fn nbyte(&self) -> usize { self.nscalar as usize * self.scalar_ty.nbyte() }
+    pub fn nbyte(&self) -> usize {
+        self.nscalar as usize * self.scalar_ty.nbyte()
+    }
 }
 impl fmt::Debug for VectorType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -103,31 +108,36 @@ impl Default for MatrixAxisOrder {
 
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct MatrixType {
+    /// Matrix vector type.
     pub vec_ty: VectorType,
+    /// Number of vectors in the matrix.
     pub nvec: u32,
-    pub stride: usize,
-    pub major: MatrixAxisOrder,
+    /// Stride between vectors in the matrix. Valid SPIR-V never gives a `None`
+    /// stride.
+    pub stride: Option<usize>,
+    /// Axis order of the matrix. Valid SPIR-V never gives a `None` major.
+    pub major: Option<MatrixAxisOrder>,
 }
 impl MatrixType {
     pub fn new(vec_ty: VectorType, nvec: u32) -> MatrixType {
         MatrixType {
-            stride: vec_ty.nbyte(),
             vec_ty: vec_ty,
             nvec: nvec,
-            major: MatrixAxisOrder::default(),
+            stride: None,
+            major: None,
         }
     }
-    pub(crate) fn decorate(&mut self, stride: usize, major: MatrixAxisOrder) {
-        self.stride = stride;
-        self.major = major;
+    /// Get the number of bytes the matrix physically occupied.
+    pub fn nbyte(&self) -> usize {
+        self.nvec as usize * self.stride.unwrap_or(self.vec_ty.nbyte())
     }
-    pub fn nbyte(&self) -> usize { self.nvec as usize * self.stride }
 }
 impl fmt::Debug for MatrixType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let transpose = match self.major {
-            MatrixAxisOrder::ColumnMajor => "",
-            MatrixAxisOrder::RowMajor => "T",
+            Some(MatrixAxisOrder::ColumnMajor) => "",
+            Some(MatrixAxisOrder::RowMajor) => "T",
+            None => "?",
         };
         let nrow = self.vec_ty.nscalar;
         let ncol = self.nvec;
@@ -364,8 +374,8 @@ impl fmt::Debug for SubpassDataType {
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct ArrayType {
     pub(crate) proto_ty: Box<Type>,
-    nrepeat: Option<u32>,
-    stride: Option<usize>,
+    pub(crate) nrepeat: Option<u32>,
+    pub(crate) stride: Option<usize>,
 }
 impl ArrayType {
     pub(crate) fn new_multibind(proto_ty: &Type, nrepeat: u32) -> ArrayType {
@@ -502,6 +512,18 @@ macro_rules! declr_ty_accessor {
         )+
     }
 }
+macro_rules! declr_ty_downcast {
+    ([$e:ident] $($name:ident -> $ty:ident($inner_ty:ident),)+) => {
+        $(
+            pub fn $name(&self) -> Option<&$inner_ty> {
+                match self {
+                    $e::$ty(x) => Some(x),
+                    _ => None
+                }
+            }
+        )+
+    }
+}
 
 
 #[derive(PartialEq, Eq, Hash, Clone)]
@@ -576,6 +598,51 @@ impl Type {
         is_accel_struct -> AccelStruct,
         is_devaddr -> DeviceAddress,
         is_devptr -> DevicePointer,
+    }
+    declr_ty_downcast! {
+        [Type]
+        as_scalar -> Scalar(ScalarType),
+        as_vec -> Vector(VectorType),
+        as_mat -> Matrix(MatrixType),
+        as_img -> Image(ImageType),
+        as_sampled_img -> SampledImage(SampledImageType),
+        as_subpass_data -> SubpassData(SubpassDataType),
+        as_arr -> Array(ArrayType),
+        as_struct -> Struct(StructType),
+        as_devptr -> DevicePointer(PointerType),
+    }
+    fn mutate_impl<F: Fn(Type) -> Type>(self, f: Rc<F>) -> Type {
+        use Type::*;
+        let out = match self {
+            Array(src) => {
+                let dst = ArrayType {
+                    proto_ty: Box::new(src.proto_ty.mutate_impl(f.clone())),
+                    nrepeat: src.nrepeat,
+                    stride: src.stride,
+                };
+                Type::Array(dst)
+            },
+            Struct(src) => {
+                let dst = StructType {
+                    name: src.name,
+                    members: src.members.into_iter()
+                        .map(|x| {
+                            StructMember {
+                                name: x.name,
+                                offset: x.offset,
+                                ty: x.ty.mutate_impl(f.clone()),
+                            }
+                        })
+                        .collect(),
+                };
+                Type::Struct(dst)
+            },
+            _ => self,
+        };
+        (*f)(out)
+    }
+    pub fn mutate<F: Fn(Type) -> Type>(self, f: F) -> Type {
+        self.mutate_impl(Rc::new(f))
     }
 }
 impl fmt::Debug for Type {

@@ -632,6 +632,18 @@ impl<'a> ReflectIntermediate<'a> {
         self.ty_map.get(&ty_id)
             .ok_or(Error::TY_NOT_FOUND)
     }
+    fn get_deco_or_member_deco_u32(
+        &self,
+        ty_id: TypeId,
+        member_idx: Option<u32>,
+        deco: Decoration
+    ) -> Result<u32> {
+        self.get_deco_u32(ty_id, deco)
+            .or_else(|| {
+                member_idx.and_then(|i| self.get_member_deco_u32(ty_id, i, deco))
+            })
+            .ok_or(Error::MISSING_DECO)
+    }
     fn put_ty(&mut self, ty_id: TypeId, ty: Type) -> Result<()> {
         use std::collections::hash_map::Entry::Vacant;
         match self.ty_map.entry(ty_id) {
@@ -901,45 +913,45 @@ impl<'a> ReflectIntermediate<'a> {
         Ok(())
     }
     fn populate_one_ty(&mut self, instr: &Instr<'a>) -> Result<()> {
-        match instr.opcode() {
+        let ty_record: Option<(TypeId, Type)> = match instr.opcode() {
             OP_TYPE_FUNCTION => {
-                Ok(())
+                None
             },
             OP_TYPE_VOID => {
                 let op = OpTypeVoid::try_from(instr)?;
-                self.put_ty(op.ty_id, Type::Void())
+                Some((op.ty_id, Type::Void()))
             },
             OP_TYPE_BOOL => {
                 let op = OpTypeBool::try_from(instr)?;
                 let scalar_ty = ScalarType::boolean();
-                self.put_ty(op.ty_id, Type::Scalar(scalar_ty))
+                Some((op.ty_id, Type::Scalar(scalar_ty)))
             },
             OP_TYPE_INT => {
                 let op = OpTypeInt::try_from(instr)?;
                 let scalar_ty = ScalarType::int(op.nbyte >> 3, op.is_signed);
-                self.put_ty(op.ty_id, Type::Scalar(scalar_ty))
+                Some((op.ty_id, Type::Scalar(scalar_ty)))
             },
             OP_TYPE_FLOAT => {
                 let op = OpTypeFloat::try_from(instr)?;
                 let scalar_ty = ScalarType::float(op.nbyte >> 3);
-                self.put_ty(op.ty_id, Type::Scalar(scalar_ty))
+                Some((op.ty_id, Type::Scalar(scalar_ty)))
             },
             OP_TYPE_VECTOR => {
                 let op = OpTypeVector::try_from(instr)?;
                 if let Type::Scalar(scalar_ty) = self.get_ty(op.scalar_ty_id)? {
                     let vec_ty = VectorType::new(scalar_ty.clone(), op.nscalar);
-                    self.put_ty(op.ty_id, Type::Vector(vec_ty))
+                    Some((op.ty_id, Type::Vector(vec_ty)))
                 } else {
-                    Err(Error::BROKEN_NESTED_TY)
+                    return Err(Error::BROKEN_NESTED_TY);
                 }
             },
             OP_TYPE_MATRIX => {
                 let op = OpTypeMatrix::try_from(instr)?;
                 if let Type::Vector(vec_ty) = self.get_ty(op.vec_ty_id)? {
                     let mat_ty = MatrixType::new(vec_ty.clone(), op.nvec);
-                    self.put_ty(op.ty_id, Type::Matrix(mat_ty))
+                    Some((op.ty_id, Type::Matrix(mat_ty)))
                 } else {
-                    Err(Error::BROKEN_NESTED_TY)
+                    return Err(Error::BROKEN_NESTED_TY);
                 }
             },
             OP_TYPE_IMAGE => {
@@ -963,21 +975,21 @@ impl<'a> ReflectIntermediate<'a> {
                     let img_ty = ImageType::new(scalar_ty, unit_fmt, arng);
                     Type::Image(img_ty)
                 };
-                self.put_ty(op.ty_id, img_ty)
+                Some((op.ty_id, img_ty))
             },
             OP_TYPE_SAMPLER => {
                 let op = OpTypeSampler::try_from(instr)?;
                 // Note that SPIR-V doesn't discriminate color and depth/stencil
                 // samplers. `sampler` and `samplerShadow` means the same thing.
-                self.put_ty(op.ty_id, Type::Sampler())
+                Some((op.ty_id, Type::Sampler()))
             },
             OP_TYPE_SAMPLED_IMAGE => {
                 let op = OpTypeSampledImage::try_from(instr)?;
                 if let Type::Image(img_ty) = self.get_ty(op.img_ty_id)? {
                     let sampled_img_ty = SampledImageType::new(img_ty.clone());
-                    self.put_ty(op.ty_id, Type::SampledImage(sampled_img_ty))
+                    Some((op.ty_id, Type::SampledImage(sampled_img_ty)))
                 } else {
-                    Err(Error::BROKEN_NESTED_TY)
+                    return Err(Error::BROKEN_NESTED_TY);
                 }
             },
             OP_TYPE_ARRAY => {
@@ -1009,7 +1021,7 @@ impl<'a> ReflectIntermediate<'a> {
                 } else {
                     ArrayType::new_multibind(&proto_ty, nrepeat)
                 };
-                self.put_ty(op.ty_id, Type::Array(arr_ty))
+                Some((op.ty_id, Type::Array(arr_ty)))
             },
             OP_TYPE_RUNTIME_ARRAY => {
                 let op = OpTypeRuntimeArray::try_from(instr)?;
@@ -1021,7 +1033,7 @@ impl<'a> ReflectIntermediate<'a> {
                 } else {
                     ArrayType::new_unsized_multibind(&proto_ty)
                 };
-                self.put_ty(op.ty_id, Type::Array(arr_ty))
+                Some((op.ty_id, Type::Array(arr_ty)))
             },
             OP_TYPE_STRUCT => {
                 let op = OpTypeStruct::try_from(instr)?;
@@ -1039,18 +1051,21 @@ impl<'a> ReflectIntermediate<'a> {
                         proto_ty = &mut *arr_ty.proto_ty;
                     }
                     if let Type::Matrix(ref mut mat_ty) = proto_ty {
-                        let mat_stride = self
-                            .get_member_deco_u32(op.ty_id, i, Decoration::MatrixStride)
-                            .map(|x| x as usize)
-                            .ok_or(Error::MISSING_DECO)?;
-                        let row_major = self.contains_deco(op.ty_id, Some(i), Decoration::RowMajor);
-                        let col_major = self.contains_deco(op.ty_id, Some(i), Decoration::ColMajor);
-                        let major = match (row_major, col_major) {
-                            (true, false) => MatrixAxisOrder::RowMajor,
-                            (false, true) => MatrixAxisOrder::ColumnMajor,
-                            _ => return Err(Error::UNENCODED_ENUM),
+                        let mat_stride = self.get_member_deco_u32(op.ty_id, i, Decoration::MatrixStride);
+                        if let Some(mat_stride) = mat_stride {
+                            mat_ty.stride = Some(mat_stride as usize);
+                        }
+
+                        let major = if self.contains_deco(op.ty_id, Some(i), Decoration::RowMajor) {
+                            Some(MatrixAxisOrder::RowMajor)
+                        } else if self.contains_deco(op.ty_id, Some(i), Decoration::ColMajor) {
+                            Some(MatrixAxisOrder::ColumnMajor)
+                        } else {
+                            None
                         };
-                        mat_ty.decorate(mat_stride, major);
+                        if let Some(major) = major {
+                            mat_ty.major = Some(major);
+                        }
                     }
                     let name = if let Some(nm) = self.get_member_name(op.ty_id, i) {
                         if nm.is_empty() { None } else { Some(nm.to_owned()) }
@@ -1072,7 +1087,7 @@ impl<'a> ReflectIntermediate<'a> {
                 }
                 // Don't have to shrink-to-fit because the types in `ty_map`
                 // won't be used directly and will be cloned later.
-                self.put_ty(op.ty_id, Type::Struct(struct_ty))
+                Some((op.ty_id, Type::Struct(struct_ty)))
             },
             OP_TYPE_POINTER => {
                 let op = OpTypePointer::try_from(instr)?;
@@ -1108,9 +1123,34 @@ impl<'a> ReflectIntermediate<'a> {
             }
             OP_TYPE_ACCELERATION_STRUCTURE_KHR => {
                 let op = OpTypeAccelerationStructureKHR::try_from(instr)?;
-                self.put_ty(op.ty_id, Type::AccelStruct())
+                Some((op.ty_id, Type::AccelStruct()))
             },
             _ => return Err(Error::UNSUPPORTED_TY),
+        };
+        if let Some((ty_id, mut ty)) = ty_record {
+            if let Ok(mat_stride) = self.get_deco_or_member_deco_u32(ty_id, None, Decoration::MatrixStride) {
+                ty = ty.mutate(|x| {
+                    if let Type::Matrix(mut mat_ty) = x {
+                        mat_ty.stride = Some(mat_stride as usize);
+                        Type::Matrix(mat_ty)
+                    } else {
+                        x
+                    }
+                });
+            }
+            if let Ok(arr_stride) = self.get_deco_or_member_deco_u32(ty_id, None, Decoration::ArrayStride) {
+                ty = ty.mutate(|x| {
+                    if let Type::Array(mut arr_ty) = x {
+                        arr_ty.stride = Some(arr_stride as usize);
+                        Type::Array(arr_ty)
+                    } else {
+                        x
+                    }
+                })
+            }
+            self.put_ty(ty_id, ty)
+        } else {
+            Ok(())
         }
     }
     fn populate_one_const(&mut self, instr: &Instr<'a>) -> Result<()> {
