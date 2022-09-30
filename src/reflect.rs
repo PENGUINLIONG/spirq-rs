@@ -968,11 +968,27 @@ impl<'a> ReflectIntermediate<'a> {
                 } else {
                     // Only unit types allowed to be stored in storage images
                     // can have given format.
-                    let unit_fmt = ImageUnitFormat::from_spv_def(
-                        op.is_sampled, op.is_depth, op.color_fmt)?;
+                    let is_sampled = match op.is_sampled {
+                        0 => None,
+                        1 => Some(true),
+                        2 => Some(false),
+                        _ => return Err(Error::UNSUPPORTED_IMG_CFG),
+                    };
+                    let is_depth = match op.is_depth {
+                        0 => Some(false),
+                        1 => Some(true),
+                        2 => None,
+                        _ => return Err(Error::UNSUPPORTED_IMG_CFG),
+                    };
                     let arng = ImageArrangement::from_spv_def(
                         op.dim, op.is_array, op.is_multisampled)?;
-                    let img_ty = ImageType::new(scalar_ty, unit_fmt, arng);
+                    let img_ty = ImageType {
+                        scalar_ty,
+                        is_sampled,
+                        is_depth,
+                        fmt: op.color_fmt,
+                        arng,
+                    };
                     Type::Image(img_ty)
                 };
                 Some((op.ty_id, img_ty))
@@ -1455,20 +1471,20 @@ impl<'a> ReflectIntermediate<'a> {
                 let desc_bind = self.get_var_desc_bind_or_default(op.var_id);
                 let var = match &ty {
                     Type::Image(img_ty) => {
-                        let desc_ty = match img_ty.unit_fmt {
-                            ImageUnitFormat::Color(_) => {
-                                let access = self.get_desc_access(op.var_id)
-                                    .ok_or(Error::ACCESS_CONFLICT)?;
-                                match img_ty.arng {
-                                    ImageArrangement::ImageBuffer => DescriptorType::StorageTexelBuffer(access),
-                                    _ => DescriptorType::StorageImage(access),
-                                }
-                            },
-                            ImageUnitFormat::Sampled => match img_ty.arng {
+                        let desc_ty = if let Some(false) = img_ty.is_sampled {
+                            // Guaranteed a storage image.
+                            let access = self.get_desc_access(op.var_id)
+                                .ok_or(Error::ACCESS_CONFLICT)?;
+                            match img_ty.arng {
+                                ImageArrangement::ImageBuffer => DescriptorType::StorageTexelBuffer(access),
+                                _ => DescriptorType::StorageImage(access),
+                            }
+                        } else {
+                            // Potentially a sampled image.
+                            match img_ty.arng {
                                 ImageArrangement::ImageBuffer => DescriptorType::UniformTexelBuffer(),
                                 _ => DescriptorType::SampledImage(),
-                            },
-                            ImageUnitFormat::Depth => DescriptorType::SampledImage(),
+                            }
                         };
                         Variable::Descriptor { name, desc_bind, desc_ty, ty: ty.clone(), nbind }
                     },

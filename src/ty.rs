@@ -134,44 +134,21 @@ impl MatrixType {
 }
 impl fmt::Debug for MatrixType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let transpose = match self.major {
-            Some(MatrixAxisOrder::ColumnMajor) => "",
-            Some(MatrixAxisOrder::RowMajor) => "T",
-            None => "?",
+        let major_lit = match self.major {
+            Some(MatrixAxisOrder::ColumnMajor) => "ColumnMajor",
+            Some(MatrixAxisOrder::RowMajor) => "RowMajor",
+            None => "AxisOrder?",
         };
         let nrow = self.vec_ty.nscalar;
         let ncol = self.nvec;
         let scalar_ty = &self.vec_ty.scalar_ty;
-        write!(f, "mat{}x{}{}<{:?}>", nrow, ncol, transpose, scalar_ty)
+        write!(f, "mat{}x{}<{:?},{}>", nrow, ncol, scalar_ty, major_lit)
     }
 }
 
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
-pub enum ImageUnitFormat {
-    /// The image is used as a storage image and the read/write format is
-    /// explicitly specified.
-    Color(ImageFormat),
-    /// The image is used as a sampled image.
-    Sampled,
-    /// The image is used as a sampled depth image. Note that you cannot access
-    /// depth-stencil images by read/write.
-    Depth,
-}
-impl ImageUnitFormat {
-    pub fn from_spv_def(is_sampled: u32, is_depth: u32, color_fmt: ImageFormat) -> Result<ImageUnitFormat> {
-        let img_unit_fmt = match (is_sampled, is_depth, color_fmt) {
-            (1, 0, _) => ImageUnitFormat::Sampled,
-            (1, 1, _) => ImageUnitFormat::Depth,
-            (2, 0, color_fmt) => ImageUnitFormat::Color(color_fmt),
-            _ => return Err(Error::UNSUPPORTED_IMG_CFG),
-        };
-        Ok(img_unit_fmt)
-    }
-}
-
-
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+#[non_exhaustive]
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub enum ImageArrangement {
     Image1D,
     Image2D,
@@ -215,59 +192,38 @@ pub struct ImageType {
     /// SPIR-V specification allows it to be `OpTypeVoid`. I have never
     /// encounter one tho.
     pub scalar_ty: Option<ScalarType>,
-    /// Matches `VkImageCreateInfo::format`.
-    pub unit_fmt: ImageUnitFormat,
+    /// Whether the image is sampled, or `None` if it's unknown at compile time.
+    pub is_sampled: Option<bool>,
+    /// Whether the image is a depth image, or `None` if it's unknown at compile time.
+    pub is_depth: Option<bool>,
+    /// Matches `VkImageCreateInfo::format`. Can be `ImageFormat::Unknown` in
+    /// case of a sampled image.
+    pub fmt: ImageFormat,
     /// Image arrangement which encodes multisampling, array-ness and
     /// dimentionality.
     pub arng: ImageArrangement,
 }
-impl ImageType {
-    pub fn new(
-        scalar_ty: Option<ScalarType>,
-        unit_fmt: ImageUnitFormat,
-        arng: ImageArrangement,
-    ) -> ImageType {
-        ImageType { scalar_ty, unit_fmt, arng }
-    }
-}
 impl fmt::Debug for ImageType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use ImageArrangement::*;
-        use ImageUnitFormat::*;
-        let scalar_ty = || -> String {
+        let scalar_ty = {
             let scalar_ty = self.scalar_ty.as_ref();
             if let Some(scalar_ty) = scalar_ty {
                 format!("{:?}", scalar_ty)
             } else {
-                "void".to_owned()
+                "Void".to_owned()
             }
         };
-        match (self.arng, self.unit_fmt) {
-            (Image1D, Color(fmt)) => write!(f, "image1D<{:?}>", fmt),
-            (Image2D, Color(fmt)) => write!(f, "image2D<{:?}>", fmt),
-            (Image2DMS, Color(fmt)) => write!(f, "image2DMS<{:?}>", fmt),
-            (Image3D, Color(fmt)) => write!(f, "image3D<{:?}>", fmt),
-            (CubeMap, Color(fmt)) => write!(f, "imageCube<{:?}>", fmt),
-            (Image1DArray, Color(fmt)) => write!(f, "image1DArray<{:?}>", fmt),
-            (Image2DArray, Color(fmt)) => write!(f, "image2DArray<{:?}>", fmt),
-            (Image2DMSArray, Color(fmt)) => write!(f, "image2DMSArray<{:?}>", fmt),
-            (CubeMapArray, Color(fmt)) => write!(f, "imageCubeArray<{:?}>", fmt),
-            (Image2DRect, Color(fmt)) => write!(f, "image2DRect<{:?}>", fmt),
-            (ImageBuffer, Color(fmt)) => write!(f, "imageBuffer<{:?}>", fmt),
-
-            (Image1D, Sampled) => write!(f, "texture1D<{}>", scalar_ty()),
-            (Image2D, Sampled) => write!(f, "texture2D<{}>", scalar_ty()),
-            (Image2DMS, Sampled) => write!(f, "texture2DMS<{}>", scalar_ty()),
-            (Image3D, Sampled) => write!(f, "texture3D<{}>", scalar_ty()),
-            (CubeMap, Sampled) => write!(f, "textureCube<{}>", scalar_ty()),
-            (Image1DArray, Sampled) => write!(f, "texture1DArray<{}>", scalar_ty()),
-            (Image2DArray, Sampled) => write!(f, "texture2DArray<{}>", scalar_ty()),
-            (Image2DMSArray, Sampled) => write!(f, "texture2DMSArray<{}>", scalar_ty()),
-            (CubeMapArray, Sampled) => write!(f, "textureCubeArray<{}>", scalar_ty()),
-            (Image2DRect, Sampled) => write!(f, "texture2DRect<{}>", scalar_ty()),
-            (ImageBuffer, Sampled) => write!(f, "textureBuffer<{}>", scalar_ty()),
-            _ => Err(fmt::Error::default()),
-        }
+        let sampled_lit = match self.is_sampled {
+            Some(true) => "Sampled",
+            Some(false) => "Storage",
+            None => "Sampled?",
+        };
+        let depth_lit = match self.is_depth {
+            Some(true) => "Color",
+            Some(false) => "Depth",
+            None => "Depth?",
+        };
+        write!(f, "Image<{},{},{},{:?},{:?}>", scalar_ty, sampled_lit, depth_lit, self.fmt, self.arng)
     }
 }
 
@@ -283,43 +239,12 @@ impl SampledImageType {
 }
 impl fmt::Debug for SampledImageType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use ImageArrangement::*;
-        use ImageUnitFormat::*;
-        let scalar_ty = {
-            let scalar_ty = self.img_ty.scalar_ty.as_ref();
-            if let Some(scalar_ty) = scalar_ty {
-                format!("{:?}", scalar_ty)
-            } else {
-                "void".to_owned()
-            }
-        };
-        match (self.img_ty.arng, self.img_ty.unit_fmt) {
-            (Image1D, Sampled) => write!(f, "sampler1D<{}>", scalar_ty),
-            (Image2D, Sampled) => write!(f, "sampler2D<{}>", scalar_ty),
-            (Image2DMS, Sampled) => write!(f, "sampler2DMS<{}>", scalar_ty),
-            (Image3D, Sampled) => write!(f, "sampler3D<{}>", scalar_ty),
-            (CubeMap, Sampled) => write!(f, "samplerCube<{}>", scalar_ty),
-            (Image1DArray, Sampled) => write!(f, "sampler1DArray<{}>", scalar_ty),
-            (Image2DArray, Sampled) => write!(f, "sampler2DArray<{}>", scalar_ty),
-            (Image2DMSArray, Sampled) => write!(f, "sampler2DMSArray<{}>", scalar_ty),
-            (CubeMapArray, Sampled) => write!(f, "samplerCubeArray<{}>", scalar_ty),
-            (Image2DRect, Sampled) => write!(f, "sampler2DRect<{}>", scalar_ty),
-            (ImageBuffer, Sampled) => write!(f, "samplerBuffer<{}>", scalar_ty),
-
-            (Image1D, Depth) => write!(f, "sampler1DShadow<{}>", scalar_ty),
-            (Image2D, Depth) => write!(f, "sampler2DShadow<{}>", scalar_ty),
-            (CubeMap, Depth) => write!(f, "samplerCubeShadow<{}>", scalar_ty),
-            (Image1DArray, Depth) => write!(f, "sampler1DArrayShadow<{}>", scalar_ty),
-            (Image2DArray, Depth) => write!(f, "sampler2DArrayShadow<{}>", scalar_ty),
-            (CubeMapArray, Depth) => write!(f, "samplerCubeShadowArray<{}>", scalar_ty),
-            (Image2DRect, Depth) => write!(f, "sampler2DRectShadow<{}>", scalar_ty),
-            _ => Err(fmt::Error::default()),
-        }
+        write!(f, "Sampled<{:?}>", self.img_ty)
     }
 }
 
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub enum SubpassDataArrangement {
     SubpassData,
     SubpassDataMS,
@@ -357,17 +282,10 @@ impl fmt::Debug for SubpassDataType {
             if let Some(scalar_ty) = scalar_ty {
                 format!("{:?}", scalar_ty)
             } else {
-                "void".to_owned()
+                "Void".to_owned()
             }
         };
-        match self.arng {
-            SubpassDataArrangement::SubpassData => {
-                write!(f, "subpassData<{}>", scalar_ty)
-            },
-            SubpassDataArrangement::SubpassDataMS => {
-                write!(f, "subpassDataMS<{}>", scalar_ty)
-            },
-        }
+        write!(f, "SubpassData<{},{:?}>", scalar_ty, self.arng)
     }
 }
 
@@ -493,7 +411,7 @@ impl PointerType {
 }
 impl fmt::Debug for PointerType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str("<pointer> { ")?;
+        f.write_str("Pointer { ")?;
         write!(f, "{:?}", *self.pointee_ty)?;
         f.write_str(" }")
     }
@@ -648,18 +566,18 @@ impl Type {
 impl fmt::Debug for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Type::Void() => write!(f, "void"),
+            Type::Void() => write!(f, "Void"),
             Type::Scalar(scalar_ty) => scalar_ty.fmt(f),
             Type::Vector(vec_ty) => vec_ty.fmt(f),
             Type::Matrix(mat_ty) => mat_ty.fmt(f),
             Type::Image(img_ty) => write!(f, "{:?}", img_ty),
-            Type::Sampler() => write!(f, "sampler"),
+            Type::Sampler() => write!(f, "Sampler"),
             Type::SampledImage(sampled_img_ty) => sampled_img_ty.fmt(f),
             Type::SubpassData(subpass_data_ty) => subpass_data_ty.fmt(f),
             Type::Array(arr_ty) => arr_ty.fmt(f),
             Type::Struct(struct_ty) => struct_ty.fmt(f),
-            Type::AccelStruct() => write!(f, "accelerationStructure"),
-            Type::DeviceAddress() => write!(f, "uint64_t"),
+            Type::AccelStruct() => write!(f, "AccelStruct"),
+            Type::DeviceAddress() => write!(f, "Address"),
             Type::DevicePointer(ptr_ty) => ptr_ty.fmt(f),
         }
     }
