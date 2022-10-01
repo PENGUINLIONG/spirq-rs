@@ -1,6 +1,6 @@
 #![allow(dead_code)]
-use std::ops::RangeInclusive;
 use spirv_headers::Op;
+use std::ops::RangeInclusive;
 
 pub type OpCode = u32;
 pub const OP_ENTRY_POINT: OpCode = Op::EntryPoint as u32;

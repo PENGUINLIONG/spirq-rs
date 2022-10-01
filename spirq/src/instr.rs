@@ -1,8 +1,8 @@
+use super::parse::Instr;
+use super::{Error, Result};
+use spirv_headers::{Dim, ExecutionMode, StorageClass};
 use std::convert::TryFrom;
 use std::marker::PhantomData;
-use spirv_headers::{Dim, ExecutionMode, StorageClass};
-use super::{Error, Result};
-use super::parse::{Instr};
 
 pub use spirv_headers::{ExecutionModel, ImageFormat};
 
@@ -38,7 +38,7 @@ macro_rules! define_ops {
 }
 
 // Be aware that the order of the read methods is important.
-define_ops!{
+define_ops! {
     OpEntryPoint {
         exec_model: ExecutionModel = read_enum(),
         func_id: FunctionId = read_u32(),

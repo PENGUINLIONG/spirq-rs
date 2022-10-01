@@ -1,11 +1,11 @@
 //! Structured representations of SPIR-V types.
+use crate::walk::Walk;
 use std::fmt;
 use std::hash::Hash;
 use std::rc::Rc;
-use crate::walk::Walk;
 
 use spirv_headers::Dim;
-pub use spirv_headers::{ImageFormat};
+pub use spirv_headers::ImageFormat;
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub enum ScalarType {
@@ -32,7 +32,11 @@ impl ScalarType {
         Self::Boolean
     }
     pub fn int(nbyte: u32, is_signed: bool) -> ScalarType {
-        if is_signed { Self::Signed(nbyte) } else { Self::Unsigned(nbyte) }
+        if is_signed {
+            Self::Signed(nbyte)
+        } else {
+            Self::Unsigned(nbyte)
+        }
     }
     pub fn float(nbyte: u32) -> ScalarType {
         Self::Float(nbyte)
@@ -62,16 +66,32 @@ impl ScalarType {
     }
 
     pub fn is_boolean(&self) -> bool {
-        if let Self::Boolean = self { true } else { false }
+        if let Self::Boolean = self {
+            true
+        } else {
+            false
+        }
     }
     pub fn is_sint(&self) -> bool {
-        if let Self::Signed(_) = self { true } else { false }
+        if let Self::Signed(_) = self {
+            true
+        } else {
+            false
+        }
     }
     pub fn is_uint(&self) -> bool {
-        if let Self::Unsigned(_) = self { true } else { false }
+        if let Self::Unsigned(_) = self {
+            true
+        } else {
+            false
+        }
     }
     pub fn is_float(&self) -> bool {
-        if let Self::Float(_) = self { true } else { false }
+        if let Self::Float(_) = self {
+            true
+        } else {
+            false
+        }
     }
 }
 impl fmt::Display for ScalarType {
@@ -86,7 +106,6 @@ impl fmt::Display for ScalarType {
     }
 }
 
-
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct VectorType {
     /// Vector scalar type.
@@ -96,7 +115,10 @@ pub struct VectorType {
 }
 impl VectorType {
     pub fn new(scalar_ty: ScalarType, nscalar: u32) -> VectorType {
-        VectorType { scalar_ty: scalar_ty, nscalar: nscalar }
+        VectorType {
+            scalar_ty: scalar_ty,
+            nscalar: nscalar,
+        }
     }
     pub fn nbyte(&self) -> usize {
         self.nscalar as usize * self.scalar_ty.nbyte()
@@ -108,16 +130,16 @@ impl fmt::Display for VectorType {
     }
 }
 
-
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub enum MatrixAxisOrder {
     ColumnMajor,
     RowMajor,
 }
 impl Default for MatrixAxisOrder {
-    fn default() -> MatrixAxisOrder { MatrixAxisOrder::ColumnMajor }
+    fn default() -> MatrixAxisOrder {
+        MatrixAxisOrder::ColumnMajor
+    }
 }
-
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct MatrixType {
@@ -157,12 +179,11 @@ impl fmt::Display for MatrixType {
         let scalar_ty = &self.vec_ty.scalar_ty;
         let stride = match self.stride {
             Some(x) => x.to_string(),
-            None => "?".to_owned()
+            None => "?".to_owned(),
         };
         write!(f, "mat{nrow}x{ncol}<{scalar_ty},{major},{stride}>")
     }
 }
-
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct ImageType {
@@ -216,10 +237,13 @@ impl fmt::Display for ImageType {
             true => "MS",
             false => "",
         };
-        write!(f, "Image{dim}{is_array}{is_multisampled}<{scalar_ty},{is_sampled},{depth},{:?}>", self.fmt)
+        write!(
+            f,
+            "Image{dim}{is_array}{is_multisampled}<{scalar_ty},{is_sampled},{depth},{:?}>",
+            self.fmt
+        )
     }
 }
-
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct CombinedImageSamplerType {
@@ -265,10 +289,12 @@ impl fmt::Display for SampledImageType {
             true => "MS",
             false => "",
         };
-        write!(f, "SampledImage{dim}{is_array}{is_multisampled}<{scalar_ty}>")
+        write!(
+            f,
+            "SampledImage{dim}{is_array}{is_multisampled}<{scalar_ty}>"
+        )
     }
 }
-
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct StorageImageType {
@@ -304,10 +330,13 @@ impl fmt::Display for StorageImageType {
             true => "MS",
             false => "",
         };
-        write!(f, "StorageImage{dim}{is_array}{is_multisampled}<{:?}>", self.fmt)
+        write!(
+            f,
+            "StorageImage{dim}{is_array}{is_multisampled}<{:?}>",
+            self.fmt
+        )
     }
 }
-
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct SubpassDataType {
@@ -359,7 +388,7 @@ impl ArrayType {
         ArrayType {
             proto_ty: Box::new(proto_ty.clone()),
             nrepeat: None,
-            stride: Some(stride)
+            stride: Some(stride),
         }
     }
 
@@ -402,7 +431,8 @@ impl StructType {
         self.name.as_ref().map(AsRef::as_ref)
     }
     pub fn nbyte(&self) -> usize {
-        self.members.last()
+        self.members
+            .last()
             .map(|last| last.offset + last.ty.nbyte().unwrap_or(0))
             .unwrap_or(0)
     }
@@ -415,7 +445,9 @@ impl fmt::Display for StructType {
             f.write_str("{ ")?;
         }
         for (i, member) in self.members.iter().enumerate() {
-            if i != 0 { f.write_str(", ")?; }
+            if i != 0 {
+                f.write_str(", ")?;
+            }
             if let Some(name) = &member.name {
                 write!(f, "{}: {}", name, member.ty)?;
             } else {
@@ -445,7 +477,6 @@ impl fmt::Display for PointerType {
     }
 }
 
-
 macro_rules! declr_ty_accessor {
     ([$e:ident] $($name:ident -> $ty:ident,)+) => {
         $(
@@ -470,7 +501,6 @@ macro_rules! declr_ty_downcast {
         )+
     }
 }
-
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 #[non_exhaustive]
@@ -533,7 +563,9 @@ impl Type {
         }
     }
     // Iterate over all entries in the type tree.
-    pub fn walk<'a>(&'a self) -> Walk<'a> { Walk::new(self) }
+    pub fn walk<'a>(&'a self) -> Walk<'a> {
+        Walk::new(self)
+    }
     declr_ty_accessor! {
         [Type]
         is_scalar -> Scalar,
@@ -575,22 +607,22 @@ impl Type {
                     stride: src.stride,
                 };
                 Type::Array(dst)
-            },
+            }
             Struct(src) => {
                 let dst = StructType {
                     name: src.name,
-                    members: src.members.into_iter()
-                        .map(|x| {
-                            StructMember {
-                                name: x.name,
-                                offset: x.offset,
-                                ty: x.ty.mutate_impl(f.clone()),
-                            }
+                    members: src
+                        .members
+                        .into_iter()
+                        .map(|x| StructMember {
+                            name: x.name,
+                            offset: x.offset,
+                            ty: x.ty.mutate_impl(f.clone()),
                         })
                         .collect(),
                 };
                 Type::Struct(dst)
-            },
+            }
             _ => self,
         };
         (*f)(out)
