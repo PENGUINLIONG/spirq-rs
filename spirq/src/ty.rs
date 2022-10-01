@@ -9,14 +9,25 @@ pub use spirv_headers::{ImageFormat};
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub enum ScalarType {
-    // Be careful with booleans. Booleans is NOT allowed to be exposed to the
-    // host according to the SPIR-V specification.
+    /// Pseudo-type representing no data. It's sometimes used to represent data
+    /// without a type hint at compile-time in SPIR-V. You shouldn't see this in
+    /// your reflection results.
+    Void,
+    /// Boolean value of either true or false. Be careful with booleans.
+    /// Booleans is NOT allowed to be exposed to the host according to the
+    /// SPIR-V specification. You shouldn't see this in your reflection results.
     Boolean,
+    /// Signed integer.
     Signed(u32),
+    /// Unsigned integer.
     Unsigned(u32),
+    /// IEEE 754 floating-point number.
     Float(u32),
 }
 impl ScalarType {
+    pub fn void() -> ScalarType {
+        Self::Void
+    }
     pub fn boolean() -> ScalarType {
         Self::Boolean
     }
@@ -31,6 +42,7 @@ impl ScalarType {
     /// unsigned, represented by a `None`.
     pub fn is_signed(&self) -> Option<bool> {
         match self {
+            Self::Void => None,
             Self::Boolean => None,
             Self::Signed(_) => Some(true),
             Self::Unsigned(_) => Some(false),
@@ -40,6 +52,7 @@ impl ScalarType {
     /// Number of bytes an instance of the type takes.
     pub fn nbyte(&self) -> usize {
         let nbyte = match self {
+            Self::Void => 0,
             Self::Boolean => 1,
             Self::Signed(nbyte) => *nbyte,
             Self::Unsigned(nbyte) => *nbyte,
@@ -64,7 +77,8 @@ impl ScalarType {
 impl fmt::Display for ScalarType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Boolean => write!(f, "bool"),
+            Self::Void => f.write_str("void"),
+            Self::Boolean => f.write_str("bool"),
             Self::Signed(nbyte) => write!(f, "i{}", nbyte << 3),
             Self::Unsigned(nbyte) => write!(f, "u{}", nbyte << 3),
             Self::Float(nbyte) => write!(f, "f{}", nbyte << 3),
@@ -152,10 +166,8 @@ impl fmt::Display for MatrixType {
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct ImageType {
-    /// Scalar type of image access result. In most cases it's `Some`, but the
-    /// SPIR-V specification allows it to be `OpTypeVoid`. I have never
-    /// encounter one tho.
-    pub scalar_ty: Option<ScalarType>,
+    /// Scalar type of image access result.
+    pub scalar_ty: ScalarType,
     /// Dimension of the image.
     pub dim: Dim,
     /// Whether the image is a depth image, or `None` if it's unknown at compile
@@ -176,14 +188,7 @@ pub struct ImageType {
 }
 impl fmt::Display for ImageType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let scalar_ty = {
-            let scalar_ty = self.scalar_ty.as_ref();
-            if let Some(scalar_ty) = scalar_ty {
-                scalar_ty.to_string()
-            } else {
-                "void".to_owned()
-            }
-        };
+        let scalar_ty = &self.scalar_ty;
         let is_sampled = match self.is_sampled {
             Some(true) => "Sampled",
             Some(false) => "Storage",
@@ -228,10 +233,8 @@ impl fmt::Display for CombinedImageSamplerType {
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct SampledImageType {
-    /// Scalar type of image access result. In most cases it's `Some`, but the
-    /// SPIR-V specification allows it to be `OpTypeVoid`. I have never
-    /// encounter one tho.
-    pub scalar_ty: Option<ScalarType>,
+    /// Scalar type of image access result.
+    pub scalar_ty: ScalarType,
     /// Dimension of the image.
     pub dim: Dim,
     /// Whether  the image is an array of images. In Vulkan, it means that the
@@ -244,14 +247,7 @@ pub struct SampledImageType {
 }
 impl fmt::Display for SampledImageType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let scalar_ty = {
-            let scalar_ty = self.scalar_ty.as_ref();
-            if let Some(scalar_ty) = scalar_ty {
-                scalar_ty.to_string()
-            } else {
-                "void".to_owned()
-            }
-        };
+        let scalar_ty = &self.scalar_ty;
         let dim = match self.dim {
             Dim::Dim1D => "1D",
             Dim::Dim2D => "2D",
@@ -315,23 +311,14 @@ impl fmt::Display for StorageImageType {
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct SubpassDataType {
-    /// Scalar type of subpass data access result. In most cases it's `Some`,
-    /// but the SPIR-V specification allows it to be `OpTypeVoid`. I have never
-    /// encounter one tho.
-    pub scalar_ty: Option<ScalarType>,
+    /// Scalar type of subpass data access result.
+    pub scalar_ty: ScalarType,
     /// Image arrangement which encodes multisampling state.
     pub is_multisampled: bool,
 }
 impl fmt::Display for SubpassDataType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let scalar_ty = {
-            let scalar_ty = self.scalar_ty.as_ref();
-            if let Some(scalar_ty) = scalar_ty {
-                format!("{}", scalar_ty)
-            } else {
-                "void".to_owned()
-            }
-        };
+        let scalar_ty = &self.scalar_ty;
         let is_multisampled = match self.is_multisampled {
             true => "MS",
             false => "",
@@ -488,8 +475,6 @@ macro_rules! declr_ty_downcast {
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 #[non_exhaustive]
 pub enum Type {
-    /// Literally nothing. You shouldn't find this in reflection results.
-    Void(),
     /// A single value, which can be a signed or unsigned integer, a floating
     /// point number, or a boolean value.
     Scalar(ScalarType),
@@ -531,7 +516,6 @@ impl Type {
     pub fn nbyte(&self) -> Option<usize> {
         use Type::*;
         match self {
-            Void() => None,
             Scalar(x) => Some(x.nbyte()),
             Vector(x) => Some(x.nbyte()),
             Matrix(x) => Some(x.nbyte()),
@@ -552,7 +536,6 @@ impl Type {
     pub fn walk<'a>(&'a self) -> Walk<'a> { Walk::new(self) }
     declr_ty_accessor! {
         [Type]
-        is_void -> Void,
         is_scalar -> Scalar,
         is_vec -> Vector,
         is_mat -> Matrix,
@@ -619,7 +602,6 @@ impl Type {
 impl fmt::Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Type::Void() => f.write_str("void"),
             Type::Scalar(x) => x.fmt(f),
             Type::Vector(x) => x.fmt(f),
             Type::Matrix(x) => x.fmt(f),
