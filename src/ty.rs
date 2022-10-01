@@ -217,6 +217,16 @@ impl fmt::Display for ImageType {
 
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
+pub struct CombinedImageSamplerType {
+    pub sampled_img_ty: SampledImageType,
+}
+impl fmt::Display for CombinedImageSamplerType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "CombinedImageSampler<{}>", self.sampled_img_ty)
+    }
+}
+
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct SampledImageType {
     /// Scalar type of image access result. In most cases it's `Some`, but the
     /// SPIR-V specification allows it to be `OpTypeVoid`. I have never
@@ -259,7 +269,46 @@ impl fmt::Display for SampledImageType {
             true => "MS",
             false => "",
         };
-        write!(f, "CombinedImageSampler{dim}{is_array}{is_multisampled}<{scalar_ty}>")
+        write!(f, "SampledImage{dim}{is_array}{is_multisampled}<{scalar_ty}>")
+    }
+}
+
+
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
+pub struct StorageImageType {
+    /// Dimension of the image.
+    pub dim: Dim,
+    /// Whether  the image is an array of images. In Vulkan, it means that the
+    /// image can have multiple layers. In Vulkan, only `Dim1D`, `Dim2D`, and
+    /// `DimCube` can be arrayed.
+    pub is_array: bool,
+    /// Whether the image is multisampled. In Vulkan, only 2D images and 2D
+    /// image arrays can be multi sampled.
+    pub is_multisampled: bool,
+    /// Matches `VkImageCreateInfo::format`. Can be `ImageFormat::Unknown` in
+    /// case of a sampled image.
+    pub fmt: ImageFormat,
+}
+impl fmt::Display for StorageImageType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let dim = match self.dim {
+            Dim::Dim1D => "1D",
+            Dim::Dim2D => "2D",
+            Dim::Dim3D => "3D",
+            Dim::DimBuffer => "Buffer",
+            Dim::DimCube => "Cube",
+            Dim::DimRect => "Rect",
+            Dim::DimSubpassData => "SubpassData",
+        };
+        let is_array = match self.is_array {
+            true => "Array",
+            false => "",
+        };
+        let is_multisampled = match self.is_multisampled {
+            true => "MS",
+            false => "",
+        };
+        write!(f, "StorageImage{dim}{is_array}{is_multisampled}<{:?}>", self.fmt)
     }
 }
 
@@ -448,12 +497,18 @@ pub enum Type {
     Vector(VectorType),
     /// A collection of vectors.
     Matrix(MatrixType),
-    /// An unsampled image, with no sampler state combined. Such design is
-    /// preferred in DirectX.
+    /// An image. In most cases, this variant is elevated to
+    /// `CombinedImageSampler`, `SampledImage`, or `StorageImage` so you
+    /// shouldn't see this in your reflection results.
     Image(ImageType),
     /// A sampled image externally combined with a sampler state. Such design is
-    /// preferred in legacy OpenGL.
+    /// preferred in OpenGL and Vulkan.
+    CombinedImageSampler(CombinedImageSamplerType),
+    /// A sampled image yet to be combined with a `Sampler`. Such design is
+    /// preferred in DirectX and Vulkan.
     SampledImage(SampledImageType),
+    /// A storage image that shaders can read and/or write.
+    StorageImage(StorageImageType),
     /// Separable sampler state.
     Sampler(),
     /// Pixel store from input attachments.
@@ -482,7 +537,9 @@ impl Type {
             Matrix(x) => Some(x.nbyte()),
             Image(_) => None,
             Sampler() => None,
+            CombinedImageSampler(_) => None,
             SampledImage(_) => None,
+            StorageImage(_) => None,
             SubpassData(_) => None,
             Array(x) => Some(x.nbyte()),
             Struct(x) => Some(x.nbyte()),
@@ -501,7 +558,9 @@ impl Type {
         is_mat -> Matrix,
         is_img -> Image,
         is_sampler -> Sampler,
+        is_combined_img_sampler -> CombinedImageSampler,
         is_sampled_img -> SampledImage,
+        is_storage_img -> StorageImage,
         is_subpass_data -> SubpassData,
         is_arr -> Array,
         is_struct -> Struct,
@@ -515,7 +574,9 @@ impl Type {
         as_vec -> Vector(VectorType),
         as_mat -> Matrix(MatrixType),
         as_img -> Image(ImageType),
+        as_combined_img_sampler -> CombinedImageSampler(CombinedImageSamplerType),
         as_sampled_img -> SampledImage(SampledImageType),
+        as_storage_img -> StorageImage(StorageImageType),
         as_subpass_data -> SubpassData(SubpassDataType),
         as_arr -> Array(ArrayType),
         as_struct -> Struct(StructType),
@@ -564,7 +625,9 @@ impl fmt::Display for Type {
             Type::Matrix(x) => x.fmt(f),
             Type::Image(x) => x.fmt(f),
             Type::Sampler() => f.write_str("Sampler"),
+            Type::CombinedImageSampler(x) => x.fmt(f),
             Type::SampledImage(x) => x.fmt(f),
+            Type::StorageImage(x) => x.fmt(f),
             Type::SubpassData(x) => x.fmt(f),
             Type::Array(x) => x.fmt(f),
             Type::Struct(x) => x.fmt(f),

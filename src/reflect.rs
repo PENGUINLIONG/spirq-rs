@@ -1039,7 +1039,10 @@ impl<'a> ReflectIntermediate<'a> {
                         is_array: img_ty.is_array,
                         is_multisampled: img_ty.is_multisampled,
                     };
-                    Some((op.ty_id, Type::SampledImage(sampled_img_ty)))
+                    let combined_img_sampler_ty = CombinedImageSamplerType {
+                        sampled_img_ty,
+                    };
+                    Some((op.ty_id, Type::CombinedImageSampler(combined_img_sampler_ty)))
                 } else {
                     return Err(Error::BROKEN_NESTED_TY);
                 }
@@ -1417,7 +1420,7 @@ impl<'a> ReflectIntermediate<'a> {
         }
     }
     fn populate_one_var(&mut self, instr: &Instr<'a>) -> Result<()> {
-        fn extract_proto_ty<'a>(ty: &Type) -> Result<(u32, Type)> {
+        fn extract_proto_ty<'a>(ty: &'a Type) -> Result<(u32, &'a Type)> {
             match ty {
                 Type::Array(arr_ty) => {
                     // `nrepeat=None` is no longer considered invalid because of
@@ -1425,9 +1428,9 @@ impl<'a> ReflectIntermediate<'a> {
                     // shader extension has been supported in Vulkan 1.2.
                     let nrepeat = arr_ty.nrepeat
                         .unwrap_or(0);
-                    Ok((nrepeat, (*arr_ty.proto_ty).clone()))
+                    Ok((nrepeat, &arr_ty.proto_ty))
                 },
-                _ => Ok((1, ty.clone())),
+                _ => Ok((1, &ty)),
             }
         }
 
@@ -1479,6 +1482,9 @@ impl<'a> ReflectIntermediate<'a> {
             StorageClass::Uniform => {
                 let (nbind, ty) = extract_proto_ty(ty)?;
                 let desc_bind = self.get_var_desc_bind_or_default(op.var_id);
+
+                // For SPIR-V versions <= 1.3 in which `BufferBlock` is not
+                // deprecated.
                 let var = if self.contains_deco(ty_id, None, Decoration::BufferBlock) {
                     let access = self.get_desc_access(op.var_id)
                         .ok_or(Error::ACCESS_CONFLICT)?;
@@ -1504,29 +1510,54 @@ impl<'a> ReflectIntermediate<'a> {
                 let desc_bind = self.get_var_desc_bind_or_default(op.var_id);
                 let var = match &ty {
                     Type::Image(img_ty) => {
-                        let desc_ty = if let Some(false) = img_ty.is_sampled {
+                        if let Some(false) = img_ty.is_sampled {
                             // Guaranteed a storage image.
                             let access = self.get_desc_access(op.var_id)
                                 .ok_or(Error::ACCESS_CONFLICT)?;
-                            match img_ty.dim {
+                            let desc_ty = match img_ty.dim {
                                 Dim::DimBuffer => DescriptorType::StorageTexelBuffer(access),
                                 _ => DescriptorType::StorageImage(access),
+                            };
+                            let storage_img_ty = StorageImageType {
+                                dim: img_ty.dim,
+                                is_array: img_ty.is_array,
+                                is_multisampled: img_ty.is_multisampled,
+                                fmt: img_ty.fmt,
+                            };
+                            Variable::Descriptor {
+                                name,
+                                desc_bind,
+                                desc_ty,
+                                ty: Type::StorageImage(storage_img_ty),
+                                nbind,
                             }
                         } else {
                             // Potentially a sampled image.
-                            match img_ty.dim {
+                            let desc_ty = match img_ty.dim {
                                 Dim::DimBuffer => DescriptorType::UniformTexelBuffer(),
                                 _ => DescriptorType::SampledImage(),
+                            };
+                            let sampled_img_ty = SampledImageType {
+                                dim: img_ty.dim,
+                                scalar_ty: img_ty.scalar_ty.clone(),
+                                is_array: img_ty.is_array,
+                                is_multisampled: img_ty.is_multisampled,
+                            };
+                            Variable::Descriptor {
+                                name,
+                                desc_bind,
+                                desc_ty,
+                                ty: Type::SampledImage(sampled_img_ty),
+                                nbind,
                             }
-                        };
-                        Variable::Descriptor { name, desc_bind, desc_ty, ty: ty.clone(), nbind }
+                        }
                     },
                     Type::Sampler() => {
                         let desc_ty = DescriptorType::Sampler();
                         Variable::Descriptor { name, desc_bind, desc_ty, ty: ty.clone(), nbind }
                     },
-                    Type::SampledImage(sampled_img_ty) => {
-                        let desc_ty = match sampled_img_ty.dim {
+                    Type::CombinedImageSampler(combined_img_sampler_ty) => {
+                        let desc_ty = match combined_img_sampler_ty.sampled_img_ty.dim {
                             Dim::DimBuffer => DescriptorType::UniformTexelBuffer(),
                             _ => DescriptorType::CombinedImageSampler(),
                         };
@@ -1861,18 +1892,21 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
             // create a new combined image sampler.
             for img_var in combined_imgs {
                 if let Variable::Descriptor { name, ty, .. } = img_var {
-                    if let Type::Image(img_ty) = ty {
+                    if let Type::SampledImage(img_ty) = ty {
                         let sampled_img_ty = SampledImageType {
                             scalar_ty: img_ty.scalar_ty.clone(),
                             dim: img_ty.dim,
                             is_array: img_ty.is_array,
                             is_multisampled: img_ty.is_multisampled,
                         };
+                        let combined_img_sampler_ty = CombinedImageSamplerType {
+                            sampled_img_ty
+                        };
                         let out_var = Variable::Descriptor {
                             name,
                             desc_bind: sampler_desc_bind,
                             desc_ty: DescriptorType::CombinedImageSampler(),
-                            ty: Type::SampledImage(sampled_img_ty),
+                            ty: Type::CombinedImageSampler(combined_img_sampler_ty),
                             nbind: sampler_nbind,
                         };
                         out_vars.push(out_var);
