@@ -1,6 +1,8 @@
 # SPIR-Q Reflection Tool
 
-`spirq-reflect` is a CLI frontend of the shader reflection library [`spirq`](https://github.com/PENGUINLIONG/spirq-rs). It generates reflection JSONs from SPIR-V shader binaries. You can install `spirq-reflect` with:
+[![Crate](https://img.shields.io/crates/v/spirq-reflect)](https://crates.io/crates/spirq-reflect)
+
+[`spirq-reflect`](https://crates.io/crates/spirq-reflect) is a CLI frontend of the shader reflection library [`spirq`](https://github.com/PENGUINLIONG/spirq-rs). It generates reflection JSONs from SPIR-V shader binaries. You can install `spirq-reflect` with:
 
 ```bash
 cargo install spirq-reflect
@@ -26,7 +28,7 @@ Please run `spirq-reflect -h` to get a detailed description of all the available
 
 The [`spirv-spec.frag.spv`](https://github.com/PENGUINLIONG/spirq-rs/tree/master/assets/spirv-spec.frag) binary in the [`spirq`](https://github.com/PENGUINLIONG/spirq-rs) repository gives the following output:
 
-```
+```json
 {
   "EntryPoint": "main",
   "ExecutionModel": "Fragment",
