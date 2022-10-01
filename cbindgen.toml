@@ -1,0 +1,3 @@
+language = "C"
+include_guard = "spirq_h"
+pragma_once = true

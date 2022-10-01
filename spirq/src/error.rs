@@ -6,7 +6,6 @@ use std::fmt;
 pub enum Error {
     CorruptedSpirv(&'static str),
     UnsupportedSpirv(&'static str),
-    MismatchedManifest,
 }
 impl Error {
     pub const INSTR_TOO_SHORT: Self = Self::CorruptedSpirv("instruction is too short");
@@ -48,7 +47,6 @@ impl fmt::Display for Error {
         match self {
             CorruptedSpirv(msg) => write!(f, "spirv binary is corrupted: {}", msg),
             UnsupportedSpirv(msg) => write!(f, "spirv binary is unsupported: {}", msg),
-            MismatchedManifest => write!(f, "mismatched manifest cannot be merged"),
         }
     }
 }

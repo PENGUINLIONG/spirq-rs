@@ -291,6 +291,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "spirq-sys"
+version = "0.0.1"
+dependencies = [
+ "spirq",
+]
+
+[[package]]
 name = "spirv_headers"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

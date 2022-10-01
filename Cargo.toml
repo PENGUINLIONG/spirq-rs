@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "spirq",
+    "spirq-sys",
     "spirq-reflect",
 ]

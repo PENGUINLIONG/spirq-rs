@@ -1,7 +1,10 @@
-use std::path::Path;
-use spirq::{ReflectConfig, ty::{Type, StructMember}};
 use clap::Parser;
 use serde_json::json;
+use spirq::{
+    ty::{StructMember, Type},
+    ReflectConfig,
+};
+use std::path::Path;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -11,7 +14,6 @@ struct Args {
     #[arg(long)]
     ref_all_rscs: bool,
 }
-
 
 fn build_spirv_binary<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
     use std::fs::File;
@@ -93,7 +95,7 @@ fn main() {
                         "Type": ty2json(&ty),
                     });
                     inputs.push(j);
-                },
+                }
                 Output { name, location, ty } => {
                     let j = json!({
                         "Name": name.unwrap(),
@@ -102,8 +104,14 @@ fn main() {
                         "Type": ty2json(&ty),
                     });
                     outputs.push(j);
-                },
-                Descriptor { name, desc_bind, desc_ty, ty, nbind } => {
+                }
+                Descriptor {
+                    name,
+                    desc_bind,
+                    desc_ty,
+                    ty,
+                    nbind,
+                } => {
                     let j = json!({
                         "Name": name.unwrap(),
                         "Set": desc_bind.set(),
@@ -113,14 +121,14 @@ fn main() {
                         "Count": nbind,
                     });
                     descs.push(j);
-                },
+                }
                 PushConstant { name, ty } => {
                     let j = json!({
                         "Name": name.unwrap(),
                         "Type": ty2json(&ty),
                     });
                     push_consts.push(j);
-                },
+                }
                 SpecConstant { name, spec_id, ty } => {
                     let j = json!({
                         "Name": name.unwrap(),
@@ -128,7 +136,7 @@ fn main() {
                         "Type": ty2json(&ty),
                     });
                     spec_consts.push(j);
-                },
+                }
             }
         }
 
