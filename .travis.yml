@@ -19,7 +19,7 @@ script:
   - cargo run --example gallery
   - cargo run --example inspect
   - cargo run --example walk
-#  - cargo fmt -- --check
+  - cargo fmt -- --check
 cache: cargo
 git:
   depth: 3

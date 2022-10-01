@@ -1,5 +1,5 @@
-use std::fmt;
 use crate::ty::Type;
+use std::fmt;
 
 #[derive(Clone)]
 pub enum Seg<'a> {
@@ -45,7 +45,10 @@ impl<'a> Walk<'a> {
 impl<'a> Iterator for Walk<'a> {
     type Item = MemberVariableRouting<'a>;
     fn next(&mut self) -> Option<MemberVariableRouting<'a>> {
-        fn get_child_ty_offset_seg<'a>(ty: &'a Type, i: usize) -> Option<(&'a Type, usize, Seg<'a>)> {
+        fn get_child_ty_offset_seg<'a>(
+            ty: &'a Type,
+            i: usize,
+        ) -> Option<(&'a Type, usize, Seg<'a>)> {
             match ty {
                 Type::Struct(struct_ty) => {
                     let member = struct_ty.members.get(i)?;
@@ -55,13 +58,19 @@ impl<'a> Iterator for Walk<'a> {
                         Seg::Index(i)
                     };
                     Some((&member.ty, member.offset, seg))
-                },
+                }
                 Type::Array(arr_ty) => {
                     // Unsized buffer are treated as 0-sized.
                     if i < arr_ty.nrepeat.unwrap_or_default() as usize {
-                        Some((&arr_ty.proto_ty, arr_ty.stride.unwrap_or_default() * i, Seg::Index(i)))
-                    } else { None }
-                },
+                        Some((
+                            &arr_ty.proto_ty,
+                            arr_ty.stride.unwrap_or_default() * i,
+                            Seg::Index(i),
+                        ))
+                    } else {
+                        None
+                    }
+                }
                 _ => None,
             }
         }
@@ -82,10 +91,17 @@ impl<'a> Iterator for Walk<'a> {
                         let mut sym = sym_stem.clone();
                         sym.push(seg);
                         sym
-                    } else { vec![seg] };
+                    } else {
+                        vec![seg]
+                    };
                     if child_ty.is_struct() || child_ty.is_arr() {
                         // Found composite type, step into it.
-                        LoopEnd::Push(WalkFrame { sym_stem: Some(sym), base_offset: offset, ty, i: 0 })
+                        LoopEnd::Push(WalkFrame {
+                            sym_stem: Some(sym),
+                            base_offset: offset,
+                            ty,
+                            i: 0,
+                        })
                     } else {
                         // Return directly if it's not a composite type.
                         return Some(MemberVariableRouting { sym, offset, ty });
@@ -105,9 +121,7 @@ impl<'a> Iterator for Walk<'a> {
                 return None;
             };
             match loop_end {
-                LoopEnd::Push(frame) => {
-                    self.inner.push(frame)
-                },
+                LoopEnd::Push(frame) => self.inner.push(frame),
                 LoopEnd::PopReturn(route) => {
                     self.inner.pop();
                     return Some(route);

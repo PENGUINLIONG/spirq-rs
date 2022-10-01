@@ -1,6 +1,6 @@
 //! Error and result reported by SPIR-Q procedures.
-use std::fmt;
 use std::error;
+use std::fmt;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum Error {
@@ -10,21 +10,29 @@ pub enum Error {
 }
 impl Error {
     pub const INSTR_TOO_SHORT: Self = Self::CorruptedSpirv("instruction is too short");
-    pub const STR_NOT_TERMINATED: Self = Self::CorruptedSpirv("instruction has a string operand that is not terminated by nul");
-    pub const UNENCODED_ENUM: Self = Self::CorruptedSpirv("instruction has a unencoded enumeration value");
+    pub const STR_NOT_TERMINATED: Self =
+        Self::CorruptedSpirv("instruction has a string operand that is not terminated by nul");
+    pub const UNENCODED_ENUM: Self =
+        Self::CorruptedSpirv("instruction has a unencoded enumeration value");
 
     pub const ID_COLLISION: Self = Self::CorruptedSpirv("id can only be assigned once");
     pub const NAME_COLLISION: Self = Self::CorruptedSpirv("item can only be named once");
-    pub const DECO_COLLISION: Self = Self::CorruptedSpirv("item can only be decorated of a kind once");
+    pub const DECO_COLLISION: Self =
+        Self::CorruptedSpirv("item can only be decorated of a kind once");
     pub const MISSING_DECO: Self = Self::CorruptedSpirv("missing decoration");
     pub const TY_NOT_FOUND: Self = Self::CorruptedSpirv("cannot find a type");
     pub const CONST_NOT_FOUND: Self = Self::CorruptedSpirv("cannot find a constant");
     pub const FUNC_NOT_FOUND: Self = Self::CorruptedSpirv("cannot find a function");
-    pub const BROKEN_NESTED_TY: Self = Self::CorruptedSpirv("nested type member violated the specification");
-    pub const BROKEN_ACCESS_CHAIN: Self = Self::CorruptedSpirv("pointer in access chain points to non-existing type");
-    pub const ACCESS_CONFLICT: Self = Self::CorruptedSpirv("variable is both read-only and write-only");
-    pub const SPEC_DIV_BY_ZERO: Self = Self::CorruptedSpirv("specialized constexpr contains division by zero");
-    pub const SPEC_TY_MISMATCHED: Self = Self::CorruptedSpirv("specialized constexpr param type mismatched");
+    pub const BROKEN_NESTED_TY: Self =
+        Self::CorruptedSpirv("nested type member violated the specification");
+    pub const BROKEN_ACCESS_CHAIN: Self =
+        Self::CorruptedSpirv("pointer in access chain points to non-existing type");
+    pub const ACCESS_CONFLICT: Self =
+        Self::CorruptedSpirv("variable is both read-only and write-only");
+    pub const SPEC_DIV_BY_ZERO: Self =
+        Self::CorruptedSpirv("specialized constexpr contains division by zero");
+    pub const SPEC_TY_MISMATCHED: Self =
+        Self::CorruptedSpirv("specialized constexpr param type mismatched");
 
     // TODO: (penguinliong) Mechanism to ignore unsupported features.
     pub const UNSUPPORTED_TY: Self = Self::UnsupportedSpirv("unsupported type");
@@ -44,6 +52,6 @@ impl fmt::Display for Error {
         }
     }
 }
-impl error::Error for Error { }
+impl error::Error for Error {}
 
 pub type Result<T> = std::result::Result<T, Error>;
