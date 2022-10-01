@@ -1,18 +1,30 @@
 # SPIR-Q Reflection Tool
 
-`spirq-reflect` is a CLI tool to generate reflection JSON from SPIR-V shader binaries. You can install `spirq-reflect` with:
+`spirq-reflect` is a CLI frontend of the shader reflection library [`spirq`](https://github.com/PENGUINLIONG/spirq-rs). It generates reflection JSONs from SPIR-V shader binaries. You can install `spirq-reflect` with:
 
 ```bash
 cargo install spirq-reflect
 ```
 
-To reflect a shader:
+## Usage
+
+Run the following command to reflect a SPIR-V binary and conclude a JSON report:
 
 ```bash
-spirq-reflect --in-path assets/spirv-spec.frag.spv
+spirq-reflect assets/spirv-spec.frag.spv
 ```
 
-You will get the following output:
+or the following if you want all declared resources to be reflected even when they are never used by the shader.
+
+```bash
+spirq-reflect assets/spirv-spec.frag.spv --ref-all-rscs
+```
+
+Please run `spirq-reflect -h` to get a detailed description of all the available command-line options.
+
+## Example Output
+
+The [`spirv-spec.frag.spv`](https://github.com/PENGUINLIONG/spirq-rs/tree/master/assets/spirv-spec.frag) binary in the [`spirq`](https://github.com/PENGUINLIONG/spirq-rs) repository gives the following output:
 
 ```
 {
