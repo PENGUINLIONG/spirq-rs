@@ -948,7 +948,8 @@ impl<'a> ReflectIntermediate<'a> {
             },
             OP_TYPE_VOID => {
                 let op = OpTypeVoid::try_from(instr)?;
-                Some((op.ty_id, Type::Void()))
+                let scalar_ty = ScalarType::void();
+                Some((op.ty_id, Type::Scalar(scalar_ty)))
             },
             OP_TYPE_BOOL => {
                 let op = OpTypeBool::try_from(instr)?;
@@ -986,8 +987,7 @@ impl<'a> ReflectIntermediate<'a> {
             OP_TYPE_IMAGE => {
                 let op = OpTypeImage::try_from(instr)?;
                 let scalar_ty = match self.get_ty(op.scalar_ty_id)? {
-                    Type::Scalar(scalar_ty) => Some(scalar_ty.clone()),
-                    Type::Void() => None,
+                    Type::Scalar(scalar_ty) => scalar_ty.clone(),
                     _ => return Err(Error::BROKEN_NESTED_TY),
                 };
                 let img_ty = if op.dim == Dim::DimSubpassData {
