@@ -40,6 +40,13 @@ fn member2json(member: &StructMember) -> serde_json::Value {
 }
 fn ty2json(ty: &Type) -> serde_json::Value {
     match ty {
+        Type::Matrix(x) => json!({
+            "Kind": "Matrix",
+            "AxisOrder": x.major.map(|x| format!("{:?}", x)),
+            "VectorType": x.vec_ty.to_string(),
+            "Count": x.nvec,
+            "Stride": x.stride,
+        }),
         Type::Array(x) => json!({
             "Kind": "Array",
             "ElementType": ty2json(&*x.proto_ty),
