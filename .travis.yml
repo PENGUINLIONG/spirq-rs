@@ -13,6 +13,7 @@ before_script:
 env:
   - RUST_LOG=trace
 script:
+  - cd spirq
   - cargo build --verbose --lib
   - cargo test --verbose
   - cargo run --example gallery

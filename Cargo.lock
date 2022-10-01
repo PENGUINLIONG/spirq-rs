@@ -273,14 +273,21 @@ version = "0.5.1"
 dependencies = [
  "byteorder",
  "bytes",
- "clap",
  "fnv",
  "inline-spirv",
  "num-derive",
  "num-traits",
+ "spirv_headers",
+]
+
+[[package]]
+name = "spirq-reflect"
+version = "0.0.1"
+dependencies = [
+ "clap",
  "serde",
  "serde_json",
- "spirv_headers",
+ "spirq",
 ]
 
 [[package]]
