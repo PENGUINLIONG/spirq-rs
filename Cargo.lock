@@ -273,13 +273,10 @@ version = "0.5.1"
 dependencies = [
  "byteorder",
  "bytes",
- "clap",
  "fnv",
  "inline-spirv",
  "num-derive",
  "num-traits",
- "serde",
- "serde_json",
  "spirv_headers",
 ]
 
