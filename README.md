@@ -27,6 +27,10 @@ let entry_points = ReflectConfig::new()
     // Combine sampled image and separated sampler states if they are bound
     // to the same binding point.
     .combine_img_samplers(true)
+    // Generate unique names for types and struct fields to help further
+    // processing of the reflection data. Otherwise, the debug names are
+    // assigned.
+    .gen_unique_names(true)
     // Specialize the constant at `SpecID=3` with unsigned integer 7. The
     // constants specialized here won't be listed in the result entry point's
     // variable list.

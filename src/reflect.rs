@@ -554,8 +554,8 @@ impl std::ops::BitAnd<AccessType> for AccessType {
 // The actual reflection to take place.
 
 /// SPIR-V reflection intermediate.
-#[derive(Default)]
 pub struct ReflectIntermediate<'a> {
+    cfg: &'a ReflectConfig,
     entry_point_declrs: Vec<EntryPointDeclartion<'a>>,
     execution_mode_declrs: Vec<ExecutionModeDeclaration>,
     vars: Vec<Variable>,
@@ -570,6 +570,23 @@ pub struct ReflectIntermediate<'a> {
     declr_map: HashMap<Locator, InstrId>,
 }
 impl<'a> ReflectIntermediate<'a> {
+    pub fn new(cfg: &'a ReflectConfig) -> Self {
+        ReflectIntermediate {
+            cfg,
+            entry_point_declrs: Default::default(),
+            execution_mode_declrs: Default::default(),
+            vars: Default::default(),
+            name_map: Default::default(),
+            deco_map: Default::default(),
+            ty_map: Default::default(),
+            var_map: Default::default(),
+            const_map: Default::default(),
+            ptr_map: Default::default(),
+            func_map: Default::default(),
+            declr_map: Default::default()
+        }
+    }
+
     /// Check if a result (like a variable declaration result) or a memeber of a
     /// result (like a structure definition result) has the given decoration.
     pub fn contains_deco(&self, id: InstrId, member_idx: Option<u32>, deco: Decoration) -> bool {
@@ -691,18 +708,30 @@ impl<'a> ReflectIntermediate<'a> {
         };
         self.put_const(const_id, constant)
     }
+    fn get_any_name(&self, id: InstrId, member_idx: Option<u32>) -> Option<String> {
+        if self.cfg.gen_unique_names {
+            if let Some(member_idx) = member_idx {
+                Some(format!("_{}_{}", id, member_idx))
+            } else {
+                Some(format!("_{}", id))
+            } 
+        } else {
+            self.name_map.get(&(id, member_idx))
+                .map(|x| (*x).to_owned())
+        }
+    }
     /// Get the human-friendly name of an instruction result.
-    pub fn get_name(&self, id: InstrId) -> Option<&'a str> {
-        self.name_map.get(&(id, None)).copied()
+    pub fn get_name(&self, id: InstrId) -> Option<String> {
+        self.get_any_name(id, None)
     }
     /// Get the human-friendly name of a member of an instruction result.
-    pub fn get_member_name(&self, id: InstrId, member_idx: u32) -> Option<&'a str> {
-        self.name_map.get(&(id, Some(member_idx))).copied()
+    pub fn get_member_name(&self, id: InstrId, member_idx: u32) -> Option<String> {
+        self.get_any_name(id, Some(member_idx))
     }
     pub fn get_func(&self, func_id: FunctionId) -> Option<&FunctionIntermediate> {
         self.func_map.get(&func_id)
     }
-    pub fn get_var_name(&self, locator: Locator) -> Option<&'a str> {
+    pub fn get_var_name(&self, locator: Locator) -> Option<String> {
         let instr_id = *self.declr_map.get(&locator)?;
         self.get_name(instr_id)
     }
@@ -962,8 +991,10 @@ impl<'a> ReflectIntermediate<'a> {
                     _ => return Err(Error::BROKEN_NESTED_TY),
                 };
                 let img_ty = if op.dim == Dim::DimSubpassData {
-                    let arng = SubpassDataArrangement::from_spv_def(op.is_multisampled)?;
-                    let subpass_data_ty = SubpassDataType::new(scalar_ty, arng);
+                    let subpass_data_ty = SubpassDataType {
+                        scalar_ty,
+                        is_multisampled: op.is_multisampled,
+                    };
                     Type::SubpassData(subpass_data_ty)
                 } else {
                     // Only unit types allowed to be stored in storage images
@@ -980,14 +1011,14 @@ impl<'a> ReflectIntermediate<'a> {
                         2 => None,
                         _ => return Err(Error::UNSUPPORTED_IMG_CFG),
                     };
-                    let arng = ImageArrangement::from_spv_def(
-                        op.dim, op.is_array, op.is_multisampled)?;
                     let img_ty = ImageType {
                         scalar_ty,
-                        is_sampled,
+                        dim: op.dim,
                         is_depth,
+                        is_array: op.is_array,
+                        is_multisampled: op.is_multisampled,
+                        is_sampled,
                         fmt: op.color_fmt,
-                        arng,
                     };
                     Type::Image(img_ty)
                 };
@@ -1002,8 +1033,16 @@ impl<'a> ReflectIntermediate<'a> {
             OP_TYPE_SAMPLED_IMAGE => {
                 let op = OpTypeSampledImage::try_from(instr)?;
                 if let Type::Image(img_ty) = self.get_ty(op.img_ty_id)? {
-                    let sampled_img_ty = SampledImageType::new(img_ty.clone());
-                    Some((op.ty_id, Type::SampledImage(sampled_img_ty)))
+                    let sampled_img_ty = SampledImageType {
+                        scalar_ty: img_ty.scalar_ty.clone(),
+                        dim: img_ty.dim,
+                        is_array: img_ty.is_array,
+                        is_multisampled: img_ty.is_multisampled,
+                    };
+                    let combined_img_sampler_ty = CombinedImageSamplerType {
+                        sampled_img_ty,
+                    };
+                    Some((op.ty_id, Type::CombinedImageSampler(combined_img_sampler_ty)))
                 } else {
                     return Err(Error::BROKEN_NESTED_TY);
                 }
@@ -1053,7 +1092,7 @@ impl<'a> ReflectIntermediate<'a> {
             },
             OP_TYPE_STRUCT => {
                 let op = OpTypeStruct::try_from(instr)?;
-                let struct_name = self.get_name(op.ty_id).map(|n| n.to_string());
+                let struct_name = self.get_name(op.ty_id);
                 let mut struct_ty = StructType::new(struct_name);
                 for (i, &member_ty_id) in op.member_ty_ids.iter().enumerate() {
                     let i = i as u32;
@@ -1083,9 +1122,7 @@ impl<'a> ReflectIntermediate<'a> {
                             mat_ty.major = Some(major);
                         }
                     }
-                    let name = if let Some(nm) = self.get_member_name(op.ty_id, i) {
-                        if nm.is_empty() { None } else { Some(nm.to_owned()) }
-                    } else { None };
+                    let name = self.get_member_name(op.ty_id, i);
                     if let Some(offset) = self.get_member_deco_u32(op.ty_id, i, Decoration::Offset)
                         .map(|x| x as usize) {
                         let member = StructMember {
@@ -1327,14 +1364,14 @@ impl<'a> ReflectIntermediate<'a> {
             _ => Err(Error::UNSUPPORTED_SPEC),
         }
     }
-    fn populate_one_spec_const(&mut self, instr: &Instr<'a>, cfg: &ReflectConfig) -> Result<()> {
+    fn populate_one_spec_const(&mut self, instr: &Instr<'a>) -> Result<()> {
         match instr.opcode() {
             OP_SPEC_CONSTANT_TRUE | OP_SPEC_CONSTANT_FALSE | OP_SPEC_CONSTANT => {
                 let op = OpConstantScalarCommonSPQ::try_from(instr)?;
                 let spec_id = self.get_deco_u32(op.const_id, Decoration::SpecId)
                     .ok_or(Error::MISSING_DECO)?;
 
-                if let Some(x) = cfg.spec_values.get(&spec_id) {
+                if let Some(x) = self.cfg.spec_values.get(&spec_id) {
                     self.put_lit_const(op.const_id, op.ty_id, x.clone(), None)
                 } else {
                     match instr.opcode() {
@@ -1383,18 +1420,17 @@ impl<'a> ReflectIntermediate<'a> {
         }
     }
     fn populate_one_var(&mut self, instr: &Instr<'a>) -> Result<()> {
-        fn extract_proto_ty<'a>(ty: &Type) -> Result<(u32, Type)> {
+        fn extract_proto_ty<'a>(ty: &'a Type) -> Result<(u32, &'a Type)> {
             match ty {
                 Type::Array(arr_ty) => {
                     // `nrepeat=None` is no longer considered invalid because of
                     // the adoption of `SPV_EXT_descriptor_indexing`. This
                     // shader extension has been supported in Vulkan 1.2.
-                    let nrepeat = arr_ty.nrepeat()
+                    let nrepeat = arr_ty.nrepeat
                         .unwrap_or(0);
-                    let proto_ty = arr_ty.proto_ty();
-                    Ok((nrepeat, proto_ty.clone()))
+                    Ok((nrepeat, &arr_ty.proto_ty))
                 },
-                _ => Ok((1, ty.clone())),
+                _ => Ok((1, &ty)),
             }
         }
 
@@ -1409,7 +1445,7 @@ impl<'a> ReflectIntermediate<'a> {
             // can safely ignore them.
             return Ok(());
         };
-        let name = self.get_name(op.var_id).map(|x| x.to_owned());
+        let name = self.get_name(op.var_id);
         let var = match op.store_cls {
             StorageClass::Input => {
                 if let Some(location) = self.get_var_location(op.var_id) {
@@ -1446,6 +1482,9 @@ impl<'a> ReflectIntermediate<'a> {
             StorageClass::Uniform => {
                 let (nbind, ty) = extract_proto_ty(ty)?;
                 let desc_bind = self.get_var_desc_bind_or_default(op.var_id);
+
+                // For SPIR-V versions <= 1.3 in which `BufferBlock` is not
+                // deprecated.
                 let var = if self.contains_deco(ty_id, None, Decoration::BufferBlock) {
                     let access = self.get_desc_access(op.var_id)
                         .ok_or(Error::ACCESS_CONFLICT)?;
@@ -1471,35 +1510,57 @@ impl<'a> ReflectIntermediate<'a> {
                 let desc_bind = self.get_var_desc_bind_or_default(op.var_id);
                 let var = match &ty {
                     Type::Image(img_ty) => {
-                        let desc_ty = if let Some(false) = img_ty.is_sampled {
+                        if let Some(false) = img_ty.is_sampled {
                             // Guaranteed a storage image.
                             let access = self.get_desc_access(op.var_id)
                                 .ok_or(Error::ACCESS_CONFLICT)?;
-                            match img_ty.arng {
-                                ImageArrangement::ImageBuffer => DescriptorType::StorageTexelBuffer(access),
+                            let desc_ty = match img_ty.dim {
+                                Dim::DimBuffer => DescriptorType::StorageTexelBuffer(access),
                                 _ => DescriptorType::StorageImage(access),
+                            };
+                            let storage_img_ty = StorageImageType {
+                                dim: img_ty.dim,
+                                is_array: img_ty.is_array,
+                                is_multisampled: img_ty.is_multisampled,
+                                fmt: img_ty.fmt,
+                            };
+                            Variable::Descriptor {
+                                name,
+                                desc_bind,
+                                desc_ty,
+                                ty: Type::StorageImage(storage_img_ty),
+                                nbind,
                             }
                         } else {
                             // Potentially a sampled image.
-                            match img_ty.arng {
-                                ImageArrangement::ImageBuffer => DescriptorType::UniformTexelBuffer(),
+                            let desc_ty = match img_ty.dim {
+                                Dim::DimBuffer => DescriptorType::UniformTexelBuffer(),
                                 _ => DescriptorType::SampledImage(),
+                            };
+                            let sampled_img_ty = SampledImageType {
+                                dim: img_ty.dim,
+                                scalar_ty: img_ty.scalar_ty.clone(),
+                                is_array: img_ty.is_array,
+                                is_multisampled: img_ty.is_multisampled,
+                            };
+                            Variable::Descriptor {
+                                name,
+                                desc_bind,
+                                desc_ty,
+                                ty: Type::SampledImage(sampled_img_ty),
+                                nbind,
                             }
-                        };
-                        Variable::Descriptor { name, desc_bind, desc_ty, ty: ty.clone(), nbind }
+                        }
                     },
                     Type::Sampler() => {
                         let desc_ty = DescriptorType::Sampler();
                         Variable::Descriptor { name, desc_bind, desc_ty, ty: ty.clone(), nbind }
                     },
-                    Type::SampledImage(_) => {
-                        let desc_ty = if let Type::SampledImage(sampled_img_ty) = &ty {
-                            if sampled_img_ty.img_ty.arng == ImageArrangement::ImageBuffer {
-                                DescriptorType::UniformTexelBuffer()
-                            } else {
-                                DescriptorType::CombinedImageSampler()
-                            }
-                        } else { unreachable!(); };
+                    Type::CombinedImageSampler(combined_img_sampler_ty) => {
+                        let desc_ty = match combined_img_sampler_ty.sampled_img_ty.dim {
+                            Dim::DimBuffer => DescriptorType::UniformTexelBuffer(),
+                            _ => DescriptorType::CombinedImageSampler(),
+                        };
                         Variable::Descriptor { name, desc_bind, desc_ty, ty: ty.clone(), nbind }
                     },
                     Type::SubpassData(_) => {
@@ -1536,7 +1597,7 @@ impl<'a> ReflectIntermediate<'a> {
 
         Ok(())
     }
-    fn populate_defs(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>, cfg: &ReflectConfig) -> Result<()> {
+    fn populate_defs(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>) -> Result<()> {
         // type definitions always follow decorations, so we don't skip
         // instructions here.
         while let Some(instr) = instrs.peek() {
@@ -1548,7 +1609,7 @@ impl<'a> ReflectIntermediate<'a> {
             } else if CONST_RANGE.contains(&opcode) {
                 self.populate_one_const(instr)?;
             } else if SPEC_CONST_RANGE.contains(&opcode) {
-                self.populate_one_spec_const(instr, cfg)?;
+                self.populate_one_spec_const(instr)?;
             } else { break; }
             instrs.next();
         }
@@ -1640,7 +1701,7 @@ impl<'a> ReflectIntermediate<'a> {
         // Don't change the order. See _2.4 Logical Layout of a Module_ of the
         // SPIR-V specification for more information.
         let mut instrs = instrs.peekable();
-        let mut itm = ReflectIntermediate::default();
+        let mut itm = ReflectIntermediate::new(cfg);
         skip_until_range_inclusive(&mut instrs, ENTRY_POINT_RANGE);
         itm.populate_entry_points(&mut instrs)?;
         itm.populate_execution_modes(&mut instrs)?;
@@ -1648,9 +1709,9 @@ impl<'a> ReflectIntermediate<'a> {
         itm.populate_names(&mut instrs)?;
         skip_until(&mut instrs, is_deco_op);
         itm.populate_decos(&mut instrs)?;
-        itm.populate_defs(&mut instrs, cfg)?;
+        itm.populate_defs(&mut instrs)?;
         itm.populate_access(&mut instrs, inspector)?;
-        itm.collect_entry_points(cfg)
+        itm.collect_entry_points()
     }
 }
 
@@ -1660,6 +1721,7 @@ pub struct ReflectConfig {
     spv: SpirvBinary,
     ref_all_rscs: bool,
     combine_img_samplers: bool,
+    gen_unique_names: bool,
     spec_values: HashMap<SpecId, ConstantValue>,
 }
 impl ReflectConfig {
@@ -1686,6 +1748,13 @@ impl ReflectConfig {
     /// Faster when disabled, but useful for modules derived from HLSL.
     pub fn combine_img_samplers(&mut self, x: bool) -> &mut Self {
         self.combine_img_samplers = x;
+        self
+    }
+    /// Generate unique names for types and struct fields to help further
+    /// processing of the reflection data. Otherwise, the debug names are
+    /// assigned.
+    pub fn gen_unique_names(&mut self, x: bool) -> &mut Self {
+        self.gen_unique_names = x;
         self
     }
     /// Use the provided value for specialization constant at `spec_id`.
@@ -1747,8 +1816,8 @@ impl<'a> ReflectIntermediate<'a> {
                 let locator = Locator::SpecConstant(spec_id);
                 let name = self.get_var_name(locator);
                 let spec = Variable::SpecConstant {
-                    name: name.map(|x| x.to_owned()),
-                    spec_id: spec_id,
+                    name,
+                    spec_id,
                     ty: constant.ty.clone(),
                 };
                 vars.push(spec);
@@ -1823,12 +1892,21 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
             // create a new combined image sampler.
             for img_var in combined_imgs {
                 if let Variable::Descriptor { name, ty, .. } = img_var {
-                    if let Type::Image(img_ty) = ty {
+                    if let Type::SampledImage(img_ty) = ty {
+                        let sampled_img_ty = SampledImageType {
+                            scalar_ty: img_ty.scalar_ty.clone(),
+                            dim: img_ty.dim,
+                            is_array: img_ty.is_array,
+                            is_multisampled: img_ty.is_multisampled,
+                        };
+                        let combined_img_sampler_ty = CombinedImageSamplerType {
+                            sampled_img_ty
+                        };
                         let out_var = Variable::Descriptor {
                             name,
                             desc_bind: sampler_desc_bind,
                             desc_ty: DescriptorType::CombinedImageSampler(),
-                            ty: Type::SampledImage(SampledImageType::new(img_ty)),
+                            ty: Type::CombinedImageSampler(combined_img_sampler_ty),
                             nbind: sampler_nbind,
                         };
                         out_vars.push(out_var);
@@ -1844,15 +1922,15 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
 }
 
 impl<'a> ReflectIntermediate<'a> {
-    pub fn collect_entry_points(&self, cfg: &ReflectConfig) -> Result<Vec<EntryPoint>> {
+    pub fn collect_entry_points(&self) -> Result<Vec<EntryPoint>> {
         let mut entry_points = Vec::with_capacity(self.entry_point_declrs.len());
         for entry_point_declr in self.entry_point_declrs.iter() {
-            let mut vars = if cfg.ref_all_rscs {
+            let mut vars = if self.cfg.ref_all_rscs {
                 self.vars.clone()
             } else {
                 self.collect_entry_point_vars(entry_point_declr.func_id)?
             };
-            if cfg.combine_img_samplers {
+            if self.cfg.combine_img_samplers {
                 vars = combine_img_samplers(vars);
             }
             let specs = self.collect_entry_point_specs()?;

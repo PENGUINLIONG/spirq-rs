@@ -2,13 +2,12 @@
 use std::fmt;
 use std::hash::Hash;
 use std::rc::Rc;
-use crate::error::*;
 use crate::walk::Walk;
 
 use spirv_headers::Dim;
 pub use spirv_headers::{ImageFormat};
 
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub enum ScalarType {
     // Be careful with booleans. Booleans is NOT allowed to be exposed to the
     // host according to the SPIR-V specification.
@@ -62,7 +61,7 @@ impl ScalarType {
         if let Self::Float(_) = self { true } else { false }
     }
 }
-impl fmt::Debug for ScalarType {
+impl fmt::Display for ScalarType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Boolean => write!(f, "bool"),
@@ -74,7 +73,7 @@ impl fmt::Debug for ScalarType {
 }
 
 
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct VectorType {
     /// Vector scalar type.
     pub scalar_ty: ScalarType,
@@ -89,14 +88,14 @@ impl VectorType {
         self.nscalar as usize * self.scalar_ty.nbyte()
     }
 }
-impl fmt::Debug for VectorType {
+impl fmt::Display for VectorType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "vec{}<{:?}>", self.nscalar, self.scalar_ty)
+        write!(f, "vec{}<{}>", self.nscalar, self.scalar_ty)
     }
 }
 
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub enum MatrixAxisOrder {
     ColumnMajor,
     RowMajor,
@@ -106,25 +105,25 @@ impl Default for MatrixAxisOrder {
 }
 
 
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct MatrixType {
     /// Matrix vector type.
     pub vec_ty: VectorType,
     /// Number of vectors in the matrix.
     pub nvec: u32,
+    /// Axis order of the matrix. Valid SPIR-V never gives a `None` major.
+    pub major: Option<MatrixAxisOrder>,
     /// Stride between vectors in the matrix. Valid SPIR-V never gives a `None`
     /// stride.
     pub stride: Option<usize>,
-    /// Axis order of the matrix. Valid SPIR-V never gives a `None` major.
-    pub major: Option<MatrixAxisOrder>,
 }
 impl MatrixType {
     pub fn new(vec_ty: VectorType, nvec: u32) -> MatrixType {
         MatrixType {
             vec_ty: vec_ty,
             nvec: nvec,
-            stride: None,
             major: None,
+            stride: None,
         }
     }
     /// Get the number of bytes the matrix physically occupied.
@@ -132,9 +131,9 @@ impl MatrixType {
         self.nvec as usize * self.stride.unwrap_or(self.vec_ty.nbyte())
     }
 }
-impl fmt::Debug for MatrixType {
+impl fmt::Display for MatrixType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let major_lit = match self.major {
+        let major = match self.major {
             Some(MatrixAxisOrder::ColumnMajor) => "ColumnMajor",
             Some(MatrixAxisOrder::RowMajor) => "RowMajor",
             None => "AxisOrder?",
@@ -142,158 +141,210 @@ impl fmt::Debug for MatrixType {
         let nrow = self.vec_ty.nscalar;
         let ncol = self.nvec;
         let scalar_ty = &self.vec_ty.scalar_ty;
-        write!(f, "mat{}x{}<{:?},{}>", nrow, ncol, scalar_ty, major_lit)
-    }
-}
-
-
-#[non_exhaustive]
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
-pub enum ImageArrangement {
-    Image1D,
-    Image2D,
-    Image2DMS,
-    Image3D,
-    CubeMap,
-    Image1DArray,
-    Image2DArray,
-    Image2DMSArray,
-    CubeMapArray,
-    Image2DRect,
-    ImageBuffer,
-}
-impl ImageArrangement {
-    /// Do note this dim is not the number of dimensions but a enumeration of
-    /// values specified in SPIR-V specification.
-    pub fn from_spv_def(dim: Dim, is_array: bool, is_multisampled: bool) -> Result<ImageArrangement> {
-        let arng = match (dim, is_array, is_multisampled) {
-            (Dim::Dim1D, false, false) => ImageArrangement::Image1D,
-            (Dim::Dim1D, true, false) => ImageArrangement::Image1DArray,
-            (Dim::Dim2D, false, false) => ImageArrangement::Image2D,
-            (Dim::Dim2D, false, true) => ImageArrangement::Image2DMS,
-            (Dim::Dim2D, true, false) => ImageArrangement::Image2DArray,
-            (Dim::Dim2D, true, true) => ImageArrangement::Image2DMSArray,
-            (Dim::Dim3D, false, false) => ImageArrangement::Image3D,
-            (Dim::Dim3D, true, false) => ImageArrangement::Image3D,
-            (Dim::DimCube, false, false) => ImageArrangement::CubeMap,
-            (Dim::DimCube, true, false) => ImageArrangement::CubeMapArray,
-            (Dim::DimRect, false, false) => ImageArrangement::Image2DRect,
-            (Dim::DimBuffer, false, false) => ImageArrangement::ImageBuffer,
-            _ => return Err(Error::UNSUPPORTED_IMG_CFG),
+        let stride = match self.stride {
+            Some(x) => x.to_string(),
+            None => "?".to_owned()
         };
-        Ok(arng)
+        write!(f, "mat{nrow}x{ncol}<{scalar_ty},{major},{stride}>")
     }
 }
 
 
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct ImageType {
     /// Scalar type of image access result. In most cases it's `Some`, but the
     /// SPIR-V specification allows it to be `OpTypeVoid`. I have never
     /// encounter one tho.
     pub scalar_ty: Option<ScalarType>,
+    /// Dimension of the image.
+    pub dim: Dim,
+    /// Whether the image is a depth image, or `None` if it's unknown at compile
+    /// time.
+    pub is_depth: Option<bool>,
+    /// Whether  the image is an array of images. In Vulkan, it means that the
+    /// image can have multiple layers. In Vulkan, only `Dim1D`, `Dim2D`, and
+    /// `DimCube` can be arrayed.
+    pub is_array: bool,
+    /// Whether the image is multisampled. In Vulkan, only 2D images and 2D
+    /// image arrays can be multi sampled.
+    pub is_multisampled: bool,
     /// Whether the image is sampled, or `None` if it's unknown at compile time.
     pub is_sampled: Option<bool>,
-    /// Whether the image is a depth image, or `None` if it's unknown at compile time.
-    pub is_depth: Option<bool>,
     /// Matches `VkImageCreateInfo::format`. Can be `ImageFormat::Unknown` in
     /// case of a sampled image.
     pub fmt: ImageFormat,
-    /// Image arrangement which encodes multisampling, array-ness and
-    /// dimentionality.
-    pub arng: ImageArrangement,
 }
-impl fmt::Debug for ImageType {
+impl fmt::Display for ImageType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let scalar_ty = {
             let scalar_ty = self.scalar_ty.as_ref();
             if let Some(scalar_ty) = scalar_ty {
-                format!("{:?}", scalar_ty)
+                scalar_ty.to_string()
             } else {
-                "Void".to_owned()
+                "void".to_owned()
             }
         };
-        let sampled_lit = match self.is_sampled {
+        let is_sampled = match self.is_sampled {
             Some(true) => "Sampled",
             Some(false) => "Storage",
             None => "Sampled?",
         };
-        let depth_lit = match self.is_depth {
-            Some(true) => "Color",
-            Some(false) => "Depth",
+        let depth = match self.is_depth {
+            Some(true) => "Depth",
+            Some(false) => "Color",
             None => "Depth?",
         };
-        write!(f, "Image<{},{},{},{:?},{:?}>", scalar_ty, sampled_lit, depth_lit, self.fmt, self.arng)
-    }
-}
-
-
-#[derive(PartialEq, Eq, Hash, Clone)]
-pub struct SampledImageType {
-    pub img_ty: ImageType,
-}
-impl SampledImageType {
-    pub fn new(img_ty: ImageType) -> SampledImageType {
-        SampledImageType { img_ty }
-    }
-}
-impl fmt::Debug for SampledImageType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Sampled<{:?}>", self.img_ty)
-    }
-}
-
-
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
-pub enum SubpassDataArrangement {
-    SubpassData,
-    SubpassDataMS,
-}
-impl SubpassDataArrangement {
-    /// Do note this dim is not the number of dimensions but a enumeration of
-    /// values specified in SPIR-V specification.
-    pub fn from_spv_def(is_multisampled: bool) -> Result<SubpassDataArrangement> {
-        let arng = match is_multisampled {
-            false => SubpassDataArrangement::SubpassData,
-            true => SubpassDataArrangement::SubpassDataMS,
+        let dim = match self.dim {
+            Dim::Dim1D => "1D",
+            Dim::Dim2D => "2D",
+            Dim::Dim3D => "3D",
+            Dim::DimBuffer => "Buffer",
+            Dim::DimCube => "Cube",
+            Dim::DimRect => "Rect",
+            Dim::DimSubpassData => "SubpassData",
         };
-        Ok(arng)
+        let is_array = match self.is_array {
+            true => "Array",
+            false => "",
+        };
+        let is_multisampled = match self.is_multisampled {
+            true => "MS",
+            false => "",
+        };
+        write!(f, "Image{dim}{is_array}{is_multisampled}<{scalar_ty},{is_sampled},{depth},{:?}>", self.fmt)
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone)]
+
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
+pub struct CombinedImageSamplerType {
+    pub sampled_img_ty: SampledImageType,
+}
+impl fmt::Display for CombinedImageSamplerType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "CombinedImageSampler<{}>", self.sampled_img_ty)
+    }
+}
+
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
+pub struct SampledImageType {
+    /// Scalar type of image access result. In most cases it's `Some`, but the
+    /// SPIR-V specification allows it to be `OpTypeVoid`. I have never
+    /// encounter one tho.
+    pub scalar_ty: Option<ScalarType>,
+    /// Dimension of the image.
+    pub dim: Dim,
+    /// Whether  the image is an array of images. In Vulkan, it means that the
+    /// image can have multiple layers. In Vulkan, only `Dim1D`, `Dim2D`, and
+    /// `DimCube` can be arrayed.
+    pub is_array: bool,
+    /// Whether the image is multisampled. In Vulkan, only 2D images and 2D
+    /// image arrays can be multi sampled.
+    pub is_multisampled: bool,
+}
+impl fmt::Display for SampledImageType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let scalar_ty = {
+            let scalar_ty = self.scalar_ty.as_ref();
+            if let Some(scalar_ty) = scalar_ty {
+                scalar_ty.to_string()
+            } else {
+                "void".to_owned()
+            }
+        };
+        let dim = match self.dim {
+            Dim::Dim1D => "1D",
+            Dim::Dim2D => "2D",
+            Dim::Dim3D => "3D",
+            Dim::DimBuffer => "Buffer",
+            Dim::DimCube => "Cube",
+            Dim::DimRect => "Rect",
+            Dim::DimSubpassData => "SubpassData",
+        };
+        let is_array = match self.is_array {
+            true => "Array",
+            false => "",
+        };
+        let is_multisampled = match self.is_multisampled {
+            true => "MS",
+            false => "",
+        };
+        write!(f, "SampledImage{dim}{is_array}{is_multisampled}<{scalar_ty}>")
+    }
+}
+
+
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
+pub struct StorageImageType {
+    /// Dimension of the image.
+    pub dim: Dim,
+    /// Whether  the image is an array of images. In Vulkan, it means that the
+    /// image can have multiple layers. In Vulkan, only `Dim1D`, `Dim2D`, and
+    /// `DimCube` can be arrayed.
+    pub is_array: bool,
+    /// Whether the image is multisampled. In Vulkan, only 2D images and 2D
+    /// image arrays can be multi sampled.
+    pub is_multisampled: bool,
+    /// Matches `VkImageCreateInfo::format`. Can be `ImageFormat::Unknown` in
+    /// case of a sampled image.
+    pub fmt: ImageFormat,
+}
+impl fmt::Display for StorageImageType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let dim = match self.dim {
+            Dim::Dim1D => "1D",
+            Dim::Dim2D => "2D",
+            Dim::Dim3D => "3D",
+            Dim::DimBuffer => "Buffer",
+            Dim::DimCube => "Cube",
+            Dim::DimRect => "Rect",
+            Dim::DimSubpassData => "SubpassData",
+        };
+        let is_array = match self.is_array {
+            true => "Array",
+            false => "",
+        };
+        let is_multisampled = match self.is_multisampled {
+            true => "MS",
+            false => "",
+        };
+        write!(f, "StorageImage{dim}{is_array}{is_multisampled}<{:?}>", self.fmt)
+    }
+}
+
+
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct SubpassDataType {
     /// Scalar type of subpass data access result. In most cases it's `Some`,
     /// but the SPIR-V specification allows it to be `OpTypeVoid`. I have never
     /// encounter one tho.
     pub scalar_ty: Option<ScalarType>,
     /// Image arrangement which encodes multisampling state.
-    pub arng: SubpassDataArrangement,
+    pub is_multisampled: bool,
 }
-impl SubpassDataType {
-    pub fn new(scalar_ty: Option<ScalarType>, arng: SubpassDataArrangement) -> Self {
-        SubpassDataType { scalar_ty, arng }
-    }
-}
-impl fmt::Debug for SubpassDataType {
+impl fmt::Display for SubpassDataType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let scalar_ty = {
             let scalar_ty = self.scalar_ty.as_ref();
             if let Some(scalar_ty) = scalar_ty {
-                format!("{:?}", scalar_ty)
+                format!("{}", scalar_ty)
             } else {
-                "Void".to_owned()
+                "void".to_owned()
             }
         };
-        write!(f, "SubpassData<{},{:?}>", scalar_ty, self.arng)
+        let is_multisampled = match self.is_multisampled {
+            true => "MS",
+            false => "",
+        };
+        write!(f, "SubpassData{is_multisampled}<{scalar_ty}>")
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct ArrayType {
-    pub(crate) proto_ty: Box<Type>,
-    pub(crate) nrepeat: Option<u32>,
-    pub(crate) stride: Option<usize>,
+    pub proto_ty: Box<Type>,
+    pub nrepeat: Option<u32>,
+    pub stride: Option<usize>,
 }
 impl ArrayType {
     pub(crate) fn new_multibind(proto_ty: &Type, nrepeat: u32) -> ArrayType {
@@ -328,36 +379,26 @@ impl ArrayType {
     /// Get the minimum size of the array type. If the number of elements is not
     /// given until runtime, 0 is returned.
     pub fn nbyte(&self) -> usize {
-        self.stride.unwrap_or_default() * self.nrepeat().unwrap_or_default() as usize
-    }
-    pub fn proto_ty(&self) -> &Type {
-        &self.proto_ty
-    }
-    pub fn stride(&self) -> usize {
-        // Multibind which makes the `stride` be `None` is used internally only.
-        self.stride.unwrap()
-    }
-    pub fn nrepeat(&self) -> Option<u32> {
-        self.nrepeat.clone()
+        self.stride.unwrap_or_default() * self.nrepeat.unwrap_or_default() as usize
     }
 }
-impl fmt::Debug for ArrayType {
+impl fmt::Display for ArrayType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let Some(nrepeat) = self.nrepeat {
-            write!(f, "[{:?}; {}]", self.proto_ty, nrepeat)
+            write!(f, "[{}; {}]", self.proto_ty, nrepeat)
         } else {
-            write!(f, "[{:?}]", self.proto_ty)
+            write!(f, "[{}]", self.proto_ty)
         }
     }
 }
 
-#[derive(PartialEq, Eq, Clone, Hash)]
+#[derive(PartialEq, Eq, Clone, Hash, Debug)]
 pub struct StructMember {
     pub name: Option<String>,
     pub offset: usize,
     pub ty: Type,
 }
-#[derive(PartialEq, Eq, Default, Clone, Hash)]
+#[derive(PartialEq, Eq, Default, Clone, Hash, Debug)]
 pub struct StructType {
     pub name: Option<String>,
     pub members: Vec<StructMember>, // Offset and type.
@@ -379,7 +420,7 @@ impl StructType {
             .unwrap_or(0)
     }
 }
-impl fmt::Debug for StructType {
+impl fmt::Display for StructType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let Some(name) = &self.name {
             write!(f, "{} {{ ", name)?;
@@ -389,16 +430,16 @@ impl fmt::Debug for StructType {
         for (i, member) in self.members.iter().enumerate() {
             if i != 0 { f.write_str(", ")?; }
             if let Some(name) = &member.name {
-                write!(f, "{}: {:?}", name, member.ty)?;
+                write!(f, "{}: {}", name, member.ty)?;
             } else {
-                write!(f, "{}: {:?}", i, member.ty)?;
+                write!(f, "{}: {}", i, member.ty)?;
             }
         }
         f.write_str(" }")
     }
 }
 
-#[derive(PartialEq, Eq, Clone, Hash)]
+#[derive(PartialEq, Eq, Clone, Hash, Debug)]
 pub struct PointerType {
     pub pointee_ty: Box<Type>,
 }
@@ -409,10 +450,10 @@ impl PointerType {
         }
     }
 }
-impl fmt::Debug for PointerType {
+impl fmt::Display for PointerType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str("Pointer { ")?;
-        write!(f, "{:?}", *self.pointee_ty)?;
+        write!(f, "{}", *self.pointee_ty)?;
         f.write_str(" }")
     }
 }
@@ -444,7 +485,7 @@ macro_rules! declr_ty_downcast {
 }
 
 
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 #[non_exhaustive]
 pub enum Type {
     /// Literally nothing. You shouldn't find this in reflection results.
@@ -456,12 +497,18 @@ pub enum Type {
     Vector(VectorType),
     /// A collection of vectors.
     Matrix(MatrixType),
-    /// An unsampled image, with no sampler state combined. Such design is
-    /// preferred in DirectX.
+    /// An image. In most cases, this variant is elevated to
+    /// `CombinedImageSampler`, `SampledImage`, or `StorageImage` so you
+    /// shouldn't see this in your reflection results.
     Image(ImageType),
     /// A sampled image externally combined with a sampler state. Such design is
-    /// preferred in legacy OpenGL.
+    /// preferred in OpenGL and Vulkan.
+    CombinedImageSampler(CombinedImageSamplerType),
+    /// A sampled image yet to be combined with a `Sampler`. Such design is
+    /// preferred in DirectX and Vulkan.
     SampledImage(SampledImageType),
+    /// A storage image that shaders can read and/or write.
+    StorageImage(StorageImageType),
     /// Separable sampler state.
     Sampler(),
     /// Pixel store from input attachments.
@@ -485,15 +532,17 @@ impl Type {
         use Type::*;
         match self {
             Void() => None,
-            Scalar(scalar_ty) => Some(scalar_ty.nbyte()),
-            Vector(vec_ty) => Some(vec_ty.nbyte()),
-            Matrix(mat_ty) => Some(mat_ty.nbyte()),
+            Scalar(x) => Some(x.nbyte()),
+            Vector(x) => Some(x.nbyte()),
+            Matrix(x) => Some(x.nbyte()),
             Image(_) => None,
             Sampler() => None,
+            CombinedImageSampler(_) => None,
             SampledImage(_) => None,
+            StorageImage(_) => None,
             SubpassData(_) => None,
-            Array(arr_ty) => Some(arr_ty.nbyte()),
-            Struct(struct_ty) => Some(struct_ty.nbyte()),
+            Array(x) => Some(x.nbyte()),
+            Struct(x) => Some(x.nbyte()),
             AccelStruct() => None,
             DeviceAddress() => Some(8),
             DevicePointer(_) => Some(8),
@@ -508,8 +557,10 @@ impl Type {
         is_vec -> Vector,
         is_mat -> Matrix,
         is_img -> Image,
-        is_samper -> Sampler,
+        is_sampler -> Sampler,
+        is_combined_img_sampler -> CombinedImageSampler,
         is_sampled_img -> SampledImage,
+        is_storage_img -> StorageImage,
         is_subpass_data -> SubpassData,
         is_arr -> Array,
         is_struct -> Struct,
@@ -523,7 +574,9 @@ impl Type {
         as_vec -> Vector(VectorType),
         as_mat -> Matrix(MatrixType),
         as_img -> Image(ImageType),
+        as_combined_img_sampler -> CombinedImageSampler(CombinedImageSamplerType),
         as_sampled_img -> SampledImage(SampledImageType),
+        as_storage_img -> StorageImage(StorageImageType),
         as_subpass_data -> SubpassData(SubpassDataType),
         as_arr -> Array(ArrayType),
         as_struct -> Struct(StructType),
@@ -563,21 +616,23 @@ impl Type {
         self.mutate_impl(Rc::new(f))
     }
 }
-impl fmt::Debug for Type {
+impl fmt::Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Type::Void() => write!(f, "Void"),
-            Type::Scalar(scalar_ty) => scalar_ty.fmt(f),
-            Type::Vector(vec_ty) => vec_ty.fmt(f),
-            Type::Matrix(mat_ty) => mat_ty.fmt(f),
-            Type::Image(img_ty) => write!(f, "{:?}", img_ty),
-            Type::Sampler() => write!(f, "Sampler"),
-            Type::SampledImage(sampled_img_ty) => sampled_img_ty.fmt(f),
-            Type::SubpassData(subpass_data_ty) => subpass_data_ty.fmt(f),
-            Type::Array(arr_ty) => arr_ty.fmt(f),
-            Type::Struct(struct_ty) => struct_ty.fmt(f),
-            Type::AccelStruct() => write!(f, "AccelStruct"),
-            Type::DeviceAddress() => write!(f, "Address"),
+            Type::Void() => f.write_str("void"),
+            Type::Scalar(x) => x.fmt(f),
+            Type::Vector(x) => x.fmt(f),
+            Type::Matrix(x) => x.fmt(f),
+            Type::Image(x) => x.fmt(f),
+            Type::Sampler() => f.write_str("Sampler"),
+            Type::CombinedImageSampler(x) => x.fmt(f),
+            Type::SampledImage(x) => x.fmt(f),
+            Type::StorageImage(x) => x.fmt(f),
+            Type::SubpassData(x) => x.fmt(f),
+            Type::Array(x) => x.fmt(f),
+            Type::Struct(x) => x.fmt(f),
+            Type::AccelStruct() => f.write_str("AccelStruct"),
+            Type::DeviceAddress() => f.write_str("Address"),
             Type::DevicePointer(ptr_ty) => ptr_ty.fmt(f),
         }
     }
