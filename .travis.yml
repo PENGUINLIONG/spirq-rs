@@ -13,13 +13,15 @@ before_script:
 env:
   - RUST_LOG=trace
 script:
-  - cd spirq
-  - cargo build --verbose --lib
+  - cargo build --verbose
   - cargo test --verbose
   - cargo run --example gallery
   - cargo run --example inspect
   - cargo run --example walk
   - cargo fmt -- --check
+  - cargo install --path spirq-reflect
+  - spirq-reflect --in-path assets/gallery.frag.spv
+  - spirq-reflect --in-path assets/spirv-spec.frag.spv
 cache: cargo
 git:
   depth: 3

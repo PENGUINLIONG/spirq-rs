@@ -1,5 +1,14 @@
 # Change Log
 
+## v0.6.0
+
+SPIR-Q v0.6 has undergone a massive type system refactorization to get rid of many historical design issues.
+
+- Fixed crash due to absence of matrix stride. (#84)
+- Major type system refactorization; lots of breaking changes. (#80)
+- For the first time we have a CLI driver `spirq-reflect`!
+
+
 ## v0.5.1
 
 - Supported reflection-time specialization constant expression evaluation. (#77)
