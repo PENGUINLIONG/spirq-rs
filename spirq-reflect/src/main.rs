@@ -145,16 +145,36 @@ fn main() {
                 }
             }
 
+            let mut exec_modes = Vec::new();
+            for exec_mode in entry_point.exec_modes {
+                let operands = exec_mode
+                    .operands
+                    .iter()
+                    .map(|operand| {
+                        json!({
+                            "Value": operand.value.to_u32(),
+                            "SpecId": operand.spec_id,
+                        })
+                    })
+                    .collect::<Vec<_>>();
+                let j = json!({
+                    "ExecutionMode": format!("{:?}", exec_mode.exec_mode),
+                    "Operands": operands,
+                });
+                exec_modes.push(j);
+            }
+
             let j = json!({
                 "EntryPoint": entry_point.name,
                 "ExecutionModel": format!("{:?}", entry_point.exec_model),
+                "ExecutionModes": exec_modes,
                 "Variables": {
                     "Inputs": inputs,
                     "Outputs": outputs,
                     "Descriptors": descs,
                     "PushConstants": push_consts,
                     "SpecConstants": spec_consts
-                }
+                },
             });
 
             println!("{}", serde_json::to_string_pretty(&j).unwrap());
