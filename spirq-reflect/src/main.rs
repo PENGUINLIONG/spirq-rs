@@ -75,13 +75,14 @@ fn main() {
     let args = Args::parse();
 
     for in_path in args.in_paths {
-        let spv = build_spirv_binary(in_path).unwrap();
+        let spv = build_spirv_binary(&in_path)
+            .expect(&format!("cannot read spirv: {}", in_path));
         let entry_points = ReflectConfig::new()
             .spv(spv)
             .ref_all_rscs(args.ref_all_rscs)
             .gen_unique_names(true)
             .reflect()
-            .unwrap();
+            .expect(&format!("cannot reflect spirv: {}", in_path));
 
         for entry_point in entry_points {
             let mut inputs = Vec::new();
