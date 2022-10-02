@@ -24,5 +24,12 @@ jobs:
     - name: Cargo build and test
       id: cargo_build_and_test
       run: |
+        cargo fmt -- --check
         cargo build --release --verbose
         cargo test --verbose
+        cargo run --example gallery
+        cargo run --example inspect
+        cargo run --example walk
+        cargo install --path spirq-reflect
+        spirq-reflect assets/gallery.frag.spv --ref-all-rscs
+        spirq-reflect assets/spirv-spec.frag.spv
