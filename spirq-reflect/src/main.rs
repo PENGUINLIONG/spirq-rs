@@ -2,25 +2,54 @@ use clap::Parser;
 use serde_json::json;
 use spirq::{
     ty::{StructMember, Type},
-    ReflectConfig,
+    EntryPoint, ReflectConfig,
 };
-use std::path::Path;
+use std::{
+    fs::File,
+    io::{stderr, Write},
+    path::Path,
+    process::exit,
+};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[arg()]
-    in_paths: Vec<String>,
+    #[arg(help = "Input SPIR-V file paths.")]
+    in_path: String,
+
+    #[arg(
+        short,
+        long,
+        help = "Output JSON file path. The output is printed to stdout if this \
+        path is not given."
+    )]
+    out_path: Option<String>,
+
     #[arg(
         long,
         help = "Reference all resources even they are never used by the entry \
         points. By default, only the referenced resources are reflected."
     )]
-    ref_all_rscs: bool,
+    reference_all_resources: bool,
+
+    #[arg(
+        long,
+        help = "Combine separate sampled image and sampler at a same \
+        descriptor set and binding. By default, they are listed as separate \
+        objects."
+    )]
+    combine_image_samplers: bool,
+
+    #[arg(
+        long,
+        help = "Generate unique names for every resource variable, structure \
+        types, and type members. By default, the names are assigned with debug \
+        annotations in the input SPIR-V."
+    )]
+    generate_unique_names: bool,
 }
 
 fn build_spirv_binary<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
-    use std::fs::File;
     use std::io::Read;
     let path = path.as_ref();
     if !path.is_file() {
@@ -70,113 +99,147 @@ fn ty2json(ty: &Type) -> serde_json::Value {
         _ => json!(ty.to_string()),
     }
 }
+fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
+    let mut inputs = Vec::new();
+    let mut outputs = Vec::new();
+    let mut descs = Vec::new();
+    let mut push_consts = Vec::new();
+    let mut spec_consts = Vec::new();
+    for var in entry_point.vars.iter() {
+        use spirq::Variable::*;
+        match var {
+            Input { name, location, ty } => {
+                let j = json!({
+                    "Name": name.as_ref(),
+                    "Location": location.loc(),
+                    "Component": location.comp(),
+                    "Type": ty2json(&ty),
+                });
+                inputs.push(j);
+            }
+            Output { name, location, ty } => {
+                let j = json!({
+                    "Name": name.as_ref(),
+                    "Location": location.loc(),
+                    "Component": location.comp(),
+                    "Type": ty2json(&ty),
+                });
+                outputs.push(j);
+            }
+            Descriptor {
+                name,
+                desc_bind,
+                desc_ty,
+                ty,
+                nbind,
+            } => {
+                let j = json!({
+                    "Name": name.as_ref(),
+                    "Set": desc_bind.set(),
+                    "Binding": desc_bind.bind(),
+                    "DescriptorType": format!("{desc_ty:?}"),
+                    "Type": ty2json(&ty),
+                    "Count": nbind,
+                });
+                descs.push(j);
+            }
+            PushConstant { name, ty } => {
+                let j = json!({
+                    "Name": name.as_ref(),
+                    "Type": ty2json(&ty),
+                });
+                push_consts.push(j);
+            }
+            SpecConstant { name, spec_id, ty } => {
+                let j = json!({
+                    "Name": name.as_ref(),
+                    "SpecId": spec_id,
+                    "Type": ty2json(&ty),
+                });
+                spec_consts.push(j);
+            }
+        }
+    }
+
+    let mut exec_modes = Vec::new();
+    for exec_mode in entry_point.exec_modes.iter() {
+        let operands = exec_mode
+            .operands
+            .iter()
+            .map(|operand| {
+                json!({
+                    "Value": operand.value.to_u32(),
+                    "SpecId": operand.spec_id,
+                })
+            })
+            .collect::<Vec<_>>();
+        let j = json!({
+            "ExecutionMode": format!("{:?}", exec_mode.exec_mode),
+            "Operands": operands,
+        });
+        exec_modes.push(j);
+    }
+
+    json!({
+        "EntryPoint": entry_point.name,
+        "ExecutionModel": format!("{:?}", entry_point.exec_model),
+        "ExecutionModes": exec_modes,
+        "Variables": {
+            "Inputs": inputs,
+            "Outputs": outputs,
+            "Descriptors": descs,
+            "PushConstants": push_consts,
+            "SpecConstants": spec_consts
+        },
+    })
+}
 
 fn main() {
     let args = Args::parse();
 
-    for in_path in args.in_paths {
-        let spv = build_spirv_binary(&in_path).expect(&format!("cannot read spirv: {}", in_path));
-        let entry_points = ReflectConfig::new()
-            .spv(spv)
-            .ref_all_rscs(args.ref_all_rscs)
-            .gen_unique_names(true)
-            .reflect()
-            .expect(&format!("cannot reflect spirv: {}", in_path));
+    let in_path: &str = &args.in_path;
 
-        for entry_point in entry_points {
-            let mut inputs = Vec::new();
-            let mut outputs = Vec::new();
-            let mut descs = Vec::new();
-            let mut push_consts = Vec::new();
-            let mut spec_consts = Vec::new();
-            for var in entry_point.vars {
-                use spirq::Variable::*;
-                match var {
-                    Input { name, location, ty } => {
-                        let j = json!({
-                            "Name": name.unwrap(),
-                            "Location": location.loc(),
-                            "Component": location.comp(),
-                            "Type": ty2json(&ty),
-                        });
-                        inputs.push(j);
-                    }
-                    Output { name, location, ty } => {
-                        let j = json!({
-                            "Name": name.unwrap(),
-                            "Location": location.loc(),
-                            "Component": location.comp(),
-                            "Type": ty2json(&ty),
-                        });
-                        outputs.push(j);
-                    }
-                    Descriptor {
-                        name,
-                        desc_bind,
-                        desc_ty,
-                        ty,
-                        nbind,
-                    } => {
-                        let j = json!({
-                            "Name": name.unwrap(),
-                            "Set": desc_bind.set(),
-                            "Binding": desc_bind.bind(),
-                            "DescriptorType": format!("{desc_ty:?}"),
-                            "Type": ty2json(&ty),
-                            "Count": nbind,
-                        });
-                        descs.push(j);
-                    }
-                    PushConstant { name, ty } => {
-                        let j = json!({
-                            "Name": name.unwrap(),
-                            "Type": ty2json(&ty),
-                        });
-                        push_consts.push(j);
-                    }
-                    SpecConstant { name, spec_id, ty } => {
-                        let j = json!({
-                            "Name": name.unwrap(),
-                            "SpecId": spec_id,
-                            "Type": ty2json(&ty),
-                        });
-                        spec_consts.push(j);
-                    }
+    let spv = match build_spirv_binary(&in_path) {
+        Some(x) => x,
+        None => {
+            writeln!(stderr(), "cannot read spirv: {in_path}").unwrap();
+            exit(-1);
+        }
+    };
+    let mut reflect_cfg = ReflectConfig::new();
+    reflect_cfg
+        .spv(spv)
+        .ref_all_rscs(args.reference_all_resources)
+        .combine_img_samplers(args.combine_image_samplers)
+        .gen_unique_names(args.generate_unique_names);
+    let entry_points = match reflect_cfg.reflect() {
+        Ok(x) => x,
+        Err(e) => {
+            writeln!(stderr(), "{e}").unwrap();
+            writeln!(stderr(), "cannot reflect spirv: {in_path}").unwrap();
+            exit(-1);
+        }
+    };
+
+    for entry_point in entry_points {
+        let j = entry_point2json(&entry_point);
+        let json = serde_json::to_string_pretty(&j).unwrap();
+
+        if let Some(ref out_path) = args.out_path {
+            let mut f = match File::create(out_path) {
+                Ok(x) => x,
+                Err(e) => {
+                    writeln!(stderr(), "{e}").unwrap();
+                    writeln!(stderr(), "cannot create output file: {out_path}").unwrap();
+                    exit(-1);
                 }
-            }
-
-            let mut exec_modes = Vec::new();
-            for exec_mode in entry_point.exec_modes {
-                let operands = exec_mode
-                    .operands
-                    .iter()
-                    .map(|operand| {
-                        json!({
-                            "Value": operand.value.to_u32(),
-                            "SpecId": operand.spec_id,
-                        })
-                    })
-                    .collect::<Vec<_>>();
-                let j = json!({
-                    "ExecutionMode": format!("{:?}", exec_mode.exec_mode),
-                    "Operands": operands,
-                });
-                exec_modes.push(j);
-            }
-
-            let j = json!({
-                "EntryPoint": entry_point.name,
-                "ExecutionModel": format!("{:?}", entry_point.exec_model),
-                "ExecutionModes": exec_modes,
-                "Variables": {
-                    "Inputs": inputs,
-                    "Outputs": outputs,
-                    "Descriptors": descs,
-                    "PushConstants": push_consts,
-                    "SpecConstants": spec_consts
-                },
-            });
-
+            };
+            if let Err(e) = f.write(json.as_bytes()) {
+                writeln!(stderr(), "{e}").unwrap();
+                writeln!(stderr(), "cannot write to output file: {out_path}").unwrap();
+                exit(-1);
+            };
+        } else {
             println!("{}", serde_json::to_string_pretty(&j).unwrap());
         }
     }
