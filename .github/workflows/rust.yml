@@ -2,23 +2,34 @@ name: Rust
 
 on:
   push:
-    branches: [ master ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ master ]
+    branches: [ "master" ]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  build_and_test:
+    name: Build and Test
 
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: rust-toolchain
-      uses: actions-rs/toolchain@v1.0.6
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+    - uses: actions/checkout@v3
+    - run: rustup toolchain install stable --profile minimal
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-on-failure: true
+    - name: Cargo build and test
+      id: cargo_build_and_test
+      run: |
+        cargo fmt -- --check
+        cargo build --release --verbose
+        cargo test --verbose
+        cargo run --example gallery
+        cargo run --example inspect
+        cargo run --example walk
+        cargo install --path spirq-reflect
+        spirq-reflect assets/gallery.frag.spv --ref-all-rscs
+        spirq-reflect assets/spirv-spec.frag.spv
