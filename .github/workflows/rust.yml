@@ -31,5 +31,6 @@ jobs:
         cargo run --example inspect
         cargo run --example walk
         cargo install --path spirq-reflect
-        spirq-reflect assets/gallery.frag.spv --ref-all-rscs
-        spirq-reflect assets/spirv-spec.frag.spv
+        spirq-reflect assets/gallery.frag.spv -o assets/gallery.frag.spv.json --reference-all-resources
+        spirq-reflect assets/spirv-spec.frag.spv -o assets/spirv-spec.frag.spv.json
+        git status 

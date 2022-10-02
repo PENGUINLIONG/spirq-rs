@@ -234,7 +234,7 @@ fn main() {
                     exit(-1);
                 }
             };
-            if let Err(e) = f.write(json.as_bytes()) {
+            if let Err(e) = writeln!(f, "{json}") {
                 writeln!(stderr(), "{e}").unwrap();
                 writeln!(stderr(), "cannot write to output file: {out_path}").unwrap();
                 exit(-1);

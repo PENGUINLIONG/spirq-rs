@@ -1,0 +1,1498 @@
+{
+  "EntryPoint": "main",
+  "ExecutionModel": "Fragment",
+  "ExecutionModes": [
+    {
+      "ExecutionMode": "OriginUpperLeft",
+      "Operands": []
+    }
+  ],
+  "Variables": {
+    "Inputs": [],
+    "Outputs": [],
+    "Descriptors": [
+      {
+        "Name": "iImg1d",
+        "Set": 1,
+        "Binding": 0,
+        "DescriptorType": "StorageImage(ReadOnly)",
+        "Type": "StorageImage1D<Rgba32i>",
+        "Count": 1
+      },
+      {
+        "Name": "iImg2d",
+        "Set": 1,
+        "Binding": 1,
+        "DescriptorType": "StorageImage(ReadOnly)",
+        "Type": "StorageImage2D<Rgba16i>",
+        "Count": 1
+      },
+      {
+        "Name": "iImg3d",
+        "Set": 1,
+        "Binding": 2,
+        "DescriptorType": "StorageImage(ReadOnly)",
+        "Type": "StorageImage3D<Rgba8i>",
+        "Count": 1
+      },
+      {
+        "Name": "iImg1dArr",
+        "Set": 1,
+        "Binding": 3,
+        "DescriptorType": "StorageImage(ReadOnly)",
+        "Type": "StorageImage1DArray<Rgba32i>",
+        "Count": 1
+      },
+      {
+        "Name": "iImg2dArr",
+        "Set": 1,
+        "Binding": 4,
+        "DescriptorType": "StorageImage(ReadOnly)",
+        "Type": "StorageImage2DArray<Rgba32i>",
+        "Count": 1
+      },
+      {
+        "Name": "iImgCube",
+        "Set": 1,
+        "Binding": 5,
+        "DescriptorType": "StorageImage(ReadOnly)",
+        "Type": "StorageImageCube<Rgba32i>",
+        "Count": 1
+      },
+      {
+        "Name": "iImgCubeArr",
+        "Set": 1,
+        "Binding": 6,
+        "DescriptorType": "StorageImage(ReadOnly)",
+        "Type": "StorageImageCubeArray<Rgba32i>",
+        "Count": 1
+      },
+      {
+        "Name": "iImgBuf",
+        "Set": 1,
+        "Binding": 7,
+        "DescriptorType": "StorageTexelBuffer(ReadOnly)",
+        "Type": "StorageImageBuffer<Rgba32i>",
+        "Count": 1
+      },
+      {
+        "Name": "uImg1d",
+        "Set": 2,
+        "Binding": 0,
+        "DescriptorType": "StorageImage(ReadOnly)",
+        "Type": "StorageImage1D<Rgba32ui>",
+        "Count": 1
+      },
+      {
+        "Name": "uImg2d",
+        "Set": 2,
+        "Binding": 1,
+        "DescriptorType": "StorageImage(ReadOnly)",
+        "Type": "StorageImage2D<Rgba16ui>",
+        "Count": 1
+      },
+      {
+        "Name": "uImg3d",
+        "Set": 2,
+        "Binding": 2,
+        "DescriptorType": "StorageImage(ReadOnly)",
+        "Type": "StorageImage3D<Rgba8ui>",
+        "Count": 1
+      },
+      {
+        "Name": "uImg1dArr",
+        "Set": 2,
+        "Binding": 3,
+        "DescriptorType": "StorageImage(ReadOnly)",
+        "Type": "StorageImage1DArray<Rgba32ui>",
+        "Count": 1
+      },
+      {
+        "Name": "uImg2dArr",
+        "Set": 2,
+        "Binding": 4,
+        "DescriptorType": "StorageImage(ReadOnly)",
+        "Type": "StorageImage2DArray<Rgba32ui>",
+        "Count": 1
+      },
+      {
+        "Name": "uImgCube",
+        "Set": 2,
+        "Binding": 5,
+        "DescriptorType": "StorageImage(ReadOnly)",
+        "Type": "StorageImageCube<Rgba32ui>",
+        "Count": 1
+      },
+      {
+        "Name": "uImgCubeArr",
+        "Set": 2,
+        "Binding": 6,
+        "DescriptorType": "StorageImage(ReadOnly)",
+        "Type": "StorageImageCubeArray<Rgba32ui>",
+        "Count": 1
+      },
+      {
+        "Name": "uImgBuf",
+        "Set": 2,
+        "Binding": 7,
+        "DescriptorType": "StorageTexelBuffer(ReadOnly)",
+        "Type": "StorageImageBuffer<Rgba32ui>",
+        "Count": 1
+      },
+      {
+        "Name": "fImg1D",
+        "Set": 3,
+        "Binding": 0,
+        "DescriptorType": "StorageImage(WriteOnly)",
+        "Type": "StorageImage1D<Rgba32f>",
+        "Count": 1
+      },
+      {
+        "Name": "fImg2D",
+        "Set": 3,
+        "Binding": 1,
+        "DescriptorType": "StorageImage(WriteOnly)",
+        "Type": "StorageImage2D<Rgba16f>",
+        "Count": 1
+      },
+      {
+        "Name": "fImg3D",
+        "Set": 3,
+        "Binding": 2,
+        "DescriptorType": "StorageImage(WriteOnly)",
+        "Type": "StorageImage3D<R32f>",
+        "Count": 1
+      },
+      {
+        "Name": "fImgCube",
+        "Set": 3,
+        "Binding": 3,
+        "DescriptorType": "StorageImage(WriteOnly)",
+        "Type": "StorageImageCube<Rgba8>",
+        "Count": 1
+      },
+      {
+        "Name": "fImg2DRect",
+        "Set": 3,
+        "Binding": 4,
+        "DescriptorType": "StorageImage(WriteOnly)",
+        "Type": "StorageImageRect<Rgba8Snorm>",
+        "Count": 1
+      },
+      {
+        "Name": "fImg1DArray",
+        "Set": 3,
+        "Binding": 5,
+        "DescriptorType": "StorageImage(WriteOnly)",
+        "Type": "StorageImage1DArray<Rgba32f>",
+        "Count": 1
+      },
+      {
+        "Name": "fImg2DArray",
+        "Set": 3,
+        "Binding": 6,
+        "DescriptorType": "StorageImage(WriteOnly)",
+        "Type": "StorageImage2DArray<Rgba32f>",
+        "Count": 1
+      },
+      {
+        "Name": "fImgCubeArray",
+        "Set": 3,
+        "Binding": 7,
+        "DescriptorType": "StorageImage(WriteOnly)",
+        "Type": "StorageImageCubeArray<Rgba32f>",
+        "Count": 1
+      },
+      {
+        "Name": "fImgBuffer",
+        "Set": 3,
+        "Binding": 8,
+        "DescriptorType": "StorageTexelBuffer(WriteOnly)",
+        "Type": "StorageImageBuffer<Rgba32f>",
+        "Count": 1
+      },
+      {
+        "Name": "fImg2DMS",
+        "Set": 3,
+        "Binding": 9,
+        "DescriptorType": "StorageImage(WriteOnly)",
+        "Type": "StorageImage2DMS<Rgba32f>",
+        "Count": 1
+      },
+      {
+        "Name": "fImg2DMSArray",
+        "Set": 3,
+        "Binding": 10,
+        "DescriptorType": "StorageImage(WriteOnly)",
+        "Type": "StorageImage2DArrayMS<Rgba32f>",
+        "Count": 1
+      },
+      {
+        "Name": "iSamp1D",
+        "Set": 4,
+        "Binding": 0,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage1D<i32>>",
+        "Count": 1
+      },
+      {
+        "Name": "iSamp2D",
+        "Set": 4,
+        "Binding": 1,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage2D<i32>>",
+        "Count": 1
+      },
+      {
+        "Name": "iSamp3D",
+        "Set": 4,
+        "Binding": 2,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage3D<i32>>",
+        "Count": 1
+      },
+      {
+        "Name": "iSampCube",
+        "Set": 4,
+        "Binding": 3,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImageCube<i32>>",
+        "Count": 1
+      },
+      {
+        "Name": "iSamp2DRect",
+        "Set": 4,
+        "Binding": 4,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImageRect<i32>>",
+        "Count": 1
+      },
+      {
+        "Name": "iSamp1DArray",
+        "Set": 4,
+        "Binding": 5,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage1DArray<i32>>",
+        "Count": 1
+      },
+      {
+        "Name": "iSamp2DArray",
+        "Set": 4,
+        "Binding": 6,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage2DArray<i32>>",
+        "Count": 1
+      },
+      {
+        "Name": "iSampCubeArray",
+        "Set": 4,
+        "Binding": 7,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImageCubeArray<i32>>",
+        "Count": 1
+      },
+      {
+        "Name": "iSampBuffer",
+        "Set": 4,
+        "Binding": 8,
+        "DescriptorType": "UniformTexelBuffer",
+        "Type": "CombinedImageSampler<SampledImageBuffer<i32>>",
+        "Count": 1
+      },
+      {
+        "Name": "iSamp2DMS",
+        "Set": 4,
+        "Binding": 9,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage2DMS<i32>>",
+        "Count": 1
+      },
+      {
+        "Name": "iSamp2DMSArray",
+        "Set": 4,
+        "Binding": 10,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage2DArrayMS<i32>>",
+        "Count": 1
+      },
+      {
+        "Name": "uSamp1D",
+        "Set": 5,
+        "Binding": 0,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage1D<u32>>",
+        "Count": 1
+      },
+      {
+        "Name": "uSamp2D",
+        "Set": 5,
+        "Binding": 1,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage2D<u32>>",
+        "Count": 1
+      },
+      {
+        "Name": "uSamp3D",
+        "Set": 5,
+        "Binding": 2,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage3D<u32>>",
+        "Count": 1
+      },
+      {
+        "Name": "uSampCube",
+        "Set": 5,
+        "Binding": 3,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImageCube<u32>>",
+        "Count": 1
+      },
+      {
+        "Name": "uSamp2DRect",
+        "Set": 5,
+        "Binding": 4,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImageRect<u32>>",
+        "Count": 1
+      },
+      {
+        "Name": "uSamp1DArray",
+        "Set": 5,
+        "Binding": 5,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage1DArray<u32>>",
+        "Count": 1
+      },
+      {
+        "Name": "uSamp2DArray",
+        "Set": 5,
+        "Binding": 6,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage2DArray<u32>>",
+        "Count": 1
+      },
+      {
+        "Name": "uSampCubeArray",
+        "Set": 5,
+        "Binding": 7,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImageCubeArray<u32>>",
+        "Count": 1
+      },
+      {
+        "Name": "uSampBuffer",
+        "Set": 5,
+        "Binding": 8,
+        "DescriptorType": "UniformTexelBuffer",
+        "Type": "CombinedImageSampler<SampledImageBuffer<u32>>",
+        "Count": 1
+      },
+      {
+        "Name": "uSamp2DMS",
+        "Set": 5,
+        "Binding": 9,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage2DMS<u32>>",
+        "Count": 1
+      },
+      {
+        "Name": "uSamp2DMSArray",
+        "Set": 5,
+        "Binding": 10,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage2DArrayMS<u32>>",
+        "Count": 1
+      },
+      {
+        "Name": "fSamp1D",
+        "Set": 6,
+        "Binding": 0,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage1D<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "fSamp2D",
+        "Set": 6,
+        "Binding": 1,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage2D<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "fSamp3D",
+        "Set": 6,
+        "Binding": 2,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage3D<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "fSampCube",
+        "Set": 6,
+        "Binding": 3,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImageCube<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "fSamp2DRect",
+        "Set": 6,
+        "Binding": 4,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImageRect<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "fSamp1DArray",
+        "Set": 6,
+        "Binding": 5,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage1DArray<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "fSamp2DArray",
+        "Set": 6,
+        "Binding": 6,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage2DArray<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "fSampCubeArray",
+        "Set": 6,
+        "Binding": 7,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImageCubeArray<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "fSampBuffer",
+        "Set": 6,
+        "Binding": 8,
+        "DescriptorType": "UniformTexelBuffer",
+        "Type": "CombinedImageSampler<SampledImageBuffer<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "fSamp2DMS",
+        "Set": 6,
+        "Binding": 9,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage2DMS<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "fSamp2DMSArray",
+        "Set": 6,
+        "Binding": 10,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage2DArrayMS<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "dsSamp1D",
+        "Set": 7,
+        "Binding": 0,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage1D<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "dsSamp2D",
+        "Set": 7,
+        "Binding": 1,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage2D<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "dsSampCube",
+        "Set": 7,
+        "Binding": 2,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImageCube<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "dsSamp2DRect",
+        "Set": 7,
+        "Binding": 3,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImageRect<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "dsSamp1DArray",
+        "Set": 7,
+        "Binding": 4,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage1DArray<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "dsSamp2DArray",
+        "Set": 7,
+        "Binding": 5,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage2DArray<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "dsSampCubeArray",
+        "Set": 7,
+        "Binding": 6,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImageCubeArray<f32>>",
+        "Count": 1
+      },
+      {
+        "Name": "samp",
+        "Set": 8,
+        "Binding": 0,
+        "DescriptorType": "Sampler",
+        "Type": "Sampler",
+        "Count": 1
+      },
+      {
+        "Name": "sampShadow",
+        "Set": 8,
+        "Binding": 1,
+        "DescriptorType": "Sampler",
+        "Type": "Sampler",
+        "Count": 1
+      },
+      {
+        "Name": "iTex1D",
+        "Set": 9,
+        "Binding": 0,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage1D<i32>",
+        "Count": 1
+      },
+      {
+        "Name": "iTex2D",
+        "Set": 9,
+        "Binding": 1,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage2D<i32>",
+        "Count": 1
+      },
+      {
+        "Name": "iTex3D",
+        "Set": 9,
+        "Binding": 2,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage3D<i32>",
+        "Count": 1
+      },
+      {
+        "Name": "iTexCube",
+        "Set": 9,
+        "Binding": 3,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImageCube<i32>",
+        "Count": 1
+      },
+      {
+        "Name": "iTex2DRect",
+        "Set": 9,
+        "Binding": 4,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImageRect<i32>",
+        "Count": 1
+      },
+      {
+        "Name": "iTex1DArray",
+        "Set": 9,
+        "Binding": 5,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage1DArray<i32>",
+        "Count": 1
+      },
+      {
+        "Name": "iTex2DArray",
+        "Set": 9,
+        "Binding": 6,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage2DArray<i32>",
+        "Count": 1
+      },
+      {
+        "Name": "iTexCubeArray",
+        "Set": 9,
+        "Binding": 7,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImageCubeArray<i32>",
+        "Count": 1
+      },
+      {
+        "Name": "iTexBuffer",
+        "Set": 9,
+        "Binding": 8,
+        "DescriptorType": "UniformTexelBuffer",
+        "Type": "SampledImageBuffer<i32>",
+        "Count": 1
+      },
+      {
+        "Name": "iTex2DMS",
+        "Set": 9,
+        "Binding": 9,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage2DMS<i32>",
+        "Count": 1
+      },
+      {
+        "Name": "iTex2DMSArray",
+        "Set": 9,
+        "Binding": 10,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage2DArrayMS<i32>",
+        "Count": 1
+      },
+      {
+        "Name": "uTex1D",
+        "Set": 10,
+        "Binding": 0,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage1D<u32>",
+        "Count": 1
+      },
+      {
+        "Name": "uTex2D",
+        "Set": 10,
+        "Binding": 1,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage2D<u32>",
+        "Count": 1
+      },
+      {
+        "Name": "uTex3D",
+        "Set": 10,
+        "Binding": 2,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage3D<u32>",
+        "Count": 1
+      },
+      {
+        "Name": "uTexCube",
+        "Set": 10,
+        "Binding": 3,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImageCube<u32>",
+        "Count": 1
+      },
+      {
+        "Name": "uTex2DRect",
+        "Set": 10,
+        "Binding": 4,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImageRect<u32>",
+        "Count": 1
+      },
+      {
+        "Name": "uTex1DArray",
+        "Set": 10,
+        "Binding": 5,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage1DArray<u32>",
+        "Count": 1
+      },
+      {
+        "Name": "uTex2DArray",
+        "Set": 10,
+        "Binding": 6,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage2DArray<u32>",
+        "Count": 1
+      },
+      {
+        "Name": "uTexCubeArray",
+        "Set": 10,
+        "Binding": 7,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImageCubeArray<u32>",
+        "Count": 1
+      },
+      {
+        "Name": "uTexBuffer",
+        "Set": 10,
+        "Binding": 8,
+        "DescriptorType": "UniformTexelBuffer",
+        "Type": "SampledImageBuffer<u32>",
+        "Count": 1
+      },
+      {
+        "Name": "uTex2DMS",
+        "Set": 10,
+        "Binding": 9,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage2DMS<u32>",
+        "Count": 1
+      },
+      {
+        "Name": "uTex2DMSArray",
+        "Set": 10,
+        "Binding": 10,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage2DArrayMS<u32>",
+        "Count": 1
+      },
+      {
+        "Name": "fTex1D",
+        "Set": 12,
+        "Binding": 0,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage1D<f32>",
+        "Count": 1
+      },
+      {
+        "Name": "fTex2D",
+        "Set": 12,
+        "Binding": 1,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage2D<f32>",
+        "Count": 1
+      },
+      {
+        "Name": "fTex3D",
+        "Set": 12,
+        "Binding": 2,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage3D<f32>",
+        "Count": 1
+      },
+      {
+        "Name": "fTexCube",
+        "Set": 12,
+        "Binding": 3,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImageCube<f32>",
+        "Count": 1
+      },
+      {
+        "Name": "fTex2DRect",
+        "Set": 12,
+        "Binding": 4,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImageRect<f32>",
+        "Count": 1
+      },
+      {
+        "Name": "fTex1DArray",
+        "Set": 12,
+        "Binding": 5,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage1DArray<f32>",
+        "Count": 1
+      },
+      {
+        "Name": "fTex2DArray",
+        "Set": 12,
+        "Binding": 6,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage2DArray<f32>",
+        "Count": 1
+      },
+      {
+        "Name": "fTexCubeArray",
+        "Set": 12,
+        "Binding": 7,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImageCubeArray<f32>",
+        "Count": 1
+      },
+      {
+        "Name": "fTexBuffer",
+        "Set": 12,
+        "Binding": 8,
+        "DescriptorType": "UniformTexelBuffer",
+        "Type": "SampledImageBuffer<f32>",
+        "Count": 1
+      },
+      {
+        "Name": "fTex2DMS",
+        "Set": 12,
+        "Binding": 9,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage2DMS<f32>",
+        "Count": 1
+      },
+      {
+        "Name": "fTex2DMSArray",
+        "Set": 12,
+        "Binding": 10,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage2DArrayMS<f32>",
+        "Count": 1
+      },
+      {
+        "Name": "ubo",
+        "Set": 13,
+        "Binding": 0,
+        "DescriptorType": "UniformBuffer",
+        "Type": {
+          "Kind": "Struct",
+          "Members": [
+            {
+              "Name": "ds",
+              "Offset": 0,
+              "MemberType": {
+                "Kind": "Array",
+                "ElementType": {
+                  "Kind": "Struct",
+                  "Members": [
+                    {
+                      "Name": "i0",
+                      "Offset": 0,
+                      "MemberType": "i32"
+                    },
+                    {
+                      "Name": "i1",
+                      "Offset": 8,
+                      "MemberType": "vec2<i32>"
+                    },
+                    {
+                      "Name": "i2",
+                      "Offset": 16,
+                      "MemberType": "vec3<i32>"
+                    },
+                    {
+                      "Name": "i3",
+                      "Offset": 32,
+                      "MemberType": "vec4<i32>"
+                    },
+                    {
+                      "Name": "u0",
+                      "Offset": 48,
+                      "MemberType": "u32"
+                    },
+                    {
+                      "Name": "u1",
+                      "Offset": 56,
+                      "MemberType": "vec2<u32>"
+                    },
+                    {
+                      "Name": "u2",
+                      "Offset": 64,
+                      "MemberType": "vec3<u32>"
+                    },
+                    {
+                      "Name": "u3",
+                      "Offset": 80,
+                      "MemberType": "vec4<u32>"
+                    },
+                    {
+                      "Name": "f0",
+                      "Offset": 96,
+                      "MemberType": "f32"
+                    },
+                    {
+                      "Name": "f1",
+                      "Offset": 104,
+                      "MemberType": "vec2<f32>"
+                    },
+                    {
+                      "Name": "f2",
+                      "Offset": 112,
+                      "MemberType": "vec3<f32>"
+                    },
+                    {
+                      "Name": "f3",
+                      "Offset": 128,
+                      "MemberType": "vec4<f32>"
+                    },
+                    {
+                      "Name": "fMat0",
+                      "Offset": 144,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec2<f32>",
+                        "Count": 2,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "fMat1",
+                      "Offset": 176,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec3<f32>",
+                        "Count": 2,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "fMat2",
+                      "Offset": 208,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec4<f32>",
+                        "Count": 2,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "fMat3",
+                      "Offset": 240,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec2<f32>",
+                        "Count": 3,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "fMat4",
+                      "Offset": 288,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec3<f32>",
+                        "Count": 3,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "fMat5",
+                      "Offset": 336,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec4<f32>",
+                        "Count": 3,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "fMat6",
+                      "Offset": 384,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec2<f32>",
+                        "Count": 4,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "fMat7",
+                      "Offset": 448,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec3<f32>",
+                        "Count": 4,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "fMat8",
+                      "Offset": 512,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec4<f32>",
+                        "Count": 4,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "d0",
+                      "Offset": 576,
+                      "MemberType": "f64"
+                    },
+                    {
+                      "Name": "d1",
+                      "Offset": 592,
+                      "MemberType": "vec2<f64>"
+                    },
+                    {
+                      "Name": "d2",
+                      "Offset": 608,
+                      "MemberType": "vec3<f64>"
+                    },
+                    {
+                      "Name": "d3",
+                      "Offset": 640,
+                      "MemberType": "vec4<f64>"
+                    },
+                    {
+                      "Name": "dMat0",
+                      "Offset": 672,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec2<f64>",
+                        "Count": 2,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "dMat1",
+                      "Offset": 704,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec3<f64>",
+                        "Count": 2,
+                        "Stride": 32
+                      }
+                    },
+                    {
+                      "Name": "dMat2",
+                      "Offset": 768,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec4<f64>",
+                        "Count": 2,
+                        "Stride": 32
+                      }
+                    },
+                    {
+                      "Name": "dMat3",
+                      "Offset": 832,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec2<f64>",
+                        "Count": 3,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "dMat4",
+                      "Offset": 896,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec3<f64>",
+                        "Count": 3,
+                        "Stride": 32
+                      }
+                    },
+                    {
+                      "Name": "dMat5",
+                      "Offset": 992,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec4<f64>",
+                        "Count": 3,
+                        "Stride": 32
+                      }
+                    },
+                    {
+                      "Name": "dMat6",
+                      "Offset": 1088,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec2<f64>",
+                        "Count": 4,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "dMat7",
+                      "Offset": 1152,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec3<f64>",
+                        "Count": 4,
+                        "Stride": 32
+                      }
+                    },
+                    {
+                      "Name": "dMat8",
+                      "Offset": 1280,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec4<f64>",
+                        "Count": 4,
+                        "Stride": 32
+                      }
+                    }
+                  ]
+                },
+                "Count": 4,
+                "Stride": 1408
+              }
+            }
+          ]
+        },
+        "Count": 1
+      },
+      {
+        "Name": "ssbo",
+        "Set": 14,
+        "Binding": 0,
+        "DescriptorType": "StorageBuffer(ReadWrite)",
+        "Type": {
+          "Kind": "Struct",
+          "Members": [
+            {
+              "Name": "ds",
+              "Offset": 0,
+              "MemberType": {
+                "Kind": "Array",
+                "ElementType": {
+                  "Kind": "Struct",
+                  "Members": [
+                    {
+                      "Name": "i0",
+                      "Offset": 0,
+                      "MemberType": "i32"
+                    },
+                    {
+                      "Name": "i1",
+                      "Offset": 8,
+                      "MemberType": "vec2<i32>"
+                    },
+                    {
+                      "Name": "i2",
+                      "Offset": 16,
+                      "MemberType": "vec3<i32>"
+                    },
+                    {
+                      "Name": "i3",
+                      "Offset": 32,
+                      "MemberType": "vec4<i32>"
+                    },
+                    {
+                      "Name": "u0",
+                      "Offset": 48,
+                      "MemberType": "u32"
+                    },
+                    {
+                      "Name": "u1",
+                      "Offset": 56,
+                      "MemberType": "vec2<u32>"
+                    },
+                    {
+                      "Name": "u2",
+                      "Offset": 64,
+                      "MemberType": "vec3<u32>"
+                    },
+                    {
+                      "Name": "u3",
+                      "Offset": 80,
+                      "MemberType": "vec4<u32>"
+                    },
+                    {
+                      "Name": "f0",
+                      "Offset": 96,
+                      "MemberType": "f32"
+                    },
+                    {
+                      "Name": "f1",
+                      "Offset": 104,
+                      "MemberType": "vec2<f32>"
+                    },
+                    {
+                      "Name": "f2",
+                      "Offset": 112,
+                      "MemberType": "vec3<f32>"
+                    },
+                    {
+                      "Name": "f3",
+                      "Offset": 128,
+                      "MemberType": "vec4<f32>"
+                    },
+                    {
+                      "Name": "fMat0",
+                      "Offset": 144,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec2<f32>",
+                        "Count": 2,
+                        "Stride": 8
+                      }
+                    },
+                    {
+                      "Name": "fMat1",
+                      "Offset": 160,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec3<f32>",
+                        "Count": 2,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "fMat2",
+                      "Offset": 192,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec4<f32>",
+                        "Count": 2,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "fMat3",
+                      "Offset": 224,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec2<f32>",
+                        "Count": 3,
+                        "Stride": 8
+                      }
+                    },
+                    {
+                      "Name": "fMat4",
+                      "Offset": 256,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec3<f32>",
+                        "Count": 3,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "fMat5",
+                      "Offset": 304,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec4<f32>",
+                        "Count": 3,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "fMat6",
+                      "Offset": 352,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec2<f32>",
+                        "Count": 4,
+                        "Stride": 8
+                      }
+                    },
+                    {
+                      "Name": "fMat7",
+                      "Offset": 384,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec3<f32>",
+                        "Count": 4,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "fMat8",
+                      "Offset": 448,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec4<f32>",
+                        "Count": 4,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "d0",
+                      "Offset": 512,
+                      "MemberType": "f64"
+                    },
+                    {
+                      "Name": "d1",
+                      "Offset": 528,
+                      "MemberType": "vec2<f64>"
+                    },
+                    {
+                      "Name": "d2",
+                      "Offset": 544,
+                      "MemberType": "vec3<f64>"
+                    },
+                    {
+                      "Name": "d3",
+                      "Offset": 576,
+                      "MemberType": "vec4<f64>"
+                    },
+                    {
+                      "Name": "dMat0",
+                      "Offset": 608,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec2<f64>",
+                        "Count": 2,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "dMat1",
+                      "Offset": 640,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec3<f64>",
+                        "Count": 2,
+                        "Stride": 32
+                      }
+                    },
+                    {
+                      "Name": "dMat2",
+                      "Offset": 704,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec4<f64>",
+                        "Count": 2,
+                        "Stride": 32
+                      }
+                    },
+                    {
+                      "Name": "dMat3",
+                      "Offset": 768,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec2<f64>",
+                        "Count": 3,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "dMat4",
+                      "Offset": 832,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec3<f64>",
+                        "Count": 3,
+                        "Stride": 32
+                      }
+                    },
+                    {
+                      "Name": "dMat5",
+                      "Offset": 928,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec4<f64>",
+                        "Count": 3,
+                        "Stride": 32
+                      }
+                    },
+                    {
+                      "Name": "dMat6",
+                      "Offset": 1024,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec2<f64>",
+                        "Count": 4,
+                        "Stride": 16
+                      }
+                    },
+                    {
+                      "Name": "dMat7",
+                      "Offset": 1088,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec3<f64>",
+                        "Count": 4,
+                        "Stride": 32
+                      }
+                    },
+                    {
+                      "Name": "dMat8",
+                      "Offset": 1216,
+                      "MemberType": {
+                        "Kind": "Matrix",
+                        "AxisOrder": "ColumnMajor",
+                        "VectorType": "vec4<f64>",
+                        "Count": 4,
+                        "Stride": 32
+                      }
+                    }
+                  ]
+                },
+                "Count": null,
+                "Stride": 1344
+              }
+            }
+          ]
+        },
+        "Count": 1
+      },
+      {
+        "Name": "iAttm",
+        "Set": 15,
+        "Binding": 0,
+        "DescriptorType": "InputAttachment(0)",
+        "Type": "SubpassData<i32>",
+        "Count": 1
+      },
+      {
+        "Name": "iAttmMS",
+        "Set": 15,
+        "Binding": 1,
+        "DescriptorType": "InputAttachment(1)",
+        "Type": "SubpassDataMS<i32>",
+        "Count": 1
+      },
+      {
+        "Name": "uAttm",
+        "Set": 15,
+        "Binding": 2,
+        "DescriptorType": "InputAttachment(2)",
+        "Type": "SubpassData<u32>",
+        "Count": 1
+      },
+      {
+        "Name": "uAttmMS",
+        "Set": 15,
+        "Binding": 3,
+        "DescriptorType": "InputAttachment(3)",
+        "Type": "SubpassDataMS<u32>",
+        "Count": 1
+      },
+      {
+        "Name": "fAttm",
+        "Set": 15,
+        "Binding": 4,
+        "DescriptorType": "InputAttachment(4)",
+        "Type": "SubpassData<f32>",
+        "Count": 1
+      },
+      {
+        "Name": "fAttmMS",
+        "Set": 15,
+        "Binding": 5,
+        "DescriptorType": "InputAttachment(5)",
+        "Type": "SubpassDataMS<f32>",
+        "Count": 1
+      },
+      {
+        "Name": "acc",
+        "Set": 16,
+        "Binding": 0,
+        "DescriptorType": "AccelStruct",
+        "Type": "AccelStruct",
+        "Count": 1
+      }
+    ],
+    "PushConstants": [],
+    "SpecConstants": []
+  }
+}
