@@ -45,7 +45,7 @@ define_ops! {
         name: &'a str = read_str(),
     }
 
-    OpExecutionMode {
+    OpExecutionModeCommonSPQ {
         func_id: FunctionId = read_u32(),
         execution_mode: ExecutionMode = read_enum(),
         params: &'a [u32] = read_list(),

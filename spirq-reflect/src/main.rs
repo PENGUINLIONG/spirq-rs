@@ -75,13 +75,13 @@ fn main() {
     let args = Args::parse();
 
     for in_path in args.in_paths {
-        let spv = build_spirv_binary(in_path).unwrap();
+        let spv = build_spirv_binary(&in_path).expect(&format!("cannot read spirv: {}", in_path));
         let entry_points = ReflectConfig::new()
             .spv(spv)
             .ref_all_rscs(args.ref_all_rscs)
             .gen_unique_names(true)
             .reflect()
-            .unwrap();
+            .expect(&format!("cannot reflect spirv: {}", in_path));
 
         for entry_point in entry_points {
             let mut inputs = Vec::new();
@@ -145,16 +145,36 @@ fn main() {
                 }
             }
 
+            let mut exec_modes = Vec::new();
+            for exec_mode in entry_point.exec_modes {
+                let operands = exec_mode
+                    .operands
+                    .iter()
+                    .map(|operand| {
+                        json!({
+                            "Value": operand.value.to_u32(),
+                            "SpecId": operand.spec_id,
+                        })
+                    })
+                    .collect::<Vec<_>>();
+                let j = json!({
+                    "ExecutionMode": format!("{:?}", exec_mode.exec_mode),
+                    "Operands": operands,
+                });
+                exec_modes.push(j);
+            }
+
             let j = json!({
                 "EntryPoint": entry_point.name,
                 "ExecutionModel": format!("{:?}", entry_point.exec_model),
+                "ExecutionModes": exec_modes,
                 "Variables": {
                     "Inputs": inputs,
                     "Outputs": outputs,
                     "Descriptors": descs,
                     "PushConstants": push_consts,
                     "SpecConstants": spec_consts
-                }
+                },
             });
 
             println!("{}", serde_json::to_string_pretty(&j).unwrap());
