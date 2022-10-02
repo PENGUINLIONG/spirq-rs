@@ -75,8 +75,7 @@ fn main() {
     let args = Args::parse();
 
     for in_path in args.in_paths {
-        let spv = build_spirv_binary(&in_path)
-            .expect(&format!("cannot read spirv: {}", in_path));
+        let spv = build_spirv_binary(&in_path).expect(&format!("cannot read spirv: {}", in_path));
         let entry_points = ReflectConfig::new()
             .spv(spv)
             .ref_all_rscs(args.ref_all_rscs)
