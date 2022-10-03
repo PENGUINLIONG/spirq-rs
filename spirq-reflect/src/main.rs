@@ -2,12 +2,13 @@ use clap::Parser;
 use serde_json::json;
 use spirq::{
     ty::{StructMember, Type},
-    EntryPoint, ReflectConfig,
+    EntryPoint, ReflectConfig, SpirvBinary,
 };
 use std::{
+    borrow::Borrow,
     fs::File,
     io::{stderr, Write},
-    path::Path,
+    path::{Path, PathBuf},
     process::exit,
 };
 
@@ -47,23 +48,366 @@ struct Args {
         annotations in the input SPIR-V."
     )]
     generate_unique_names: bool,
+
+    #[arg(
+        short = 'I',
+        help = "The base directories of standard includes (`#include <...>`) \
+        in compilation of GLSL or HLSL shader sources."
+    )]
+    include_directories: Vec<String>,
+
+    #[arg(
+        short = 'D',
+        help = "Compiler definitions in compilation of GLSL or HLSL shader \
+        sources."
+    )]
+    definitions: Vec<String>,
+
+    #[arg(
+        short,
+        long,
+        help = "Shader entry point function name in compilation of GLSL or \
+        HLSL shader."
+    )]
+    entry_point: Option<String>,
 }
 
-fn build_spirv_binary<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
-    use std::io::Read;
-    let path = path.as_ref();
-    if !path.is_file() {
-        return None;
-    }
-    let mut buf = Vec::new();
-    if let Ok(mut f) = File::open(&path) {
-        if buf.len() & 3 != 0 {
-            // Misaligned input.
-            return None;
+fn read_spirv_bianry(path: &str) -> SpirvBinary {
+    let spv = match std::fs::read(&path) {
+        Ok(x) => x,
+        Err(e) => {
+            writeln!(stderr(), "{}", e.to_string()).unwrap();
+            writeln!(stderr(), "cannot read from SPIR-V binary: {}", path).unwrap();
+            exit(-1);
         }
-        f.read_to_end(&mut buf).ok()?;
+    };
+    if spv.len() % 4 != 0 {
+        // Misaligned input.
+        writeln!(stderr(), "spirv binary must align to 4 bytes: {}", path).unwrap();
+        exit(-1);
     }
-    Some(buf)
+    SpirvBinary::from(spv)
+}
+
+fn compile_shader_source(
+    path: &str,
+    args: &Args,
+    src_lang: shaderc::SourceLanguage,
+    shader_kind: shaderc::ShaderKind,
+) -> SpirvBinary {
+    let src = match std::fs::read_to_string(path) {
+        Ok(x) => x,
+        Err(e) => {
+            writeln!(stderr(), "{}", e.to_string()).unwrap();
+            writeln!(stderr(), "cannot read from input shader source: {}", path).unwrap();
+            exit(-1);
+        }
+    };
+
+    let mut opt = match shaderc::CompileOptions::new() {
+        Some(x) => x,
+        None => {
+            writeln!(stderr(), "cannot create shaderc compile option").unwrap();
+            exit(-1);
+        }
+    };
+    opt.set_target_env(
+        shaderc::TargetEnv::Vulkan,
+        shaderc::EnvVersion::Vulkan1_2 as u32,
+    );
+    opt.set_source_language(src_lang);
+    opt.set_auto_bind_uniforms(true);
+    opt.set_optimization_level(shaderc::OptimizationLevel::Zero);
+    opt.set_include_callback(|name, ty, src_path, _depth| {
+        use shaderc::{IncludeType, ResolvedInclude};
+        let path = match ty {
+            IncludeType::Relative => {
+                let cur_dir = Path::new(src_path).parent()
+                    .ok_or("the shader source is not living in a filesystem, but attempts to include a relative path")?;
+                cur_dir.join(name)
+            },
+            IncludeType::Standard => {
+                args.include_directories.iter()
+                    .find_map(|incl_dir| {
+                        let path = PathBuf::from(incl_dir).join(name);
+                        if path.exists() { Some(path) } else { None }
+                    })
+                    .ok_or(format!("cannot find \"{}\" in include directories", name))?
+            },
+        };
+
+        let path_lit = path.to_string_lossy().to_string();
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| format!("cannot read from \"{}\": {}", path_lit, e.to_string()))?;
+        let incl = ResolvedInclude { resolved_name: path_lit, content };
+        Ok(incl)
+    });
+    for (k, v) in args.definitions.iter().map(|x| {
+        if let Some((a, b)) = x.split_once('=') {
+            (a, Some(b))
+        } else {
+            (x.as_ref(), None)
+        }
+    }) {
+        opt.add_macro_definition(k, v);
+    }
+    opt.set_generate_debug_info();
+
+    let entry_point = args
+        .entry_point
+        .as_ref()
+        .map(|x| x.borrow())
+        .unwrap_or("main");
+
+    let mut compiler = match shaderc::Compiler::new() {
+        Some(x) => x,
+        None => {
+            writeln!(stderr(), "cannot create compiler instance").unwrap();
+            exit(-1);
+        }
+    };
+    let art = match compiler.compile_into_spirv(&src, shader_kind, &path, entry_point, Some(&opt)) {
+        Ok(x) => x,
+        Err(e) => {
+            writeln!(stderr(), "{}", e.to_string()).unwrap();
+            writeln!(stderr(), "cannot compile shader source: {}", path).unwrap();
+            exit(-1);
+        }
+    };
+
+    SpirvBinary::from(art.as_binary())
+}
+
+fn get_spirv_bianry(path: &str, args: &Args) -> SpirvBinary {
+    // Ensure the source file exists.
+    if !Path::new(path).is_file() {
+        writeln!(stderr(), "input file doesn't exist").unwrap();
+        exit(-1);
+    }
+
+    // Extension names to shader types.
+    let ext_map = &[
+        (
+            ".vert",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Vertex,
+        ),
+        (
+            ".tesc",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::TessControl,
+        ),
+        (
+            ".tese",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::TessEvaluation,
+        ),
+        (
+            ".geom",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Geometry,
+        ),
+        (
+            ".frag",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Fragment,
+        ),
+        (
+            ".comp",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Compute,
+        ),
+        (
+            ".mesh",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Mesh,
+        ),
+        (
+            ".task",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Task,
+        ),
+        (
+            ".rgen",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::RayGeneration,
+        ),
+        (
+            ".rint",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Intersection,
+        ),
+        (
+            ".rahit",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::AnyHit,
+        ),
+        (
+            ".rchit",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::ClosestHit,
+        ),
+        (
+            ".rmiss",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Miss,
+        ),
+        (
+            ".rcall",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Callable,
+        ),
+        (
+            ".vert.glsl",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Vertex,
+        ),
+        (
+            ".tesc.glsl",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::TessControl,
+        ),
+        (
+            ".tese.glsl",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::TessEvaluation,
+        ),
+        (
+            ".geom.glsl",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Geometry,
+        ),
+        (
+            ".frag.glsl",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Fragment,
+        ),
+        (
+            ".comp.glsl",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Compute,
+        ),
+        (
+            ".mesh.glsl",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Mesh,
+        ),
+        (
+            ".task.glsl",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Task,
+        ),
+        (
+            ".rgen.glsl",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::RayGeneration,
+        ),
+        (
+            ".rint.glsl",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Intersection,
+        ),
+        (
+            ".rahit.glsl",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::AnyHit,
+        ),
+        (
+            ".rchit.glsl",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::ClosestHit,
+        ),
+        (
+            ".rmiss.glsl",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Miss,
+        ),
+        (
+            ".rcall.glsl",
+            shaderc::SourceLanguage::GLSL,
+            shaderc::ShaderKind::Callable,
+        ),
+        (
+            ".vert.hlsl",
+            shaderc::SourceLanguage::HLSL,
+            shaderc::ShaderKind::Vertex,
+        ),
+        (
+            ".tesc.hlsl",
+            shaderc::SourceLanguage::HLSL,
+            shaderc::ShaderKind::TessControl,
+        ),
+        (
+            ".tese.hlsl",
+            shaderc::SourceLanguage::HLSL,
+            shaderc::ShaderKind::TessEvaluation,
+        ),
+        (
+            ".geom.hlsl",
+            shaderc::SourceLanguage::HLSL,
+            shaderc::ShaderKind::Geometry,
+        ),
+        (
+            ".frag.hlsl",
+            shaderc::SourceLanguage::HLSL,
+            shaderc::ShaderKind::Fragment,
+        ),
+        (
+            ".comp.hlsl",
+            shaderc::SourceLanguage::HLSL,
+            shaderc::ShaderKind::Compute,
+        ),
+        (
+            ".mesh.hlsl",
+            shaderc::SourceLanguage::HLSL,
+            shaderc::ShaderKind::Mesh,
+        ),
+        (
+            ".task.hlsl",
+            shaderc::SourceLanguage::HLSL,
+            shaderc::ShaderKind::Task,
+        ),
+        (
+            ".rgen.hlsl",
+            shaderc::SourceLanguage::HLSL,
+            shaderc::ShaderKind::RayGeneration,
+        ),
+        (
+            ".rint.hlsl",
+            shaderc::SourceLanguage::HLSL,
+            shaderc::ShaderKind::Intersection,
+        ),
+        (
+            ".rahit.hlsl",
+            shaderc::SourceLanguage::HLSL,
+            shaderc::ShaderKind::AnyHit,
+        ),
+        (
+            ".rchit.hlsl",
+            shaderc::SourceLanguage::HLSL,
+            shaderc::ShaderKind::ClosestHit,
+        ),
+        (
+            ".rmiss.hlsl",
+            shaderc::SourceLanguage::HLSL,
+            shaderc::ShaderKind::Miss,
+        ),
+        (
+            ".rcall.hlsl",
+            shaderc::SourceLanguage::HLSL,
+            shaderc::ShaderKind::Callable,
+        ),
+    ];
+
+    // Discovered as shader source files.
+    for (ext, src_lang2, shader_kind2) in ext_map {
+        if path.ends_with(ext) {
+            return compile_shader_source(path, args, *src_lang2, *shader_kind2);
+        }
+    }
+
+    // Otherwise it's considered be a compiled SPIR-V binary.
+    read_spirv_bianry(path)
 }
 
 fn member2json(member: &StructMember) -> serde_json::Value {
@@ -199,13 +543,7 @@ fn main() {
 
     let in_path: &str = &args.in_path;
 
-    let spv = match build_spirv_binary(&in_path) {
-        Some(x) => x,
-        None => {
-            writeln!(stderr(), "cannot read spirv: {in_path}").unwrap();
-            exit(-1);
-        }
-    };
+    let spv = get_spirv_bianry(in_path, &args);
     let mut reflect_cfg = ReflectConfig::new();
     reflect_cfg
         .spv(spv)
