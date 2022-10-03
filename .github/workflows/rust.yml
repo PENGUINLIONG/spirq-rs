@@ -27,9 +27,9 @@ jobs:
         cargo fmt -- --check
         cargo build --release --verbose
         cargo test --verbose
-        cargo run --example gallery
-        cargo run --example inspect
-        cargo run --example walk
+        cargo run --example gallery > spirq/examples/gallery/main.log
+        cargo run --example inspect > spirq/examples/inspect/main.log
+        cargo run --example walk > spirq/examples/walk/main.log
         cargo install --path shader-reflect
         shader-reflect assets/gallery.frag -o assets/gallery.frag.json --reference-all-resources
         shader-reflect assets/gallery.frag.spv -o assets/gallery.frag.spv.json --reference-all-resources

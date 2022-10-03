@@ -1,22 +1,22 @@
 collected spirvs: ["gallery.frag", "spirv-spec.frag"]
-[main { exec_model: Fragment, name: "main", vars: [Descriptor { name: None, desc_bind: (set=0, bind=0), desc_ty: UniformBuffer, ty: blockName { s: S { b: u32, v: [vec4<f32>; 5], i: i32 }, cond: u32 }, nbind: 1 }, Output { name: Some("color"), location: (loc=0, comp=0), ty: vec4<f32> }, Input { name: Some("color1"), location: (loc=0, comp=0), ty: vec4<f32> }, Input { name: Some("color2"), location: (loc=2, comp=0), ty: vec4<f32> }, Input { name: Some("multiplier"), location: (loc=1, comp=0), ty: vec4<f32> }], exec_modes: [OriginUpperLeft] }]
-Descriptor { name: None, desc_bind: (set=0, bind=0), desc_ty: UniformBuffer, ty: blockName { s: S { b: u32, v: [vec4<f32>; 5], i: i32 }, cond: u32 }, nbind: 1 }
-- MemberVariableRouting { sym: [s, b], offset: 0, ty: u32 }
-- MemberVariableRouting { sym: [s, v, 0], offset: 16, ty: vec4<f32> }
-- MemberVariableRouting { sym: [s, v, 1], offset: 32, ty: vec4<f32> }
-- MemberVariableRouting { sym: [s, v, 2], offset: 48, ty: vec4<f32> }
-- MemberVariableRouting { sym: [s, v, 3], offset: 64, ty: vec4<f32> }
-- MemberVariableRouting { sym: [s, v, 4], offset: 80, ty: vec4<f32> }
-- MemberVariableRouting { sym: [s, v], offset: 16, ty: [vec4<f32>; 5] }
-- MemberVariableRouting { sym: [s, i], offset: 96, ty: i32 }
-- MemberVariableRouting { sym: [s], offset: 0, ty: S { b: u32, v: [vec4<f32>; 5], i: i32 } }
-- MemberVariableRouting { sym: [cond], offset: 112, ty: u32 }
-- MemberVariableRouting { sym: [], offset: 0, ty: blockName { s: S { b: u32, v: [vec4<f32>; 5], i: i32 }, cond: u32 } }
-Output { name: Some("color"), location: (loc=0, comp=0), ty: vec4<f32> }
-- MemberVariableRouting { sym: [], offset: 0, ty: vec4<f32> }
-Input { name: Some("color1"), location: (loc=0, comp=0), ty: vec4<f32> }
-- MemberVariableRouting { sym: [], offset: 0, ty: vec4<f32> }
-Input { name: Some("color2"), location: (loc=2, comp=0), ty: vec4<f32> }
-- MemberVariableRouting { sym: [], offset: 0, ty: vec4<f32> }
-Input { name: Some("multiplier"), location: (loc=1, comp=0), ty: vec4<f32> }
-- MemberVariableRouting { sym: [], offset: 0, ty: vec4<f32> }
+[main { exec_model: Fragment, name: "main", vars: [Descriptor { name: None, desc_bind: (set=0, bind=0), desc_ty: UniformBuffer, ty: Struct(StructType { name: Some("blockName"), members: [StructMember { name: Some("s"), offset: 0, ty: Struct(StructType { name: Some("S"), members: [StructMember { name: Some("b"), offset: 0, ty: Scalar(Unsigned(4)) }, StructMember { name: Some("v"), offset: 16, ty: Array(ArrayType { proto_ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }), nrepeat: Some(5), stride: Some(16) }) }, StructMember { name: Some("i"), offset: 96, ty: Scalar(Signed(4)) }] }) }, StructMember { name: Some("cond"), offset: 112, ty: Scalar(Unsigned(4)) }] }), nbind: 1 }, Output { name: Some("color"), location: (loc=0, comp=0), ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }, Input { name: Some("color1"), location: (loc=0, comp=0), ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }, Input { name: Some("color2"), location: (loc=2, comp=0), ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }, Input { name: Some("multiplier"), location: (loc=1, comp=0), ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }], exec_modes: [ExecutionMode { exec_mode: OriginUpperLeft, operands: [] }] }]
+Descriptor { name: None, desc_bind: (set=0, bind=0), desc_ty: UniformBuffer, ty: Struct(StructType { name: Some("blockName"), members: [StructMember { name: Some("s"), offset: 0, ty: Struct(StructType { name: Some("S"), members: [StructMember { name: Some("b"), offset: 0, ty: Scalar(Unsigned(4)) }, StructMember { name: Some("v"), offset: 16, ty: Array(ArrayType { proto_ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }), nrepeat: Some(5), stride: Some(16) }) }, StructMember { name: Some("i"), offset: 96, ty: Scalar(Signed(4)) }] }) }, StructMember { name: Some("cond"), offset: 112, ty: Scalar(Unsigned(4)) }] }), nbind: 1 }
+- MemberVariableRouting { sym: [s, b], offset: 0, ty: Scalar(Unsigned(4)) }
+- MemberVariableRouting { sym: [s, v, 0], offset: 16, ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }
+- MemberVariableRouting { sym: [s, v, 1], offset: 32, ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }
+- MemberVariableRouting { sym: [s, v, 2], offset: 48, ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }
+- MemberVariableRouting { sym: [s, v, 3], offset: 64, ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }
+- MemberVariableRouting { sym: [s, v, 4], offset: 80, ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }
+- MemberVariableRouting { sym: [s, v], offset: 16, ty: Array(ArrayType { proto_ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }), nrepeat: Some(5), stride: Some(16) }) }
+- MemberVariableRouting { sym: [s, i], offset: 96, ty: Scalar(Signed(4)) }
+- MemberVariableRouting { sym: [s], offset: 0, ty: Struct(StructType { name: Some("S"), members: [StructMember { name: Some("b"), offset: 0, ty: Scalar(Unsigned(4)) }, StructMember { name: Some("v"), offset: 16, ty: Array(ArrayType { proto_ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }), nrepeat: Some(5), stride: Some(16) }) }, StructMember { name: Some("i"), offset: 96, ty: Scalar(Signed(4)) }] }) }
+- MemberVariableRouting { sym: [cond], offset: 112, ty: Scalar(Unsigned(4)) }
+- MemberVariableRouting { sym: [], offset: 0, ty: Struct(StructType { name: Some("blockName"), members: [StructMember { name: Some("s"), offset: 0, ty: Struct(StructType { name: Some("S"), members: [StructMember { name: Some("b"), offset: 0, ty: Scalar(Unsigned(4)) }, StructMember { name: Some("v"), offset: 16, ty: Array(ArrayType { proto_ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }), nrepeat: Some(5), stride: Some(16) }) }, StructMember { name: Some("i"), offset: 96, ty: Scalar(Signed(4)) }] }) }, StructMember { name: Some("cond"), offset: 112, ty: Scalar(Unsigned(4)) }] }) }
+Output { name: Some("color"), location: (loc=0, comp=0), ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }
+- MemberVariableRouting { sym: [], offset: 0, ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }
+Input { name: Some("color1"), location: (loc=0, comp=0), ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }
+- MemberVariableRouting { sym: [], offset: 0, ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }
+Input { name: Some("color2"), location: (loc=2, comp=0), ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }
+- MemberVariableRouting { sym: [], offset: 0, ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }
+Input { name: Some("multiplier"), location: (loc=1, comp=0), ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }
+- MemberVariableRouting { sym: [], offset: 0, ty: Vector(VectorType { scalar_ty: Float(4), nscalar: 4 }) }
