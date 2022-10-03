@@ -1,5 +1,11 @@
 # Change Log
 
+## v0.6.1
+
+- Fixed variable order varies between runs.
+- `spirq-reflect` is renamed to `shader-reflect`.
+- Supported GLSL/HLSL reflection in `shader-reflect`.
+
 ## v0.6.0
 
 SPIR-Q v0.6 has undergone a massive type system refactorization to get rid of many historical design issues.
