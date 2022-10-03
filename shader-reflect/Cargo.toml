@@ -10,7 +10,7 @@ homepage = "https://github.com/PENGUINLIONG/spirq-rs"
 documentation = "https://docs.rs/spirq"
 categories = ["graphics"]
 readme = "README.md"
-keywords = ["spirv", "vulkan", "opengl", "opencl", "glsl", "hlsl"]
+keywords = ["spirv", "vulkan", "opengl", "glsl", "hlsl"]
 
 [badges]
 maintenance = { status = "actively-developed" }
