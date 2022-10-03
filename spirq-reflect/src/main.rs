@@ -116,7 +116,7 @@ fn compile_shader_source(
         shaderc::EnvVersion::Vulkan1_2 as u32,
     );
     opt.set_source_language(src_lang);
-    opt.set_auto_bind_uniforms(true);
+    opt.set_auto_bind_uniforms(false);
     opt.set_optimization_level(shaderc::OptimizationLevel::Zero);
     opt.set_include_callback(|name, ty, src_path, _depth| {
         use shaderc::{IncludeType, ResolvedInclude};
