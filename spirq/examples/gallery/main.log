@@ -11,7 +11,14 @@
                 desc_ty: StorageImage(
                     ReadOnly,
                 ),
-                ty: Image<i32,Storage,Depth,Rgba32i,Image1D>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim1D,
+                        is_array: false,
+                        is_multisampled: false,
+                        fmt: Rgba32i,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -22,7 +29,14 @@
                 desc_ty: StorageImage(
                     ReadOnly,
                 ),
-                ty: Image<i32,Storage,Depth,Rgba16i,Image2D>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim2D,
+                        is_array: false,
+                        is_multisampled: false,
+                        fmt: Rgba16i,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -33,7 +47,14 @@
                 desc_ty: StorageImage(
                     ReadOnly,
                 ),
-                ty: Image<i32,Storage,Depth,Rgba8i,Image3D>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim3D,
+                        is_array: false,
+                        is_multisampled: false,
+                        fmt: Rgba8i,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -44,7 +65,14 @@
                 desc_ty: StorageImage(
                     ReadOnly,
                 ),
-                ty: Image<i32,Storage,Depth,Rgba32i,Image1DArray>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim1D,
+                        is_array: true,
+                        is_multisampled: false,
+                        fmt: Rgba32i,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -55,7 +83,14 @@
                 desc_ty: StorageImage(
                     ReadOnly,
                 ),
-                ty: Image<i32,Storage,Depth,Rgba32i,Image2DArray>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim2D,
+                        is_array: true,
+                        is_multisampled: false,
+                        fmt: Rgba32i,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -66,7 +101,14 @@
                 desc_ty: StorageImage(
                     ReadOnly,
                 ),
-                ty: Image<i32,Storage,Depth,Rgba32i,CubeMap>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: DimCube,
+                        is_array: false,
+                        is_multisampled: false,
+                        fmt: Rgba32i,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -77,7 +119,14 @@
                 desc_ty: StorageImage(
                     ReadOnly,
                 ),
-                ty: Image<i32,Storage,Depth,Rgba32i,CubeMapArray>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: DimCube,
+                        is_array: true,
+                        is_multisampled: false,
+                        fmt: Rgba32i,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -88,7 +137,14 @@
                 desc_ty: StorageTexelBuffer(
                     ReadOnly,
                 ),
-                ty: Image<i32,Storage,Depth,Rgba32i,ImageBuffer>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: DimBuffer,
+                        is_array: false,
+                        is_multisampled: false,
+                        fmt: Rgba32i,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -99,7 +155,14 @@
                 desc_ty: StorageImage(
                     ReadOnly,
                 ),
-                ty: Image<u32,Storage,Depth,Rgba32ui,Image1D>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim1D,
+                        is_array: false,
+                        is_multisampled: false,
+                        fmt: Rgba32ui,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -110,7 +173,14 @@
                 desc_ty: StorageImage(
                     ReadOnly,
                 ),
-                ty: Image<u32,Storage,Depth,Rgba16ui,Image2D>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim2D,
+                        is_array: false,
+                        is_multisampled: false,
+                        fmt: Rgba16ui,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -121,7 +191,14 @@
                 desc_ty: StorageImage(
                     ReadOnly,
                 ),
-                ty: Image<u32,Storage,Depth,Rgba8ui,Image3D>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim3D,
+                        is_array: false,
+                        is_multisampled: false,
+                        fmt: Rgba8ui,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -132,7 +209,14 @@
                 desc_ty: StorageImage(
                     ReadOnly,
                 ),
-                ty: Image<u32,Storage,Depth,Rgba32ui,Image1DArray>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim1D,
+                        is_array: true,
+                        is_multisampled: false,
+                        fmt: Rgba32ui,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -143,7 +227,14 @@
                 desc_ty: StorageImage(
                     ReadOnly,
                 ),
-                ty: Image<u32,Storage,Depth,Rgba32ui,Image2DArray>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim2D,
+                        is_array: true,
+                        is_multisampled: false,
+                        fmt: Rgba32ui,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -154,7 +245,14 @@
                 desc_ty: StorageImage(
                     ReadOnly,
                 ),
-                ty: Image<u32,Storage,Depth,Rgba32ui,CubeMap>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: DimCube,
+                        is_array: false,
+                        is_multisampled: false,
+                        fmt: Rgba32ui,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -165,7 +263,14 @@
                 desc_ty: StorageImage(
                     ReadOnly,
                 ),
-                ty: Image<u32,Storage,Depth,Rgba32ui,CubeMapArray>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: DimCube,
+                        is_array: true,
+                        is_multisampled: false,
+                        fmt: Rgba32ui,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -176,7 +281,14 @@
                 desc_ty: StorageTexelBuffer(
                     ReadOnly,
                 ),
-                ty: Image<u32,Storage,Depth,Rgba32ui,ImageBuffer>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: DimBuffer,
+                        is_array: false,
+                        is_multisampled: false,
+                        fmt: Rgba32ui,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -187,7 +299,14 @@
                 desc_ty: StorageImage(
                     WriteOnly,
                 ),
-                ty: Image<f32,Storage,Depth,Rgba32f,Image1D>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim1D,
+                        is_array: false,
+                        is_multisampled: false,
+                        fmt: Rgba32f,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -198,7 +317,14 @@
                 desc_ty: StorageImage(
                     WriteOnly,
                 ),
-                ty: Image<f32,Storage,Depth,Rgba16f,Image2D>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim2D,
+                        is_array: false,
+                        is_multisampled: false,
+                        fmt: Rgba16f,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -209,7 +335,14 @@
                 desc_ty: StorageImage(
                     WriteOnly,
                 ),
-                ty: Image<f32,Storage,Depth,R32f,Image3D>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim3D,
+                        is_array: false,
+                        is_multisampled: false,
+                        fmt: R32f,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -220,7 +353,14 @@
                 desc_ty: StorageImage(
                     WriteOnly,
                 ),
-                ty: Image<f32,Storage,Depth,Rgba8,CubeMap>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: DimCube,
+                        is_array: false,
+                        is_multisampled: false,
+                        fmt: Rgba8,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -231,7 +371,14 @@
                 desc_ty: StorageImage(
                     WriteOnly,
                 ),
-                ty: Image<f32,Storage,Depth,Rgba8Snorm,Image2DRect>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: DimRect,
+                        is_array: false,
+                        is_multisampled: false,
+                        fmt: Rgba8Snorm,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -242,7 +389,14 @@
                 desc_ty: StorageImage(
                     WriteOnly,
                 ),
-                ty: Image<f32,Storage,Depth,Rgba32f,Image1DArray>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim1D,
+                        is_array: true,
+                        is_multisampled: false,
+                        fmt: Rgba32f,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -253,7 +407,14 @@
                 desc_ty: StorageImage(
                     WriteOnly,
                 ),
-                ty: Image<f32,Storage,Depth,Rgba32f,Image2DArray>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim2D,
+                        is_array: true,
+                        is_multisampled: false,
+                        fmt: Rgba32f,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -264,7 +425,14 @@
                 desc_ty: StorageImage(
                     WriteOnly,
                 ),
-                ty: Image<f32,Storage,Depth,Rgba32f,CubeMapArray>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: DimCube,
+                        is_array: true,
+                        is_multisampled: false,
+                        fmt: Rgba32f,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -275,7 +443,14 @@
                 desc_ty: StorageTexelBuffer(
                     WriteOnly,
                 ),
-                ty: Image<f32,Storage,Depth,Rgba32f,ImageBuffer>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: DimBuffer,
+                        is_array: false,
+                        is_multisampled: false,
+                        fmt: Rgba32f,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -286,7 +461,14 @@
                 desc_ty: StorageImage(
                     WriteOnly,
                 ),
-                ty: Image<f32,Storage,Depth,Rgba32f,Image2DMS>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim2D,
+                        is_array: false,
+                        is_multisampled: true,
+                        fmt: Rgba32f,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -297,7 +479,14 @@
                 desc_ty: StorageImage(
                     WriteOnly,
                 ),
-                ty: Image<f32,Storage,Depth,Rgba32f,Image2DMSArray>,
+                ty: StorageImage(
+                    StorageImageType {
+                        dim: Dim2D,
+                        is_array: true,
+                        is_multisampled: true,
+                        fmt: Rgba32f,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -306,7 +495,18 @@
                 ),
                 desc_bind: (set=4, bind=0),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<i32,Sampled,Depth,Unknown,Image1D>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Signed(
+                                4,
+                            ),
+                            dim: Dim1D,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -315,7 +515,18 @@
                 ),
                 desc_bind: (set=4, bind=1),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<i32,Sampled,Depth,Unknown,Image2D>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Signed(
+                                4,
+                            ),
+                            dim: Dim2D,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -324,7 +535,18 @@
                 ),
                 desc_bind: (set=4, bind=2),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<i32,Sampled,Depth,Unknown,Image3D>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Signed(
+                                4,
+                            ),
+                            dim: Dim3D,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -333,7 +555,18 @@
                 ),
                 desc_bind: (set=4, bind=3),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<i32,Sampled,Depth,Unknown,CubeMap>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Signed(
+                                4,
+                            ),
+                            dim: DimCube,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -342,7 +575,18 @@
                 ),
                 desc_bind: (set=4, bind=4),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<i32,Sampled,Depth,Unknown,Image2DRect>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Signed(
+                                4,
+                            ),
+                            dim: DimRect,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -351,7 +595,18 @@
                 ),
                 desc_bind: (set=4, bind=5),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<i32,Sampled,Depth,Unknown,Image1DArray>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Signed(
+                                4,
+                            ),
+                            dim: Dim1D,
+                            is_array: true,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -360,7 +615,18 @@
                 ),
                 desc_bind: (set=4, bind=6),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<i32,Sampled,Depth,Unknown,Image2DArray>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Signed(
+                                4,
+                            ),
+                            dim: Dim2D,
+                            is_array: true,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -369,7 +635,18 @@
                 ),
                 desc_bind: (set=4, bind=7),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<i32,Sampled,Depth,Unknown,CubeMapArray>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Signed(
+                                4,
+                            ),
+                            dim: DimCube,
+                            is_array: true,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -378,7 +655,18 @@
                 ),
                 desc_bind: (set=4, bind=8),
                 desc_ty: UniformTexelBuffer,
-                ty: Sampled<Image<i32,Sampled,Depth,Unknown,ImageBuffer>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Signed(
+                                4,
+                            ),
+                            dim: DimBuffer,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -387,7 +675,18 @@
                 ),
                 desc_bind: (set=4, bind=9),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<i32,Sampled,Depth,Unknown,Image2DMS>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Signed(
+                                4,
+                            ),
+                            dim: Dim2D,
+                            is_array: false,
+                            is_multisampled: true,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -396,7 +695,18 @@
                 ),
                 desc_bind: (set=4, bind=10),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<i32,Sampled,Depth,Unknown,Image2DMSArray>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Signed(
+                                4,
+                            ),
+                            dim: Dim2D,
+                            is_array: true,
+                            is_multisampled: true,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -405,7 +715,18 @@
                 ),
                 desc_bind: (set=5, bind=0),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<u32,Sampled,Depth,Unknown,Image1D>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Unsigned(
+                                4,
+                            ),
+                            dim: Dim1D,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -414,7 +735,18 @@
                 ),
                 desc_bind: (set=5, bind=1),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<u32,Sampled,Depth,Unknown,Image2D>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Unsigned(
+                                4,
+                            ),
+                            dim: Dim2D,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -423,7 +755,18 @@
                 ),
                 desc_bind: (set=5, bind=2),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<u32,Sampled,Depth,Unknown,Image3D>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Unsigned(
+                                4,
+                            ),
+                            dim: Dim3D,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -432,7 +775,18 @@
                 ),
                 desc_bind: (set=5, bind=3),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<u32,Sampled,Depth,Unknown,CubeMap>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Unsigned(
+                                4,
+                            ),
+                            dim: DimCube,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -441,7 +795,18 @@
                 ),
                 desc_bind: (set=5, bind=4),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<u32,Sampled,Depth,Unknown,Image2DRect>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Unsigned(
+                                4,
+                            ),
+                            dim: DimRect,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -450,7 +815,18 @@
                 ),
                 desc_bind: (set=5, bind=5),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<u32,Sampled,Depth,Unknown,Image1DArray>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Unsigned(
+                                4,
+                            ),
+                            dim: Dim1D,
+                            is_array: true,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -459,7 +835,18 @@
                 ),
                 desc_bind: (set=5, bind=6),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<u32,Sampled,Depth,Unknown,Image2DArray>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Unsigned(
+                                4,
+                            ),
+                            dim: Dim2D,
+                            is_array: true,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -468,7 +855,18 @@
                 ),
                 desc_bind: (set=5, bind=7),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<u32,Sampled,Depth,Unknown,CubeMapArray>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Unsigned(
+                                4,
+                            ),
+                            dim: DimCube,
+                            is_array: true,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -477,7 +875,18 @@
                 ),
                 desc_bind: (set=5, bind=8),
                 desc_ty: UniformTexelBuffer,
-                ty: Sampled<Image<u32,Sampled,Depth,Unknown,ImageBuffer>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Unsigned(
+                                4,
+                            ),
+                            dim: DimBuffer,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -486,7 +895,18 @@
                 ),
                 desc_bind: (set=5, bind=9),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<u32,Sampled,Depth,Unknown,Image2DMS>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Unsigned(
+                                4,
+                            ),
+                            dim: Dim2D,
+                            is_array: false,
+                            is_multisampled: true,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -495,7 +915,18 @@
                 ),
                 desc_bind: (set=5, bind=10),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<u32,Sampled,Depth,Unknown,Image2DMSArray>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Unsigned(
+                                4,
+                            ),
+                            dim: Dim2D,
+                            is_array: true,
+                            is_multisampled: true,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -504,7 +935,18 @@
                 ),
                 desc_bind: (set=6, bind=0),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Depth,Unknown,Image1D>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: Dim1D,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -513,7 +955,18 @@
                 ),
                 desc_bind: (set=6, bind=1),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Depth,Unknown,Image2D>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: Dim2D,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -522,7 +975,18 @@
                 ),
                 desc_bind: (set=6, bind=2),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Depth,Unknown,Image3D>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: Dim3D,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -531,7 +995,18 @@
                 ),
                 desc_bind: (set=6, bind=3),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Depth,Unknown,CubeMap>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: DimCube,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -540,7 +1015,18 @@
                 ),
                 desc_bind: (set=6, bind=4),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Depth,Unknown,Image2DRect>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: DimRect,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -549,7 +1035,18 @@
                 ),
                 desc_bind: (set=6, bind=5),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Depth,Unknown,Image1DArray>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: Dim1D,
+                            is_array: true,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -558,7 +1055,18 @@
                 ),
                 desc_bind: (set=6, bind=6),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Depth,Unknown,Image2DArray>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: Dim2D,
+                            is_array: true,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -567,7 +1075,18 @@
                 ),
                 desc_bind: (set=6, bind=7),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Depth,Unknown,CubeMapArray>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: DimCube,
+                            is_array: true,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -576,7 +1095,18 @@
                 ),
                 desc_bind: (set=6, bind=8),
                 desc_ty: UniformTexelBuffer,
-                ty: Sampled<Image<f32,Sampled,Depth,Unknown,ImageBuffer>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: DimBuffer,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -585,7 +1115,18 @@
                 ),
                 desc_bind: (set=6, bind=9),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Depth,Unknown,Image2DMS>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: Dim2D,
+                            is_array: false,
+                            is_multisampled: true,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -594,7 +1135,18 @@
                 ),
                 desc_bind: (set=6, bind=10),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Depth,Unknown,Image2DMSArray>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: Dim2D,
+                            is_array: true,
+                            is_multisampled: true,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -603,7 +1155,18 @@
                 ),
                 desc_bind: (set=7, bind=0),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Color,Unknown,Image1D>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: Dim1D,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -612,7 +1175,18 @@
                 ),
                 desc_bind: (set=7, bind=1),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Color,Unknown,Image2D>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: Dim2D,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -621,7 +1195,18 @@
                 ),
                 desc_bind: (set=7, bind=2),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Color,Unknown,CubeMap>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: DimCube,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -630,7 +1215,18 @@
                 ),
                 desc_bind: (set=7, bind=3),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Color,Unknown,Image2DRect>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: DimRect,
+                            is_array: false,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -639,7 +1235,18 @@
                 ),
                 desc_bind: (set=7, bind=4),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Color,Unknown,Image1DArray>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: Dim1D,
+                            is_array: true,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -648,7 +1255,18 @@
                 ),
                 desc_bind: (set=7, bind=5),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Color,Unknown,Image2DArray>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: Dim2D,
+                            is_array: true,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -657,7 +1275,18 @@
                 ),
                 desc_bind: (set=7, bind=6),
                 desc_ty: CombinedImageSampler,
-                ty: Sampled<Image<f32,Sampled,Color,Unknown,CubeMapArray>>,
+                ty: CombinedImageSampler(
+                    CombinedImageSamplerType {
+                        sampled_img_ty: SampledImageType {
+                            scalar_ty: Float(
+                                4,
+                            ),
+                            dim: DimCube,
+                            is_array: true,
+                            is_multisampled: false,
+                        },
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -684,7 +1313,16 @@
                 ),
                 desc_bind: (set=9, bind=0),
                 desc_ty: SampledImage,
-                ty: Image<i32,Sampled,Depth,Unknown,Image1D>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Signed(
+                            4,
+                        ),
+                        dim: Dim1D,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -693,7 +1331,16 @@
                 ),
                 desc_bind: (set=9, bind=1),
                 desc_ty: SampledImage,
-                ty: Image<i32,Sampled,Depth,Unknown,Image2D>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Signed(
+                            4,
+                        ),
+                        dim: Dim2D,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -702,7 +1349,16 @@
                 ),
                 desc_bind: (set=9, bind=2),
                 desc_ty: SampledImage,
-                ty: Image<i32,Sampled,Depth,Unknown,Image3D>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Signed(
+                            4,
+                        ),
+                        dim: Dim3D,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -711,7 +1367,16 @@
                 ),
                 desc_bind: (set=9, bind=3),
                 desc_ty: SampledImage,
-                ty: Image<i32,Sampled,Depth,Unknown,CubeMap>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Signed(
+                            4,
+                        ),
+                        dim: DimCube,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -720,7 +1385,16 @@
                 ),
                 desc_bind: (set=9, bind=4),
                 desc_ty: SampledImage,
-                ty: Image<i32,Sampled,Depth,Unknown,Image2DRect>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Signed(
+                            4,
+                        ),
+                        dim: DimRect,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -729,7 +1403,16 @@
                 ),
                 desc_bind: (set=9, bind=5),
                 desc_ty: SampledImage,
-                ty: Image<i32,Sampled,Depth,Unknown,Image1DArray>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Signed(
+                            4,
+                        ),
+                        dim: Dim1D,
+                        is_array: true,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -738,7 +1421,16 @@
                 ),
                 desc_bind: (set=9, bind=6),
                 desc_ty: SampledImage,
-                ty: Image<i32,Sampled,Depth,Unknown,Image2DArray>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Signed(
+                            4,
+                        ),
+                        dim: Dim2D,
+                        is_array: true,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -747,7 +1439,16 @@
                 ),
                 desc_bind: (set=9, bind=7),
                 desc_ty: SampledImage,
-                ty: Image<i32,Sampled,Depth,Unknown,CubeMapArray>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Signed(
+                            4,
+                        ),
+                        dim: DimCube,
+                        is_array: true,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -756,7 +1457,16 @@
                 ),
                 desc_bind: (set=9, bind=8),
                 desc_ty: UniformTexelBuffer,
-                ty: Image<i32,Sampled,Depth,Unknown,ImageBuffer>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Signed(
+                            4,
+                        ),
+                        dim: DimBuffer,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -765,7 +1475,16 @@
                 ),
                 desc_bind: (set=9, bind=9),
                 desc_ty: SampledImage,
-                ty: Image<i32,Sampled,Depth,Unknown,Image2DMS>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Signed(
+                            4,
+                        ),
+                        dim: Dim2D,
+                        is_array: false,
+                        is_multisampled: true,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -774,7 +1493,16 @@
                 ),
                 desc_bind: (set=9, bind=10),
                 desc_ty: SampledImage,
-                ty: Image<i32,Sampled,Depth,Unknown,Image2DMSArray>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Signed(
+                            4,
+                        ),
+                        dim: Dim2D,
+                        is_array: true,
+                        is_multisampled: true,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -783,7 +1511,16 @@
                 ),
                 desc_bind: (set=10, bind=0),
                 desc_ty: SampledImage,
-                ty: Image<u32,Sampled,Depth,Unknown,Image1D>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Unsigned(
+                            4,
+                        ),
+                        dim: Dim1D,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -792,7 +1529,16 @@
                 ),
                 desc_bind: (set=10, bind=1),
                 desc_ty: SampledImage,
-                ty: Image<u32,Sampled,Depth,Unknown,Image2D>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Unsigned(
+                            4,
+                        ),
+                        dim: Dim2D,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -801,7 +1547,16 @@
                 ),
                 desc_bind: (set=10, bind=2),
                 desc_ty: SampledImage,
-                ty: Image<u32,Sampled,Depth,Unknown,Image3D>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Unsigned(
+                            4,
+                        ),
+                        dim: Dim3D,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -810,7 +1565,16 @@
                 ),
                 desc_bind: (set=10, bind=3),
                 desc_ty: SampledImage,
-                ty: Image<u32,Sampled,Depth,Unknown,CubeMap>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Unsigned(
+                            4,
+                        ),
+                        dim: DimCube,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -819,7 +1583,16 @@
                 ),
                 desc_bind: (set=10, bind=4),
                 desc_ty: SampledImage,
-                ty: Image<u32,Sampled,Depth,Unknown,Image2DRect>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Unsigned(
+                            4,
+                        ),
+                        dim: DimRect,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -828,7 +1601,16 @@
                 ),
                 desc_bind: (set=10, bind=5),
                 desc_ty: SampledImage,
-                ty: Image<u32,Sampled,Depth,Unknown,Image1DArray>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Unsigned(
+                            4,
+                        ),
+                        dim: Dim1D,
+                        is_array: true,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -837,7 +1619,16 @@
                 ),
                 desc_bind: (set=10, bind=6),
                 desc_ty: SampledImage,
-                ty: Image<u32,Sampled,Depth,Unknown,Image2DArray>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Unsigned(
+                            4,
+                        ),
+                        dim: Dim2D,
+                        is_array: true,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -846,7 +1637,16 @@
                 ),
                 desc_bind: (set=10, bind=7),
                 desc_ty: SampledImage,
-                ty: Image<u32,Sampled,Depth,Unknown,CubeMapArray>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Unsigned(
+                            4,
+                        ),
+                        dim: DimCube,
+                        is_array: true,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -855,7 +1655,16 @@
                 ),
                 desc_bind: (set=10, bind=8),
                 desc_ty: UniformTexelBuffer,
-                ty: Image<u32,Sampled,Depth,Unknown,ImageBuffer>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Unsigned(
+                            4,
+                        ),
+                        dim: DimBuffer,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -864,7 +1673,16 @@
                 ),
                 desc_bind: (set=10, bind=9),
                 desc_ty: SampledImage,
-                ty: Image<u32,Sampled,Depth,Unknown,Image2DMS>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Unsigned(
+                            4,
+                        ),
+                        dim: Dim2D,
+                        is_array: false,
+                        is_multisampled: true,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -873,206 +1691,1675 @@
                 ),
                 desc_bind: (set=10, bind=10),
                 desc_ty: SampledImage,
-                ty: Image<u32,Sampled,Depth,Unknown,Image2DMSArray>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Unsigned(
+                            4,
+                        ),
+                        dim: Dim2D,
+                        is_array: true,
+                        is_multisampled: true,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fTex1D",
                 ),
-                desc_bind: (set=12, bind=0),
+                desc_bind: (set=11, bind=0),
                 desc_ty: SampledImage,
-                ty: Image<f32,Sampled,Depth,Unknown,Image1D>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Float(
+                            4,
+                        ),
+                        dim: Dim1D,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fTex2D",
                 ),
-                desc_bind: (set=12, bind=1),
+                desc_bind: (set=11, bind=1),
                 desc_ty: SampledImage,
-                ty: Image<f32,Sampled,Depth,Unknown,Image2D>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Float(
+                            4,
+                        ),
+                        dim: Dim2D,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fTex3D",
                 ),
-                desc_bind: (set=12, bind=2),
+                desc_bind: (set=11, bind=2),
                 desc_ty: SampledImage,
-                ty: Image<f32,Sampled,Depth,Unknown,Image3D>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Float(
+                            4,
+                        ),
+                        dim: Dim3D,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fTexCube",
                 ),
-                desc_bind: (set=12, bind=3),
+                desc_bind: (set=11, bind=3),
                 desc_ty: SampledImage,
-                ty: Image<f32,Sampled,Depth,Unknown,CubeMap>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Float(
+                            4,
+                        ),
+                        dim: DimCube,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fTex2DRect",
                 ),
-                desc_bind: (set=12, bind=4),
+                desc_bind: (set=11, bind=4),
                 desc_ty: SampledImage,
-                ty: Image<f32,Sampled,Depth,Unknown,Image2DRect>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Float(
+                            4,
+                        ),
+                        dim: DimRect,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fTex1DArray",
                 ),
-                desc_bind: (set=12, bind=5),
+                desc_bind: (set=11, bind=5),
                 desc_ty: SampledImage,
-                ty: Image<f32,Sampled,Depth,Unknown,Image1DArray>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Float(
+                            4,
+                        ),
+                        dim: Dim1D,
+                        is_array: true,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fTex2DArray",
                 ),
-                desc_bind: (set=12, bind=6),
+                desc_bind: (set=11, bind=6),
                 desc_ty: SampledImage,
-                ty: Image<f32,Sampled,Depth,Unknown,Image2DArray>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Float(
+                            4,
+                        ),
+                        dim: Dim2D,
+                        is_array: true,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fTexCubeArray",
                 ),
-                desc_bind: (set=12, bind=7),
+                desc_bind: (set=11, bind=7),
                 desc_ty: SampledImage,
-                ty: Image<f32,Sampled,Depth,Unknown,CubeMapArray>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Float(
+                            4,
+                        ),
+                        dim: DimCube,
+                        is_array: true,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fTexBuffer",
                 ),
-                desc_bind: (set=12, bind=8),
+                desc_bind: (set=11, bind=8),
                 desc_ty: UniformTexelBuffer,
-                ty: Image<f32,Sampled,Depth,Unknown,ImageBuffer>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Float(
+                            4,
+                        ),
+                        dim: DimBuffer,
+                        is_array: false,
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fTex2DMS",
                 ),
-                desc_bind: (set=12, bind=9),
+                desc_bind: (set=11, bind=9),
                 desc_ty: SampledImage,
-                ty: Image<f32,Sampled,Depth,Unknown,Image2DMS>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Float(
+                            4,
+                        ),
+                        dim: Dim2D,
+                        is_array: false,
+                        is_multisampled: true,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fTex2DMSArray",
                 ),
-                desc_bind: (set=12, bind=10),
+                desc_bind: (set=11, bind=10),
                 desc_ty: SampledImage,
-                ty: Image<f32,Sampled,Depth,Unknown,Image2DMSArray>,
+                ty: SampledImage(
+                    SampledImageType {
+                        scalar_ty: Float(
+                            4,
+                        ),
+                        dim: Dim2D,
+                        is_array: true,
+                        is_multisampled: true,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "ubo",
                 ),
-                desc_bind: (set=13, bind=0),
+                desc_bind: (set=12, bind=0),
                 desc_ty: UniformBuffer,
-                ty: Ubo { ds: [Data { i0: i32, i1: vec2<i32>, i2: vec3<i32>, i3: vec4<i32>, u0: u32, u1: vec2<u32>, u2: vec3<u32>, u3: vec4<u32>, f0: f32, f1: vec2<f32>, f2: vec3<f32>, f3: vec4<f32>, fMat0: mat2x2<f32,ColumnMajor>, fMat1: mat3x2<f32,ColumnMajor>, fMat2: mat4x2<f32,ColumnMajor>, fMat3: mat2x3<f32,ColumnMajor>, fMat4: mat3x3<f32,ColumnMajor>, fMat5: mat4x3<f32,ColumnMajor>, fMat6: mat2x4<f32,ColumnMajor>, fMat7: mat3x4<f32,ColumnMajor>, fMat8: mat4x4<f32,ColumnMajor>, d0: f64, d1: vec2<f64>, d2: vec3<f64>, d3: vec4<f64>, dMat0: mat2x2<f64,ColumnMajor>, dMat1: mat3x2<f64,ColumnMajor>, dMat2: mat4x2<f64,ColumnMajor>, dMat3: mat2x3<f64,ColumnMajor>, dMat4: mat3x3<f64,ColumnMajor>, dMat5: mat4x3<f64,ColumnMajor>, dMat6: mat2x4<f64,ColumnMajor>, dMat7: mat3x4<f64,ColumnMajor>, dMat8: mat4x4<f64,ColumnMajor> }; 4] },
+                ty: Struct(
+                    StructType {
+                        name: Some(
+                            "Ubo",
+                        ),
+                        members: [
+                            StructMember {
+                                name: Some(
+                                    "ds",
+                                ),
+                                offset: 0,
+                                ty: Array(
+                                    ArrayType {
+                                        proto_ty: Struct(
+                                            StructType {
+                                                name: Some(
+                                                    "Data",
+                                                ),
+                                                members: [
+                                                    StructMember {
+                                                        name: Some(
+                                                            "i0",
+                                                        ),
+                                                        offset: 0,
+                                                        ty: Scalar(
+                                                            Signed(
+                                                                4,
+                                                            ),
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "i1",
+                                                        ),
+                                                        offset: 8,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Signed(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 2,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "i2",
+                                                        ),
+                                                        offset: 16,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Signed(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 3,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "i3",
+                                                        ),
+                                                        offset: 32,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Signed(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 4,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "u0",
+                                                        ),
+                                                        offset: 48,
+                                                        ty: Scalar(
+                                                            Unsigned(
+                                                                4,
+                                                            ),
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "u1",
+                                                        ),
+                                                        offset: 56,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Unsigned(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 2,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "u2",
+                                                        ),
+                                                        offset: 64,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Unsigned(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 3,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "u3",
+                                                        ),
+                                                        offset: 80,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Unsigned(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 4,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "f0",
+                                                        ),
+                                                        offset: 96,
+                                                        ty: Scalar(
+                                                            Float(
+                                                                4,
+                                                            ),
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "f1",
+                                                        ),
+                                                        offset: 104,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Float(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 2,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "f2",
+                                                        ),
+                                                        offset: 112,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Float(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 3,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "f3",
+                                                        ),
+                                                        offset: 128,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Float(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 4,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat0",
+                                                        ),
+                                                        offset: 144,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 2,
+                                                                },
+                                                                nvec: 2,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat1",
+                                                        ),
+                                                        offset: 176,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 3,
+                                                                },
+                                                                nvec: 2,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat2",
+                                                        ),
+                                                        offset: 208,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 4,
+                                                                },
+                                                                nvec: 2,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat3",
+                                                        ),
+                                                        offset: 240,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 2,
+                                                                },
+                                                                nvec: 3,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat4",
+                                                        ),
+                                                        offset: 288,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 3,
+                                                                },
+                                                                nvec: 3,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat5",
+                                                        ),
+                                                        offset: 336,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 4,
+                                                                },
+                                                                nvec: 3,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat6",
+                                                        ),
+                                                        offset: 384,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 2,
+                                                                },
+                                                                nvec: 4,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat7",
+                                                        ),
+                                                        offset: 448,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 3,
+                                                                },
+                                                                nvec: 4,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat8",
+                                                        ),
+                                                        offset: 512,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 4,
+                                                                },
+                                                                nvec: 4,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "d0",
+                                                        ),
+                                                        offset: 576,
+                                                        ty: Scalar(
+                                                            Float(
+                                                                8,
+                                                            ),
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "d1",
+                                                        ),
+                                                        offset: 592,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Float(
+                                                                    8,
+                                                                ),
+                                                                nscalar: 2,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "d2",
+                                                        ),
+                                                        offset: 608,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Float(
+                                                                    8,
+                                                                ),
+                                                                nscalar: 3,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "d3",
+                                                        ),
+                                                        offset: 640,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Float(
+                                                                    8,
+                                                                ),
+                                                                nscalar: 4,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat0",
+                                                        ),
+                                                        offset: 672,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 2,
+                                                                },
+                                                                nvec: 2,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat1",
+                                                        ),
+                                                        offset: 704,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 3,
+                                                                },
+                                                                nvec: 2,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    32,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat2",
+                                                        ),
+                                                        offset: 768,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 4,
+                                                                },
+                                                                nvec: 2,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    32,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat3",
+                                                        ),
+                                                        offset: 832,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 2,
+                                                                },
+                                                                nvec: 3,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat4",
+                                                        ),
+                                                        offset: 896,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 3,
+                                                                },
+                                                                nvec: 3,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    32,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat5",
+                                                        ),
+                                                        offset: 992,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 4,
+                                                                },
+                                                                nvec: 3,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    32,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat6",
+                                                        ),
+                                                        offset: 1088,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 2,
+                                                                },
+                                                                nvec: 4,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat7",
+                                                        ),
+                                                        offset: 1152,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 3,
+                                                                },
+                                                                nvec: 4,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    32,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat8",
+                                                        ),
+                                                        offset: 1280,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 4,
+                                                                },
+                                                                nvec: 4,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    32,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                ],
+                                            },
+                                        ),
+                                        nrepeat: Some(
+                                            4,
+                                        ),
+                                        stride: Some(
+                                            1408,
+                                        ),
+                                    },
+                                ),
+                            },
+                        ],
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "ssbo",
                 ),
-                desc_bind: (set=14, bind=0),
+                desc_bind: (set=13, bind=0),
                 desc_ty: StorageBuffer(
                     ReadWrite,
                 ),
-                ty: Ssbo { ds: [Data { i0: i32, i1: vec2<i32>, i2: vec3<i32>, i3: vec4<i32>, u0: u32, u1: vec2<u32>, u2: vec3<u32>, u3: vec4<u32>, f0: f32, f1: vec2<f32>, f2: vec3<f32>, f3: vec4<f32>, fMat0: mat2x2<f32,ColumnMajor>, fMat1: mat3x2<f32,ColumnMajor>, fMat2: mat4x2<f32,ColumnMajor>, fMat3: mat2x3<f32,ColumnMajor>, fMat4: mat3x3<f32,ColumnMajor>, fMat5: mat4x3<f32,ColumnMajor>, fMat6: mat2x4<f32,ColumnMajor>, fMat7: mat3x4<f32,ColumnMajor>, fMat8: mat4x4<f32,ColumnMajor>, d0: f64, d1: vec2<f64>, d2: vec3<f64>, d3: vec4<f64>, dMat0: mat2x2<f64,ColumnMajor>, dMat1: mat3x2<f64,ColumnMajor>, dMat2: mat4x2<f64,ColumnMajor>, dMat3: mat2x3<f64,ColumnMajor>, dMat4: mat3x3<f64,ColumnMajor>, dMat5: mat4x3<f64,ColumnMajor>, dMat6: mat2x4<f64,ColumnMajor>, dMat7: mat3x4<f64,ColumnMajor>, dMat8: mat4x4<f64,ColumnMajor> }] },
+                ty: Struct(
+                    StructType {
+                        name: Some(
+                            "Ssbo",
+                        ),
+                        members: [
+                            StructMember {
+                                name: Some(
+                                    "ds",
+                                ),
+                                offset: 0,
+                                ty: Array(
+                                    ArrayType {
+                                        proto_ty: Struct(
+                                            StructType {
+                                                name: Some(
+                                                    "Data",
+                                                ),
+                                                members: [
+                                                    StructMember {
+                                                        name: Some(
+                                                            "i0",
+                                                        ),
+                                                        offset: 0,
+                                                        ty: Scalar(
+                                                            Signed(
+                                                                4,
+                                                            ),
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "i1",
+                                                        ),
+                                                        offset: 8,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Signed(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 2,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "i2",
+                                                        ),
+                                                        offset: 16,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Signed(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 3,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "i3",
+                                                        ),
+                                                        offset: 32,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Signed(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 4,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "u0",
+                                                        ),
+                                                        offset: 48,
+                                                        ty: Scalar(
+                                                            Unsigned(
+                                                                4,
+                                                            ),
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "u1",
+                                                        ),
+                                                        offset: 56,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Unsigned(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 2,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "u2",
+                                                        ),
+                                                        offset: 64,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Unsigned(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 3,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "u3",
+                                                        ),
+                                                        offset: 80,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Unsigned(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 4,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "f0",
+                                                        ),
+                                                        offset: 96,
+                                                        ty: Scalar(
+                                                            Float(
+                                                                4,
+                                                            ),
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "f1",
+                                                        ),
+                                                        offset: 104,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Float(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 2,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "f2",
+                                                        ),
+                                                        offset: 112,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Float(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 3,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "f3",
+                                                        ),
+                                                        offset: 128,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Float(
+                                                                    4,
+                                                                ),
+                                                                nscalar: 4,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat0",
+                                                        ),
+                                                        offset: 144,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 2,
+                                                                },
+                                                                nvec: 2,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    8,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat1",
+                                                        ),
+                                                        offset: 160,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 3,
+                                                                },
+                                                                nvec: 2,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat2",
+                                                        ),
+                                                        offset: 192,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 4,
+                                                                },
+                                                                nvec: 2,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat3",
+                                                        ),
+                                                        offset: 224,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 2,
+                                                                },
+                                                                nvec: 3,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    8,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat4",
+                                                        ),
+                                                        offset: 256,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 3,
+                                                                },
+                                                                nvec: 3,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat5",
+                                                        ),
+                                                        offset: 304,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 4,
+                                                                },
+                                                                nvec: 3,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat6",
+                                                        ),
+                                                        offset: 352,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 2,
+                                                                },
+                                                                nvec: 4,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    8,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat7",
+                                                        ),
+                                                        offset: 384,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 3,
+                                                                },
+                                                                nvec: 4,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "fMat8",
+                                                        ),
+                                                        offset: 448,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        4,
+                                                                    ),
+                                                                    nscalar: 4,
+                                                                },
+                                                                nvec: 4,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "d0",
+                                                        ),
+                                                        offset: 512,
+                                                        ty: Scalar(
+                                                            Float(
+                                                                8,
+                                                            ),
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "d1",
+                                                        ),
+                                                        offset: 528,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Float(
+                                                                    8,
+                                                                ),
+                                                                nscalar: 2,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "d2",
+                                                        ),
+                                                        offset: 544,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Float(
+                                                                    8,
+                                                                ),
+                                                                nscalar: 3,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "d3",
+                                                        ),
+                                                        offset: 576,
+                                                        ty: Vector(
+                                                            VectorType {
+                                                                scalar_ty: Float(
+                                                                    8,
+                                                                ),
+                                                                nscalar: 4,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat0",
+                                                        ),
+                                                        offset: 608,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 2,
+                                                                },
+                                                                nvec: 2,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat1",
+                                                        ),
+                                                        offset: 640,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 3,
+                                                                },
+                                                                nvec: 2,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    32,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat2",
+                                                        ),
+                                                        offset: 704,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 4,
+                                                                },
+                                                                nvec: 2,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    32,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat3",
+                                                        ),
+                                                        offset: 768,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 2,
+                                                                },
+                                                                nvec: 3,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat4",
+                                                        ),
+                                                        offset: 832,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 3,
+                                                                },
+                                                                nvec: 3,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    32,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat5",
+                                                        ),
+                                                        offset: 928,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 4,
+                                                                },
+                                                                nvec: 3,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    32,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat6",
+                                                        ),
+                                                        offset: 1024,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 2,
+                                                                },
+                                                                nvec: 4,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    16,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat7",
+                                                        ),
+                                                        offset: 1088,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 3,
+                                                                },
+                                                                nvec: 4,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    32,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructMember {
+                                                        name: Some(
+                                                            "dMat8",
+                                                        ),
+                                                        offset: 1216,
+                                                        ty: Matrix(
+                                                            MatrixType {
+                                                                vec_ty: VectorType {
+                                                                    scalar_ty: Float(
+                                                                        8,
+                                                                    ),
+                                                                    nscalar: 4,
+                                                                },
+                                                                nvec: 4,
+                                                                major: Some(
+                                                                    ColumnMajor,
+                                                                ),
+                                                                stride: Some(
+                                                                    32,
+                                                                ),
+                                                            },
+                                                        ),
+                                                    },
+                                                ],
+                                            },
+                                        ),
+                                        nrepeat: None,
+                                        stride: Some(
+                                            1344,
+                                        ),
+                                    },
+                                ),
+                            },
+                        ],
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "iAttm",
                 ),
-                desc_bind: (set=15, bind=0),
+                desc_bind: (set=14, bind=0),
                 desc_ty: InputAttachment(
                     0,
                 ),
-                ty: SubpassData<i32,SubpassData>,
+                ty: SubpassData(
+                    SubpassDataType {
+                        scalar_ty: Signed(
+                            4,
+                        ),
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "iAttmMS",
                 ),
-                desc_bind: (set=15, bind=1),
+                desc_bind: (set=14, bind=1),
                 desc_ty: InputAttachment(
                     1,
                 ),
-                ty: SubpassData<i32,SubpassDataMS>,
+                ty: SubpassData(
+                    SubpassDataType {
+                        scalar_ty: Signed(
+                            4,
+                        ),
+                        is_multisampled: true,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "uAttm",
                 ),
-                desc_bind: (set=15, bind=2),
+                desc_bind: (set=14, bind=2),
                 desc_ty: InputAttachment(
                     2,
                 ),
-                ty: SubpassData<u32,SubpassData>,
+                ty: SubpassData(
+                    SubpassDataType {
+                        scalar_ty: Unsigned(
+                            4,
+                        ),
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "uAttmMS",
                 ),
-                desc_bind: (set=15, bind=3),
+                desc_bind: (set=14, bind=3),
                 desc_ty: InputAttachment(
                     3,
                 ),
-                ty: SubpassData<u32,SubpassDataMS>,
+                ty: SubpassData(
+                    SubpassDataType {
+                        scalar_ty: Unsigned(
+                            4,
+                        ),
+                        is_multisampled: true,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fAttm",
                 ),
-                desc_bind: (set=15, bind=4),
+                desc_bind: (set=14, bind=4),
                 desc_ty: InputAttachment(
                     4,
                 ),
-                ty: SubpassData<f32,SubpassData>,
+                ty: SubpassData(
+                    SubpassDataType {
+                        scalar_ty: Float(
+                            4,
+                        ),
+                        is_multisampled: false,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fAttmMS",
                 ),
-                desc_bind: (set=15, bind=5),
+                desc_bind: (set=14, bind=5),
                 desc_ty: InputAttachment(
                     5,
                 ),
-                ty: SubpassData<f32,SubpassDataMS>,
+                ty: SubpassData(
+                    SubpassDataType {
+                        scalar_ty: Float(
+                            4,
+                        ),
+                        is_multisampled: true,
+                    },
+                ),
                 nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "acc",
                 ),
-                desc_bind: (set=16, bind=0),
+                desc_bind: (set=15, bind=0),
                 desc_ty: AccelStruct,
                 ty: AccelStruct,
                 nbind: 1,
             },
         ],
         exec_modes: [
-            OriginUpperLeft,
+            ExecutionMode {
+                exec_mode: OriginUpperLeft,
+                operands: [],
+            },
         ],
     },
 ]

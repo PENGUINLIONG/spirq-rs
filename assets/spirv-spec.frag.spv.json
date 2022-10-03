@@ -10,6 +10,12 @@
   "Variables": {
     "Inputs": [
       {
+        "Name": "color1",
+        "Location": 0,
+        "Component": 0,
+        "Type": "vec4<f32>"
+      },
+      {
         "Name": "color2",
         "Location": 2,
         "Component": 0,
@@ -18,12 +24,6 @@
       {
         "Name": "multiplier",
         "Location": 1,
-        "Component": 0,
-        "Type": "vec4<f32>"
-      },
-      {
-        "Name": "color1",
-        "Location": 0,
         "Component": 0,
         "Type": "vec4<f32>"
       }

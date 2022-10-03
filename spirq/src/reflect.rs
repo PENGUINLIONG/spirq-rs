@@ -8,6 +8,7 @@ use crate::ty::*;
 use crate::walk::Walk;
 use crate::{EntryPoint, SpirvBinary};
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
+use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::fmt;
 use std::iter::Peekable;
@@ -1707,7 +1708,8 @@ impl<'a> ReflectIntermediate<'a> {
         accessed_vars
     }
     fn collect_entry_point_vars(&self, func_id: FunctionId) -> Result<Vec<Variable>> {
-        let mut vars = Vec::new();
+        // `BTreeMap` to ensure a stable order.
+        let mut vars = BTreeMap::new();
         for accessed_var_id in self
             .collect_fn_vars(func_id)
             .into_iter()
@@ -1719,10 +1721,10 @@ impl<'a> ReflectIntermediate<'a> {
             // collect built-in variable as useful information, we simply ignore
             // such null-references.
             if let Some(accessed_var) = self.get_var(accessed_var_id) {
-                vars.push(accessed_var.clone());
+                vars.entry(accessed_var_id).or_insert(accessed_var.clone());
             }
         }
-        Ok(vars)
+        Ok(vars.into_values().collect())
     }
     fn collect_entry_point_specs(&self) -> Result<Vec<Variable>> {
         // TODO: (penguinlion) Report only specialization constants that have
