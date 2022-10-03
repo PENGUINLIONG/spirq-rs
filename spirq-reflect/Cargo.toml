@@ -1,16 +1,16 @@
 [package]
-name = "spirq-reflect"
+name = "shader-reflect"
 version = "0.1.1"
 authors = ["PENGUINLIONG <admin@penguinliong.moe>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
-description = "Light weight SPIR-V query utility for graphics. (CLI)"
+description = "SPIR-V/GLSL/HLSL shader interface reflection to JSON. (CLI)"
 repository = "https://github.com/PENGUINLIONG/spirq-rs"
 homepage = "https://github.com/PENGUINLIONG/spirq-rs"
 documentation = "https://docs.rs/spirq"
 categories = ["graphics"]
 readme = "README.md"
-keywords = ["spirv", "vulkan", "opengl", "opencl"]
+keywords = ["spirv", "vulkan", "opengl", "opencl", "glsl", "hlsl"]
 
 [badges]
 maintenance = { status = "actively-developed" }

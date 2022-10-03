@@ -248,6 +248,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "shader-reflect"
+version = "0.1.1"
+dependencies = [
+ "clap",
+ "serde",
+ "serde_json",
+ "shaderc",
+ "spirq",
+]
+
+[[package]]
 name = "shaderc"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -278,17 +289,6 @@ dependencies = [
  "num-derive",
  "num-traits",
  "spirv_headers",
-]
-
-[[package]]
-name = "spirq-reflect"
-version = "0.1.1"
-dependencies = [
- "clap",
- "serde",
- "serde_json",
- "shaderc",
- "spirq",
 ]
 
 [[package]]
