@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use spirv_headers::Op;
+use spirv::Op;
 use std::ops::RangeInclusive;
 
 pub type OpCode = u32;

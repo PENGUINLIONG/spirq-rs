@@ -14,8 +14,8 @@ use std::fmt;
 use std::iter::Peekable;
 use std::ops::RangeInclusive;
 
-use spirv_headers::Dim;
-pub use spirv_headers::{Decoration, ExecutionModel, StorageClass};
+use spirv::Dim;
+pub use spirv::{Decoration, ExecutionModel, StorageClass};
 
 // Public types.
 
@@ -376,7 +376,7 @@ struct EntryPointDeclartion<'a> {
 /// SPIR-V execution mode.
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct ExecutionMode {
-    pub exec_mode: spirv_headers::ExecutionMode,
+    pub exec_mode: spirv::ExecutionMode,
     pub operands: Vec<Constant>,
 }
 enum ExecutionModeOperand {
@@ -385,7 +385,7 @@ enum ExecutionModeOperand {
 }
 struct ExecutionModeDeclaration {
     pub func_id: FunctionId,
-    pub exec_mode: spirv_headers::ExecutionMode,
+    pub exec_mode: spirv::ExecutionMode,
     pub operands: Vec<ExecutionModeOperand>,
 }
 

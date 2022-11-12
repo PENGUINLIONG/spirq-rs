@@ -4,8 +4,8 @@ use std::fmt;
 use std::hash::Hash;
 use std::rc::Rc;
 
-use spirv_headers::Dim;
-pub use spirv_headers::ImageFormat;
+use spirv::Dim;
+pub use spirv::ImageFormat;
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub enum ScalarType {
