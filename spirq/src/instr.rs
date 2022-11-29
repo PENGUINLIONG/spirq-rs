@@ -1,10 +1,10 @@
 use super::parse::Instr;
 use super::{Error, Result};
-use spirv_headers::{Dim, ExecutionMode, StorageClass};
+use spirv::{Dim, ExecutionMode, StorageClass};
 use std::convert::TryFrom;
 use std::marker::PhantomData;
 
-pub use spirv_headers::{ExecutionModel, ImageFormat};
+pub use spirv::{ExecutionModel, ImageFormat};
 
 pub type InstrId = u32;
 pub type FunctionId = InstrId;

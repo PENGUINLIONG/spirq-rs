@@ -1,6 +1,6 @@
 use num_traits::FromPrimitive;
 use spirq::ReflectConfig;
-use spirv_headers::Op;
+use spirv::Op;
 use std::collections::BTreeMap;
 use std::path::Path;
 
