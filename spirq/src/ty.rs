@@ -541,6 +541,9 @@ pub enum Type {
     /// Forward-declared pointer. Usually used for bindless resources with the
     /// `buffer_reference` extension. See `VK_KHR_buffer_device_address`.
     DevicePointer(PointerType),
+    /// Ray query payload type (`rayQueryEXT`). Only available with `RayQueryKHR`
+    /// capability enabled.
+    RayQuery(),
 }
 impl Type {
     pub fn nbyte(&self) -> Option<usize> {
@@ -560,6 +563,7 @@ impl Type {
             AccelStruct() => None,
             DeviceAddress() => Some(8),
             DevicePointer(_) => Some(8),
+            RayQuery() => None,
         }
     }
     // Iterate over all entries in the type tree.
@@ -648,6 +652,7 @@ impl fmt::Display for Type {
             Type::AccelStruct() => f.write_str("AccelStruct"),
             Type::DeviceAddress() => f.write_str("Address"),
             Type::DevicePointer(ptr_ty) => ptr_ty.fmt(f),
+            Type::RayQuery() => f.write_str("RayQuery"),
         }
     }
 }

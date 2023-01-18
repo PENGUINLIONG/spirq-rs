@@ -48,12 +48,14 @@ pub const OP_TYPE_POINTER: OpCode = Op::TypePointer as u32;
 pub const OP_TYPE_FORWARD_POINTER: OpCode = Op::TypeForwardPointer as u32;
 pub const OP_TYPE_FUNCTION: OpCode = Op::TypeFunction as u32;
 pub const OP_TYPE_ACCELERATION_STRUCTURE_KHR: OpCode = Op::TypeAccelerationStructureKHR as u32;
+pub const OP_TYPE_RAY_QUERY: OpCode = Op::TypeRayQueryKHR as u32;
 
 pub fn is_ty_op(op: u32) -> bool {
     match op {
         OP_TYPE_VOID..=OP_TYPE_FUNCTION => true,
         OP_TYPE_ACCELERATION_STRUCTURE_KHR => true,
         OP_TYPE_FORWARD_POINTER => true,
+        OP_TYPE_RAY_QUERY => true,
         _ => false,
     }
 }
