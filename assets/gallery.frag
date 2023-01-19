@@ -1,5 +1,6 @@
 #version 460 core
 #extension GL_EXT_ray_tracing : enable
+#extension GL_EXT_ray_query : enable
 
 struct Data {
     // Signed integer scalar and vector types.
@@ -193,4 +194,7 @@ layout(set=14, binding=5, input_attachment_index=5) uniform subpassInputMS  fAtt
 // Acceleration structure (for ray-tracing).
 layout(set=15, binding=0) uniform accelerationStructureEXT acc;
 
-void main() {}
+void main() {
+    rayQueryEXT ray_query;
+    rayQueryProceedEXT(ray_query);
+}
