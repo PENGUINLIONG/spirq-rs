@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.6.2
+
+- Supported type `RayQueryEXT`.
+
 ## v0.6.1
 
 - Fixed variable order varies between runs.
