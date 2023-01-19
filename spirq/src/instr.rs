@@ -231,4 +231,7 @@ define_ops! {
         b_id: SpecConstantId = read_u32(),
         c_id: SpecConstantId = read_u32(),
     }
+    OpTypeRayQueryKHR {
+        ty_id: TypeId = read_u32(),
+    }
 }

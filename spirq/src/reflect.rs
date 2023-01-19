@@ -984,6 +984,10 @@ impl<'a> ReflectIntermediate<'a> {
                 let op = OpTypeAccelerationStructureKHR::try_from(instr)?;
                 Some((op.ty_id, Type::AccelStruct()))
             }
+            OP_TYPE_RAY_QUERY => {
+                let op = OpTypeRayQueryKHR::try_from(instr)?;
+                Some((op.ty_id, Type::RayQuery()))
+            }
             _ => return Err(Error::UNSUPPORTED_TY),
         };
         if let Some((ty_id, mut ty)) = ty_record {
