@@ -693,7 +693,7 @@ impl<'a> ReflectIntermediate<'a> {
                 }
                 _ => {
                     instrs.next();
-                    continue
+                    continue;
                 },
             };
             if !value.is_empty() {

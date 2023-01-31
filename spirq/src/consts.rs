@@ -26,7 +26,7 @@ pub fn is_debug_op(op: u32) -> bool {
         OP_NAME..=OP_MEMBER_NAME => true,
         OP_STRING => true,
         OP_MODULE_PROCESSED => true,
-        _ => false
+        _ => false,
     }
 }
 
