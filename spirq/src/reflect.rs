@@ -1617,8 +1617,12 @@ impl<'a> ReflectIntermediate<'a> {
         skip_until_range_inclusive(&mut instrs, ENTRY_POINT_RANGE);
         itm.populate_entry_points(&mut instrs)?;
         itm.populate_exec_modes(&mut instrs)?;
-        skip_until_range_inclusive(&mut instrs, NAME_RANGE);
-        itm.populate_names(&mut instrs)?;
+        if let Some(x) = instrs.peek() {
+            if is_debug_op(x.opcode()) {
+                skip_until(&mut instrs, is_debug_op);
+                itm.populate_names(&mut instrs)?;
+            }
+        }
         skip_until(&mut instrs, is_deco_op);
         itm.populate_decos(&mut instrs)?;
         itm.populate_defs(&mut instrs)?;
