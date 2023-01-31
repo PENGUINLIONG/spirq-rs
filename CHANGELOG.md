@@ -1,8 +1,12 @@
 # Change Log
 
+## v0.6.3
+
+- Fixed that shader reflection is bypassed when the SPIR-V has no debug ops. (#102)
+
 ## v0.6.2
 
-- Supported type `RayQueryEXT`.
+- Supported type `RayQueryEXT`. (#100)
 
 ## v0.6.1
 
