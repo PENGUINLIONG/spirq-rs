@@ -679,6 +679,9 @@ impl<'a> ReflectIntermediate<'a> {
         // Extract naming. Names are generally produced as debug information by
         // `glslValidator` but it might be in absence.
         while let Some(instr) = instrs.peek() {
+            if !is_debug_op(instr.opcode()) {
+                break;
+            }
             let (key, value) = match instr.opcode() {
                 OP_NAME => {
                     let op = OpName::try_from(instr)?;
@@ -688,7 +691,10 @@ impl<'a> ReflectIntermediate<'a> {
                     let op = OpMemberName::try_from(instr)?;
                     ((op.target_id, Some(op.member_idx)), op.name)
                 }
-                _ => break,
+                _ => {
+                    instrs.next();
+                    continue
+                },
             };
             if !value.is_empty() {
                 let collision = self.name_map.insert(key, value);
@@ -1618,7 +1624,7 @@ impl<'a> ReflectIntermediate<'a> {
         itm.populate_entry_points(&mut instrs)?;
         itm.populate_exec_modes(&mut instrs)?;
         if let Some(x) = instrs.peek() {
-            if is_debug_op(x.opcode()) {
+            if !is_deco_op(x.opcode()) {
                 skip_until(&mut instrs, is_debug_op);
                 itm.populate_names(&mut instrs)?;
             }
