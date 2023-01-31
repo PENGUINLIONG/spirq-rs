@@ -9,9 +9,26 @@ pub const ENTRY_POINT_RANGE: RangeInclusive<OpCode> = OP_ENTRY_POINT..=OP_ENTRY_
 pub const OP_EXECUTION_MODE: OpCode = Op::ExecutionMode as u32;
 pub const OP_EXECUTION_MODE_ID: OpCode = Op::ExecutionModeId as u32;
 
+pub const OP_SOURCE_CONTINUED: OpCode = Op::SourceContinued as u32;
+pub const OP_SOURCE: OpCode = Op::Source as u32;
+pub const OP_SOURCE_EXTENSION: OpCode = Op::SourceExtension as u32;
+
 pub const OP_NAME: OpCode = Op::Name as u32;
 pub const OP_MEMBER_NAME: OpCode = Op::MemberName as u32;
-pub const NAME_RANGE: RangeInclusive<OpCode> = OP_NAME..=OP_MEMBER_NAME;
+
+pub const OP_STRING: OpCode = Op::String as u32;
+
+pub const OP_MODULE_PROCESSED: OpCode = Op::ModuleProcessed as u32;
+
+pub fn is_debug_op(op: u32) -> bool {
+    match op {
+        OP_SOURCE_CONTINUED..=OP_SOURCE_EXTENSION => true,
+        OP_NAME..=OP_MEMBER_NAME => true,
+        OP_STRING => true,
+        OP_MODULE_PROCESSED => true,
+        _ => false,
+    }
+}
 
 pub const OP_DECORATE: OpCode = Op::Decorate as u32;
 pub const OP_MEMBER_DECORATE: OpCode = Op::MemberDecorate as u32;
