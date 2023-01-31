@@ -694,7 +694,7 @@ impl<'a> ReflectIntermediate<'a> {
                 _ => {
                     instrs.next();
                     continue;
-                },
+                }
             };
             if !value.is_empty() {
                 let collision = self.name_map.insert(key, value);
