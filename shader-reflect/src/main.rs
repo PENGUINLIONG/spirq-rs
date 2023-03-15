@@ -511,8 +511,15 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
             .operands
             .iter()
             .map(|operand| {
+                let value = match operand.value {
+                    spirq::ConstantValue::Bool(x) => x.to_string(),
+                    spirq::ConstantValue::S32(x) => x.to_string(),
+                    spirq::ConstantValue::U32(x) => x.to_string(),
+                    spirq::ConstantValue::F32(x) => x.to_string(),
+                    _ => todo!(),
+                };
                 json!({
-                    "Value": operand.value.to_u32(),
+                    "Value": value,
                     "SpecId": operand.spec_id,
                 })
             })

@@ -1917,7 +1917,9 @@
                                 name: Some(
                                     "ds",
                                 ),
-                                offset: 0,
+                                offset: Some(
+                                    0,
+                                ),
                                 ty: Array(
                                     ArrayType {
                                         proto_ty: Struct(
@@ -1930,7 +1932,9 @@
                                                         name: Some(
                                                             "i0",
                                                         ),
-                                                        offset: 0,
+                                                        offset: Some(
+                                                            0,
+                                                        ),
                                                         ty: Scalar(
                                                             Signed(
                                                                 4,
@@ -1942,7 +1946,9 @@
                                                         name: Some(
                                                             "i1",
                                                         ),
-                                                        offset: 8,
+                                                        offset: Some(
+                                                            8,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Signed(
@@ -1957,7 +1963,9 @@
                                                         name: Some(
                                                             "i2",
                                                         ),
-                                                        offset: 16,
+                                                        offset: Some(
+                                                            16,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Signed(
@@ -1972,7 +1980,9 @@
                                                         name: Some(
                                                             "i3",
                                                         ),
-                                                        offset: 32,
+                                                        offset: Some(
+                                                            32,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Signed(
@@ -1987,7 +1997,9 @@
                                                         name: Some(
                                                             "u0",
                                                         ),
-                                                        offset: 48,
+                                                        offset: Some(
+                                                            48,
+                                                        ),
                                                         ty: Scalar(
                                                             Unsigned(
                                                                 4,
@@ -1999,7 +2011,9 @@
                                                         name: Some(
                                                             "u1",
                                                         ),
-                                                        offset: 56,
+                                                        offset: Some(
+                                                            56,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Unsigned(
@@ -2014,7 +2028,9 @@
                                                         name: Some(
                                                             "u2",
                                                         ),
-                                                        offset: 64,
+                                                        offset: Some(
+                                                            64,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Unsigned(
@@ -2029,7 +2045,9 @@
                                                         name: Some(
                                                             "u3",
                                                         ),
-                                                        offset: 80,
+                                                        offset: Some(
+                                                            80,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Unsigned(
@@ -2044,7 +2062,9 @@
                                                         name: Some(
                                                             "f0",
                                                         ),
-                                                        offset: 96,
+                                                        offset: Some(
+                                                            96,
+                                                        ),
                                                         ty: Scalar(
                                                             Float(
                                                                 4,
@@ -2056,7 +2076,9 @@
                                                         name: Some(
                                                             "f1",
                                                         ),
-                                                        offset: 104,
+                                                        offset: Some(
+                                                            104,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Float(
@@ -2071,7 +2093,9 @@
                                                         name: Some(
                                                             "f2",
                                                         ),
-                                                        offset: 112,
+                                                        offset: Some(
+                                                            112,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Float(
@@ -2086,7 +2110,9 @@
                                                         name: Some(
                                                             "f3",
                                                         ),
-                                                        offset: 128,
+                                                        offset: Some(
+                                                            128,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Float(
@@ -2101,7 +2127,9 @@
                                                         name: Some(
                                                             "fMat0",
                                                         ),
-                                                        offset: 144,
+                                                        offset: Some(
+                                                            144,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2125,7 +2153,9 @@
                                                         name: Some(
                                                             "fMat1",
                                                         ),
-                                                        offset: 176,
+                                                        offset: Some(
+                                                            176,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2149,7 +2179,9 @@
                                                         name: Some(
                                                             "fMat2",
                                                         ),
-                                                        offset: 208,
+                                                        offset: Some(
+                                                            208,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2173,7 +2205,9 @@
                                                         name: Some(
                                                             "fMat3",
                                                         ),
-                                                        offset: 240,
+                                                        offset: Some(
+                                                            240,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2197,7 +2231,9 @@
                                                         name: Some(
                                                             "fMat4",
                                                         ),
-                                                        offset: 288,
+                                                        offset: Some(
+                                                            288,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2221,7 +2257,9 @@
                                                         name: Some(
                                                             "fMat5",
                                                         ),
-                                                        offset: 336,
+                                                        offset: Some(
+                                                            336,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2245,7 +2283,9 @@
                                                         name: Some(
                                                             "fMat6",
                                                         ),
-                                                        offset: 384,
+                                                        offset: Some(
+                                                            384,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2269,7 +2309,9 @@
                                                         name: Some(
                                                             "fMat7",
                                                         ),
-                                                        offset: 448,
+                                                        offset: Some(
+                                                            448,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2293,7 +2335,9 @@
                                                         name: Some(
                                                             "fMat8",
                                                         ),
-                                                        offset: 512,
+                                                        offset: Some(
+                                                            512,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2317,7 +2361,9 @@
                                                         name: Some(
                                                             "d0",
                                                         ),
-                                                        offset: 576,
+                                                        offset: Some(
+                                                            576,
+                                                        ),
                                                         ty: Scalar(
                                                             Float(
                                                                 8,
@@ -2329,7 +2375,9 @@
                                                         name: Some(
                                                             "d1",
                                                         ),
-                                                        offset: 592,
+                                                        offset: Some(
+                                                            592,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Float(
@@ -2344,7 +2392,9 @@
                                                         name: Some(
                                                             "d2",
                                                         ),
-                                                        offset: 608,
+                                                        offset: Some(
+                                                            608,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Float(
@@ -2359,7 +2409,9 @@
                                                         name: Some(
                                                             "d3",
                                                         ),
-                                                        offset: 640,
+                                                        offset: Some(
+                                                            640,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Float(
@@ -2374,7 +2426,9 @@
                                                         name: Some(
                                                             "dMat0",
                                                         ),
-                                                        offset: 672,
+                                                        offset: Some(
+                                                            672,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2398,7 +2452,9 @@
                                                         name: Some(
                                                             "dMat1",
                                                         ),
-                                                        offset: 704,
+                                                        offset: Some(
+                                                            704,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2422,7 +2478,9 @@
                                                         name: Some(
                                                             "dMat2",
                                                         ),
-                                                        offset: 768,
+                                                        offset: Some(
+                                                            768,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2446,7 +2504,9 @@
                                                         name: Some(
                                                             "dMat3",
                                                         ),
-                                                        offset: 832,
+                                                        offset: Some(
+                                                            832,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2470,7 +2530,9 @@
                                                         name: Some(
                                                             "dMat4",
                                                         ),
-                                                        offset: 896,
+                                                        offset: Some(
+                                                            896,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2494,7 +2556,9 @@
                                                         name: Some(
                                                             "dMat5",
                                                         ),
-                                                        offset: 992,
+                                                        offset: Some(
+                                                            992,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2518,7 +2582,9 @@
                                                         name: Some(
                                                             "dMat6",
                                                         ),
-                                                        offset: 1088,
+                                                        offset: Some(
+                                                            1088,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2542,7 +2608,9 @@
                                                         name: Some(
                                                             "dMat7",
                                                         ),
-                                                        offset: 1152,
+                                                        offset: Some(
+                                                            1152,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2566,7 +2634,9 @@
                                                         name: Some(
                                                             "dMat8",
                                                         ),
-                                                        offset: 1280,
+                                                        offset: Some(
+                                                            1280,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2622,7 +2692,9 @@
                                 name: Some(
                                     "ds",
                                 ),
-                                offset: 0,
+                                offset: Some(
+                                    0,
+                                ),
                                 ty: Array(
                                     ArrayType {
                                         proto_ty: Struct(
@@ -2635,7 +2707,9 @@
                                                         name: Some(
                                                             "i0",
                                                         ),
-                                                        offset: 0,
+                                                        offset: Some(
+                                                            0,
+                                                        ),
                                                         ty: Scalar(
                                                             Signed(
                                                                 4,
@@ -2647,7 +2721,9 @@
                                                         name: Some(
                                                             "i1",
                                                         ),
-                                                        offset: 8,
+                                                        offset: Some(
+                                                            8,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Signed(
@@ -2662,7 +2738,9 @@
                                                         name: Some(
                                                             "i2",
                                                         ),
-                                                        offset: 16,
+                                                        offset: Some(
+                                                            16,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Signed(
@@ -2677,7 +2755,9 @@
                                                         name: Some(
                                                             "i3",
                                                         ),
-                                                        offset: 32,
+                                                        offset: Some(
+                                                            32,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Signed(
@@ -2692,7 +2772,9 @@
                                                         name: Some(
                                                             "u0",
                                                         ),
-                                                        offset: 48,
+                                                        offset: Some(
+                                                            48,
+                                                        ),
                                                         ty: Scalar(
                                                             Unsigned(
                                                                 4,
@@ -2704,7 +2786,9 @@
                                                         name: Some(
                                                             "u1",
                                                         ),
-                                                        offset: 56,
+                                                        offset: Some(
+                                                            56,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Unsigned(
@@ -2719,7 +2803,9 @@
                                                         name: Some(
                                                             "u2",
                                                         ),
-                                                        offset: 64,
+                                                        offset: Some(
+                                                            64,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Unsigned(
@@ -2734,7 +2820,9 @@
                                                         name: Some(
                                                             "u3",
                                                         ),
-                                                        offset: 80,
+                                                        offset: Some(
+                                                            80,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Unsigned(
@@ -2749,7 +2837,9 @@
                                                         name: Some(
                                                             "f0",
                                                         ),
-                                                        offset: 96,
+                                                        offset: Some(
+                                                            96,
+                                                        ),
                                                         ty: Scalar(
                                                             Float(
                                                                 4,
@@ -2761,7 +2851,9 @@
                                                         name: Some(
                                                             "f1",
                                                         ),
-                                                        offset: 104,
+                                                        offset: Some(
+                                                            104,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Float(
@@ -2776,7 +2868,9 @@
                                                         name: Some(
                                                             "f2",
                                                         ),
-                                                        offset: 112,
+                                                        offset: Some(
+                                                            112,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Float(
@@ -2791,7 +2885,9 @@
                                                         name: Some(
                                                             "f3",
                                                         ),
-                                                        offset: 128,
+                                                        offset: Some(
+                                                            128,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Float(
@@ -2806,7 +2902,9 @@
                                                         name: Some(
                                                             "fMat0",
                                                         ),
-                                                        offset: 144,
+                                                        offset: Some(
+                                                            144,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2830,7 +2928,9 @@
                                                         name: Some(
                                                             "fMat1",
                                                         ),
-                                                        offset: 160,
+                                                        offset: Some(
+                                                            160,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2854,7 +2954,9 @@
                                                         name: Some(
                                                             "fMat2",
                                                         ),
-                                                        offset: 192,
+                                                        offset: Some(
+                                                            192,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2878,7 +2980,9 @@
                                                         name: Some(
                                                             "fMat3",
                                                         ),
-                                                        offset: 224,
+                                                        offset: Some(
+                                                            224,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2902,7 +3006,9 @@
                                                         name: Some(
                                                             "fMat4",
                                                         ),
-                                                        offset: 256,
+                                                        offset: Some(
+                                                            256,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2926,7 +3032,9 @@
                                                         name: Some(
                                                             "fMat5",
                                                         ),
-                                                        offset: 304,
+                                                        offset: Some(
+                                                            304,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2950,7 +3058,9 @@
                                                         name: Some(
                                                             "fMat6",
                                                         ),
-                                                        offset: 352,
+                                                        offset: Some(
+                                                            352,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2974,7 +3084,9 @@
                                                         name: Some(
                                                             "fMat7",
                                                         ),
-                                                        offset: 384,
+                                                        offset: Some(
+                                                            384,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -2998,7 +3110,9 @@
                                                         name: Some(
                                                             "fMat8",
                                                         ),
-                                                        offset: 448,
+                                                        offset: Some(
+                                                            448,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -3022,7 +3136,9 @@
                                                         name: Some(
                                                             "d0",
                                                         ),
-                                                        offset: 512,
+                                                        offset: Some(
+                                                            512,
+                                                        ),
                                                         ty: Scalar(
                                                             Float(
                                                                 8,
@@ -3034,7 +3150,9 @@
                                                         name: Some(
                                                             "d1",
                                                         ),
-                                                        offset: 528,
+                                                        offset: Some(
+                                                            528,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Float(
@@ -3049,7 +3167,9 @@
                                                         name: Some(
                                                             "d2",
                                                         ),
-                                                        offset: 544,
+                                                        offset: Some(
+                                                            544,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Float(
@@ -3064,7 +3184,9 @@
                                                         name: Some(
                                                             "d3",
                                                         ),
-                                                        offset: 576,
+                                                        offset: Some(
+                                                            576,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
                                                                 scalar_ty: Float(
@@ -3079,7 +3201,9 @@
                                                         name: Some(
                                                             "dMat0",
                                                         ),
-                                                        offset: 608,
+                                                        offset: Some(
+                                                            608,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -3103,7 +3227,9 @@
                                                         name: Some(
                                                             "dMat1",
                                                         ),
-                                                        offset: 640,
+                                                        offset: Some(
+                                                            640,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -3127,7 +3253,9 @@
                                                         name: Some(
                                                             "dMat2",
                                                         ),
-                                                        offset: 704,
+                                                        offset: Some(
+                                                            704,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -3151,7 +3279,9 @@
                                                         name: Some(
                                                             "dMat3",
                                                         ),
-                                                        offset: 768,
+                                                        offset: Some(
+                                                            768,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -3175,7 +3305,9 @@
                                                         name: Some(
                                                             "dMat4",
                                                         ),
-                                                        offset: 832,
+                                                        offset: Some(
+                                                            832,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -3199,7 +3331,9 @@
                                                         name: Some(
                                                             "dMat5",
                                                         ),
-                                                        offset: 928,
+                                                        offset: Some(
+                                                            928,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -3223,7 +3357,9 @@
                                                         name: Some(
                                                             "dMat6",
                                                         ),
-                                                        offset: 1024,
+                                                        offset: Some(
+                                                            1024,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -3247,7 +3383,9 @@
                                                         name: Some(
                                                             "dMat7",
                                                         ),
-                                                        offset: 1088,
+                                                        offset: Some(
+                                                            1088,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {
@@ -3271,7 +3409,9 @@
                                                         name: Some(
                                                             "dMat8",
                                                         ),
-                                                        offset: 1216,
+                                                        offset: Some(
+                                                            1216,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
                                                                 vec_ty: VectorType {

@@ -1,6 +1,5 @@
-use super::parse::Instr;
-use super::{Error, Result};
-use spirv::{Dim, ExecutionMode, StorageClass};
+use super::parse::{define_ops, Instr};
+use spirv::{Dim, ExecutionMode, StorageClass, AddressingModel, MemoryModel, Decoration};
 use std::convert::TryFrom;
 use std::marker::PhantomData;
 
@@ -15,30 +14,18 @@ pub type SpecConstantId = InstrId;
 
 pub type MemberIdx = u32;
 
-macro_rules! define_ops {
-    ($($opcode:ident { $($field:ident: $type:ty = $read_fn:ident(),)+ })+) => {
-        $(
-            pub struct $opcode<'a> {
-                $( pub $field: $type, )*
-                _ph: PhantomData<&'a ()>,
-            }
-            impl<'a> TryFrom<&Instr<'a>> for $opcode<'a> {
-                type Error = Error;
-                fn try_from(instr: &Instr<'a>) -> Result<Self> {
-                    let mut operands = instr.operands();
-                    let op = $opcode {
-                        $( $field: operands.$read_fn()?, )+
-                        _ph: PhantomData,
-                    };
-                    Ok(op)
-                }
-            }
-        )+
-    };
-}
-
 // Be aware that the order of the read methods is important.
 define_ops! {
+    OpExtInstImport {
+        instr_set_id: InstrId = read_u32(),
+        name: &'a str = read_str(),
+    }
+
+    OpMemoryModel {
+        addr_model: AddressingModel = read_enum(),
+        mem_model: MemoryModel = read_enum(),
+    }
+
     OpEntryPoint {
         exec_model: ExecutionModel = read_enum(),
         func_id: FunctionId = read_u32(),
@@ -63,13 +50,13 @@ define_ops! {
 
     OpDecorate {
         target_id: InstrId = read_u32(),
-        deco: u32 = read_enum(),
+        deco: Decoration = read_enum(),
         params: &'a [u32] = read_list(),
     }
     OpMemberDecorate {
         target_id: InstrId = read_u32(),
         member_idx: MemberIdx = read_u32(),
-        deco: u32 = read_enum(),
+        deco: Decoration = read_enum(),
         params: &'a [u32] = read_list(),
     }
 

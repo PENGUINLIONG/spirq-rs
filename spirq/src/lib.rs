@@ -57,75 +57,42 @@
 //! [`reflect`]: reflect/struct.ReflectConfig.html#method.reflect
 //! [`Type`]: ty/enum.Type.html
 mod consts;
-pub mod error;
-mod inspect;
 mod instr;
-pub mod parse;
+pub mod inspect;
+pub mod analysis;
 pub mod reflect;
 #[cfg(test)]
 mod tests;
-pub mod ty;
-pub mod walk;
 
-use std::convert::TryInto;
 use std::fmt;
-use std::iter::FromIterator;
 
-pub use error::{Error, Result};
-pub use reflect::{
-    AccessType, ConstantValue, DescriptorBinding, DescriptorType, ExecutionMode, ExecutionModel,
-    InterfaceLocation, Locator, ReflectConfig, Variable,
+pub use spirq_types as ty;
+pub use spirq_parse as parse;
+
+pub mod error {
+    pub use anyhow::{ Error, Result };
+}
+pub use reflect::{ ExecutionModel, ReflectConfig };
+
+pub use spirq_types::{
+    AccessType,
+    DescriptorType,
+    Type,
+};
+pub use spirq_interface::{
+    Locator,
+    DescriptorBinding,
+    InterfaceLocation,
+    SpecId,
+    Variable,
+    ExecutionMode,
+    Function,
+    Constant,
+    ConstantValue,
 };
 
-/// SPIR-V program binary.
-#[derive(Debug, Default, Clone)]
-pub struct SpirvBinary(Vec<u32>);
-impl From<Vec<u32>> for SpirvBinary {
-    fn from(x: Vec<u32>) -> Self {
-        SpirvBinary(x)
-    }
-}
-impl From<&[u32]> for SpirvBinary {
-    fn from(x: &[u32]) -> Self {
-        SpirvBinary(x.to_owned())
-    }
-}
-impl FromIterator<u32> for SpirvBinary {
-    fn from_iter<I: IntoIterator<Item = u32>>(iter: I) -> Self {
-        SpirvBinary(iter.into_iter().collect::<Vec<u32>>())
-    }
-}
-impl From<&[u8]> for SpirvBinary {
-    fn from(x: &[u8]) -> Self {
-        if x.len() == 0 {
-            return SpirvBinary::default();
-        }
-        x.chunks_exact(4)
-            .map(|x| x.try_into().unwrap())
-            .map(match x[0] {
-                0x03 => u32::from_le_bytes,
-                0x07 => u32::from_be_bytes,
-                _ => return SpirvBinary::default(),
-            })
-            .collect::<SpirvBinary>()
-    }
-}
-impl From<Vec<u8>> for SpirvBinary {
-    fn from(x: Vec<u8>) -> Self {
-        SpirvBinary::from(x.as_ref() as &[u8])
-    }
-}
-
-impl SpirvBinary {
-    pub fn words(&self) -> &[u32] {
-        &self.0
-    }
-    pub fn into_words(self) -> Vec<u32> {
-        self.0
-    }
-}
-
 // SPIR-V program entry points.
+pub use spirq_parse::SpirvBinary;
 
 /// Representing an entry point described in a SPIR-V.
 #[derive(Clone, PartialEq, Eq, Hash)]

@@ -1,12 +1,10 @@
 //! Structured representations of SPIR-V types.
+use spirv::{ImageFormat, Dim, StorageClass};
+
 use crate::walk::Walk;
-use crate::AccessType;
 use std::fmt;
 use std::hash::Hash;
 use std::rc::Rc;
-
-use spirv::Dim;
-pub use spirv::ImageFormat;
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub enum ScalarType {
@@ -360,39 +358,15 @@ impl fmt::Display for SubpassDataType {
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct ArrayType {
     pub proto_ty: Box<Type>,
+    /// Number of elements in the array. None if the array length is only known
+    /// at runtime.
     pub nrepeat: Option<u32>,
+    /// Stride between elements in the array. None if the array doesn't have
+    /// a explicitly specified layout. For example, an array of descriptor
+    /// resources doesn't have a physical layout.
     pub stride: Option<usize>,
 }
 impl ArrayType {
-    pub(crate) fn new_multibind(proto_ty: &Type, nrepeat: u32) -> ArrayType {
-        ArrayType {
-            proto_ty: Box::new(proto_ty.clone()),
-            nrepeat: Some(nrepeat),
-            stride: None,
-        }
-    }
-    pub(crate) fn new_unsized_multibind(proto_ty: &Type) -> ArrayType {
-        ArrayType {
-            proto_ty: Box::new(proto_ty.clone()),
-            nrepeat: None,
-            stride: None,
-        }
-    }
-    pub fn new(proto_ty: &Type, nrepeat: u32, stride: usize) -> ArrayType {
-        ArrayType {
-            proto_ty: Box::new(proto_ty.clone()),
-            nrepeat: Some(nrepeat),
-            stride: Some(stride),
-        }
-    }
-    pub fn new_unsized(proto_ty: &Type, stride: usize) -> ArrayType {
-        ArrayType {
-            proto_ty: Box::new(proto_ty.clone()),
-            nrepeat: None,
-            stride: Some(stride),
-        }
-    }
-
     /// Get the minimum size of the array type. If the number of elements is not
     /// given until runtime, 0 is returned.
     pub fn nbyte(&self) -> usize {
@@ -409,10 +383,51 @@ impl fmt::Display for ArrayType {
     }
 }
 
+/// Access type of a variable.
+#[repr(u32)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum AccessType {
+    /// The variable can be accessed by read.
+    ReadOnly = 1,
+    /// The variable can be accessed by write.
+    WriteOnly = 2,
+    /// The variable can be accessed by read or by write.
+    ReadWrite = 3,
+}
+impl std::ops::BitOr<AccessType> for AccessType {
+    type Output = AccessType;
+    fn bitor(self, rhs: AccessType) -> AccessType {
+        return match (self, rhs) {
+            (Self::ReadOnly, Self::ReadOnly) => Self::ReadOnly,
+            (Self::WriteOnly, Self::WriteOnly) => Self::WriteOnly,
+            _ => Self::ReadWrite,
+        };
+    }
+}
+impl std::ops::BitAnd<AccessType> for AccessType {
+    type Output = Option<AccessType>;
+    fn bitand(self, rhs: AccessType) -> Option<AccessType> {
+        return match (self, rhs) {
+            (Self::ReadOnly, Self::ReadWrite)
+            | (Self::ReadWrite, Self::ReadOnly)
+            | (Self::ReadOnly, Self::ReadOnly) => Some(Self::ReadOnly),
+            (Self::WriteOnly, Self::ReadWrite)
+            | (Self::ReadWrite, Self::WriteOnly)
+            | (Self::WriteOnly, Self::WriteOnly) => Some(Self::WriteOnly),
+            (Self::ReadWrite, Self::ReadWrite) => Some(Self::ReadWrite),
+            (_, _) => None,
+        };
+    }
+}
+
 #[derive(PartialEq, Eq, Clone, Hash, Debug)]
 pub struct StructMember {
     pub name: Option<String>,
-    pub offset: usize,
+    /// Offset of this member from the beginning of the struct. None if the
+    /// struct doesn't have a explicitly specified layout. For example,
+    /// `gl_PerVertex` doesn't have a physical layout. You won't see a `None` in
+    /// reflected result.
+    pub offset: Option<usize>,
     pub ty: Type,
     pub access_ty: AccessType,
 }
@@ -422,20 +437,15 @@ pub struct StructType {
     pub members: Vec<StructMember>, // Offset and type.
 }
 impl StructType {
-    pub(crate) fn new(name: Option<String>) -> StructType {
-        StructType {
-            name,
-            ..Default::default()
-        }
-    }
-
     pub fn name(&self) -> Option<&str> {
         self.name.as_ref().map(AsRef::as_ref)
     }
     pub fn nbyte(&self) -> usize {
         self.members
             .last()
-            .map(|last| last.offset + last.ty.nbyte().unwrap_or(0))
+            .map(|last| {
+                last.offset.unwrap_or(0) + last.ty.nbyte().unwrap_or(0)
+            })
             .unwrap_or(0)
     }
 }
@@ -463,13 +473,9 @@ impl fmt::Display for StructType {
 #[derive(PartialEq, Eq, Clone, Hash, Debug)]
 pub struct PointerType {
     pub pointee_ty: Box<Type>,
+    pub store_cls: StorageClass,
 }
 impl PointerType {
-    pub(crate) fn new(pointee_ty: &Type) -> PointerType {
-        PointerType {
-            pointee_ty: Box::new(pointee_ty.clone()),
-        }
-    }
 }
 impl fmt::Display for PointerType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -689,4 +695,33 @@ impl fmt::Display for Type {
             Type::RayQuery() => f.write_str("RayQuery"),
         }
     }
+}
+
+/// Descriptor type matching `VkDescriptorType`.
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub enum DescriptorType {
+    /// `VK_DESCRIPTOR_TYPE_SAMPLER`
+    Sampler(),
+    /// `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`
+    CombinedImageSampler(),
+    /// `VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE`
+    SampledImage(),
+    /// `VK_DESCRIPTOR_TYPE_STORAGE_IMAGE`
+    StorageImage(AccessType),
+    /// `VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER`.
+    UniformTexelBuffer(),
+    /// `VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER`.
+    StorageTexelBuffer(AccessType),
+    /// `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER` or
+    /// `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC` depending on how you gonna
+    /// use it.
+    UniformBuffer(),
+    /// `VK_DESCRIPTOR_TYPE_STORAGE_BUFFER` or
+    /// `VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC` depending on how you gonna
+    /// use it.
+    StorageBuffer(AccessType),
+    /// `VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT` and its input attachment index.
+    InputAttachment(u32),
+    /// `VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR`
+    AccelStruct(),
 }

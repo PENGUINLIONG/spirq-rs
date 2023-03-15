@@ -1,0 +1,22 @@
+[package]
+name = "spirq-types"
+version = "0.6.4"
+authors = ["PENGUINLIONG <admin@penguinliong.moe>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "Type system for SPIR-Q, a light weight SPIR-V query utility for graphics."
+repository = "https://github.com/PENGUINLIONG/spirq-rs"
+homepage = "https://github.com/PENGUINLIONG/spirq-rs"
+documentation = "https://docs.rs/spirq-types"
+categories = ["graphics"]
+readme = "README.md"
+keywords = ["spirv", "vulkan", "opengl", "opencl"]
+
+[badges]
+maintenance = { status = "actively-developed" }
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+spirv = "0.2"
+anyhow = "1.0"
