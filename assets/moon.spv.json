@@ -1,0 +1,152 @@
+{
+  "EntryPoint": "PSMain",
+  "ExecutionModel": "Fragment",
+  "ExecutionModes": [
+    {
+      "ExecutionMode": "OriginUpperLeft",
+      "Operands": []
+    }
+  ],
+  "Variables": {
+    "Inputs": [
+      {
+        "Name": "in.var.POSITION0",
+        "Location": 0,
+        "Component": 0,
+        "Type": "vec3<f32>"
+      },
+      {
+        "Name": "in.var.TEXCOORD0",
+        "Location": 1,
+        "Component": 0,
+        "Type": "vec2<f32>"
+      },
+      {
+        "Name": "in.var.NORMAL0",
+        "Location": 2,
+        "Component": 0,
+        "Type": "vec3<f32>"
+      },
+      {
+        "Name": "in.var.TEXCOORD1",
+        "Location": 3,
+        "Component": 0,
+        "Type": "u32"
+      }
+    ],
+    "Outputs": [
+      {
+        "Name": "out.var.SV_Target0",
+        "Location": 0,
+        "Component": 0,
+        "Type": "vec4<f32>"
+      }
+    ],
+    "Descriptors": [
+      {
+        "Name": "tex",
+        "Set": 0,
+        "Binding": 0,
+        "DescriptorType": "SampledImage",
+        "Type": "SampledImage2D<f32>",
+        "Count": 0
+      },
+      {
+        "Name": "samp",
+        "Set": 0,
+        "Binding": 1,
+        "DescriptorType": "Sampler",
+        "Type": "Sampler",
+        "Count": 1
+      },
+      {
+        "Name": "infos",
+        "Set": 0,
+        "Binding": 2,
+        "DescriptorType": "StorageBuffer(ReadOnly)",
+        "Type": {
+          "Kind": "Struct",
+          "Members": [
+            {
+              "Name": null,
+              "Offset": 0,
+              "MemberType": {
+                "Kind": "Array",
+                "ElementType": {
+                  "Kind": "Struct",
+                  "Members": [
+                    {
+                      "Name": "base_color_factor",
+                      "Offset": 0,
+                      "MemberType": "vec4<f32>"
+                    },
+                    {
+                      "Name": "emissive_factor",
+                      "Offset": 16,
+                      "MemberType": "vec3<f32>"
+                    },
+                    {
+                      "Name": "metallic_factor",
+                      "Offset": 28,
+                      "MemberType": "f32"
+                    },
+                    {
+                      "Name": "roughness_factor",
+                      "Offset": 32,
+                      "MemberType": "f32"
+                    },
+                    {
+                      "Name": "albedo_texture",
+                      "Offset": 36,
+                      "MemberType": "u32"
+                    },
+                    {
+                      "Name": "normal_texture",
+                      "Offset": 40,
+                      "MemberType": "u32"
+                    },
+                    {
+                      "Name": "emissive_texture",
+                      "Offset": 44,
+                      "MemberType": "u32"
+                    }
+                  ]
+                },
+                "Count": null,
+                "Stride": 48
+              }
+            }
+          ]
+        },
+        "Count": 1
+      }
+    ],
+    "PushConstants": [
+      {
+        "Name": "constant",
+        "Type": {
+          "Kind": "Struct",
+          "Members": [
+            {
+              "Name": "combined_matrix",
+              "Offset": 0,
+              "MemberType": {
+                "Kind": "Matrix",
+                "AxisOrder": "RowMajor",
+                "VectorType": "vec4<f32>",
+                "Count": 4,
+                "Stride": 16
+              }
+            },
+            {
+              "Name": "camera_pos",
+              "Offset": 64,
+              "MemberType": "vec3<f32>"
+            }
+          ]
+        }
+      }
+    ],
+    "SpecConstants": []
+  }
+}
