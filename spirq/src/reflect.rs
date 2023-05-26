@@ -583,20 +583,23 @@ impl<'a> ReflectIntermediate<'a> {
         self.get_name(instr_id)
     }
     pub fn get_desc_access_ty(&self, id: InstrId, ty: &Type) -> Option<AccessType> {
-        self.get_access_ty_from_deco(id, None)
-            .and_then(|x| {
-                // Use the stricter one.
-                if x == AccessType::ReadWrite {
-                    match ty.access_ty() {
-                        Some(x) => Some(x),
-                        None => Some(AccessType::ReadWrite),
-                    }
-                } else {
-                    Some(x)
+        self.get_access_ty_from_deco(id, None).and_then(|x| {
+            // Use the stricter one.
+            if x == AccessType::ReadWrite {
+                match ty.access_ty() {
+                    Some(x) => Some(x),
+                    None => Some(AccessType::ReadWrite),
                 }
-            })
+            } else {
+                Some(x)
+            }
+        })
     }
-    pub fn get_access_ty_from_deco(&self, id: InstrId, member_idx: Option<u32>) -> Option<AccessType> {
+    pub fn get_access_ty_from_deco(
+        &self,
+        id: InstrId,
+        member_idx: Option<u32>,
+    ) -> Option<AccessType> {
         let write_only = self.contains_deco(id, member_idx, Decoration::NonReadable);
         let read_only = self.contains_deco(id, member_idx, Decoration::NonWritable);
         match (write_only, read_only) {
@@ -920,7 +923,8 @@ impl<'a> ReflectIntermediate<'a> {
                         .get_member_deco_u32(op.ty_id, i, Decoration::Offset)
                         .map(|x| x as usize)
                     {
-                        let access_ty = self.get_access_ty_from_deco(op.ty_id, Some(i))
+                        let access_ty = self
+                            .get_access_ty_from_deco(op.ty_id, Some(i))
                             .ok_or(Error::ACCESS_CONFLICT)?;
                         let member = StructMember {
                             name,
