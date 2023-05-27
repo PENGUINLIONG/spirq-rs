@@ -400,31 +400,6 @@ pub enum AccessType {
     /// The variable can be accessed by read or by write.
     ReadWrite = 3,
 }
-impl std::ops::BitOr<AccessType> for AccessType {
-    type Output = AccessType;
-    fn bitor(self, rhs: AccessType) -> AccessType {
-        return match (self, rhs) {
-            (Self::ReadOnly, Self::ReadOnly) => Self::ReadOnly,
-            (Self::WriteOnly, Self::WriteOnly) => Self::WriteOnly,
-            _ => Self::ReadWrite,
-        };
-    }
-}
-impl std::ops::BitAnd<AccessType> for AccessType {
-    type Output = Option<AccessType>;
-    fn bitand(self, rhs: AccessType) -> Option<AccessType> {
-        return match (self, rhs) {
-            (Self::ReadOnly, Self::ReadWrite)
-            | (Self::ReadWrite, Self::ReadOnly)
-            | (Self::ReadOnly, Self::ReadOnly) => Some(Self::ReadOnly),
-            (Self::WriteOnly, Self::ReadWrite)
-            | (Self::ReadWrite, Self::WriteOnly)
-            | (Self::WriteOnly, Self::WriteOnly) => Some(Self::WriteOnly),
-            (Self::ReadWrite, Self::ReadWrite) => Some(Self::ReadWrite),
-            (_, _) => None,
-        };
-    }
-}
 
 // The actual reflection to take place.
 
@@ -607,13 +582,30 @@ impl<'a> ReflectIntermediate<'a> {
         let instr_id = *self.declr_map.get(&locator)?;
         self.get_name(instr_id)
     }
-    fn get_desc_access(&self, var_id: VariableId) -> Option<AccessType> {
-        let read_only = self.contains_deco(var_id, None, Decoration::NonWritable);
-        let write_only = self.contains_deco(var_id, None, Decoration::NonReadable);
-        match (read_only, write_only) {
+    pub fn get_desc_access_ty(&self, id: InstrId, ty: &Type) -> Option<AccessType> {
+        self.get_access_ty_from_deco(id, None).and_then(|x| {
+            // Use the stricter one.
+            if x == AccessType::ReadWrite {
+                match ty.access_ty() {
+                    Some(x) => Some(x),
+                    None => Some(AccessType::ReadWrite),
+                }
+            } else {
+                Some(x)
+            }
+        })
+    }
+    pub fn get_access_ty_from_deco(
+        &self,
+        id: InstrId,
+        member_idx: Option<u32>,
+    ) -> Option<AccessType> {
+        let write_only = self.contains_deco(id, member_idx, Decoration::NonReadable);
+        let read_only = self.contains_deco(id, member_idx, Decoration::NonWritable);
+        match (write_only, read_only) {
             (true, true) => None,
-            (true, false) => Some(AccessType::ReadOnly),
-            (false, true) => Some(AccessType::WriteOnly),
+            (true, false) => Some(AccessType::WriteOnly),
+            (false, true) => Some(AccessType::ReadOnly),
             (false, false) => Some(AccessType::ReadWrite),
         }
     }
@@ -931,10 +923,14 @@ impl<'a> ReflectIntermediate<'a> {
                         .get_member_deco_u32(op.ty_id, i, Decoration::Offset)
                         .map(|x| x as usize)
                     {
+                        let access_ty = self
+                            .get_access_ty_from_deco(op.ty_id, Some(i))
+                            .ok_or(Error::ACCESS_CONFLICT)?;
                         let member = StructMember {
                             name,
                             offset,
                             ty: member_ty.clone(),
+                            access_ty,
                         };
                         struct_ty.members.push(member);
                     } else {
@@ -996,7 +992,9 @@ impl<'a> ReflectIntermediate<'a> {
             }
             _ => return Err(Error::UNSUPPORTED_TY),
         };
+
         if let Some((ty_id, mut ty)) = ty_record {
+            // Propagate matrix stride.
             if let Ok(mat_stride) =
                 self.get_deco_or_member_deco_u32(ty_id, None, Decoration::MatrixStride)
             {
@@ -1009,6 +1007,7 @@ impl<'a> ReflectIntermediate<'a> {
                     }
                 });
             }
+            // Propagate array stride.
             if let Ok(arr_stride) =
                 self.get_deco_or_member_deco_u32(ty_id, None, Decoration::ArrayStride)
             {
@@ -1341,7 +1340,7 @@ impl<'a> ReflectIntermediate<'a> {
                 // deprecated.
                 let var = if self.contains_deco(ty_id, None, Decoration::BufferBlock) {
                     let access = self
-                        .get_desc_access(op.var_id)
+                        .get_desc_access_ty(op.var_id, ty)
                         .ok_or(Error::ACCESS_CONFLICT)?;
                     let desc_ty = DescriptorType::StorageBuffer(access);
                     Variable::Descriptor {
@@ -1367,7 +1366,7 @@ impl<'a> ReflectIntermediate<'a> {
                 let (nbind, ty) = extract_proto_ty(ty)?;
                 let desc_bind = self.get_var_desc_bind_or_default(op.var_id);
                 let access = self
-                    .get_desc_access(op.var_id)
+                    .get_desc_access_ty(op.var_id, ty)
                     .ok_or(Error::ACCESS_CONFLICT)?;
                 let desc_ty = DescriptorType::StorageBuffer(access);
                 let var = Variable::Descriptor {
@@ -1387,7 +1386,7 @@ impl<'a> ReflectIntermediate<'a> {
                         if let Some(false) = img_ty.is_sampled {
                             // Guaranteed a storage image.
                             let access = self
-                                .get_desc_access(op.var_id)
+                                .get_desc_access_ty(op.var_id, ty)
                                 .ok_or(Error::ACCESS_CONFLICT)?;
                             let desc_ty = match img_ty.dim {
                                 Dim::DimBuffer => DescriptorType::StorageTexelBuffer(access),

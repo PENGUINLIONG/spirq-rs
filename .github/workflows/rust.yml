@@ -37,4 +37,5 @@ jobs:
         shader-reflect assets/spirv-spec.frag -o assets/spirv-spec.frag.json
         shader-reflect assets/spirv-spec.frag.spv -o assets/spirv-spec.frag.spv.json
         diff assets/spirv-spec.frag.json assets/spirv-spec.frag.spv.json
+        shader-reflect assets/moon.spv -o assets/moon.spv.json --reference-all-resources
         git diff --exit-code

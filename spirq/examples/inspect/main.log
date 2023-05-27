@@ -1,4 +1,4 @@
-collected spirvs: ["gallery.frag", "spirv-spec.frag"]
+collected spirvs: ["gallery.frag", "moon", "spirv-spec.frag"]
 entered function main
 found a store instruction
 found a load instruction

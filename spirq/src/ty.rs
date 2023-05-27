@@ -1,5 +1,6 @@
 //! Structured representations of SPIR-V types.
 use crate::walk::Walk;
+use crate::AccessType;
 use std::fmt;
 use std::hash::Hash;
 use std::rc::Rc;
@@ -413,6 +414,7 @@ pub struct StructMember {
     pub name: Option<String>,
     pub offset: usize,
     pub ty: Type,
+    pub access_ty: AccessType,
 }
 #[derive(PartialEq, Eq, Default, Clone, Hash, Debug)]
 pub struct StructType {
@@ -566,6 +568,37 @@ impl Type {
             RayQuery() => None,
         }
     }
+    pub fn access_ty(&self) -> Option<AccessType> {
+        use Type::*;
+        match self {
+            Scalar(_) => None,
+            Vector(_) => None,
+            Matrix(_) => None,
+            Image(_) => None,
+            Sampler() => None,
+            CombinedImageSampler(_) => None,
+            SampledImage(_) => None,
+            StorageImage(_) => None,
+            SubpassData(_) => None,
+            Array(x) => x.proto_ty.access_ty(),
+            Struct(x) => x.members.iter().fold(None, |seed, x| match seed {
+                None => Some(x.access_ty),
+                Some(AccessType::ReadOnly) => match x.access_ty {
+                    AccessType::ReadOnly => Some(AccessType::ReadOnly),
+                    _ => Some(AccessType::ReadWrite),
+                },
+                Some(AccessType::WriteOnly) => match x.access_ty {
+                    AccessType::WriteOnly => Some(AccessType::WriteOnly),
+                    _ => Some(AccessType::ReadWrite),
+                },
+                Some(AccessType::ReadWrite) => Some(AccessType::ReadWrite),
+            }),
+            AccelStruct() => None,
+            DeviceAddress() => None,
+            DevicePointer(x) => x.pointee_ty.access_ty(),
+            RayQuery() => None,
+        }
+    }
     // Iterate over all entries in the type tree.
     pub fn walk<'a>(&'a self) -> Walk<'a> {
         Walk::new(self)
@@ -622,6 +655,7 @@ impl Type {
                             name: x.name,
                             offset: x.offset,
                             ty: x.ty.mutate_impl(f.clone()),
+                            access_ty: x.access_ty,
                         })
                         .collect(),
                 };
