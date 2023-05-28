@@ -301,7 +301,7 @@ dependencies = [
 
 [[package]]
 name = "shader-reflect"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "clap",
  "serde",
@@ -332,7 +332,7 @@ dependencies = [
 
 [[package]]
 name = "spirq"
-version = "0.6.3"
+version = "0.6.4"
 dependencies = [
  "byteorder",
  "bytes",
