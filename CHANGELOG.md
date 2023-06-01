@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.6.4
+
+- Fixed access analysis on DXC outputs. (#105)
+
 ## v0.6.3
 
 - Fixed that shader reflection is bypassed when the SPIR-V has no debug ops. (#102)
