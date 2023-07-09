@@ -56,7 +56,6 @@
 //! [`EntryPoint`]: struct.EntryPoint.html
 //! [`reflect`]: reflect/struct.ReflectConfig.html#method.reflect
 //! [`Type`]: ty/enum.Type.html
-mod consts;
 mod instr;
 pub mod inspect;
 pub mod analysis;

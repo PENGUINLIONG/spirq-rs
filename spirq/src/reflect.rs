@@ -1,9 +1,8 @@
 //! Reflection procedures and types.
+use crate::{EntryPoint, SpecId, Locator};
 use crate::analysis::{DecorationRegistry, NameRegistry, FunctionRegistry, VariableAlloc, VariableRegistry};
-use crate::{consts::*, SpecId, Locator};
 use crate::inspect::{FnInspector, Inspector};
 use crate::instr::*;
-use crate::EntryPoint;
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use num_traits::FromPrimitive;
 use anyhow::{Error, Result, anyhow};
@@ -35,6 +34,94 @@ struct ExecutionModeDeclaration {
 }
 
 // The actual reflection to take place.
+
+fn is_ty_op(op: Op) -> bool {
+    match op {
+        Op::TypeVoid => true,
+        Op::TypeBool => true,
+        Op::TypeInt => true,
+        Op::TypeFloat => true,
+        Op::TypeVector => true,
+        Op::TypeMatrix => true,
+        Op::TypeImage => true,
+        Op::TypeSampler => true,
+        Op::TypeSampledImage => true,
+        Op::TypeArray => true,
+        Op::TypeRuntimeArray => true,
+        Op::TypeStruct => true,
+        Op::TypeOpaque => true,
+        Op::TypePointer => true,
+        Op::TypeFunction => true,
+        Op::TypeEvent => true,
+        Op::TypeDeviceEvent => true,
+        Op::TypeReserveId => true,
+        Op::TypeQueue => true,
+        Op::TypePipe => true,
+        Op::TypeForwardPointer => true,
+        Op::TypePipeStorage => true,
+        Op::TypeNamedBarrier => true,
+        Op::TypeRayQueryKHR => true,
+        Op::TypeAccelerationStructureKHR => true,
+        Op::TypeCooperativeMatrixNV => true,
+        Op::TypeVmeImageINTEL => true,
+        Op::TypeAvcImePayloadINTEL => true,
+        Op::TypeAvcRefPayloadINTEL => true,
+        Op::TypeAvcSicPayloadINTEL => true,
+        Op::TypeAvcMcePayloadINTEL => true,
+        Op::TypeAvcMceResultINTEL => true,
+        Op::TypeAvcImeResultINTEL => true,
+        Op::TypeAvcImeResultSingleReferenceStreamoutINTEL => true,
+        Op::TypeAvcImeResultDualReferenceStreamoutINTEL => true,
+        Op::TypeAvcImeSingleReferenceStreaminINTEL => true,
+        Op::TypeAvcImeDualReferenceStreaminINTEL => true,
+        Op::TypeAvcRefResultINTEL => true,
+        Op::TypeAvcSicResultINTEL => true,
+        _ => false,
+    }
+}
+fn is_const_op(op: Op) -> bool {
+    match op {
+        Op::ConstantTrue => true,
+        Op::ConstantFalse => true,
+        Op::Constant => true,
+        Op::ConstantComposite => true,
+        Op::ConstantSampler => true,
+        Op::ConstantNull => true,
+        Op::ConstantPipeStorage => true,
+        Op::SpecConstantTrue => true,
+        Op::SpecConstantFalse => true,
+        Op::SpecConstant => true,
+        Op::SpecConstantComposite => true,
+        Op::SpecConstantOp => true,
+        _ => false,
+    }
+}
+fn is_atomic_load_op(op: Op) -> bool {
+    match op {
+        Op::AtomicLoad => true,
+        Op::AtomicExchange => true,
+        Op::AtomicCompareExchange => true,
+        Op::AtomicCompareExchangeWeak => true,
+        Op::AtomicIIncrement => true,
+        Op::AtomicIDecrement => true,
+        Op::AtomicIAdd => true,
+        Op::AtomicISub => true,
+        Op::AtomicSMin => true,
+        Op::AtomicUMin => true,
+        Op::AtomicSMax => true,
+        Op::AtomicUMax => true,
+        Op::AtomicAnd => true,
+        Op::AtomicOr => true,
+        Op::AtomicXor => true,
+        _ => false,
+    }
+}
+fn is_atomic_store_op(op: Op) -> bool {
+    match op {
+        Op::AtomicStore => true,
+        _ => false,
+    }
+}
 
 /// SPIR-V reflection intermediate.
 pub struct ReflectIntermediate<'a> {
