@@ -11,6 +11,9 @@ type InstrId = u32;
 fn const_id_not_found(id: InstrId) -> Error {
     anyhow!("constant id {} not found", id)
 }
+fn evaluation_failed(op: Op, result_ty: &Type, operands: &[ConstantValue]) -> Error {
+    anyhow!("cannot evaluate {op:?} with {operands:?} as {result_ty:?}")
+}
 fn broken_expr_tree(id: InstrId) -> Error {
     anyhow!("broken expression tree at id {}", id)
 }
@@ -62,23 +65,424 @@ impl Evaluator {
         self.values.iter()
     }
 
-    fn get_s32(&self, id: InstrId) -> Result<i32> {
-        match self.get_value(id) {
-            Ok(ConstantValue::S32(x)) => Ok(*x),
-            _ => Err(const_id_not_found(id)),
-        }
-    }
-    fn get_u32(&self, id: InstrId) -> Result<u32> {
-        match self.get_value(id) {
-            Ok(ConstantValue::U32(x)) => Ok(*x),
-            _ => Err(const_id_not_found(id)),
-        }
-    }
-    fn get_f32(&self, id: InstrId) -> Result<f32> {
-        match self.get_value(id) {
-            Ok(ConstantValue::F32(x)) => Ok((*x).into()),
-            _ => Err(const_id_not_found(id)),
-        }
+    pub fn evaluate(op: spirv::Op, result_ty: &Type, operands: &[ConstantValue]) -> Result<ConstantValue> {
+        let value = match op {
+            // Convert ops.
+            Op::ConvertFToS => {
+                let x = match operands {
+                    [ConstantValue::F32(x)] => *x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(x.0 as i32),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::ConvertFToU => {
+                let x = match operands {
+                    [ConstantValue::F32(x)] => *x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(x.0 as u32),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::ConvertSToF => {
+                let x = match operands {
+                    [ConstantValue::S32(x)] => *x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32((x as f32).into()),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::ConvertUToF => {
+                let x = match operands {
+                    [ConstantValue::U32(x)] => *x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32((x as f32).into()),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::SConvert => {
+                let x = match operands {
+                    [ConstantValue::S32(x)] => *x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(x),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::UConvert => {
+                let x = match operands {
+                    [ConstantValue::U32(x)] => *x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(x),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::FConvert => {
+                let x = match operands {
+                    [ConstantValue::F32(x)] => *x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(x),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::Bitcast => {
+                let bits = match operands {
+                    [ConstantValue::U32(x)] => x.to_ne_bytes(),
+                    [ConstantValue::S32(x)] => x.to_ne_bytes(),
+                    [ConstantValue::F32(x)] => x.to_ne_bytes(),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(i32::from_ne_bytes(bits)),
+                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(u32::from_ne_bytes(bits)),
+                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(f32::from_ne_bytes(bits).into()),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            // 3.42.13. Arithmetic Instructions
+            Op::SNegate => {
+                let a = match operands {
+                    [ConstantValue::S32(x)] => *x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(-a),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::FNegate => {
+                let a = match operands {
+                    [ConstantValue::F32(x)] => *x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(-a),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::IAdd => {
+                let (a, b) = match operands {
+                    [ConstantValue::S32(x), ConstantValue::S32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::S32(x), ConstantValue::U32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::U32(x), ConstantValue::S32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::U32(x), ConstantValue::U32(y)] => (*x as i64, *y as i64),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32((a + b) as i32),
+                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32((a + b) as u32),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::FAdd => {
+                let (a, b) = match operands {
+                    [ConstantValue::F32(x), ConstantValue::F32(y)] => (*x, *y),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(a + b),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::ISub => {
+                let (a, b) = match operands {
+                    [ConstantValue::S32(x), ConstantValue::S32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::S32(x), ConstantValue::U32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::U32(x), ConstantValue::S32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::U32(x), ConstantValue::U32(y)] => (*x as i64, *y as i64),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(((a - b) & 0xffffffff) as i32),
+                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(((a - b) & 0xffffffff) as u32),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::FSub => {
+                let (a, b) = match operands {
+                    [ConstantValue::F32(x), ConstantValue::F32(y)] => (*x, *y),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(a - b),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::IMul => {
+                let (a, b) = match operands {
+                    [ConstantValue::S32(x), ConstantValue::S32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::S32(x), ConstantValue::U32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::U32(x), ConstantValue::S32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::U32(x), ConstantValue::U32(y)] => (*x as i64, *y as i64),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(((a * b) & 0xffffffff) as i32),
+                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(((a * b) & 0xffffffff) as u32),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::FMul => {
+                let (a, b) = match operands {
+                    [ConstantValue::F32(x), ConstantValue::F32(y)] => (*x, *y),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(a * b),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::UDiv => {
+                let (a, b) = match operands {
+                    [ConstantValue::S32(x), ConstantValue::S32(y)] => (*x as u64, *y as u64),
+                    [ConstantValue::S32(x), ConstantValue::U32(y)] => (*x as u64, *y as u64),
+                    [ConstantValue::U32(x), ConstantValue::S32(y)] => (*x as u64, *y as u64),
+                    [ConstantValue::U32(x), ConstantValue::U32(y)] => (*x as u64, *y as u64),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(((a / b) & 0xffffffff) as i32),
+                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(((a / b) & 0xffffffff) as u32),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::SDiv => {
+                let (a, b) = match operands {
+                    [ConstantValue::S32(x), ConstantValue::S32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::S32(x), ConstantValue::U32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::U32(x), ConstantValue::S32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::U32(x), ConstantValue::U32(y)] => (*x as i64, *y as i64),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(((a / b) & 0xffffffff) as i32),
+                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(((a / b) & 0xffffffff) as u32),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::FDiv => {
+                let (a, b) = match operands {
+                    [ConstantValue::F32(x), ConstantValue::F32(y)] => (*x, *y),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(a / b),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::UMod => {
+                let (a, b) = match operands {
+                    [ConstantValue::S32(x), ConstantValue::S32(y)] => (*x as u64, *y as u64),
+                    [ConstantValue::S32(x), ConstantValue::U32(y)] => (*x as u64, *y as u64),
+                    [ConstantValue::U32(x), ConstantValue::S32(y)] => (*x as u64, *y as u64),
+                    [ConstantValue::U32(x), ConstantValue::U32(y)] => (*x as u64, *y as u64),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(((a % b) & 0xffffffff) as i32),
+                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(((a % b) & 0xffffffff) as u32),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::SRem => {
+                let (a, b) = match operands {
+                    [ConstantValue::S32(x), ConstantValue::S32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::S32(x), ConstantValue::U32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::U32(x), ConstantValue::S32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::U32(x), ConstantValue::U32(y)] => (*x as i64, *y as i64),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(((a % b) & 0xffffffff) as i32),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            }
+            Op::SMod => {
+                let (a, b) = match operands {
+                    [ConstantValue::S32(x), ConstantValue::S32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::S32(x), ConstantValue::U32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::U32(x), ConstantValue::S32(y)] => (*x as i64, *y as i64),
+                    [ConstantValue::U32(x), ConstantValue::U32(y)] => (*x as i64, *y as i64),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32((a.rem_euclid(b) & 0xffffffff) as i32),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::FRem => {
+                let (a, b) = match operands {
+                    [ConstantValue::F32(x), ConstantValue::F32(y)] => (*x, *y),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(a % b),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::FMod => {
+                let (a, b) = match operands {
+                    [ConstantValue::F32(x), ConstantValue::F32(y)] => (*x, *y),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(a.rem_euclid(*b).into()),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            // 3.42.14. Bit Instructions
+            Op::ShiftRightLogical => {
+                if operands.len() != 2 {
+                    return Err(evaluation_failed(op, result_ty, operands));
+                }
+                let base = match operands[0] {
+                    ConstantValue::S32(x) => u32::from_ne_bytes(x.to_ne_bytes()),
+                    ConstantValue::U32(x) => x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                let shift = match operands[1] {
+                    ConstantValue::S32(x) => u32::from_ne_bytes(x.to_ne_bytes()),
+                    ConstantValue::U32(x) => x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(i32::from_ne_bytes((base >> shift).to_ne_bytes())),
+                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(base >> shift),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::ShiftRightArithmetic => {
+                if operands.len() != 2 {
+                    return Err(evaluation_failed(op, result_ty, operands));
+                }
+                // See https://www.reddit.com/r/rust/comments/2lp3il/where_is_arithmetic_signed_rightshift.
+                let base = match operands[0] {
+                    ConstantValue::S32(x) => x,
+                    ConstantValue::U32(x) => i32::from_ne_bytes(x.to_ne_bytes()),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                let shift = match operands[1] {
+                    ConstantValue::S32(x) => u32::from_ne_bytes(x.to_ne_bytes()),
+                    ConstantValue::U32(x) => x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(base >> shift),
+                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(u32::from_ne_bytes((base >> shift).to_ne_bytes())),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::ShiftLeftLogical => {
+                if operands.len() != 2 {
+                    return Err(evaluation_failed(op, result_ty, operands));
+                }
+                let base = match operands[0] {
+                    ConstantValue::S32(x) => u32::from_ne_bytes(x.to_ne_bytes()),
+                    ConstantValue::U32(x) => x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                let shift = match operands[1] {
+                    ConstantValue::S32(x) => u32::from_ne_bytes(x.to_ne_bytes()),
+                    ConstantValue::U32(x) => x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(i32::from_ne_bytes((base << shift).to_ne_bytes())),
+                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(base << shift),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::BitwiseOr => {
+                if operands.len() != 2 {
+                    return Err(evaluation_failed(op, result_ty, operands));
+                }
+                let x = match operands[0] {
+                    ConstantValue::S32(x) => u32::from_ne_bytes(x.to_ne_bytes()),
+                    ConstantValue::U32(x) => x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                let y = match operands[1] {
+                    ConstantValue::S32(x) => u32::from_ne_bytes(x.to_ne_bytes()),
+                    ConstantValue::U32(x) => x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(i32::from_ne_bytes((x | y).to_ne_bytes())),
+                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(x | y),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::BitwiseXor => {
+                if operands.len() != 2 {
+                    return Err(evaluation_failed(op, result_ty, operands));
+                }
+                let x = match operands[0] {
+                    ConstantValue::S32(x) => u32::from_ne_bytes(x.to_ne_bytes()),
+                    ConstantValue::U32(x) => x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                let y = match operands[1] {
+                    ConstantValue::S32(x) => u32::from_ne_bytes(x.to_ne_bytes()),
+                    ConstantValue::U32(x) => x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(i32::from_ne_bytes((x ^ y).to_ne_bytes())),
+                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(x ^ y),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::BitwiseAnd => {
+                if operands.len() != 2 {
+                    return Err(evaluation_failed(op, result_ty, operands));
+                }
+                let x = match operands[0] {
+                    ConstantValue::S32(x) => u32::from_ne_bytes(x.to_ne_bytes()),
+                    ConstantValue::U32(x) => x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                let y = match operands[1] {
+                    ConstantValue::S32(x) => u32::from_ne_bytes(x.to_ne_bytes()),
+                    ConstantValue::U32(x) => x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(i32::from_ne_bytes((x & y).to_ne_bytes())),
+                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(x & y),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            Op::Not => {
+                if operands.len() != 1 {
+                    return Err(evaluation_failed(op, result_ty, operands));
+                }
+                let x = match operands[0] {
+                    ConstantValue::S32(x) => u32::from_ne_bytes(x.to_ne_bytes()),
+                    ConstantValue::U32(x) => x,
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                };
+                match result_ty {
+                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(i32::from_ne_bytes((!x).to_ne_bytes())),
+                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(!x),
+                    _ => return Err(evaluation_failed(op, result_ty, operands)),
+                }
+            },
+            _ => return Err(evaluation_failed(op, result_ty, operands)),
+        };
+        Ok(value)
     }
 
     pub fn interpret(&mut self, ty_reg: &TypeRegistry, instr: &Instr) -> Result<&Constant> {
@@ -86,438 +490,21 @@ impl Evaluator {
         let result_ty_id = operands.read_u32()?;
         let result_ty = ty_reg.get(result_ty_id)?;
         let result_id = operands.read_u32()?;
+        let operands = operands.read_list()
+            .and_then(|operands| {
+                let mut out = Vec::new();
+                for operand in operands.iter() {
+                    if let Ok(operand) = self.get_value(*operand) {
+                        out.push(operand.to_owned());
+                    } else {
+                        return Err(broken_expr_tree(result_id));
+                    }
+                }
+                Ok(out)
+            })?;
 
-        let value = match instr.op() {
-            // Convert ops.
-            Op::ConvertFToS => match result_ty {
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    match self.get_value(operands.read_u32()?)? {
-                        ConstantValue::F32(x) => ConstantValue::S32((*x).0 as i32),
-                        _ => return Err(broken_expr_tree(result_id)),
-                    }
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::ConvertFToU => match result_ty {
-                Type::Scalar(ScalarType::Unsigned(4)) => {
-                    match self.get_value(operands.read_u32()?)? {
-                        ConstantValue::F32(x) => ConstantValue::U32((*x).0 as u32),
-                        _ => return Err(broken_expr_tree(result_id)),
-                    }
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::ConvertSToF => match result_ty {
-                Type::Scalar(ScalarType::Float(4)) => {
-                    match self.get_value(operands.read_u32()?)? {
-                        ConstantValue::S32(x) => ConstantValue::F32((*x as f32).into()),
-                        _ => return Err(broken_expr_tree(result_id)),
-                    }
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::ConvertUToF => match result_ty {
-                Type::Scalar(ScalarType::Float(4)) => {
-                    match self.get_value(operands.read_u32()?)? {
-                        ConstantValue::U32(x) => ConstantValue::F32(((*x) as f32).into()),
-                        _ => return Err(broken_expr_tree(result_id)),
-                    }
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::SConvert => match result_ty {
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    match self.get_value(operands.read_u32()?)? {
-                        ConstantValue::S32(x) => ConstantValue::S32(*x),
-                        _ => return Err(broken_expr_tree(result_id)),
-                    }
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::UConvert => match result_ty {
-                Type::Scalar(ScalarType::Unsigned(4)) => {
-                    match self.get_value(operands.read_u32()?)? {
-                        ConstantValue::U32(x) => ConstantValue::U32(*x),
-                        _ => return Err(broken_expr_tree(result_id)),
-                    }
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::FConvert => match result_ty {
-                Type::Scalar(ScalarType::Float(4)) => {
-                    match self.get_value(operands.read_u32()?)? {
-                        ConstantValue::F32(x) => ConstantValue::F32((*x).into()),
-                        _ => return Err(broken_expr_tree(result_id)),
-                    }
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::Bitcast => match result_ty {
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    let bytes = match self.get_value(operands.read_u32()?)? {
-                        ConstantValue::U32(x) => x.to_ne_bytes(),
-                        ConstantValue::S32(x) => x.to_ne_bytes(),
-                        ConstantValue::F32(x) => x.to_ne_bytes(),
-                        _ => return Err(broken_expr_tree(result_id)),
-                    };
-                    ConstantValue::S32(i32::from_ne_bytes(bytes))
-                }
-                Type::Scalar(ScalarType::Unsigned(4)) => {
-                    let bytes = match self.get_value(operands.read_u32()?)? {
-                        ConstantValue::U32(x) => x.to_ne_bytes(),
-                        ConstantValue::S32(x) => x.to_ne_bytes(),
-                        ConstantValue::F32(x) => x.to_ne_bytes(),
-                        _ => return Err(broken_expr_tree(result_id)),
-                    };
-                    ConstantValue::U32(u32::from_ne_bytes(bytes))
-                }
-                Type::Scalar(ScalarType::Float(4)) => {
-                    let bytes = match self.get_value(operands.read_u32()?)? {
-                        ConstantValue::U32(x) => x.to_ne_bytes(),
-                        ConstantValue::S32(x) => x.to_ne_bytes(),
-                        ConstantValue::F32(x) => x.to_ne_bytes(),
-                        _ => return Err(broken_expr_tree(result_id)),
-                    };
-                    ConstantValue::F32(f32::from_ne_bytes(bytes).into())
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            // 3.42.13. Arithmetic Instructions
-            Op::SNegate => match result_ty {
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    let x = self.get_s32(operands.read_u32()?)?;
-                    ConstantValue::S32(-x)
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::FNegate => match result_ty {
-                Type::Scalar(ScalarType::Float(4)) => {
-                    let x = self.get_f32(operands.read_u32()?)?;
-                    ConstantValue::F32((-x).into())
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::IAdd => match result_ty {
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    let x = match self.get_value(operands.read_u32()?) {
-                        Ok(ConstantValue::S32(x)) => *x,
-                        Ok(ConstantValue::U32(x)) => *x as i32,
-                        _ => return Err(broken_expr_tree(result_id)),
-                    };
-                    let y = match self.get_value(operands.read_u32()?) {
-                        Ok(ConstantValue::S32(y)) => *y,
-                        Ok(ConstantValue::U32(y)) => *y as i32,
-                        _ => return Err(broken_expr_tree(result_id)),
-                    };
-                    ConstantValue::S32(x + y)
-                }
-                Type::Scalar(ScalarType::Unsigned(4)) => {
-                    let x = match self.get_value(operands.read_u32()?) {
-                        Ok(ConstantValue::U32(x)) => *x,
-                        Ok(ConstantValue::S32(x)) => *x as u32,
-                        _ => return Err(broken_expr_tree(result_id)),
-                    };
-                    let y = match self.get_value(operands.read_u32()?) {
-                        Ok(ConstantValue::U32(y)) => *y,
-                        Ok(ConstantValue::S32(y)) => *y as u32,
-                        _ => return Err(broken_expr_tree(result_id)),
-                    };
-                    ConstantValue::U32(x + y)
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::FAdd => match result_ty {
-                Type::Scalar(ScalarType::Float(4)) => {
-                    let x = self.get_f32(operands.read_u32()?)?;
-                    let y = self.get_f32(operands.read_u32()?)?;
-                    ConstantValue::F32((x + y).into())
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::ISub => match result_ty {
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    let x = match self.get_value(operands.read_u32()?) {
-                        Ok(ConstantValue::S32(x)) => *x,
-                        Ok(ConstantValue::U32(x)) => *x as i32,
-                        _ => return Err(broken_expr_tree(result_id)),
-                    };
-                    let y = match self.get_value(operands.read_u32()?) {
-                        Ok(ConstantValue::S32(y)) => *y,
-                        Ok(ConstantValue::U32(y)) => *y as i32,
-                        _ => return Err(broken_expr_tree(result_id)),
-                    };
-                    ConstantValue::S32(x - y)
-                }
-                Type::Scalar(ScalarType::Unsigned(4)) => {
-                    let x = match self.get_value(operands.read_u32()?) {
-                        Ok(ConstantValue::U32(x)) => *x,
-                        Ok(ConstantValue::S32(x)) => *x as u32,
-                        _ => return Err(broken_expr_tree(result_id)),
-                    };
-                    let y = match self.get_value(operands.read_u32()?) {
-                        Ok(ConstantValue::U32(y)) => *y,
-                        Ok(ConstantValue::S32(y)) => *y as u32,
-                        _ => return Err(broken_expr_tree(result_id)),
-                    };
-                    ConstantValue::U32(x - y)
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::FSub => match result_ty {
-                Type::Scalar(ScalarType::Float(4)) => {
-                    let x = self.get_f32(operands.read_u32()?)?;
-                    let y = self.get_f32(operands.read_u32()?)?;
-                    ConstantValue::F32((x - y).into())
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::IMul => match result_ty {
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    let x = match self.get_value(operands.read_u32()?) {
-                        Ok(ConstantValue::S32(x)) => *x,
-                        Ok(ConstantValue::U32(x)) => *x as i32,
-                        _ => return Err(broken_expr_tree(result_id)),
-                    };
-                    let y = match self.get_value(operands.read_u32()?) {
-                        Ok(ConstantValue::S32(y)) => *y,
-                        Ok(ConstantValue::U32(y)) => *y as i32,
-                        _ => return Err(broken_expr_tree(result_id)),
-                    };
-                    ConstantValue::S32(x * y)
-                }
-                Type::Scalar(ScalarType::Unsigned(4)) => {
-                    let x = match self.get_value(operands.read_u32()?) {
-                        Ok(ConstantValue::U32(x)) => *x,
-                        Ok(ConstantValue::S32(x)) => *x as u32,
-                        _ => return Err(broken_expr_tree(result_id)),
-                    };
-                    let y = match self.get_value(operands.read_u32()?) {
-                        Ok(ConstantValue::U32(y)) => *y,
-                        Ok(ConstantValue::S32(y)) => *y as u32,
-                        _ => return Err(broken_expr_tree(result_id)),
-                    };
-                    ConstantValue::U32(x * y)
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::FMul => match result_ty {
-                Type::Scalar(ScalarType::Float(4)) => {
-                    let x = self.get_f32(operands.read_u32()?)?;
-                    let y = self.get_f32(operands.read_u32()?)?;
-                    ConstantValue::F32((x * y).into())
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::UDiv => match result_ty {
-                Type::Scalar(ScalarType::Unsigned(4)) => {
-                    let x = self.get_u32(operands.read_u32()?)?;
-                    let y = self.get_u32(operands.read_u32()?)?;
-                    ConstantValue::U32(x / y)
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::SDiv => match result_ty {
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    let x = self.get_s32(operands.read_u32()?)?;
-                    let y = self.get_s32(operands.read_u32()?)?;
-                    ConstantValue::S32(x / y)
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::FDiv => match result_ty {
-                Type::Scalar(ScalarType::Float(4)) => {
-                    let x = self.get_f32(operands.read_u32()?)?;
-                    let y = self.get_f32(operands.read_u32()?)?;
-                    ConstantValue::F32((x / y).into())
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::UMod => match result_ty {
-                Type::Scalar(ScalarType::Unsigned(4)) => {
-                    let x = self.get_u32(operands.read_u32()?)?;
-                    let y = self.get_u32(operands.read_u32()?)?;
-                    ConstantValue::U32(x % y)
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::SRem => match result_ty {
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    let x = self.get_s32(operands.read_u32()?)?;
-                    let y = self.get_s32(operands.read_u32()?)?;
-                    ConstantValue::S32(x % y)
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::SMod => match result_ty {
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    let x = self.get_s32(operands.read_u32()?)?;
-                    let y = self.get_s32(operands.read_u32()?)?;
-                    ConstantValue::S32(x % y)
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::FRem => match result_ty {
-                Type::Scalar(ScalarType::Float(4)) => {
-                    let x = self.get_f32(operands.read_u32()?)?;
-                    let y = self.get_f32(operands.read_u32()?)?;
-                    ConstantValue::F32((x % y).into())
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::FMod => match result_ty {
-                Type::Scalar(ScalarType::Float(4)) => {
-                    let x = self.get_f32(operands.read_u32()?)?;
-                    let y = self.get_f32(operands.read_u32()?)?;
-                    ConstantValue::F32((x % y).into())
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            // 3.42.14. Bit Instructions
-            Op::ShiftRightLogical => match result_ty {
-                Type::Scalar(ScalarType::Unsigned(4)) => {
-                    let base = self.get_u32(operands.read_u32()?)?;
-                    match self.get_value(operands.read_u32()?)? {
-                        ConstantValue::S32(x) => {
-                            let shift = *x as u32;
-                            ConstantValue::U32(base >> shift)
-                        }
-                        ConstantValue::U32(x) => {
-                            let shift = x;
-                            ConstantValue::U32(base >> shift)
-                        }
-                        _ => return Err(broken_expr_tree(result_id)),
-                    }
-                }
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    let base = self.get_s32(operands.read_u32()?)? as u32;
-                    match self.get_value(operands.read_u32()?)? {
-                        ConstantValue::S32(x) => {
-                            let shift = *x as u32;
-                            ConstantValue::S32((base >> shift) as i32)
-                        }
-                        ConstantValue::U32(x) => {
-                            let shift = x;
-                            ConstantValue::S32((base >> shift) as i32)
-                        }
-                        _ => return Err(broken_expr_tree(result_id)),
-                    }
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::ShiftRightArithmetic => match result_ty {
-                Type::Scalar(ScalarType::Unsigned(4)) => {
-                    let base = self.get_u32(operands.read_u32()?)? as i32;
-                    match self.get_value(operands.read_u32()?)? {
-                        ConstantValue::S32(x) => {
-                            let shift = *x as u32;
-                            ConstantValue::U32((base >> shift) as u32)
-                        }
-                        ConstantValue::U32(x) => {
-                            let shift = x;
-                            ConstantValue::U32((base >> shift) as u32)
-                        }
-                        _ => return Err(broken_expr_tree(result_id)),
-                    }
-                }
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    let base = self.get_s32(operands.read_u32()?)?;
-                    match self.get_value(operands.read_u32()?)? {
-                        ConstantValue::S32(x) => {
-                            let shift = *x as u32;
-                            ConstantValue::S32(base >> shift)
-                        }
-                        ConstantValue::U32(x) => {
-                            let shift = x;
-                            ConstantValue::S32(base >> shift)
-                        }
-                        _ => return Err(broken_expr_tree(result_id)),
-                    }
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::ShiftLeftLogical => match result_ty {
-                Type::Scalar(ScalarType::Unsigned(4)) => {
-                    let base = self.get_u32(operands.read_u32()?)?;
-                    match self.get_value(operands.read_u32()?)? {
-                        ConstantValue::S32(x) => {
-                            let shift = *x as u32;
-                            ConstantValue::U32(base << shift)
-                        }
-                        ConstantValue::U32(x) => {
-                            let shift = x;
-                            ConstantValue::U32(base << shift)
-                        }
-                        _ => return Err(broken_expr_tree(result_id)),
-                    }
-                }
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    let base = self.get_s32(operands.read_u32()?)? as u32;
-                    match self.get_value(operands.read_u32()?)? {
-                        ConstantValue::S32(x) => {
-                            let shift = *x as u32;
-                            ConstantValue::S32((base << shift) as i32)
-                        }
-                        ConstantValue::U32(x) => {
-                            let shift = x;
-                            ConstantValue::S32((base << shift) as i32)
-                        }
-                        _ => return Err(broken_expr_tree(result_id)),
-                    }
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::BitwiseOr => match result_ty {
-                Type::Scalar(ScalarType::Unsigned(4)) => {
-                    let x = self.get_u32(operands.read_u32()?)?;
-                    let y = self.get_u32(operands.read_u32()?)?;
-                    ConstantValue::U32(x | y)
-                }
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    let x = self.get_s32(operands.read_u32()?)?;
-                    let y = self.get_s32(operands.read_u32()?)?;
-                    ConstantValue::S32(x | y)
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::BitwiseXor => match result_ty {
-                Type::Scalar(ScalarType::Unsigned(4)) => {
-                    let x = self.get_u32(operands.read_u32()?)?;
-                    let y = self.get_u32(operands.read_u32()?)?;
-                    ConstantValue::U32(x ^ y)
-                }
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    let x = self.get_s32(operands.read_u32()?)?;
-                    let y = self.get_s32(operands.read_u32()?)?;
-                    ConstantValue::S32(x ^ y)
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::BitwiseAnd => match result_ty {
-                Type::Scalar(ScalarType::Unsigned(4)) => {
-                    let x = self.get_u32(operands.read_u32()?)?;
-                    let y = self.get_u32(operands.read_u32()?)?;
-                    ConstantValue::U32(x & y)
-                }
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    let x = self.get_s32(operands.read_u32()?)?;
-                    let y = self.get_s32(operands.read_u32()?)?;
-                    ConstantValue::S32(x & y)
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            Op::Not => match result_ty {
-                Type::Scalar(ScalarType::Unsigned(4)) => {
-                    let x = self.get_u32(operands.read_u32()?)?;
-                    ConstantValue::U32(!x)
-                }
-                Type::Scalar(ScalarType::Signed(4)) => {
-                    let x = self.get_s32(operands.read_u32()?)?;
-                    ConstantValue::S32(!x)
-                }
-                _ => return Err(broken_expr_tree(result_id)),
-            },
-            _ => return Err(broken_expr_tree(result_id)),
-        };
+        let value = Self::evaluate(instr.op(), result_ty, &operands)?;
+
         self.set(result_id, Constant::new_itm(result_ty.clone(), value))
     }
 
