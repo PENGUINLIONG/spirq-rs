@@ -8,7 +8,7 @@ use crate::instr::{FunctionId, InstrId, VariableId};
 use crate::{DescriptorBinding, InterfaceLocation};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DecorationKey {
+struct DecorationKey {
     pub id: InstrId,
     pub member_idx: Option<u32>,
     pub deco: Decoration,

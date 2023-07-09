@@ -127,8 +127,7 @@ fn is_atomic_store_op(op: Op) -> bool {
 
 /// SPIR-V reflection intermediate.
 pub struct ReflectIntermediate<'a> {
-    cfg: &'a ReflectConfig,
-
+    pub cfg: &'a ReflectConfig,
     pub name_reg: NameRegistry<'a>,
     pub deco_reg: DecorationRegistry<'a>,
     pub ty_reg: TypeRegistry,
