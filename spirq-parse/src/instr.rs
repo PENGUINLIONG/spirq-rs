@@ -1,7 +1,7 @@
 //!  SPIR-V instruction parser.
-use std::{borrow::Borrow, ops::Deref, fmt};
+use std::{borrow::Borrow, fmt, ops::Deref};
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use num_traits::FromPrimitive;
 use spirv::Op;
 
@@ -39,7 +39,7 @@ impl<'a> Iterator for Instrs<'a> {
 }
 
 pub struct Instr {
-    inner: [u32]
+    inner: [u32],
 }
 impl Instr {
     pub fn new(x: &[u32]) -> Result<&Instr> {
@@ -118,7 +118,9 @@ pub struct InstructionBuilder {
 }
 impl InstructionBuilder {
     pub fn new(op: Op) -> InstructionBuilder {
-        InstructionBuilder { inner: vec![(op as u32) & 0xFFFF] }
+        InstructionBuilder {
+            inner: vec![(op as u32) & 0xFFFF],
+        }
     }
     pub fn push(mut self, x: u32) -> Self {
         self.inner.push(x);

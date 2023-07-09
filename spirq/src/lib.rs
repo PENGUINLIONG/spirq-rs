@@ -56,39 +56,28 @@
 //! [`EntryPoint`]: struct.EntryPoint.html
 //! [`reflect`]: reflect/struct.ReflectConfig.html#method.reflect
 //! [`Type`]: ty/enum.Type.html
-mod instr;
-pub mod inspect;
 pub mod analysis;
+pub mod inspect;
+mod instr;
 pub mod reflect;
 #[cfg(test)]
 mod tests;
 
 use std::fmt;
 
-pub use spirq_types as ty;
 pub use spirq_parse as parse;
+pub use spirq_types as ty;
 
 pub mod error {
-    pub use anyhow::{ Error, Result };
+    pub use anyhow::{Error, Result};
 }
-pub use reflect::{ ExecutionModel, ReflectConfig };
+pub use reflect::{ExecutionModel, ReflectConfig};
 
-pub use spirq_types::{
-    AccessType,
-    DescriptorType,
-    Type,
-};
 pub use spirq_interface::{
-    Locator,
-    DescriptorBinding,
-    InterfaceLocation,
-    SpecId,
-    Variable,
-    ExecutionMode,
-    Function,
-    Constant,
-    ConstantValue,
+    Constant, ConstantValue, DescriptorBinding, ExecutionMode, Function, InterfaceLocation,
+    Locator, SpecId, Variable,
 };
+pub use spirq_types::{AccessType, DescriptorType, Type};
 
 // SPIR-V program entry points.
 pub use spirq_parse::SpirvBinary;

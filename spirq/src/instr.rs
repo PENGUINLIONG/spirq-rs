@@ -1,5 +1,5 @@
 use super::parse::{define_ops, Instr};
-use spirv::{Dim, ExecutionMode, StorageClass, AddressingModel, MemoryModel, Decoration};
+use spirv::{AddressingModel, Decoration, Dim, ExecutionMode, MemoryModel, StorageClass};
 use std::convert::TryFrom;
 use std::marker::PhantomData;
 

@@ -1,9 +1,9 @@
+mod constant;
+mod func;
 mod locator;
 mod var;
-mod func;
-mod constant;
 
-pub use locator::{Locator, DescriptorBinding, InterfaceLocation, SpecId};
-pub use var::Variable;
-pub use func::{ExecutionMode, Function};
 pub use constant::{Constant, ConstantValue};
+pub use func::{ExecutionMode, Function};
+pub use locator::{DescriptorBinding, InterfaceLocation, Locator, SpecId};
+pub use var::Variable;

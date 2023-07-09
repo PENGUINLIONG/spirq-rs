@@ -1,6 +1,6 @@
-use ordered_float::OrderedFloat;
-use spirq_types::{Type, ScalarType};
 use anyhow::{anyhow, Result};
+use ordered_float::OrderedFloat;
+use spirq_types::{ScalarType, Type};
 
 use crate::SpecId;
 
@@ -47,15 +47,18 @@ impl ConstantValue {
                 (&mut bytes[4..8]).copy_from_slice(&upper_bytes);
                 Self::try_from_bytes(&bytes, ty)
             }
-            _ => return Err(anyhow!("cannot parse constant value from {} dwords", x.len())),
+            _ => {
+                return Err(anyhow!(
+                    "cannot parse constant value from {} dwords",
+                    x.len()
+                ))
+            }
         }
     }
     pub fn try_from_bytes(x: &[u8], ty: &Type) -> Result<Self> {
         if let Some(scalar_ty) = ty.as_scalar() {
             match scalar_ty {
-                ScalarType::Boolean => {
-                    Ok(ConstantValue::Bool(x.iter().any(|x| x != &0)))
-                }
+                ScalarType::Boolean => Ok(ConstantValue::Bool(x.iter().any(|x| x != &0))),
                 ScalarType::Signed(4) if x.len() == 4 => {
                     let x = i32::from_ne_bytes([x[0], x[1], x[2], x[3]]);
                     Ok(ConstantValue::S32(x))
@@ -68,7 +71,11 @@ impl ConstantValue {
                     let x = f32::from_ne_bytes([x[0], x[1], x[2], x[3]]);
                     Ok(ConstantValue::F32(OrderedFloat(x)))
                 }
-                _ => Err(anyhow!("cannot parse {:?} from {} bytes", scalar_ty, x.len())),
+                _ => Err(anyhow!(
+                    "cannot parse {:?} from {} bytes",
+                    scalar_ty,
+                    x.len()
+                )),
             }
         } else {
             Err(anyhow!("cannot parse {:?} as a constant value", ty))
@@ -99,7 +106,6 @@ impl ConstantValue {
             _ => None,
         }
     }
-
 }
 
 /// Reflection intermediate of constants and specialization constant.

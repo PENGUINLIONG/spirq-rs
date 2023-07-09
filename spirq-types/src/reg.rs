@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use anyhow::{Result, anyhow};
 use crate::Type;
+use anyhow::{anyhow, Result};
 
 pub type TypeId = u32;
 
@@ -24,16 +24,21 @@ impl TypeRegistry {
                     entry.insert(ty);
                     Ok(())
                 } else {
-                    Err(anyhow!("type collision at id {}: {:?} vs {:?}", id, entry.get(), ty))
+                    Err(anyhow!(
+                        "type collision at id {}: {:?} vs {:?}",
+                        id,
+                        entry.get(),
+                        ty
+                    ))
                 }
-            },
+            }
         }
     }
 
     /// Get the type identified by `handle`.
     pub fn get(&self, id: TypeId) -> Result<&Type> {
-        self.ty_map.get(&id)
+        self.ty_map
+            .get(&id)
             .ok_or(anyhow!("missing type id {}", id))
     }
-
 }

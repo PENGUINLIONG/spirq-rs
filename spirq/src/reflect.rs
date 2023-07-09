@@ -1,20 +1,22 @@
 //! Reflection procedures and types.
-use crate::{EntryPoint, SpecId, Locator};
-use crate::analysis::{DecorationRegistry, NameRegistry, FunctionRegistry, VariableAlloc, VariableRegistry};
+use crate::analysis::{
+    DecorationRegistry, FunctionRegistry, NameRegistry, VariableAlloc, VariableRegistry,
+};
 use crate::inspect::{FnInspector, Inspector};
 use crate::instr::*;
+use crate::{EntryPoint, Locator, SpecId};
+use anyhow::{anyhow, Error, Result};
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use num_traits::FromPrimitive;
-use anyhow::{Error, Result, anyhow};
 use spirq_eval::Evaluator;
-use spirq_interface::{Variable, Function, ExecutionMode, ConstantValue, Constant};
-use spirq_parse::{SpirvBinary, Instrs, Instr, InstructionBuilder};
+use spirq_interface::{Constant, ConstantValue, ExecutionMode, Function, Variable};
+use spirq_parse::{Instr, Instrs, InstructionBuilder, SpirvBinary};
 use spirq_types::*;
-use std::collections::BTreeMap;
-use std::collections::hash_map::Entry;
-use std::convert::TryFrom;
-use spirv::{Dim, Op, MemoryModel, AddressingModel};
+use spirv::{AddressingModel, Dim, MemoryModel, Op};
 pub use spirv::{Decoration, ExecutionModel, StorageClass};
+use std::collections::hash_map::Entry;
+use std::collections::BTreeMap;
+use std::convert::TryFrom;
 
 // Intermediate types used in reflection.
 
@@ -154,7 +156,7 @@ fn broken_nested_ty(id: TypeId) -> Error {
 impl<'a> ReflectIntermediate<'a> {
     fn populate_one_ty(&mut self, instr: &Instr) -> Result<()> {
         match instr.op() {
-            Op::TypeFunction => {},
+            Op::TypeFunction => {}
             Op::TypeVoid => {
                 let op = OpTypeVoid::try_from(instr)?;
                 let scalar_ty = ScalarType::void();
@@ -204,7 +206,8 @@ impl<'a> ReflectIntermediate<'a> {
                         scalar_ty,
                         is_multisampled: op.is_multisampled,
                     };
-                    self.ty_reg.set(op.ty_id, Type::SubpassData(subpass_data_ty))?;
+                    self.ty_reg
+                        .set(op.ty_id, Type::SubpassData(subpass_data_ty))?;
                 } else {
                     // Only unit types allowed to be stored in storage images
                     // can have given format.
@@ -248,7 +251,10 @@ impl<'a> ReflectIntermediate<'a> {
                         is_multisampled: img_ty.is_multisampled,
                     };
                     let combined_img_sampler_ty = CombinedImageSamplerType { sampled_img_ty };
-                    self.ty_reg.set(op.ty_id, Type::CombinedImageSampler(combined_img_sampler_ty))?;
+                    self.ty_reg.set(
+                        op.ty_id,
+                        Type::CombinedImageSampler(combined_img_sampler_ty),
+                    )?;
                 } else {
                     return Err(broken_nested_ty(op.ty_id));
                 }
@@ -256,8 +262,13 @@ impl<'a> ReflectIntermediate<'a> {
             Op::TypeArray => {
                 let op = OpTypeArray::try_from(instr)?;
                 // FIXME: Workaround old storage buffers.
-                if self.deco_reg.contains(op.proto_ty_id, Decoration::BufferBlock) {
-                    let _ = self.deco_reg.set(op.ty_id, Decoration::BufferBlock, &[] as &'static [u32]);
+                if self
+                    .deco_reg
+                    .contains(op.proto_ty_id, Decoration::BufferBlock)
+                {
+                    let _ =
+                        self.deco_reg
+                            .set(op.ty_id, Decoration::BufferBlock, &[] as &'static [u32]);
                 }
                 let proto_ty = if let Ok(x) = self.ty_reg.get(op.proto_ty_id) {
                     x
@@ -277,9 +288,10 @@ impl<'a> ReflectIntermediate<'a> {
                 let nrepeat = match self.interp.get_value(op.nrepeat_const_id)? {
                     ConstantValue::S32(x) if *x > 0 => *x as u32,
                     ConstantValue::U32(x) if *x > 0 => *x,
-                    _ => return Err(anyhow!("invalid array size"))
+                    _ => return Err(anyhow!("invalid array size")),
                 };
-                let stride = self.deco_reg
+                let stride = self
+                    .deco_reg
                     .get_u32(op.ty_id, Decoration::ArrayStride)
                     .map(|x| x as usize);
 
@@ -307,7 +319,8 @@ impl<'a> ReflectIntermediate<'a> {
                 } else {
                     return Ok(());
                 };
-                let stride = self.deco_reg
+                let stride = self
+                    .deco_reg
                     .get_u32(op.ty_id, Decoration::ArrayStride)
                     .map(|x| x as usize);
                 let arr_ty = if let Ok(stride) = stride {
@@ -330,15 +343,17 @@ impl<'a> ReflectIntermediate<'a> {
             }
             Op::TypeStruct => {
                 let op = OpTypeStruct::try_from(instr)?;
-                let struct_name = self.name_reg.get(op.ty_id)
-                    .map(ToOwned::to_owned)
-                    .or_else(|| {
-                        if self.cfg.gen_unique_names {
-                            Some(format!("type_{}", op.ty_id))
-                        } else {
-                            None
-                        }
-                    });
+                let struct_name =
+                    self.name_reg
+                        .get(op.ty_id)
+                        .map(ToOwned::to_owned)
+                        .or_else(|| {
+                            if self.cfg.gen_unique_names {
+                                Some(format!("type_{}", op.ty_id))
+                            } else {
+                                None
+                            }
+                        });
                 let mut members = Vec::new();
                 for (i, &member_ty_id) in op.member_ty_ids.iter().enumerate() {
                     let i = i as u32;
@@ -353,13 +368,18 @@ impl<'a> ReflectIntermediate<'a> {
                     }
                     if let Type::Matrix(ref mut mat_ty) = proto_ty {
                         let mat_stride =
-                            self.deco_reg.get_member_u32(op.ty_id, i, Decoration::MatrixStride);
+                            self.deco_reg
+                                .get_member_u32(op.ty_id, i, Decoration::MatrixStride);
                         if let Ok(mat_stride) = mat_stride {
                             mat_ty.stride = Some(mat_stride as usize);
                         }
 
-                        let is_row_major = self.deco_reg.contains_member(op.ty_id, i, Decoration::RowMajor);
-                        let is_col_major = self.deco_reg.contains_member(op.ty_id, i, Decoration::ColMajor);
+                        let is_row_major =
+                            self.deco_reg
+                                .contains_member(op.ty_id, i, Decoration::RowMajor);
+                        let is_col_major =
+                            self.deco_reg
+                                .contains_member(op.ty_id, i, Decoration::ColMajor);
 
                         mat_ty.major = if is_row_major {
                             Some(MatrixAxisOrder::RowMajor)
@@ -369,7 +389,9 @@ impl<'a> ReflectIntermediate<'a> {
                             None
                         };
                     }
-                    let name = self.name_reg.get_member(op.ty_id, i)
+                    let name = self
+                        .name_reg
+                        .get_member(op.ty_id, i)
                         .map(ToOwned::to_owned)
                         .or_else(|| {
                             if self.cfg.gen_unique_names {
@@ -381,11 +403,13 @@ impl<'a> ReflectIntermediate<'a> {
                     // For shader input/output blocks there are no offset
                     // decoration. Since these variables are not externally
                     // accessible we don't have to worry about them.
-                    let offset = self.deco_reg
+                    let offset = self
+                        .deco_reg
                         .get_member_u32(op.ty_id, i, Decoration::Offset)
                         .map(|x| x as usize)
                         .ok();
-                    let access_ty = self.deco_reg
+                    let access_ty = self
+                        .deco_reg
                         .get_member_access_ty_from_deco(op.ty_id, i)
                         .ok_or_else(|| anyhow!("missing access type"))?;
                     let member = StructMember {
@@ -410,7 +434,9 @@ impl<'a> ReflectIntermediate<'a> {
                     // Before SPIR-V 1.3, there is no `StorageBuffer` storage
                     // class. And from a pointer perspective you can't tell if
                     // it's a uniform block or a buffer block.
-                    let is_storage_buffer = self.deco_reg.contains(op.target_ty_id, Decoration::BufferBlock);
+                    let is_storage_buffer = self
+                        .deco_reg
+                        .contains(op.target_ty_id, Decoration::BufferBlock);
                     let store_cls = if op.store_cls == StorageClass::Uniform && is_storage_buffer {
                         StorageClass::StorageBuffer
                     } else {
@@ -455,7 +481,9 @@ impl<'a> ReflectIntermediate<'a> {
                     Op::Constant => ConstantValue::try_from_dwords(op.value, &ty)?,
                     _ => return Ok(()),
                 };
-                let name = self.name_reg.get(op.const_id)
+                let name = self
+                    .name_reg
+                    .get(op.const_id)
                     .map(ToOwned::to_owned)
                     .or_else(|| {
                         if self.cfg.gen_unique_names {
@@ -468,17 +496,14 @@ impl<'a> ReflectIntermediate<'a> {
                 self.interp.set(op.const_id, constant)?;
                 Ok(())
             }
-            Op::ConstantComposite |
-            Op::ConstantSampler |
-            Op::ConstantNull |
-            Op::ConstantPipeStorage => {
-                Ok(())
-            },
+            Op::ConstantComposite
+            | Op::ConstantSampler
+            | Op::ConstantNull
+            | Op::ConstantPipeStorage => Ok(()),
             Op::SpecConstantTrue | Op::SpecConstantFalse | Op::SpecConstant => {
                 let op = OpConstantScalarCommonSPQ::try_from(instr)?;
                 let name = self.name_reg.get(op.const_id).map(ToString::to_string);
-                let spec_id = self.deco_reg
-                    .get_u32(op.const_id, Decoration::SpecId)?;
+                let spec_id = self.deco_reg.get_u32(op.const_id, Decoration::SpecId)?;
                 let ty = self.ty_reg.get(op.ty_id)?.clone();
                 let constant = if let Some(user_value) = self.cfg.spec_values.get(&spec_id) {
                     Constant::new(name, ty, user_value.clone())
@@ -499,9 +524,7 @@ impl<'a> ReflectIntermediate<'a> {
             // `Constant` for the composite of them.
             // `Constant` is registered only for those will be
             // interacting with Vulkan.
-            Op::SpecConstantComposite => {
-                Ok(())
-            }
+            Op::SpecConstantComposite => Ok(()),
             Op::SpecConstantOp => {
                 let op = OpSpecConstantHeadSPQ::try_from(instr)?;
                 let opcode = Op::from_u32(op.opcode)
@@ -578,7 +601,8 @@ impl Inspector for FunctionInspector {
                     let op = instr.op();
                     if op == Op::AccessChain {
                         let op = OpAccessChain::try_from(instr)?;
-                        if self.access_chain_map
+                        if self
+                            .access_chain_map
                             .insert(op.var_id, op.accessed_var_id)
                             .is_some()
                         {
@@ -610,8 +634,6 @@ impl Inspector for FunctionInspector {
     }
 }
 
-
-
 pub fn reflect<'a, I: Inspector>(
     itm: &mut ReflectIntermediate<'a>,
     mut inspector: I,
@@ -642,7 +664,8 @@ pub fn reflect<'a, I: Inspector>(
     while let Some(instr) = instrs.peek().cloned() {
         if instr.op() == Op::ExtInstImport {
             let op = OpExtInstImport::try_from(instr)?;
-            itm.interp.import_ext_instr_set(op.instr_set_id, op.name.to_owned())?;
+            itm.interp
+                .import_ext_instr_set(op.instr_set_id, op.name.to_owned())?;
             instrs.next();
         } else {
             break;
@@ -679,7 +702,9 @@ pub fn reflect<'a, I: Inspector>(
             };
             match entry_point_declrs.entry(op.func_id) {
                 Entry::Occupied(_) => return Err(anyhow!("duplicate entry point at a same id")),
-                Entry::Vacant(e) => { e.insert(entry_point_declr); },
+                Entry::Vacant(e) => {
+                    e.insert(entry_point_declr);
+                }
             }
             instrs.next();
         } else {
@@ -689,7 +714,7 @@ pub fn reflect<'a, I: Inspector>(
     // 6. All execution-mode declarations, using OpExecutionMode or
     //    OpExecutionModeId.
     while let Some(instr) = instrs.peek().cloned() {
-        let op =  instr.op();
+        let op = instr.op();
         match op {
             Op::ExecutionMode | Op::ExecutionModeId => {
                 let mut operands = instr.operands();
@@ -701,15 +726,21 @@ pub fn reflect<'a, I: Inspector>(
 
                 let func_id = operands.read_u32()?;
                 let exec_mode = operands.read_enum::<spirv::ExecutionMode>()?;
-                let operands = operands.read_list()?.into_iter().map(operand_ctor).collect();
+                let operands = operands
+                    .read_list()?
+                    .into_iter()
+                    .map(operand_ctor)
+                    .collect();
                 let exec_mode_declr = ExecutionModeDeclaration {
                     func_id,
                     exec_mode,
                     operands,
                 };
-                entry_point_declrs.get_mut(&func_id)
+                entry_point_declrs
+                    .get_mut(&func_id)
                     .ok_or(anyhow!("execution mode for non-existing entry point"))?
-                    .exec_modes.push(exec_mode_declr);
+                    .exec_modes
+                    .push(exec_mode_declr);
                 instrs.next();
             }
             _ => break,
@@ -723,11 +754,11 @@ pub fn reflect<'a, I: Inspector>(
     //   c. All OpModuleProcessed instructions.
     while let Some(instr) = instrs.peek().cloned() {
         match instr.op() {
-            Op::String |
-            Op::SourceExtension |
-            Op::Source |
-            Op::SourceContinued |
-            Op::ModuleProcessed => {
+            Op::String
+            | Op::SourceExtension
+            | Op::Source
+            | Op::SourceContinued
+            | Op::ModuleProcessed => {
                 instrs.next();
             }
             Op::Name => {
@@ -741,7 +772,8 @@ pub fn reflect<'a, I: Inspector>(
             Op::MemberName => {
                 let op = OpMemberName::try_from(instr)?;
                 if !op.name.is_empty() {
-                    itm.name_reg.set_member(op.target_id, op.member_idx, op.name);
+                    itm.name_reg
+                        .set_member(op.target_id, op.member_idx, op.name);
                 }
                 instrs.next();
             }
@@ -761,15 +793,16 @@ pub fn reflect<'a, I: Inspector>(
             Op::MemberDecorate => {
                 let op = OpMemberDecorate::try_from(instr)?;
                 let deco = op.deco;
-                itm.deco_reg.set_member(op.target_id, op.member_idx, deco, op.params)?;
+                itm.deco_reg
+                    .set_member(op.target_id, op.member_idx, deco, op.params)?;
                 instrs.next();
             }
-            Op::DecorationGroup |
-            Op::GroupDecorate |
-            Op::GroupMemberDecorate |
-            Op::DecorateId |
-            Op::DecorateString |
-            Op::MemberDecorateString => {
+            Op::DecorationGroup
+            | Op::GroupDecorate
+            | Op::GroupMemberDecorate
+            | Op::DecorateId
+            | Op::DecorateString
+            | Op::MemberDecorateString => {
                 instrs.next();
             }
             _ => break,
@@ -893,14 +926,22 @@ impl ReflectConfig {
     }
     /// Reflect the SPIR-V binary and extract all entry points with an inspector
     /// function for customized reflection subroutines.
-    pub fn reflect_inspect_by<F: FnMut(&mut ReflectIntermediate<'_>, &Instr)>(&self, inspector: F) -> Result<Vec<EntryPoint>> {
+    pub fn reflect_inspect_by<F: FnMut(&mut ReflectIntermediate<'_>, &Instr)>(
+        &self,
+        inspector: F,
+    ) -> Result<Vec<EntryPoint>> {
         let mut inspector = FnInspector::<F>(inspector);
         self.reflect_inspect(&mut inspector)
     }
 }
 
-
-fn make_desc_var(deco_reg: &DecorationRegistry, name: Option<String>, var_id: VariableId, ptr_ty: &PointerType, ty: &Type) -> Option<Variable> {
+fn make_desc_var(
+    deco_reg: &DecorationRegistry,
+    name: Option<String>,
+    var_id: VariableId,
+    ptr_ty: &PointerType,
+    ty: &Type,
+) -> Option<Variable> {
     // Unwrap multi-binding.
     let (nbind, ty) = match ty {
         Type::Array(arr_ty) => {
@@ -945,21 +986,21 @@ fn make_desc_var(deco_reg: &DecorationRegistry, name: Option<String>, var_id: Va
             // Compatibility for SPIR-V <= 1.3 is done when
             // extracting storage class deco for pointer types.
             if ptr_ty.store_cls == StorageClass::StorageBuffer {
-                let access = deco_reg.get_desc_access_ty(var_id, &ty)
+                let access = deco_reg
+                    .get_desc_access_ty(var_id, &ty)
                     .unwrap_or(AccessType::ReadWrite);
                 DescriptorType::StorageBuffer(access)
             } else {
                 DescriptorType::UniformBuffer()
             }
         }
-        Type::SampledImage(sampled_img_ty) => {
-            match sampled_img_ty.dim {
-                Dim::DimBuffer => DescriptorType::UniformTexelBuffer(),
-                _ => DescriptorType::SampledImage(),
-            }
-        }
+        Type::SampledImage(sampled_img_ty) => match sampled_img_ty.dim {
+            Dim::DimBuffer => DescriptorType::UniformTexelBuffer(),
+            _ => DescriptorType::SampledImage(),
+        },
         Type::StorageImage(store_img_ty) => {
-            let access = deco_reg.get_desc_access_ty(var_id, &ty)
+            let access = deco_reg
+                .get_desc_access_ty(var_id, &ty)
                 .unwrap_or(AccessType::ReadWrite);
             match store_img_ty.dim {
                 Dim::DimBuffer => DescriptorType::StorageTexelBuffer(access),
@@ -974,8 +1015,7 @@ fn make_desc_var(deco_reg: &DecorationRegistry, name: Option<String>, var_id: Va
             }
         }
         Type::SubpassData(_) => {
-            let input_attm_idx = deco_reg.get_var_input_attm_idx(var_id)
-                .unwrap_or_default();
+            let input_attm_idx = deco_reg.get_var_input_attm_idx(var_id).unwrap_or_default();
             DescriptorType::InputAttachment(input_attm_idx)
         }
         Type::AccelStruct() => DescriptorType::AccelStruct(),
@@ -991,7 +1031,12 @@ fn make_desc_var(deco_reg: &DecorationRegistry, name: Option<String>, var_id: Va
     };
     Some(var)
 }
-fn make_var<'a>(deco_reg: &DecorationRegistry<'a>, name: Option<String>, var_id: VariableId, var_alloc: &VariableAlloc) -> Option<Variable> {
+fn make_var<'a>(
+    deco_reg: &DecorationRegistry<'a>,
+    name: Option<String>,
+    var_id: VariableId,
+    var_alloc: &VariableAlloc,
+) -> Option<Variable> {
     let ptr_ty = &var_alloc.ptr_ty;
     let ty = &*ptr_ty.pointee_ty;
     // Note that the storage class of a variable must be the same as the
@@ -1055,7 +1100,9 @@ impl<'a> ReflectIntermediate<'a> {
         // `BTreeMap` to ensure a stable order.
         let mut vars = BTreeMap::new();
         for (var_id, var_alloc) in self.var_reg.iter() {
-            let name = self.name_reg.get(*var_id)
+            let name = self
+                .name_reg
+                .get(*var_id)
                 .map(ToOwned::to_owned)
                 .or_else(|| {
                     if self.cfg.gen_unique_names {
@@ -1078,11 +1125,13 @@ impl<'a> ReflectIntermediate<'a> {
     }
 
     fn collect_entry_point_vars(&self, func_id: FunctionId) -> Vec<Variable> {
-        let accessed_var_ids = self.func_reg
+        let accessed_var_ids = self
+            .func_reg
             .collect_fn_vars(func_id)
             .into_iter()
             .collect::<HashSet<_>>();
-        let vars = self.collect_vars_impl()
+        let vars = self
+            .collect_vars_impl()
             .into_iter()
             .filter_map(|(var_id, var)| {
                 if accessed_var_ids.contains(&var_id) {
@@ -1111,7 +1160,11 @@ impl<'a> ReflectIntermediate<'a> {
         }
         Ok(vars)
     }
-    fn collect_exec_modes(&self, func_id: FunctionId, exec_mode_declrs: &[ExecutionModeDeclaration]) -> Result<Vec<ExecutionMode>> {
+    fn collect_exec_modes(
+        &self,
+        func_id: FunctionId,
+        exec_mode_declrs: &[ExecutionModeDeclaration],
+    ) -> Result<Vec<ExecutionMode>> {
         let mut exec_modes = Vec::with_capacity(exec_mode_declrs.len());
 
         for declr in exec_mode_declrs.iter() {
@@ -1126,7 +1179,7 @@ impl<'a> ReflectIntermediate<'a> {
                         let ty = Type::Scalar(ScalarType::int(32, false));
                         let value = ConstantValue::from(*x);
                         Constant::new_itm(ty, value)
-                    },
+                    }
                     ExecutionModeOperand::Id(x) => self.interp.get(*x)?.clone(),
                 };
                 operands.push(operand);
@@ -1235,7 +1288,10 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
 }
 
 impl<'a> ReflectIntermediate<'a> {
-    fn collect_entry_points(&self, entry_point_declrs: HashMap<FunctionId, EntryPointDeclartion<'a>>) -> Result<Vec<EntryPoint>> {
+    fn collect_entry_points(
+        &self,
+        entry_point_declrs: HashMap<FunctionId, EntryPointDeclartion<'a>>,
+    ) -> Result<Vec<EntryPoint>> {
         let mut entry_points = Vec::with_capacity(entry_point_declrs.len());
         for (id, entry_point_declr) in entry_point_declrs.iter() {
             let mut vars = if self.cfg.ref_all_rscs {

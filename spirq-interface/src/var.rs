@@ -1,6 +1,6 @@
 use spirq_types::{DescriptorType, Type, Walk};
 
-use crate::{InterfaceLocation, DescriptorBinding, SpecId, Locator};
+use crate::{DescriptorBinding, InterfaceLocation, Locator, SpecId};
 
 /// A SPIR-V variable - interface variables, descriptor resources and push
 /// constants.

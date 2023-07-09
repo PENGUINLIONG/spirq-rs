@@ -1,5 +1,5 @@
 //! Structured representations of SPIR-V types.
-use spirv::{ImageFormat, Dim, StorageClass};
+use spirv::{Dim, ImageFormat, StorageClass};
 
 use crate::walk::Walk;
 use std::fmt;
@@ -443,9 +443,7 @@ impl StructType {
     pub fn nbyte(&self) -> usize {
         self.members
             .last()
-            .map(|last| {
-                last.offset.unwrap_or(0) + last.ty.nbyte().unwrap_or(0)
-            })
+            .map(|last| last.offset.unwrap_or(0) + last.ty.nbyte().unwrap_or(0))
             .unwrap_or(0)
     }
 }
@@ -475,8 +473,7 @@ pub struct PointerType {
     pub pointee_ty: Box<Type>,
     pub store_cls: StorageClass,
 }
-impl PointerType {
-}
+impl PointerType {}
 impl fmt::Display for PointerType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str("Pointer { ")?;

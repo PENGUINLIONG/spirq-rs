@@ -1,6 +1,5 @@
 use std::fmt;
 
-
 /// Descriptor set and binding point carrier.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Default, Clone, Copy)]
 pub struct DescriptorBinding(u32, u32);

@@ -1,4 +1,4 @@
-use std::{iter::FromIterator, convert::TryInto};
+use std::{convert::TryInto, iter::FromIterator};
 
 /// SPIR-V program binary.
 #[derive(Debug, Default, Clone)]

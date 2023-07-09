@@ -1,12 +1,11 @@
-use anyhow::{Result, anyhow};
-use std::collections::HashMap;
+use anyhow::{anyhow, Result};
 use spirq_interface::Function;
 use spirq_types::{AccessType, PointerType, Type};
 use spirv::{Decoration, StorageClass};
+use std::collections::HashMap;
 
-use crate::{InterfaceLocation, DescriptorBinding};
-use crate::instr::{InstrId, VariableId, FunctionId};
-
+use crate::instr::{FunctionId, InstrId, VariableId};
+use crate::{DescriptorBinding, InterfaceLocation};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DecorationKey {
@@ -16,10 +15,18 @@ pub struct DecorationKey {
 }
 impl DecorationKey {
     pub fn new(id: InstrId, deco: Decoration) -> Self {
-        Self { id, member_idx: None, deco }
+        Self {
+            id,
+            member_idx: None,
+            deco,
+        }
     }
     pub fn new_member(id: InstrId, member_idx: u32, deco: Decoration) -> Self {
-        Self { id, member_idx: Some(member_idx), deco }
+        Self {
+            id,
+            member_idx: Some(member_idx),
+            deco,
+        }
     }
 }
 
@@ -34,12 +41,13 @@ impl<'a> DecorationRegistry<'a> {
             Entry::Vacant(entry) => {
                 entry.insert(operands);
                 Ok(())
-            },
+            }
             Entry::Occupied(_) => Err(anyhow!("duplicate decoration at id {}", key.id)),
         }
     }
     fn get_impl(&self, key: DecorationKey) -> Result<&'a [u32]> {
-        self.deco_map.get(&key)
+        self.deco_map
+            .get(&key)
             .copied()
             .ok_or(anyhow!("missing decoration at id {}", key.id))
     }
@@ -47,7 +55,13 @@ impl<'a> DecorationRegistry<'a> {
     pub fn set(&mut self, id: InstrId, deco: Decoration, operands: &'a [u32]) -> Result<()> {
         self.set_impl(DecorationKey::new(id, deco), operands)
     }
-    pub fn set_member(&mut self, id: InstrId, member_idx: u32, deco: Decoration, operands: &'a [u32]) -> Result<()> {
+    pub fn set_member(
+        &mut self,
+        id: InstrId,
+        member_idx: u32,
+        deco: Decoration,
+        operands: &'a [u32],
+    ) -> Result<()> {
         self.set_impl(DecorationKey::new_member(id, member_idx, deco), operands)
     }
     pub fn get(&self, id: InstrId, deco: Decoration) -> Result<&'a [u32]> {
@@ -59,12 +73,25 @@ impl<'a> DecorationRegistry<'a> {
 
     pub fn get_u32(&self, id: InstrId, deco: Decoration) -> Result<u32> {
         self.get(id, deco)
-            .and_then(|x| x.get(0).ok_or(anyhow!("expected a single operand for decoration {:?} at id {}", deco, id)))
+            .and_then(|x| {
+                x.get(0).ok_or(anyhow!(
+                    "expected a single operand for decoration {:?} at id {}",
+                    deco,
+                    id
+                ))
+            })
             .copied()
     }
     pub fn get_member_u32(&self, id: InstrId, member_idx: u32, deco: Decoration) -> Result<u32> {
         self.get_member(id, member_idx, deco)
-            .and_then(|x| x.get(0).ok_or(anyhow!("expected a single operand for member decoration {:?} at id {} for member {}", deco, id, member_idx)))
+            .and_then(|x| {
+                x.get(0).ok_or(anyhow!(
+                    "expected a single operand for member decoration {:?} at id {} for member {}",
+                    deco,
+                    id,
+                    member_idx
+                ))
+            })
             .copied()
     }
 
@@ -72,11 +99,13 @@ impl<'a> DecorationRegistry<'a> {
         self.deco_map.contains_key(&DecorationKey::new(id, deco))
     }
     pub fn contains_member(&self, id: InstrId, member_idx: u32, deco: Decoration) -> bool {
-        self.deco_map.contains_key(&DecorationKey::new_member(id, member_idx, deco))
+        self.deco_map
+            .contains_key(&DecorationKey::new_member(id, member_idx, deco))
     }
 
     pub fn get_all(&self, deco: Decoration) -> impl Iterator<Item = (InstrId, &[u32])> {
-        self.deco_map.iter()
+        self.deco_map
+            .iter()
             .filter(move |(key, _)| key.deco == deco)
             .map(|(key, value)| (key.id, *value))
     }
@@ -89,8 +118,7 @@ impl<'a> DecorationRegistry<'a> {
     }
     /// Get the set-binding pair of a descriptor resource.
     pub(crate) fn get_var_desc_bind(&self, var_id: VariableId) -> Result<DescriptorBinding> {
-        let desc_set = self.get_u32(var_id, Decoration::DescriptorSet)
-            .unwrap_or(0);
+        let desc_set = self.get_u32(var_id, Decoration::DescriptorSet).unwrap_or(0);
         self.get_u32(var_id, Decoration::Binding)
             .map(|bind_point| DescriptorBinding::new(desc_set, bind_point))
     }
@@ -114,10 +142,7 @@ impl<'a> DecorationRegistry<'a> {
             }
         })
     }
-    pub(crate) fn get_access_ty_from_deco(
-        &self,
-        id: InstrId,
-    ) -> Option<AccessType> {
+    pub(crate) fn get_access_ty_from_deco(&self, id: InstrId) -> Option<AccessType> {
         let write_only = self.contains(id, Decoration::NonReadable);
         let read_only = self.contains(id, Decoration::NonWritable);
         match (write_only, read_only) {
@@ -146,7 +171,6 @@ impl<'a> DecorationRegistry<'a> {
     pub(crate) fn get_var_input_attm_idx(&self, var_id: VariableId) -> Result<u32> {
         self.get_u32(var_id, Decoration::InputAttachmentIndex)
     }
-
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -162,31 +186,45 @@ impl<'a> NameRegistry<'a> {
     // Names are debuf information. Not important so ID collisions are ignored.
     pub fn set(&mut self, id: InstrId, name: &'a str) {
         use std::collections::hash_map::Entry;
-        let key = NameKey { id, member_idx: None };
+        let key = NameKey {
+            id,
+            member_idx: None,
+        };
         match self.name_map.entry(key) {
             Entry::Vacant(entry) => {
                 entry.insert(name);
-            },
-            _ => {},
+            }
+            _ => {}
         }
     }
     pub fn set_member(&mut self, id: InstrId, member_idx: u32, name: &'a str) {
         use std::collections::hash_map::Entry;
-        let key = NameKey { id, member_idx: Some(member_idx) };
+        let key = NameKey {
+            id,
+            member_idx: Some(member_idx),
+        };
         match self.name_map.entry(key) {
             Entry::Vacant(entry) => {
                 entry.insert(name);
-            },
-            _ => {},
+            }
+            _ => {}
         }
     }
 
     pub fn get(&self, id: InstrId) -> Option<&'a str> {
-        self.name_map.get(&NameKey { id, member_idx: None })
+        self.name_map
+            .get(&NameKey {
+                id,
+                member_idx: None,
+            })
             .copied()
     }
     pub fn get_member(&self, id: InstrId, member_idx: u32) -> Option<&'a str> {
-        self.name_map.get(&NameKey { id, member_idx: Some(member_idx) })
+        self.name_map
+            .get(&NameKey {
+                id,
+                member_idx: Some(member_idx),
+            })
             .copied()
     }
 }
@@ -212,13 +250,14 @@ impl VariableRegistry {
             Entry::Vacant(entry) => {
                 entry.insert(var);
                 Ok(())
-            },
+            }
             _ => Err(anyhow!("variable id {} already existed", id)),
         }
     }
 
     pub fn get(&self, id: VariableId) -> Result<&VariableAlloc> {
-        self.var_map.get(&id)
+        self.var_map
+            .get(&id)
             .ok_or(anyhow!("variable id {} is not found", id))
     }
 
@@ -238,21 +277,24 @@ impl FunctionRegistry {
             Entry::Vacant(entry) => {
                 entry.insert(func);
                 Ok(())
-            },
+            }
             _ => Err(anyhow!("function id {} already existed", id)),
         }
     }
 
     pub fn get(&self, id: FunctionId) -> Result<&Function> {
-        self.func_map.get(&id)
+        self.func_map
+            .get(&id)
             .ok_or(anyhow!("function id {} is not found", id))
     }
     pub fn get_mut(&mut self, id: FunctionId) -> Result<&mut Function> {
-        self.func_map.get_mut(&id)
+        self.func_map
+            .get_mut(&id)
             .ok_or(anyhow!("function id {} is not found", id))
     }
     pub fn get_by_name(&self, name: &str) -> Result<&Function> {
-        self.func_map.values()
+        self.func_map
+            .values()
             .find(|x| {
                 if let Some(nm) = x.name.as_ref() {
                     nm == name
