@@ -1,6 +1,7 @@
 use clap::Parser;
 use serde_json::json;
 use spirq::{
+    var::{InputVariable, OutputVariable, PushConstantVariable, DescriptorVariable, SpecConstantVariable},
     ty::{StructMember, Type},
     AccessType, DescriptorType, EntryPoint, ReflectConfig, SpirvBinary,
 };
@@ -492,7 +493,13 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
     for var in entry_point.vars.iter() {
         use spirq::Variable::*;
         match var {
-            Input { name, location, ty } => {
+            Input(input_var) => {
+                let InputVariable {
+                    name,
+                    location,
+                    ty,
+                } = input_var;
+
                 let j = json!({
                     "Name": name.as_ref(),
                     "Location": location.loc(),
@@ -501,7 +508,13 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 });
                 inputs.push(j);
             }
-            Output { name, location, ty } => {
+            Output(output_var) => {
+                let OutputVariable {
+                    name,
+                    location,
+                    ty,
+                } = output_var;
+
                 let j = json!({
                     "Name": name.as_ref(),
                     "Location": location.loc(),
@@ -510,13 +523,15 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 });
                 outputs.push(j);
             }
-            Descriptor {
-                name,
-                desc_bind,
-                desc_ty,
-                ty,
-                bind_count,
-            } => {
+            Descriptor(desc_var) => {
+                let DescriptorVariable {
+                    name,
+                    desc_bind,
+                    desc_ty,
+                    ty,
+                    bind_count,
+                } = desc_var;
+
                 let j = json!({
                     "Name": name.as_ref(),
                     "Set": desc_bind.set(),
@@ -527,14 +542,22 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 });
                 descs.push(j);
             }
-            PushConstant { name, ty } => {
+            PushConstant(push_const_var) => {
+                let PushConstantVariable { name, ty } = push_const_var;
+
                 let j = json!({
                     "Name": name.as_ref(),
                     "Type": ty2json(&ty),
                 });
                 push_consts.push(j);
             }
-            SpecConstant { name, spec_id, ty } => {
+            SpecConstant(spec_const_var) => {
+                let SpecConstantVariable {
+                    name,
+                    spec_id,
+                    ty,
+                } = spec_const_var;
+
                 let j = json!({
                     "Name": name.as_ref(),
                     "SpecId": spec_id,

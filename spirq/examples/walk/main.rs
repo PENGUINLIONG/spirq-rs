@@ -1,4 +1,4 @@
-use spirq::ReflectConfig;
+use spirq::{ReflectConfig, SpirvVariable};
 use std::collections::BTreeMap;
 use std::path::Path;
 

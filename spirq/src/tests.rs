@@ -68,8 +68,8 @@ fn test_vs_input_loc() {
         .vars
         .into_iter()
         .filter_map(|x| {
-            if let Variable::Input { location, .. } = x {
-                Some(location)
+            if let Variable::Input (in_var) = x {
+                Some(in_var.location)
             } else {
                 None
             }
@@ -108,8 +108,8 @@ fn test_fs_output_loc() {
         .vars
         .into_iter()
         .filter_map(|x| {
-            if let Variable::Output { location, .. } = x {
-                Some(location)
+            if let Variable::Output(out_var) = x {
+                Some(out_var.location)
             } else {
                 None
             }
@@ -140,7 +140,13 @@ fn test_spec_consts() {
     let spec_ids = entry
         .vars
         .into_iter()
-        .filter_map(|x| x.spec_id())
+        .filter_map(|x| {
+            if let Variable::SpecConstant(spec_const_var) = x {
+                Some(spec_const_var.spec_id)
+            } else {
+                None
+            }
+        })
         .collect::<HashSet<_>>();
     assert!(spec_ids.contains(&233));
     assert!(spec_ids.contains(&234));
@@ -184,11 +190,8 @@ fn test_desc_tys() {
         .vars
         .into_iter()
         .filter_map(|x| {
-            if let Variable::Descriptor {
-                desc_bind, desc_ty, ..
-            } = x
-            {
-                Some((desc_bind, desc_ty))
+            if let Variable::Descriptor(desc_var) = x{
+                Some((desc_var.desc_bind, desc_var.desc_ty))
             } else {
                 None
             }
@@ -296,13 +299,8 @@ fn test_dyn_multibind() {
         .vars
         .into_iter()
         .filter_map(|x| {
-            if let Variable::Descriptor {
-                desc_bind,
-                bind_count,
-                ..
-            } = x
-            {
-                Some((desc_bind, bind_count))
+            if let Variable::Descriptor(desc_var) = x {
+                Some((desc_var.desc_bind, desc_var.bind_count))
             } else {
                 None
             }
@@ -366,8 +364,8 @@ fn test_spec_const_arrays() {
         .vars
         .iter()
         .filter_map(|x| {
-            if let Variable::SpecConstant { spec_id, ty, .. } = x {
-                Some((spec_id, ty.clone()))
+            if let Variable::SpecConstant(spec_const_var) = x {
+                Some((spec_const_var.spec_id, spec_const_var.ty.clone()))
             } else {
                 None
             }
@@ -377,14 +375,8 @@ fn test_spec_const_arrays() {
         .vars
         .iter()
         .filter_map(|x| {
-            if let Variable::Descriptor {
-                desc_bind,
-                bind_count,
-                ty,
-                ..
-            } = x
-            {
-                Some((desc_bind, (*bind_count, ty.size())))
+            if let Variable::Descriptor(desc_var) = x{
+                Some((desc_var.desc_bind, (desc_var.bind_count, desc_var.ty.size())))
             } else {
                 None
             }
@@ -427,11 +419,8 @@ fn test_ray_tracing() {
         .vars
         .into_iter()
         .filter_map(|x| {
-            if let Variable::Descriptor {
-                desc_bind, desc_ty, ..
-            } = x
-            {
-                Some((desc_bind, desc_ty))
+            if let Variable::Descriptor(desc_var) = x{
+                Some((desc_var.desc_bind, desc_var.desc_ty))
             } else {
                 None
             }
@@ -477,11 +466,9 @@ fn test_combine_image_sampler() {
         .vars
         .into_iter()
         .filter_map(|x| {
-            if let Variable::Descriptor {
-                desc_bind, desc_ty, ..
-            } = x
+            if let Variable::Descriptor(desc_var) = x
             {
-                Some((desc_bind, desc_ty))
+                Some((desc_var.desc_bind, desc_var.desc_ty))
             } else {
                 None
             }
@@ -530,11 +517,8 @@ fn test_old_store_buf() {
         .vars
         .into_iter()
         .filter_map(|x| {
-            if let Variable::Descriptor {
-                desc_bind, desc_ty, ..
-            } = x
-            {
-                Some((desc_bind, desc_ty))
+            if let Variable::Descriptor(desc_var) = x {
+                Some((desc_var.desc_bind, desc_var.desc_ty))
             } else {
                 None
             }
@@ -624,7 +608,9 @@ fn test_matrix_stride() {
     "#
     );
     for var in entry.vars {
-        if let Variable::Descriptor { desc_bind, ty, .. } = var {
+        if let Variable::Descriptor(desc_var) = var {
+            let desc_bind = desc_var.desc_bind;
+            let ty = desc_var.ty;
             match desc_bind.bind() {
                 0 => {
                     let struct_ty = ty.as_struct().unwrap();

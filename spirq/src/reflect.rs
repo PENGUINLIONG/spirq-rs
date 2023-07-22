@@ -4,12 +4,12 @@ use crate::analysis::{
 };
 use crate::inspect::{FnInspector, Inspector};
 use crate::instr::*;
-use crate::{EntryPoint, Locator, SpecId};
+use crate::{EntryPoint, SpecId};
 use anyhow::{anyhow, Error, Result};
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use num_traits::FromPrimitive;
 use spirq_eval::Evaluator;
-use spirq_interface::{Constant, ConstantValue, ExecutionMode, Function, Variable};
+use spirq_interface::{Constant, ConstantValue, ExecutionMode, Function, Variable, InputVariable, OutputVariable, PushConstantVariable, DescriptorVariable, SpecConstantVariable};
 use spirq_parse::{Instr, Instrs, InstructionBuilder, SpirvBinary};
 use spirq_types::*;
 use spirv::{AddressingModel, Dim, MemoryModel, Op};
@@ -1033,14 +1033,14 @@ fn make_desc_var(
         Type::AccelStruct(_) => DescriptorType::accel_struct(),
         _ => return None,
     };
-
-    let var = Variable::Descriptor {
-        name,
-        desc_bind,
-        desc_ty,
-        ty,
-        bind_count,
+    let desc_var = DescriptorVariable {
+            name,
+            desc_bind,
+            desc_ty,
+            ty,
+            bind_count,
     };
+    let var = Variable::Descriptor(desc_var);
     Some(var)
 }
 fn make_var<'a>(
@@ -1056,11 +1056,12 @@ fn make_var<'a>(
     match ptr_ty.store_cls {
         StorageClass::Input => {
             if let Ok(location) = deco_reg.get_var_location(var_id) {
-                let var = Variable::Input {
+                let in_var = InputVariable {
                     name,
                     location,
                     ty: ty.clone(),
                 };
+                let var = Variable::Input(in_var);
                 // There can be interface blocks for input and output but
                 // there won't be any for attribute inputs nor for
                 // attachment outputs, so we just ignore structs and arrays
@@ -1074,11 +1075,12 @@ fn make_var<'a>(
         }
         StorageClass::Output => {
             if let Ok(location) = deco_reg.get_var_location(var_id) {
-                let var = Variable::Output {
+                let out_var = OutputVariable {
                     name,
                     location,
                     ty: ty.clone(),
                 };
+                let var = Variable::Output(out_var);
                 Some(var)
             } else {
                 None
@@ -1088,10 +1090,11 @@ fn make_var<'a>(
             // Push constants have no global offset. Offsets are applied to
             // members.
             if let Type::Struct(_) = ty {
-                let var = Variable::PushConstant {
+                let push_const_var = PushConstantVariable {
                     name,
                     ty: ty.clone(),
                 };
+                let var = Variable::PushConstant(push_const_var);
                 Some(var)
             } else {
                 None
@@ -1162,11 +1165,12 @@ impl<'a> ReflectIntermediate<'a> {
         let mut vars = Vec::new();
         for constant in self.interp.constants() {
             if let Some(spec_id) = constant.spec_id {
-                let spec = Variable::SpecConstant {
-                    name: constant.name.clone(),
-                    spec_id,
-                    ty: constant.ty.clone(),
+                let spec_const_var = SpecConstantVariable {
+                        name: constant.name.clone(),
+                        spec_id,
+                        ty: constant.ty.clone(),
                 };
+                let spec = Variable::SpecConstant(spec_const_var);
                 vars.push(spec);
             }
         }
@@ -1212,19 +1216,19 @@ impl<'a> ReflectIntermediate<'a> {
 /// Merge `DescriptorType::SampledImage` and `DescriptorType::Sampler` if
 /// they are bound to a same binding point with a same number of bindings.
 fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
-    let mut samplers = Vec::<Variable>::new();
-    let mut imgs = Vec::<Variable>::new();
+    let mut samplers = Vec::<DescriptorVariable>::new();
+    let mut imgs = Vec::<DescriptorVariable>::new();
     let mut out_vars = Vec::<Variable>::new();
 
     for var in vars {
-        if let Variable::Descriptor { desc_ty, .. } = &var {
-            match desc_ty {
+        if let Variable::Descriptor(desc_var) = &var {
+            match desc_var.desc_ty {
                 DescriptorType::Sampler => {
-                    samplers.push(var);
+                    samplers.push(desc_var.clone());
                     continue;
                 }
                 DescriptorType::SampledImage => {
-                    imgs.push(var);
+                    imgs.push(desc_var.clone());
                     continue;
                 }
                 _ => {}
@@ -1234,44 +1238,28 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
     }
 
     for sampler_var in samplers {
-        let (sampler_desc_bind, sampler_bind_count) = {
-            if let Variable::Descriptor {
-                desc_bind,
-                bind_count,
-                ..
-            } = sampler_var
-            {
-                (desc_bind, bind_count)
-            } else {
-                unreachable!();
-            }
-        };
-
         let mut combined_imgs = Vec::new();
         imgs = imgs
             .drain(..)
-            .filter_map(|var| {
-                let succ = var.locator() == Locator::Descriptor(sampler_desc_bind)
-                    && var.bind_count() == Some(sampler_bind_count);
-                if succ {
-                    combined_imgs.push(var);
-                    None
-                } else {
-                    Some(var)
-                }
+            .filter_map(|image_var| {
+                    if image_var.desc_bind == sampler_var.desc_bind && image_var.bind_count == sampler_var.bind_count {
+                        combined_imgs.push(image_var);
+                        None
+                    } else {
+                        Some(image_var)
+                    }
             })
             .collect();
 
         if combined_imgs.is_empty() {
             // If the sampler can be combined with no texture, just put it
             // back.
-            out_vars.push(sampler_var);
+            out_vars.push(Variable::Descriptor(sampler_var.clone()));
         } else {
             // For any texture that can be combined with this sampler,
             // create a new combined image sampler.
             for img_var in combined_imgs {
-                if let Variable::Descriptor { name, ty, .. } = img_var {
-                    if let Type::SampledImage(img_ty) = ty {
+                    if let Type::SampledImage(img_ty) = img_var.ty {
                         let sampled_img_ty = SampledImageType {
                             scalar_ty: img_ty.scalar_ty.clone(),
                             dim: img_ty.dim,
@@ -1279,25 +1267,23 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
                             is_multisampled: img_ty.is_multisampled,
                         };
                         let combined_img_sampler_ty = CombinedImageSamplerType { sampled_img_ty };
-                        let out_var = Variable::Descriptor {
-                            name,
-                            desc_bind: sampler_desc_bind,
+                        let out_desc_var = DescriptorVariable {
+                            name: img_var.name.clone(),
+                            desc_bind: sampler_var.desc_bind,
                             desc_ty: DescriptorType::combined_image_sampler(),
                             ty: Type::CombinedImageSampler(combined_img_sampler_ty.clone()),
-                            bind_count: sampler_bind_count,
+                            bind_count: sampler_var.bind_count,
                         };
+                        let out_var = Variable::Descriptor(out_desc_var);
                         out_vars.push(out_var);
                     } else {
                         unreachable!();
                     }
-                } else {
-                    unreachable!();
-                }
             }
         }
     }
 
-    out_vars.extend(imgs);
+    out_vars.extend(imgs.into_iter().map(|x| Variable::Descriptor(x)));
 
     out_vars
 }
