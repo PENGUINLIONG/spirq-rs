@@ -421,15 +421,15 @@ fn ty2json(ty: &Type) -> serde_json::Value {
     match ty {
         Type::Matrix(x) => json!({
             "Kind": "Matrix",
-            "AxisOrder": x.major.map(|x| format!("{:?}", x)),
-            "VectorType": x.vec_ty.to_string(),
-            "Count": x.nvec,
+            "AxisOrder": x.axis_order.map(|x| format!("{:?}", x)),
+            "VectorType": x.vector_ty.to_string(),
+            "Count": x.vector_count,
             "Stride": x.stride,
         }),
         Type::Array(x) => json!({
             "Kind": "Array",
-            "ElementType": ty2json(&*x.proto_ty),
-            "Count": x.nrepeat,
+            "ElementType": ty2json(&*x.element_ty),
+            "Count": x.element_count,
             "Stride": x.stride
         }),
         Type::Struct(x) => json!({

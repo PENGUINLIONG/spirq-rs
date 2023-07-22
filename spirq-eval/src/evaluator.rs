@@ -74,7 +74,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(x.0 as i32),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(x.0 as i32),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -84,7 +84,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(x.0 as u32),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: false }) => ConstantValue::U32(x.0 as u32),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -94,7 +94,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32((x as f32).into()),
+                    Type::Scalar(ScalarType::Float { bits: 32 }) => ConstantValue::F32((x as f32).into()),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -104,7 +104,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32((x as f32).into()),
+                    Type::Scalar(ScalarType::Float { bits: 32 }) => ConstantValue::F32((x as f32).into()),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -114,7 +114,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(x),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(x),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -124,7 +124,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(x),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: false }) => ConstantValue::U32(x),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -134,7 +134,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(x),
+                    Type::Scalar(ScalarType::Float { bits: 32 }) => ConstantValue::F32(x),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -146,9 +146,9 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(i32::from_ne_bytes(bits)),
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(u32::from_ne_bytes(bits)),
-                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(f32::from_ne_bytes(bits).into()),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(i32::from_ne_bytes(bits)),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: false }) => ConstantValue::U32(u32::from_ne_bytes(bits)),
+                    Type::Scalar(ScalarType::Float { bits: 32 }) => ConstantValue::F32(f32::from_ne_bytes(bits).into()),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -159,7 +159,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(-a),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(-a),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -169,7 +169,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(-a),
+                    Type::Scalar(ScalarType::Float { bits: 32 }) => ConstantValue::F32(-a),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -182,8 +182,8 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32((a + b) as i32),
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32((a + b) as u32),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32((a + b) as i32),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: false }) => ConstantValue::U32((a + b) as u32),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -193,7 +193,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(a + b),
+                    Type::Scalar(ScalarType::Float { bits: 32 }) => ConstantValue::F32(a + b),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -206,8 +206,8 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(((a - b) & 0xffffffff) as i32),
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(((a - b) & 0xffffffff) as u32),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(((a - b) & 0xffffffff) as i32),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: false }) => ConstantValue::U32(((a - b) & 0xffffffff) as u32),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -217,7 +217,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(a - b),
+                    Type::Scalar(ScalarType::Float { bits: 32 }) => ConstantValue::F32(a - b),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -230,8 +230,8 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(((a * b) & 0xffffffff) as i32),
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(((a * b) & 0xffffffff) as u32),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(((a * b) & 0xffffffff) as i32),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: false }) => ConstantValue::U32(((a * b) & 0xffffffff) as u32),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -241,7 +241,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(a * b),
+                    Type::Scalar(ScalarType::Float { bits: 32 }) => ConstantValue::F32(a * b),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -254,8 +254,8 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(((a / b) & 0xffffffff) as i32),
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(((a / b) & 0xffffffff) as u32),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(((a / b) & 0xffffffff) as i32),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: false }) => ConstantValue::U32(((a / b) & 0xffffffff) as u32),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -268,8 +268,8 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(((a / b) & 0xffffffff) as i32),
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(((a / b) & 0xffffffff) as u32),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(((a / b) & 0xffffffff) as i32),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: false }) => ConstantValue::U32(((a / b) & 0xffffffff) as u32),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -279,7 +279,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(a / b),
+                    Type::Scalar(ScalarType::Float { bits: 32 }) => ConstantValue::F32(a / b),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -292,8 +292,8 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(((a % b) & 0xffffffff) as i32),
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(((a % b) & 0xffffffff) as u32),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(((a % b) & 0xffffffff) as i32),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: false }) => ConstantValue::U32(((a % b) & 0xffffffff) as u32),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -306,7 +306,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(((a % b) & 0xffffffff) as i32),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(((a % b) & 0xffffffff) as i32),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             }
@@ -319,7 +319,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32((a.rem_euclid(b) & 0xffffffff) as i32),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32((a.rem_euclid(b) & 0xffffffff) as i32),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -329,7 +329,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(a % b),
+                    Type::Scalar(ScalarType::Float { bits: 32 }) => ConstantValue::F32(a % b),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -339,7 +339,7 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Float(4)) => ConstantValue::F32(a.rem_euclid(*b).into()),
+                    Type::Scalar(ScalarType::Float { bits: 32 }) => ConstantValue::F32(a.rem_euclid(*b).into()),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -359,8 +359,8 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(i32::from_ne_bytes((base >> shift).to_ne_bytes())),
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(base >> shift),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(i32::from_ne_bytes((base >> shift).to_ne_bytes())),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: false }) => ConstantValue::U32(base >> shift),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -380,8 +380,8 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(base >> shift),
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(u32::from_ne_bytes((base >> shift).to_ne_bytes())),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(base >> shift),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: false }) => ConstantValue::U32(u32::from_ne_bytes((base >> shift).to_ne_bytes())),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -400,8 +400,8 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(i32::from_ne_bytes((base << shift).to_ne_bytes())),
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(base << shift),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(i32::from_ne_bytes((base << shift).to_ne_bytes())),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: false }) => ConstantValue::U32(base << shift),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -420,8 +420,8 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(i32::from_ne_bytes((x | y).to_ne_bytes())),
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(x | y),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(i32::from_ne_bytes((x | y).to_ne_bytes())),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: false }) => ConstantValue::U32(x | y),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -440,8 +440,8 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(i32::from_ne_bytes((x ^ y).to_ne_bytes())),
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(x ^ y),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(i32::from_ne_bytes((x ^ y).to_ne_bytes())),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: false }) => ConstantValue::U32(x ^ y),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -460,8 +460,8 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(i32::from_ne_bytes((x & y).to_ne_bytes())),
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(x & y),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(i32::from_ne_bytes((x & y).to_ne_bytes())),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: false }) => ConstantValue::U32(x & y),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },
@@ -475,8 +475,8 @@ impl Evaluator {
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 };
                 match result_ty {
-                    Type::Scalar(ScalarType::Signed(4)) => ConstantValue::S32(i32::from_ne_bytes((!x).to_ne_bytes())),
-                    Type::Scalar(ScalarType::Unsigned(4)) => ConstantValue::U32(!x),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: true }) => ConstantValue::S32(i32::from_ne_bytes((!x).to_ne_bytes())),
+                    Type::Scalar(ScalarType::Integer { bits: 32, signed: false }) => ConstantValue::U32(!x),
                     _ => return Err(evaluation_failed(op, result_ty, operands)),
                 }
             },

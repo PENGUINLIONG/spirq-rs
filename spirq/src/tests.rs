@@ -382,7 +382,7 @@ fn test_spec_const_arrays() {
                 ..
             } = x
             {
-                Some((desc_bind, (*nbind, ty.nbyte())))
+                Some((desc_bind, (*nbind, ty.size())))
             } else {
                 None
             }
@@ -391,7 +391,7 @@ fn test_spec_const_arrays() {
     assert_eq!(spec_consts.len(), 1);
     assert_eq!(
         *spec_consts.get(&2).unwrap(),
-        ty::Type::Scalar(ty::ScalarType::Unsigned(4))
+        ty::Type::Scalar(ty::ScalarType::u32())
     );
     assert_eq!(
         *descs.get(&DescriptorBinding::new(0, 0)).unwrap(),

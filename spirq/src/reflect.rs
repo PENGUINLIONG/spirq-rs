@@ -158,28 +158,36 @@ impl<'a> ReflectIntermediate<'a> {
             Op::TypeFunction => {}
             Op::TypeVoid => {
                 let op = OpTypeVoid::try_from(instr)?;
-                let scalar_ty = ScalarType::void();
+                let scalar_ty = ScalarType::Void;
                 self.ty_reg.set(op.ty_id, Type::Scalar(scalar_ty))?;
             }
             Op::TypeBool => {
                 let op = OpTypeBool::try_from(instr)?;
-                let scalar_ty = ScalarType::boolean();
+                let scalar_ty = ScalarType::Boolean;
                 self.ty_reg.set(op.ty_id, Type::Scalar(scalar_ty))?;
             }
             Op::TypeInt => {
                 let op = OpTypeInt::try_from(instr)?;
-                let scalar_ty = ScalarType::int(op.nbyte >> 3, op.is_signed);
+                let scalar_ty = ScalarType::Integer {
+                    bits: op.bits,
+                    signed: op.is_signed
+                };
                 self.ty_reg.set(op.ty_id, Type::Scalar(scalar_ty))?;
             }
             Op::TypeFloat => {
                 let op = OpTypeFloat::try_from(instr)?;
-                let scalar_ty = ScalarType::float(op.nbyte >> 3);
+                let scalar_ty = ScalarType::Float {
+                    bits: op.bits,
+                };
                 self.ty_reg.set(op.ty_id, Type::Scalar(scalar_ty))?;
             }
             Op::TypeVector => {
                 let op = OpTypeVector::try_from(instr)?;
                 if let Type::Scalar(scalar_ty) = self.ty_reg.get(op.scalar_ty_id)? {
-                    let vec_ty = VectorType::new(scalar_ty.clone(), op.nscalar);
+                    let vec_ty = VectorType {
+                        scalar_ty: scalar_ty.clone(),
+                        scalar_count: op.nscalar,
+                    };
                     self.ty_reg.set(op.ty_id, Type::Vector(vec_ty))?;
                 } else {
                     return Err(broken_nested_ty(op.ty_id));
@@ -188,7 +196,12 @@ impl<'a> ReflectIntermediate<'a> {
             Op::TypeMatrix => {
                 let op = OpTypeMatrix::try_from(instr)?;
                 if let Type::Vector(vec_ty) = self.ty_reg.get(op.vec_ty_id)? {
-                    let mat_ty = MatrixType::new(vec_ty.clone(), op.nvec);
+                    let mat_ty = MatrixType {
+                        vector_ty: vec_ty.clone(),
+                        vector_count: op.nvec,
+                        axis_order: None,
+                        stride: None,
+                    };
                     self.ty_reg.set(op.ty_id, Type::Matrix(mat_ty))?;
                 } else {
                     return Err(broken_nested_ty(op.ty_id));
@@ -238,7 +251,7 @@ impl<'a> ReflectIntermediate<'a> {
                 let op = OpTypeSampler::try_from(instr)?;
                 // Note that SPIR-V doesn't discriminate color and depth/stencil
                 // samplers. `sampler` and `samplerShadow` means the same thing.
-                self.ty_reg.set(op.ty_id, Type::Sampler())?;
+                self.ty_reg.set(op.ty_id, Type::Sampler(SamplerType{}))?;
             }
             Op::TypeSampledImage => {
                 let op = OpTypeSampledImage::try_from(instr)?;
@@ -263,13 +276,13 @@ impl<'a> ReflectIntermediate<'a> {
                 // FIXME: Workaround old storage buffers.
                 if self
                     .deco_reg
-                    .contains(op.proto_ty_id, Decoration::BufferBlock)
+                    .contains(op.element_ty_id, Decoration::BufferBlock)
                 {
                     let _ =
                         self.deco_reg
                             .set(op.ty_id, Decoration::BufferBlock, &[] as &'static [u32]);
                 }
-                let proto_ty = if let Ok(x) = self.ty_reg.get(op.proto_ty_id) {
+                let element_ty = if let Ok(x) = self.ty_reg.get(op.element_ty_id) {
                     x
                 } else {
                     return Ok(());
@@ -284,7 +297,7 @@ impl<'a> ReflectIntermediate<'a> {
                 // behavior of `glslang` is to treat the specialization
                 // constants as normal constants, then I would say...
                 // probably it's fine to size array with them?
-                let nrepeat = match self.interp.get_value(op.nrepeat_const_id)? {
+                let element_count = match self.interp.get_value(op.element_count_const_id)? {
                     ConstantValue::S32(x) if *x > 0 => *x as u32,
                     ConstantValue::U32(x) if *x > 0 => *x,
                     _ => return Err(anyhow!("invalid array size")),
@@ -297,15 +310,15 @@ impl<'a> ReflectIntermediate<'a> {
                 let arr_ty = if let Ok(stride) = stride {
                     // Sized data arrays.
                     ArrayType {
-                        proto_ty: Box::new(proto_ty.clone()),
-                        nrepeat: Some(nrepeat),
+                        element_ty: Box::new(element_ty.clone()),
+                        element_count: Some(element_count),
                         stride: Some(stride),
                     }
                 } else {
                     // Multiple descriptor binding points grouped into an array.
                     ArrayType {
-                        proto_ty: Box::new(proto_ty.clone()),
-                        nrepeat: Some(nrepeat),
+                        element_ty: Box::new(element_ty.clone()),
+                        element_count: Some(element_count),
                         stride: None,
                     }
                 };
@@ -313,7 +326,7 @@ impl<'a> ReflectIntermediate<'a> {
             }
             Op::TypeRuntimeArray => {
                 let op = OpTypeRuntimeArray::try_from(instr)?;
-                let proto_ty = if let Ok(x) = self.ty_reg.get(op.proto_ty_id) {
+                let element_ty = if let Ok(x) = self.ty_reg.get(op.element_ty_id) {
                     x
                 } else {
                     return Ok(());
@@ -325,16 +338,16 @@ impl<'a> ReflectIntermediate<'a> {
                 let arr_ty = if let Ok(stride) = stride {
                     // Unsized data arrays.
                     ArrayType {
-                        proto_ty: Box::new(proto_ty.clone()),
-                        nrepeat: None,
+                        element_ty: Box::new(element_ty.clone()),
+                        element_count: None,
                         stride: Some(stride),
                     }
                 } else {
                     // Multiple descriptor binding points grouped into an array
                     // whose size is unknown at compile time.
                     ArrayType {
-                        proto_ty: Box::new(proto_ty.clone()),
-                        nrepeat: None,
+                        element_ty: Box::new(element_ty.clone()),
+                        element_count: None,
                         stride: None,
                     }
                 };
@@ -361,11 +374,11 @@ impl<'a> ReflectIntermediate<'a> {
                     } else {
                         return Ok(());
                     };
-                    let mut proto_ty = &mut member_ty;
-                    while let Type::Array(arr_ty) = proto_ty {
-                        proto_ty = &mut *arr_ty.proto_ty;
+                    let mut element_ty = &mut member_ty;
+                    while let Type::Array(arr_ty) = element_ty {
+                        element_ty = &mut *arr_ty.element_ty;
                     }
-                    if let Type::Matrix(ref mut mat_ty) = proto_ty {
+                    if let Type::Matrix(ref mut mat_ty) = element_ty {
                         let mat_stride =
                             self.deco_reg
                                 .get_member_u32(op.ty_id, i, Decoration::MatrixStride);
@@ -380,7 +393,7 @@ impl<'a> ReflectIntermediate<'a> {
                             self.deco_reg
                                 .contains_member(op.ty_id, i, Decoration::ColMajor);
 
-                        mat_ty.major = if is_row_major {
+                        mat_ty.axis_order = if is_row_major {
                             Some(MatrixAxisOrder::RowMajor)
                         } else if is_col_major {
                             Some(MatrixAxisOrder::ColumnMajor)
@@ -454,15 +467,15 @@ impl<'a> ReflectIntermediate<'a> {
             }
             Op::TypeForwardPointer => {
                 let op = OpTypeForwardPointer::try_from(instr)?;
-                self.ty_reg.set(op.ty_id, Type::DeviceAddress())?;
+                self.ty_reg.set(op.ty_id, Type::DeviceAddress(DeviceAddressType { }))?;
             }
             Op::TypeAccelerationStructureKHR => {
                 let op = OpTypeAccelerationStructureKHR::try_from(instr)?;
-                self.ty_reg.set(op.ty_id, Type::AccelStruct())?;
+                self.ty_reg.set(op.ty_id, Type::AccelStruct(AccelStructType { }))?;
             }
             Op::TypeRayQueryKHR => {
                 let op = OpTypeRayQueryKHR::try_from(instr)?;
-                self.ty_reg.set(op.ty_id, Type::RayQuery())?;
+                self.ty_reg.set(op.ty_id, Type::RayQuery(RayQueryType { }))?;
             }
             _ => return Err(anyhow!("unexpected opcode {:?}", instr.op())),
         }
@@ -947,8 +960,8 @@ fn make_desc_var(
             // `nrepeat=None` is no longer considered invalid because of
             // the adoption of `SPV_EXT_descriptor_indexing`. This
             // shader extension has been supported in Vulkan 1.2.
-            let nrepeat = arr_ty.nrepeat.unwrap_or(0);
-            (nrepeat, &*arr_ty.proto_ty)
+            let nrepeat = arr_ty.element_count.unwrap_or(0);
+            (nrepeat, &*arr_ty.element_ty)
         }
         _ => (1, ty),
     };
@@ -1006,7 +1019,7 @@ fn make_desc_var(
                 _ => DescriptorType::StorageImage(access),
             }
         }
-        Type::Sampler() => DescriptorType::Sampler(),
+        Type::Sampler(_) => DescriptorType::Sampler(),
         Type::CombinedImageSampler(combined_img_sampler_ty) => {
             match combined_img_sampler_ty.sampled_img_ty.dim {
                 Dim::DimBuffer => DescriptorType::UniformTexelBuffer(),
@@ -1017,7 +1030,7 @@ fn make_desc_var(
             let input_attm_idx = deco_reg.get_var_input_attm_idx(var_id).unwrap_or_default();
             DescriptorType::InputAttachment(input_attm_idx)
         }
-        Type::AccelStruct() => DescriptorType::AccelStruct(),
+        Type::AccelStruct(_) => DescriptorType::AccelStruct(),
         _ => return None,
     };
 
@@ -1175,7 +1188,11 @@ impl<'a> ReflectIntermediate<'a> {
             for operand in declr.operands.iter() {
                 let operand = match operand {
                     ExecutionModeOperand::Literal(x) => {
-                        let ty = Type::Scalar(ScalarType::int(32, false));
+                        let scalar_ty = ScalarType::Integer {
+                            bits: 32,
+                            signed: false,
+                        };
+                        let ty = Type::Scalar(scalar_ty);
                         let value = ConstantValue::from(*x);
                         Constant::new_itm(ty, value)
                     }

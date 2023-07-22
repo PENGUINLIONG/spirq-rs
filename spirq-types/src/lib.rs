@@ -4,8 +4,8 @@ mod walk;
 
 pub use reg::TypeRegistry;
 pub use ty::{
-    AccessType, ArrayType, CombinedImageSamplerType, DescriptorType, ImageType, MatrixAxisOrder,
-    MatrixType, PointerType, SampledImageType, ScalarType, StorageImageType, StructMember,
-    StructType, SubpassDataType, Type, VectorType,
+    AccelStructType, AccessType, ArrayType, CombinedImageSamplerType, DescriptorType, ImageType, SamplerType, MatrixAxisOrder,
+    MatrixType, DeviceAddressType, PointerType, SampledImageType, ScalarType, StorageImageType, StructMember,
+    StructType, SubpassDataType, Type, VectorType, RayQueryType, SpirvType
 };
 pub use walk::Walk;

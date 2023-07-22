@@ -68,12 +68,12 @@ define_ops! {
     }
     OpTypeInt {
         ty_id: TypeId = read_u32(),
-        nbyte: u32 = read_u32(),
+        bits: u32 = read_u32(),
         is_signed: bool = read_bool(),
     }
     OpTypeFloat {
         ty_id: TypeId = read_u32(),
-        nbyte: u32 = read_u32(),
+        bits: u32 = read_u32(),
     }
     OpTypeVector {
         ty_id: TypeId = read_u32(),
@@ -104,12 +104,12 @@ define_ops! {
     }
     OpTypeArray {
         ty_id: TypeId = read_u32(),
-        proto_ty_id: TypeId = read_u32(),
-        nrepeat_const_id: ConstantId = read_u32(),
+        element_ty_id: TypeId = read_u32(),
+        element_count_const_id: ConstantId = read_u32(),
     }
     OpTypeRuntimeArray {
         ty_id: TypeId = read_u32(),
-        proto_ty_id: TypeId = read_u32(),
+        element_ty_id: TypeId = read_u32(),
     }
     OpTypeStruct {
         ty_id: TypeId = read_u32(),
