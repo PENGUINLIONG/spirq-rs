@@ -1,9 +1,7 @@
 [workspace]
 members = [
     "spirq",
-    "spirq-types",
-    "spirq-interface",
+    "spirq-core",
     "spirq-parse",
-    "spirq-eval",
     "shader-reflect",
 ]

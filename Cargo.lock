@@ -357,32 +357,17 @@ dependencies = [
  "num-derive",
  "num-traits",
  "ordered-float",
- "spirq-eval",
- "spirq-interface",
+ "spirq-core",
  "spirq-parse",
- "spirq-types",
  "spirv",
 ]
 
 [[package]]
-name = "spirq-eval"
+name = "spirq-core"
 version = "0.6.4"
 dependencies = [
  "anyhow",
  "ordered-float",
- "spirq-interface",
- "spirq-parse",
- "spirq-types",
- "spirv",
-]
-
-[[package]]
-name = "spirq-interface"
-version = "0.6.4"
-dependencies = [
- "anyhow",
- "ordered-float",
- "spirq-types",
  "spirv",
 ]
 
@@ -392,14 +377,6 @@ version = "0.6.4"
 dependencies = [
  "anyhow",
  "num-traits",
- "spirv",
-]
-
-[[package]]
-name = "spirq-types"
-version = "0.6.4"
-dependencies = [
- "anyhow",
  "spirv",
 ]
 

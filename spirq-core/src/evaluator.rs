@@ -1,10 +1,8 @@
-use std::collections::{hash_map::Entry, HashMap};
-
+use crate::constant::{Constant, ConstantValue};
+use crate::ty::{ScalarType, Type};
 use anyhow::{anyhow, Error, Result};
-use spirq_interface::{Constant, ConstantValue};
-use spirq_parse::Instr;
-use spirq_types::{ScalarType, Type, TypeRegistry};
 use spirv::Op;
+use std::collections::{hash_map::Entry, HashMap};
 
 type InstrId = u32;
 
@@ -602,25 +600,23 @@ impl Evaluator {
         Ok(value)
     }
 
-    pub fn interpret(&mut self, ty_reg: &TypeRegistry, instr: &Instr) -> Result<&Constant> {
-        let mut operands = instr.operands();
-        let result_ty_id = operands.read_u32()?;
-        let result_ty = ty_reg.get(result_ty_id)?;
-        let result_id = operands.read_u32()?;
-        let operands = operands.read_list().and_then(|operands| {
-            let mut out = Vec::new();
-            for operand in operands.iter() {
-                if let Ok(operand) = self.get_value(*operand) {
-                    out.push(operand.to_owned());
-                } else {
-                    return Err(broken_expr_tree(result_id));
-                }
+    pub fn interpret(
+        &mut self,
+        op: spirv::Op,
+        result_id: InstrId,
+        result_ty: &Type,
+        operand_ids: &[InstrId],
+    ) -> Result<&Constant> {
+        let mut operands = Vec::new();
+        for operand in operand_ids.iter() {
+            if let Ok(operand) = self.get_value(*operand) {
+                operands.push(operand.to_owned());
+            } else {
+                return Err(broken_expr_tree(result_id));
             }
-            Ok(out)
-        })?;
+        }
 
-        let value = Self::evaluate(instr.op(), result_ty, &operands)?;
-
+        let value = Self::evaluate(op, result_ty, &operands)?;
         self.set(result_id, Constant::new_itm(result_ty.clone(), value))
     }
 

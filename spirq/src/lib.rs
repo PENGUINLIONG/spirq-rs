@@ -57,57 +57,40 @@
 //! [`reflect`]: reflect/struct.ReflectConfig.html#method.reflect
 //! [`Type`]: ty/enum.Type.html
 pub mod analysis;
+pub mod entry_point;
 pub mod inspect;
 mod instr;
 pub mod reflect;
+pub mod reflect_cfg;
 #[cfg(test)]
 mod tests;
 
-use std::fmt;
+pub use spirq_core::constant;
+pub use spirq_core::evaluator;
+pub use spirq_core::func;
+pub use spirq_core::locator;
+pub use spirq_core::ty;
+pub use spirq_core::var;
 
-pub use spirq_interface as var;
 pub use spirq_parse as parse;
-pub use spirq_types as ty;
 
 pub mod error {
     pub use anyhow::{Error, Result};
 }
-pub use reflect::{ExecutionModel, ReflectConfig};
 
-pub use spirq_interface::{
-    Constant, ConstantValue, DescriptorBinding, ExecutionMode, Function, InterfaceLocation,
-    Locator, SpecId, SpirvVariable, Variable,
-};
-pub use spirq_types::{AccessType, DescriptorType, SpirvType, Type};
+pub use reflect_cfg::ReflectConfig;
 
-// SPIR-V program entry points.
-pub use spirq_parse::SpirvBinary;
-
-/// Representing an entry point described in a SPIR-V.
-#[derive(Clone, PartialEq, Eq, Hash)]
-pub struct EntryPoint {
-    /// Entry point execution model.
-    pub exec_model: ExecutionModel,
-    /// Name of the entry point.
-    pub name: String,
-    /// Variables that contains specialization constant, input, output and
-    /// descriptor type information.
-    ///
-    /// Note that it is possible that multiple resources are bound to a same
-    /// `Locator` so this is not a map.
-    pub vars: Vec<Variable>,
-    /// Execution modes the entry point will execute in, including predefined
-    /// compute shader local sizes and specialization constant IDs of local
-    /// sizes.
-    pub exec_modes: Vec<ExecutionMode>,
-}
-impl fmt::Debug for EntryPoint {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct(&self.name)
-            .field("exec_model", &self.exec_model)
-            .field("name", &self.name)
-            .field("vars", &self.vars)
-            .field("exec_modes", &self.exec_modes)
-            .finish()
-    }
+// Re-exports.
+pub mod prelude {
+    pub use super::ReflectConfig;
+    pub use super::{
+        constant::ConstantValue,
+        entry_point::{EntryPoint, ExecutionModel},
+        error::{Error, Result},
+        func::ExecutionMode,
+        locator::{DescriptorBinding, InterfaceLocation, SpecId},
+        parse::SpirvBinary,
+        ty::{AccessType, SpirvType, Type},
+        var::{DescriptorType, SpirvVariable, Variable},
+    };
 }

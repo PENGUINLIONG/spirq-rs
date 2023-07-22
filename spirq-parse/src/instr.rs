@@ -1,9 +1,8 @@
 //!  SPIR-V instruction parser.
-use std::{borrow::Borrow, fmt, ops::Deref};
-
 use anyhow::{anyhow, Result};
 use num_traits::FromPrimitive;
 use spirv::Op;
+use std::{borrow::Borrow, fmt, ops::Deref};
 
 pub struct Instrs<'a>(&'a [u32]);
 impl<'a> Instrs<'a> {
@@ -180,7 +179,7 @@ macro_rules! define_ops {
         $(
             pub struct $opcode<'a> {
                 $( pub $field: $type, )*
-                _ph: std::marker::PhantomData<&'a ()>,
+                _ph: ::std::marker::PhantomData<&'a ()>,
             }
             impl<'a> TryFrom<&'a Instr> for $opcode<'a> {
                 type Error = anyhow::Error;
@@ -188,7 +187,7 @@ macro_rules! define_ops {
                     let mut operands = instr.operands();
                     let op = $opcode {
                         $( $field: operands.$read_fn()?, )+
-                        _ph: PhantomData,
+                        _ph: ::std::marker::PhantomData,
                     };
                     Ok(op)
                 }

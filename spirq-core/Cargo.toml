@@ -1,13 +1,13 @@
 [package]
-name = "spirq-eval"
+name = "spirq-core"
 version = "0.6.4"
 authors = ["PENGUINLIONG <admin@penguinliong.moe>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
-description = "Constant evaluator for SPIR-Q, a light weight SPIR-V query utility for graphics."
+description = "SPIR-Q core feature implementation, a light weight SPIR-V query utility for graphics."
 repository = "https://github.com/PENGUINLIONG/spirq-rs"
 homepage = "https://github.com/PENGUINLIONG/spirq-rs"
-documentation = "https://docs.rs/spirq-eval"
+documentation = "https://docs.rs/spirq-core"
 categories = ["graphics"]
 readme = "README.md"
 keywords = ["spirv", "vulkan", "opengl", "opencl"]
@@ -20,7 +20,4 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 spirv = "0.2"
 anyhow = "1.0"
-spirq-types = { version = "0.6.4", path = "../spirq-types" }
-spirq-parse = { version = "0.6.4", path = "../spirq-parse" }
-spirq-interface = { version = "0.6.4", path = "../spirq-interface" }
 ordered-float = "3.4"

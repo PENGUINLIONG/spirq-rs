@@ -1,4 +1,5 @@
-use super::*;
+use crate::prelude::*;
+use crate::ty;
 use inline_spirv::*;
 use std::collections::{HashMap, HashSet};
 

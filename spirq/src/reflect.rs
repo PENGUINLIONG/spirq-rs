@@ -1,25 +1,39 @@
 //! Reflection procedures and types.
-use crate::analysis::{
-    DecorationRegistry, FunctionRegistry, NameRegistry, VariableAlloc, VariableRegistry,
-};
-use crate::inspect::{FnInspector, Inspector};
-use crate::instr::*;
-use crate::{EntryPoint, SpecId};
 use anyhow::{anyhow, Error, Result};
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use num_traits::FromPrimitive;
-use spirq_eval::Evaluator;
-use spirq_interface::{
-    Constant, ConstantValue, DescriptorVariable, ExecutionMode, Function, InputVariable,
-    OutputVariable, PushConstantVariable, SpecConstantVariable, Variable,
-};
-use spirq_parse::{Instr, Instrs, InstructionBuilder, SpirvBinary};
-use spirq_types::*;
+pub use spirv::Decoration;
 use spirv::{AddressingModel, Dim, MemoryModel, Op};
-pub use spirv::{Decoration, ExecutionModel, StorageClass};
 use std::collections::hash_map::Entry;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
+
+use crate::{
+    analysis::{DecorationRegistry, NameRegistry},
+    constant::{Constant, ConstantValue},
+    entry_point::{EntryPoint, ExecutionModel},
+    evaluator::Evaluator,
+    func::{ExecutionMode, Function, FunctionRegistry},
+    inspect::Inspector,
+    instr::*,
+    parse::{Instr, Instrs},
+    reflect_cfg::ReflectConfig,
+    ty::{
+        AccelStructType, AccessType, ArrayType, CombinedImageSamplerType, DeviceAddressType,
+        ImageType, MatrixAxisOrder, MatrixType, PointerType, RayQueryType, SampledImageType,
+        SamplerType, ScalarType, StorageClass, StorageImageType, StructMember, StructType,
+        SubpassDataType, Type, TypeRegistry, VectorType,
+    },
+    var::{
+        DescriptorType, DescriptorVariable, InputVariable, OutputVariable, PushConstantVariable,
+        SpecConstantVariable, Variable, VariableAlloc, VariableRegistry,
+    },
+};
+
+type ConstantId = u32;
+type FunctionId = u32;
+type TypeId = u32;
+type VariableId = u32;
 
 // Intermediate types used in reflection.
 
@@ -534,22 +548,16 @@ impl<'a> ReflectIntermediate<'a> {
                 self.interp.set(op.const_id, constant)?;
                 Ok(())
             }
-            // `SpecId` decorations will be specified to each of the
-            // constituents so we don't have to register a
-            // `Constant` for the composite of them.
-            // `Constant` is registered only for those will be
-            // interacting with Vulkan.
+            // `SpecId` decorations will be specified to each of the constituents so we don't have to register a `Constant` for the composite of them. `Constant` is registered only for those will be interacting with Vulkan.
             Op::SpecConstantComposite => Ok(()),
             Op::SpecConstantOp => {
                 let op = OpSpecConstantHeadSPQ::try_from(instr)?;
                 let opcode = Op::from_u32(op.opcode)
                     .ok_or_else(|| anyhow!("invalid specialization constant op opcode"))?;
-                let instr2 = InstructionBuilder::new(opcode)
-                    .push(op.ty_id)
-                    .push(op.spec_const_id)
-                    .push_list(&instr.as_ref()[4..])
-                    .build();
-                self.interp.interpret(&self.ty_reg, &instr2)?;
+                let result_id = op.spec_const_id;
+                let result_ty = self.ty_reg.get(op.ty_id)?;
+                self.interp
+                    .interpret(opcode, result_id, result_ty, &instr.as_ref()[4..])?;
                 Ok(())
             }
             _ => Err(anyhow!("unexpected opcode {:?}", instr.op())),
@@ -576,7 +584,7 @@ impl<'a> ReflectIntermediate<'a> {
     }
 }
 
-struct FunctionInspector {
+pub struct FunctionInspector {
     cur_func: Option<(FunctionId, Function)>,
     access_chain_map: HashMap<VariableId, VariableId>,
 }
@@ -874,80 +882,6 @@ pub fn reflect<'a, I: Inspector>(
     }
 
     itm.collect_entry_points(entry_point_declrs)
-}
-
-/// Reflection configuration builder.
-#[derive(Default, Clone)]
-pub struct ReflectConfig {
-    spv: SpirvBinary,
-    ref_all_rscs: bool,
-    combine_img_samplers: bool,
-    gen_unique_names: bool,
-    spec_values: HashMap<SpecId, ConstantValue>,
-}
-impl ReflectConfig {
-    pub fn new() -> Self {
-        Default::default()
-    }
-
-    /// SPIR-V binary to be reflected.
-    pub fn spv<Spv: Into<SpirvBinary>>(&mut self, x: Spv) -> &mut Self {
-        self.spv = x.into();
-        self
-    }
-    /// Reference all defined resources even the resource is not used by an
-    /// entry point. Otherwise and by default, only the referenced resources are
-    /// assigned to entry points.
-    ///
-    /// Can be faster for modules with only entry point; slower for multiple
-    /// entry points.
-    pub fn ref_all_rscs(&mut self, x: bool) -> &mut Self {
-        self.ref_all_rscs = x;
-        self
-    }
-    /// Combine images and samplers sharing a same binding point to combined
-    /// image sampler descriptors.
-    ///
-    /// Faster when disabled, but useful for modules derived from HLSL.
-    pub fn combine_img_samplers(&mut self, x: bool) -> &mut Self {
-        self.combine_img_samplers = x;
-        self
-    }
-    /// Generate unique names for types and struct fields to help further
-    /// processing of the reflection data. Otherwise, the debug names are
-    /// assigned.
-    pub fn gen_unique_names(&mut self, x: bool) -> &mut Self {
-        self.gen_unique_names = x;
-        self
-    }
-    /// Use the provided value for specialization constant at `spec_id`.
-    pub fn specialize(&mut self, spec_id: SpecId, value: ConstantValue) -> &mut Self {
-        self.spec_values.insert(spec_id, value);
-        self
-    }
-
-    /// Reflect the SPIR-V binary and extract all entry points.
-    pub fn reflect(&self) -> Result<Vec<EntryPoint>> {
-        let mut itm = ReflectIntermediate::new(self);
-        let inspector = FunctionInspector::new();
-        reflect(&mut itm, inspector)
-    }
-    /// Reflect the SPIR-V binary and extract all entry points with an inspector
-    /// for customized reflection subroutines.
-    pub fn reflect_inspect<I: Inspector>(&self, inspector: &mut I) -> Result<Vec<EntryPoint>> {
-        let mut itm = ReflectIntermediate::new(self);
-        let mut func_inspector = FunctionInspector::new();
-        reflect(&mut itm, func_inspector.chain(inspector))
-    }
-    /// Reflect the SPIR-V binary and extract all entry points with an inspector
-    /// function for customized reflection subroutines.
-    pub fn reflect_inspect_by<F: FnMut(&mut ReflectIntermediate<'_>, &Instr)>(
-        &self,
-        inspector: F,
-    ) -> Result<Vec<EntryPoint>> {
-        let mut inspector = FnInspector::<F>(inspector);
-        self.reflect_inspect(&mut inspector)
-    }
 }
 
 fn make_desc_var(

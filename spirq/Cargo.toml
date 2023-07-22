@@ -20,10 +20,8 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 anyhow = "1.0.40"
 spirv = "0.2"
-spirq-types = { version = "0.6.4", path = "../spirq-types" }
+spirq-core = { version = "0.6.4", path = "../spirq-core" }
 spirq-parse = { version = "0.6.4", path = "../spirq-parse" }
-spirq-eval = { version = "0.6.4", path = "../spirq-eval" }
-spirq-interface = { version = "0.6.4", path = "../spirq-interface" }
 num-traits = "0.2"
 num-derive = "0.3"
 fnv = "1.0.7"

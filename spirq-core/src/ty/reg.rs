@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::Type;
+use super::Type;
 use anyhow::{anyhow, Result};
 
 pub type TypeId = u32;

@@ -1,6 +1,5 @@
 //! Inspect SPIR-V function parsing.
-use crate::parse::Instr;
-use crate::reflect::ReflectIntermediate;
+use crate::{parse::Instr, reflect::ReflectIntermediate};
 
 pub trait Inspector {
     /// For each instruction iterated in a function parse, the inspector receive

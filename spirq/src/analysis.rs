@@ -1,11 +1,15 @@
 use anyhow::{anyhow, Result};
-use spirq_interface::Function;
-use spirq_types::{AccessType, PointerType, Type};
-use spirv::{Decoration, StorageClass};
 use std::collections::HashMap;
 
-use crate::instr::{FunctionId, InstrId, VariableId};
-use crate::{DescriptorBinding, InterfaceLocation};
+use crate::{
+    locator::{DescriptorBinding, InterfaceLocation},
+    ty::{AccessType, Type},
+};
+
+pub use spirv::Decoration;
+
+type VariableId = u32;
+type InstrId = u32;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 struct DecorationKey {
@@ -226,102 +230,5 @@ impl<'a> NameRegistry<'a> {
                 member_idx: Some(member_idx),
             })
             .copied()
-    }
-}
-
-/// Variable allocated by `OpVariable`.
-pub struct VariableAlloc {
-    pub name: Option<String>,
-    /// Variable storage class.
-    pub store_cls: StorageClass,
-    /// Pointer type of the variable. It points to an array if it's a multibind.
-    /// Otherwise, it directly points to the actual inner type.
-    pub ptr_ty: PointerType,
-}
-
-#[derive(Default)]
-pub struct VariableRegistry {
-    var_map: HashMap<VariableId, VariableAlloc>,
-}
-impl VariableRegistry {
-    pub fn set(&mut self, id: VariableId, var: VariableAlloc) -> Result<()> {
-        use std::collections::hash_map::Entry;
-        match self.var_map.entry(id) {
-            Entry::Vacant(entry) => {
-                entry.insert(var);
-                Ok(())
-            }
-            _ => Err(anyhow!("variable id {} already existed", id)),
-        }
-    }
-
-    pub fn get(&self, id: VariableId) -> Result<&VariableAlloc> {
-        self.var_map
-            .get(&id)
-            .ok_or(anyhow!("variable id {} is not found", id))
-    }
-
-    pub fn iter(&self) -> impl Iterator<Item = (&VariableId, &VariableAlloc)> {
-        self.var_map.iter()
-    }
-}
-
-#[derive(Default)]
-pub struct FunctionRegistry {
-    func_map: HashMap<FunctionId, Function>,
-}
-impl FunctionRegistry {
-    pub fn set(&mut self, id: FunctionId, func: Function) -> Result<()> {
-        use std::collections::hash_map::Entry;
-        match self.func_map.entry(id) {
-            Entry::Vacant(entry) => {
-                entry.insert(func);
-                Ok(())
-            }
-            _ => Err(anyhow!("function id {} already existed", id)),
-        }
-    }
-
-    pub fn get(&self, id: FunctionId) -> Result<&Function> {
-        self.func_map
-            .get(&id)
-            .ok_or(anyhow!("function id {} is not found", id))
-    }
-    pub fn get_mut(&mut self, id: FunctionId) -> Result<&mut Function> {
-        self.func_map
-            .get_mut(&id)
-            .ok_or(anyhow!("function id {} is not found", id))
-    }
-    pub fn get_by_name(&self, name: &str) -> Result<&Function> {
-        self.func_map
-            .values()
-            .find(|x| {
-                if let Some(nm) = x.name.as_ref() {
-                    nm == name
-                } else {
-                    false
-                }
-            })
-            .ok_or(anyhow!("function {} is not found", name))
-    }
-
-    pub fn collect_ordered(&self) -> Vec<Function> {
-        let mut out: Vec<_> = self.func_map.iter().collect();
-        out.sort_by_key(|x| x.0);
-        out.into_iter().map(|x| x.1.clone()).collect()
-    }
-
-    pub(crate) fn collect_fn_vars_impl(&self, func: FunctionId, vars: &mut Vec<VariableId>) {
-        if let Ok(func) = self.get(func) {
-            vars.extend(func.accessed_vars.iter());
-            for call in func.callees.iter() {
-                self.collect_fn_vars_impl(*call, vars);
-            }
-        }
-    }
-    pub(crate) fn collect_fn_vars(&self, func: FunctionId) -> Vec<VariableId> {
-        let mut accessed_vars = Vec::new();
-        self.collect_fn_vars_impl(func, &mut accessed_vars);
-        accessed_vars
     }
 }

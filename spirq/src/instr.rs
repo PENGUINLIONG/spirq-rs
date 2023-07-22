@@ -1,18 +1,19 @@
-use spirq_parse::{define_ops, Instr};
-use spirv::{AddressingModel, Decoration, Dim, ExecutionMode, MemoryModel, StorageClass};
+use spirv::{
+    AddressingModel, Decoration, Dim, ExecutionMode, ExecutionModel, ImageFormat, MemoryModel,
+    StorageClass,
+};
 use std::convert::TryFrom;
-use std::marker::PhantomData;
 
-pub use spirv::{ExecutionModel, ImageFormat};
+use crate::parse::{define_ops, Instr};
 
-pub type InstrId = u32;
-pub type FunctionId = InstrId;
-pub type TypeId = InstrId;
-pub type VariableId = InstrId;
-pub type ConstantId = InstrId;
-pub type SpecConstantId = InstrId;
+type InstrId = u32;
+type FunctionId = InstrId;
+type TypeId = InstrId;
+type VariableId = InstrId;
+type ConstantId = InstrId;
+type SpecConstantId = InstrId;
 
-pub type MemberIdx = u32;
+type MemberIdx = u32;
 
 // Be aware that the order of the read methods is important.
 define_ops! {

@@ -1,6 +1,11 @@
-use spirq_types::{DescriptorType, Type, Walk};
+use crate::{
+    locator::{DescriptorBinding, InterfaceLocation, Locator, SpecId},
+    ty::{AccessType, PointerType, StorageClass, Type, Walk},
+};
+use anyhow::{anyhow, Result};
+use std::collections::HashMap;
 
-use crate::{DescriptorBinding, InterfaceLocation, Locator, SpecId};
+type VariableId = u32;
 
 pub trait SpirvVariable {
     /// Debug name of this variable.
@@ -52,6 +57,96 @@ impl SpirvVariable for OutputVariable {
     }
     fn ty(&self) -> &Type {
         &self.ty
+    }
+}
+
+/// Descriptor type matching `VkDescriptorType`.
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub enum DescriptorType {
+    /// `VK_DESCRIPTOR_TYPE_SAMPLER`
+    Sampler,
+    /// `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`
+    CombinedImageSampler,
+    /// `VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE`
+    SampledImage,
+    /// `VK_DESCRIPTOR_TYPE_STORAGE_IMAGE`
+    StorageImage { access_ty: AccessType },
+    /// `VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER`.
+    UniformTexelBuffer,
+    /// `VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER`.
+    StorageTexelBuffer { access_ty: AccessType },
+    /// `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER` or
+    /// `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC` depending on how you gonna
+    /// use it.
+    UniformBuffer,
+    /// `VK_DESCRIPTOR_TYPE_STORAGE_BUFFER` or
+    /// `VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC` depending on how you gonna
+    /// use it.
+    StorageBuffer { access_ty: AccessType },
+    /// `VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT` and its input attachment index.
+    InputAttachment { input_attachment_index: u32 },
+    /// `VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR`
+    AccelStruct,
+}
+impl DescriptorType {
+    pub fn sampler() -> Self {
+        Self::Sampler
+    }
+    pub fn combined_image_sampler() -> Self {
+        Self::CombinedImageSampler
+    }
+    pub fn sampled_image() -> Self {
+        Self::SampledImage
+    }
+    pub fn storage_image(access_ty: AccessType) -> Self {
+        Self::StorageImage { access_ty }
+    }
+    pub fn read_only_storage_image() -> Self {
+        Self::storage_image(AccessType::ReadOnly)
+    }
+    pub fn write_only_storage_image() -> Self {
+        Self::storage_image(AccessType::WriteOnly)
+    }
+    pub fn read_write_storage_image() -> Self {
+        Self::storage_image(AccessType::ReadWrite)
+    }
+    pub fn uniform_texel_buffer() -> Self {
+        Self::UniformTexelBuffer
+    }
+    pub fn storage_texel_buffer(access_ty: AccessType) -> Self {
+        Self::StorageTexelBuffer { access_ty }
+    }
+    pub fn read_only_storage_texel_buffer() -> Self {
+        Self::storage_texel_buffer(AccessType::ReadOnly)
+    }
+    pub fn write_only_storage_texel_buffer() -> Self {
+        Self::storage_texel_buffer(AccessType::WriteOnly)
+    }
+    pub fn read_write_storage_texel_buffer() -> Self {
+        Self::storage_texel_buffer(AccessType::ReadWrite)
+    }
+    pub fn uniform_buffer() -> Self {
+        Self::UniformBuffer
+    }
+    pub fn storage_buffer(access_ty: AccessType) -> Self {
+        Self::StorageBuffer { access_ty }
+    }
+    pub fn read_only_storage_buffer() -> Self {
+        Self::storage_buffer(AccessType::ReadOnly)
+    }
+    pub fn write_only_storage_buffer() -> Self {
+        Self::storage_buffer(AccessType::WriteOnly)
+    }
+    pub fn read_write_storage_buffer() -> Self {
+        Self::storage_buffer(AccessType::ReadWrite)
+    }
+    pub fn input_attachment(input_attachment_index: u32) -> Self {
+        Self::InputAttachment {
+            input_attachment_index,
+        }
+    }
+    pub fn accel_struct() -> Self {
+        Self::AccelStruct
     }
 }
 
@@ -167,5 +262,42 @@ impl SpirvVariable for Variable {
             Variable::PushConstant(x) => x.ty(),
             Variable::SpecConstant(x) => x.ty(),
         }
+    }
+}
+
+/// Variable allocated by `OpVariable`.
+pub struct VariableAlloc {
+    pub name: Option<String>,
+    /// Variable storage class.
+    pub store_cls: StorageClass,
+    /// Pointer type of the variable. It points to an array if it's a multibind.
+    /// Otherwise, it directly points to the actual inner type.
+    pub ptr_ty: PointerType,
+}
+
+#[derive(Default)]
+pub struct VariableRegistry {
+    var_map: HashMap<VariableId, VariableAlloc>,
+}
+impl VariableRegistry {
+    pub fn set(&mut self, id: VariableId, var: VariableAlloc) -> Result<()> {
+        use std::collections::hash_map::Entry;
+        match self.var_map.entry(id) {
+            Entry::Vacant(entry) => {
+                entry.insert(var);
+                Ok(())
+            }
+            _ => Err(anyhow!("variable id {} already existed", id)),
+        }
+    }
+
+    pub fn get(&self, id: VariableId) -> Result<&VariableAlloc> {
+        self.var_map
+            .get(&id)
+            .ok_or(anyhow!("variable id {} is not found", id))
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&VariableId, &VariableAlloc)> {
+        self.var_map.iter()
     }
 }

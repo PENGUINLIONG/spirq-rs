@@ -1,13 +1,8 @@
 use clap::Parser;
 use serde_json::json;
-use spirq::{
-    ty::{StructMember, Type},
-    var::{
-        DescriptorVariable, InputVariable, OutputVariable, PushConstantVariable,
-        SpecConstantVariable,
-    },
-    AccessType, DescriptorType, EntryPoint, ReflectConfig, SpirvBinary,
-};
+use spirq::prelude::*;
+use spirq::ty;
+use spirq::var;
 use std::{
     borrow::Borrow,
     fs::File,
@@ -414,7 +409,7 @@ fn get_spirv_bianry(path: &str, args: &Args) -> SpirvBinary {
     read_spirv_bianry(path)
 }
 
-fn member2json(member: &StructMember) -> serde_json::Value {
+fn member2json(member: &ty::StructMember) -> serde_json::Value {
     json!({
         "Name": member.name,
         "Offset": member.offset,
@@ -494,10 +489,9 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
     let mut push_consts = Vec::new();
     let mut spec_consts = Vec::new();
     for var in entry_point.vars.iter() {
-        use spirq::Variable::*;
         match var {
-            Input(input_var) => {
-                let InputVariable { name, location, ty } = input_var;
+            Variable::Input(input_var) => {
+                let var::InputVariable { name, location, ty } = input_var;
 
                 let j = json!({
                     "Name": name.as_ref(),
@@ -507,8 +501,8 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 });
                 inputs.push(j);
             }
-            Output(output_var) => {
-                let OutputVariable { name, location, ty } = output_var;
+            Variable::Output(output_var) => {
+                let var::OutputVariable { name, location, ty } = output_var;
 
                 let j = json!({
                     "Name": name.as_ref(),
@@ -518,8 +512,8 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 });
                 outputs.push(j);
             }
-            Descriptor(desc_var) => {
-                let DescriptorVariable {
+            Variable::Descriptor(desc_var) => {
+                let var::DescriptorVariable {
                     name,
                     desc_bind,
                     desc_ty,
@@ -537,8 +531,8 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 });
                 descs.push(j);
             }
-            PushConstant(push_const_var) => {
-                let PushConstantVariable { name, ty } = push_const_var;
+            Variable::PushConstant(push_const_var) => {
+                let var::PushConstantVariable { name, ty } = push_const_var;
 
                 let j = json!({
                     "Name": name.as_ref(),
@@ -546,8 +540,8 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 });
                 push_consts.push(j);
             }
-            SpecConstant(spec_const_var) => {
-                let SpecConstantVariable { name, spec_id, ty } = spec_const_var;
+            Variable::SpecConstant(spec_const_var) => {
+                let var::SpecConstantVariable { name, spec_id, ty } = spec_const_var;
 
                 let j = json!({
                     "Name": name.as_ref(),
@@ -566,10 +560,10 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
             .iter()
             .map(|operand| {
                 let value = match operand.value {
-                    spirq::ConstantValue::Bool(x) => x.to_string(),
-                    spirq::ConstantValue::S32(x) => x.to_string(),
-                    spirq::ConstantValue::U32(x) => x.to_string(),
-                    spirq::ConstantValue::F32(x) => x.to_string(),
+                    ConstantValue::Bool(x) => x.to_string(),
+                    ConstantValue::S32(x) => x.to_string(),
+                    ConstantValue::U32(x) => x.to_string(),
+                    ConstantValue::F32(x) => x.to_string(),
                     _ => todo!(),
                 };
                 json!({

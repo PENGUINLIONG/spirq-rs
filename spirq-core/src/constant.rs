@@ -1,8 +1,8 @@
+use crate::ty::{ScalarType, Type};
 use anyhow::{anyhow, Result};
 use ordered_float::OrderedFloat;
-use spirq_types::{ScalarType, Type};
 
-use crate::SpecId;
+use crate::locator::SpecId;
 
 #[non_exhaustive]
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
