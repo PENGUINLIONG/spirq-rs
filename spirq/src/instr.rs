@@ -1,5 +1,5 @@
-use spirv::{AddressingModel, Decoration, Dim, ExecutionMode, MemoryModel, StorageClass};
 use spirq_parse::{define_ops, Instr};
+use spirv::{AddressingModel, Decoration, Dim, ExecutionMode, MemoryModel, StorageClass};
 use std::convert::TryFrom;
 use std::marker::PhantomData;
 

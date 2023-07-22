@@ -540,7 +540,9 @@ fn test_old_store_buf() {
         .collect::<HashMap<_, _>>();
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(),
-        DescriptorType::StorageBuffer { access_ty: AccessType::ReadWrite }
+        DescriptorType::StorageBuffer {
+            access_ty: AccessType::ReadWrite
+        }
     );
 }
 #[test]

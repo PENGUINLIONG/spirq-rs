@@ -46,7 +46,7 @@ pub enum ScalarType {
         /// Number of bytes the integer takes.
         bits: u32,
         /// Whether the integer is signed.
-        signed: bool,
+        is_signed: bool,
     },
     /// IEEE 754 floating-point number.
     Float {
@@ -59,14 +59,14 @@ impl ScalarType {
     pub fn int(bits: u32) -> Self {
         Self::Integer {
             bits,
-            signed: true,
+            is_signed: true,
         }
     }
     /// Create an unsigned integer type with the given number of bits.
     pub fn uint(bits: u32) -> Self {
         Self::Integer {
             bits,
-            signed: false,
+            is_signed: false,
         }
     }
     /// Create a floating point type with the given number of bits.
@@ -101,11 +101,9 @@ impl fmt::Display for ScalarType {
         match self {
             Self::Void => f.write_str("void"),
             Self::Boolean => f.write_str("bool"),
-            Self::Integer { bits, signed } => {
-                match signed {
-                    true => write!(f, "i{}", bits),
-                    false => write!(f, "u{}", bits),
-                }
+            Self::Integer { bits, is_signed } => match is_signed {
+                true => write!(f, "i{}", bits),
+                false => write!(f, "u{}", bits),
             },
             Self::Float { bits } => write!(f, "f{}", bits),
         }
@@ -242,8 +240,7 @@ impl fmt::Display for ImageType {
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
-pub struct SamplerType {
-}
+pub struct SamplerType {}
 impl SpirvType for SamplerType {
     fn min_size(&self) -> Option<usize> {
         None
@@ -493,19 +490,18 @@ impl SpirvType for StructType {
         self.members.get(member_index).and_then(|x| x.offset)
     }
     fn access_ty(&self) -> Option<AccessType> {
-        self.members.iter()
-            .fold(None, |seed, x| match seed {
-                None => Some(x.access_ty),
-                Some(AccessType::ReadOnly) => match x.access_ty {
-                    AccessType::ReadOnly => Some(AccessType::ReadOnly),
-                    _ => Some(AccessType::ReadWrite),
-                },
-                Some(AccessType::WriteOnly) => match x.access_ty {
-                    AccessType::WriteOnly => Some(AccessType::WriteOnly),
-                    _ => Some(AccessType::ReadWrite),
-                },
-                Some(AccessType::ReadWrite) => Some(AccessType::ReadWrite),
-            })
+        self.members.iter().fold(None, |seed, x| match seed {
+            None => Some(x.access_ty),
+            Some(AccessType::ReadOnly) => match x.access_ty {
+                AccessType::ReadOnly => Some(AccessType::ReadOnly),
+                _ => Some(AccessType::ReadWrite),
+            },
+            Some(AccessType::WriteOnly) => match x.access_ty {
+                AccessType::WriteOnly => Some(AccessType::WriteOnly),
+                _ => Some(AccessType::ReadWrite),
+            },
+            Some(AccessType::ReadWrite) => Some(AccessType::ReadWrite),
+        })
     }
 }
 impl fmt::Display for StructType {
@@ -530,8 +526,7 @@ impl fmt::Display for StructType {
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
-pub struct AccelStructType {
-}
+pub struct AccelStructType {}
 impl SpirvType for AccelStructType {
     fn min_size(&self) -> Option<usize> {
         None
@@ -544,8 +539,7 @@ impl fmt::Display for AccelStructType {
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
-pub struct DeviceAddressType {
-}
+pub struct DeviceAddressType {}
 impl SpirvType for DeviceAddressType {
     fn min_size(&self) -> Option<usize> {
         Some(std::mem::size_of::<u64>())
@@ -579,8 +573,7 @@ impl fmt::Display for PointerType {
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
-pub struct RayQueryType {
-}
+pub struct RayQueryType {}
 impl SpirvType for RayQueryType {
     fn min_size(&self) -> Option<usize> {
         None
@@ -875,15 +868,11 @@ pub enum DescriptorType {
     /// `VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE`
     SampledImage,
     /// `VK_DESCRIPTOR_TYPE_STORAGE_IMAGE`
-    StorageImage {
-        access_ty: AccessType,
-    },
+    StorageImage { access_ty: AccessType },
     /// `VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER`.
     UniformTexelBuffer,
     /// `VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER`.
-    StorageTexelBuffer {
-        access_ty: AccessType,
-    },
+    StorageTexelBuffer { access_ty: AccessType },
     /// `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER` or
     /// `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC` depending on how you gonna
     /// use it.
@@ -891,13 +880,9 @@ pub enum DescriptorType {
     /// `VK_DESCRIPTOR_TYPE_STORAGE_BUFFER` or
     /// `VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC` depending on how you gonna
     /// use it.
-    StorageBuffer {
-        access_ty: AccessType,
-    },
+    StorageBuffer { access_ty: AccessType },
     /// `VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT` and its input attachment index.
-    InputAttachment {
-        input_attachment_index: u32
-    },
+    InputAttachment { input_attachment_index: u32 },
     /// `VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR`
     AccelStruct,
 }
@@ -954,7 +939,9 @@ impl DescriptorType {
         Self::storage_buffer(AccessType::ReadWrite)
     }
     pub fn input_attachment(input_attachment_index: u32) -> Self {
-        Self::InputAttachment { input_attachment_index }
+        Self::InputAttachment {
+            input_attachment_index,
+        }
     }
     pub fn accel_struct() -> Self {
         Self::AccelStruct

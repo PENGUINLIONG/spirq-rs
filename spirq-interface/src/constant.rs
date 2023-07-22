@@ -61,21 +61,19 @@ impl ConstantValue {
                 ScalarType::Boolean => Ok(ConstantValue::Bool(x.iter().any(|x| x != &0))),
                 ScalarType::Integer {
                     bits: 32,
-                    signed: true,
+                    is_signed: true,
                 } if x.len() == 4 => {
                     let x = i32::from_ne_bytes([x[0], x[1], x[2], x[3]]);
                     Ok(ConstantValue::S32(x))
                 }
                 ScalarType::Integer {
                     bits: 32,
-                    signed: false,
+                    is_signed: false,
                 } if x.len() == 4 => {
                     let x = u32::from_ne_bytes([x[0], x[1], x[2], x[3]]);
                     Ok(ConstantValue::U32(x))
                 }
-                ScalarType::Float {
-                    bits: 32,
-                } if x.len() == 4 => {
+                ScalarType::Float { bits: 32 } if x.len() == 4 => {
                     let x = f32::from_ne_bytes([x[0], x[1], x[2], x[3]]);
                     Ok(ConstantValue::F32(OrderedFloat(x)))
                 }

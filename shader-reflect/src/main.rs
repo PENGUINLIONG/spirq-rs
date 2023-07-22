@@ -2,7 +2,7 @@ use clap::Parser;
 use serde_json::json;
 use spirq::{
     ty::{StructMember, Type},
-    EntryPoint, ReflectConfig, SpirvBinary, DescriptorType, AccessType,
+    AccessType, DescriptorType, EntryPoint, ReflectConfig, SpirvBinary,
 };
 use std::{
     borrow::Borrow,
@@ -448,18 +448,38 @@ fn desc_ty2json(desc_ty: &DescriptorType) -> serde_json::Value {
         DescriptorType::Sampler => json!("Sampler"),
         DescriptorType::CombinedImageSampler => json!("CombinedImageSampler"),
         DescriptorType::SampledImage => json!("SampledImage"),
-        DescriptorType::StorageImage { access_ty: AccessType::ReadOnly } => json!("StorageImage(ReadOnly)"),
-        DescriptorType::StorageImage { access_ty: AccessType::WriteOnly } => json!("StorageImage(WriteOnly)"),
-        DescriptorType::StorageImage { access_ty: AccessType::ReadWrite } => json!("StorageImage(ReadWrite)"),
+        DescriptorType::StorageImage {
+            access_ty: AccessType::ReadOnly,
+        } => json!("StorageImage(ReadOnly)"),
+        DescriptorType::StorageImage {
+            access_ty: AccessType::WriteOnly,
+        } => json!("StorageImage(WriteOnly)"),
+        DescriptorType::StorageImage {
+            access_ty: AccessType::ReadWrite,
+        } => json!("StorageImage(ReadWrite)"),
         DescriptorType::UniformTexelBuffer => json!("UniformTexelBuffer"),
-        DescriptorType::StorageTexelBuffer { access_ty: AccessType::ReadOnly } => json!("StorageTexelBuffer(ReadOnly)"),
-        DescriptorType::StorageTexelBuffer { access_ty: AccessType::WriteOnly } => json!("StorageTexelBuffer(WriteOnly)"),
-        DescriptorType::StorageTexelBuffer { access_ty: AccessType::ReadWrite } => json!("StorageTexelBuffer(ReadWrite)"),
+        DescriptorType::StorageTexelBuffer {
+            access_ty: AccessType::ReadOnly,
+        } => json!("StorageTexelBuffer(ReadOnly)"),
+        DescriptorType::StorageTexelBuffer {
+            access_ty: AccessType::WriteOnly,
+        } => json!("StorageTexelBuffer(WriteOnly)"),
+        DescriptorType::StorageTexelBuffer {
+            access_ty: AccessType::ReadWrite,
+        } => json!("StorageTexelBuffer(ReadWrite)"),
         DescriptorType::UniformBuffer => json!("UniformBuffer"),
-        DescriptorType::StorageBuffer { access_ty: AccessType::ReadOnly } => json!("StorageBuffer(ReadOnly)"),
-        DescriptorType::StorageBuffer { access_ty: AccessType::WriteOnly } => json!("StorageBuffer(WriteOnly)"),
-        DescriptorType::StorageBuffer { access_ty: AccessType::ReadWrite } => json!("StorageBuffer(ReadWrite)"),
-        DescriptorType::InputAttachment { input_attachment_index } => json!(format!("InputAttachment({})", input_attachment_index)),
+        DescriptorType::StorageBuffer {
+            access_ty: AccessType::ReadOnly,
+        } => json!("StorageBuffer(ReadOnly)"),
+        DescriptorType::StorageBuffer {
+            access_ty: AccessType::WriteOnly,
+        } => json!("StorageBuffer(WriteOnly)"),
+        DescriptorType::StorageBuffer {
+            access_ty: AccessType::ReadWrite,
+        } => json!("StorageBuffer(ReadWrite)"),
+        DescriptorType::InputAttachment {
+            input_attachment_index,
+        } => json!(format!("InputAttachment({})", input_attachment_index)),
         DescriptorType::AccelStruct => json!("AccelStruct"),
     }
 }

@@ -77,7 +77,7 @@ pub use spirq_interface::{
     Constant, ConstantValue, DescriptorBinding, ExecutionMode, Function, InterfaceLocation,
     Locator, SpecId, Variable,
 };
-pub use spirq_types::{AccessType, DescriptorType, Type, SpirvType};
+pub use spirq_types::{AccessType, DescriptorType, SpirvType, Type};
 
 // SPIR-V program entry points.
 pub use spirq_parse::SpirvBinary;

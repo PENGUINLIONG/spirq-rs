@@ -170,15 +170,13 @@ impl<'a> ReflectIntermediate<'a> {
                 let op = OpTypeInt::try_from(instr)?;
                 let scalar_ty = ScalarType::Integer {
                     bits: op.bits,
-                    signed: op.is_signed
+                    is_signed: op.is_signed,
                 };
                 self.ty_reg.set(op.ty_id, Type::Scalar(scalar_ty))?;
             }
             Op::TypeFloat => {
                 let op = OpTypeFloat::try_from(instr)?;
-                let scalar_ty = ScalarType::Float {
-                    bits: op.bits,
-                };
+                let scalar_ty = ScalarType::Float { bits: op.bits };
                 self.ty_reg.set(op.ty_id, Type::Scalar(scalar_ty))?;
             }
             Op::TypeVector => {
@@ -251,7 +249,7 @@ impl<'a> ReflectIntermediate<'a> {
                 let op = OpTypeSampler::try_from(instr)?;
                 // Note that SPIR-V doesn't discriminate color and depth/stencil
                 // samplers. `sampler` and `samplerShadow` means the same thing.
-                self.ty_reg.set(op.ty_id, Type::Sampler(SamplerType{}))?;
+                self.ty_reg.set(op.ty_id, Type::Sampler(SamplerType {}))?;
             }
             Op::TypeSampledImage => {
                 let op = OpTypeSampledImage::try_from(instr)?;
@@ -467,15 +465,17 @@ impl<'a> ReflectIntermediate<'a> {
             }
             Op::TypeForwardPointer => {
                 let op = OpTypeForwardPointer::try_from(instr)?;
-                self.ty_reg.set(op.ty_id, Type::DeviceAddress(DeviceAddressType { }))?;
+                self.ty_reg
+                    .set(op.ty_id, Type::DeviceAddress(DeviceAddressType {}))?;
             }
             Op::TypeAccelerationStructureKHR => {
                 let op = OpTypeAccelerationStructureKHR::try_from(instr)?;
-                self.ty_reg.set(op.ty_id, Type::AccelStruct(AccelStructType { }))?;
+                self.ty_reg
+                    .set(op.ty_id, Type::AccelStruct(AccelStructType {}))?;
             }
             Op::TypeRayQueryKHR => {
                 let op = OpTypeRayQueryKHR::try_from(instr)?;
-                self.ty_reg.set(op.ty_id, Type::RayQuery(RayQueryType { }))?;
+                self.ty_reg.set(op.ty_id, Type::RayQuery(RayQueryType {}))?;
             }
             _ => return Err(anyhow!("unexpected opcode {:?}", instr.op())),
         }
@@ -1188,10 +1188,7 @@ impl<'a> ReflectIntermediate<'a> {
             for operand in declr.operands.iter() {
                 let operand = match operand {
                     ExecutionModeOperand::Literal(x) => {
-                        let scalar_ty = ScalarType::Integer {
-                            bits: 32,
-                            signed: false,
-                        };
+                        let scalar_ty = ScalarType::u32();
                         let ty = Type::Scalar(scalar_ty);
                         let value = ConstantValue::from(*x);
                         Constant::new_itm(ty, value)
