@@ -515,7 +515,7 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 desc_bind,
                 desc_ty,
                 ty,
-                nbind,
+                bind_count,
             } => {
                 let j = json!({
                     "Name": name.as_ref(),
@@ -523,7 +523,7 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                     "Binding": desc_bind.bind(),
                     "DescriptorType": desc_ty2json(&desc_ty),
                     "Type": ty2json(&ty),
-                    "Count": nbind,
+                    "Count": bind_count,
                 });
                 descs.push(j);
             }

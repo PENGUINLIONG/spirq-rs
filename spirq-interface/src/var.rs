@@ -40,7 +40,7 @@ pub enum Variable {
         /// `GL_EXT_nonuniform_qualifier` and SPIR-V extension
         /// `SPV_EXT_descriptor_indexing`. Dynamic multi-binding is only
         /// supported in Vulkan 1.2.
-        nbind: u32,
+        bind_count: u32,
     },
     /// Push constant.
     PushConstant {
@@ -115,9 +115,9 @@ impl Variable {
         }
     }
     /// Number of bindings at the binding point it it's a descriptor resource.
-    pub fn nbind(&self) -> Option<u32> {
-        if let Variable::Descriptor { nbind, .. } = self {
-            Some(*nbind)
+    pub fn bind_count(&self) -> Option<u32> {
+        if let Variable::Descriptor { bind_count, .. } = self {
+            Some(*bind_count)
         } else {
             None
         }

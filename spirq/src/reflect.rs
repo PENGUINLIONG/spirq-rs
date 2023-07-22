@@ -955,7 +955,7 @@ fn make_desc_var(
     ty: &Type,
 ) -> Option<Variable> {
     // Unwrap multi-binding.
-    let (nbind, ty) = match ty {
+    let (bind_count, ty) = match ty {
         Type::Array(arr_ty) => {
             // `nrepeat=None` is no longer considered invalid because of
             // the adoption of `SPV_EXT_descriptor_indexing`. This
@@ -1039,7 +1039,7 @@ fn make_desc_var(
         desc_bind,
         desc_ty,
         ty,
-        nbind,
+        bind_count,
     };
     Some(var)
 }
@@ -1234,12 +1234,14 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
     }
 
     for sampler_var in samplers {
-        let (sampler_desc_bind, sampler_nbind) = {
+        let (sampler_desc_bind, sampler_bind_count) = {
             if let Variable::Descriptor {
-                desc_bind, nbind, ..
+                desc_bind,
+                bind_count,
+                ..
             } = sampler_var
             {
-                (desc_bind, nbind)
+                (desc_bind, bind_count)
             } else {
                 unreachable!();
             }
@@ -1250,7 +1252,7 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
             .drain(..)
             .filter_map(|var| {
                 let succ = var.locator() == Locator::Descriptor(sampler_desc_bind)
-                    && var.nbind() == Some(sampler_nbind);
+                    && var.bind_count() == Some(sampler_bind_count);
                 if succ {
                     combined_imgs.push(var);
                     None
@@ -1282,7 +1284,7 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
                             desc_bind: sampler_desc_bind,
                             desc_ty: DescriptorType::combined_image_sampler(),
                             ty: Type::CombinedImageSampler(combined_img_sampler_ty.clone()),
-                            nbind: sampler_nbind,
+                            bind_count: sampler_bind_count,
                         };
                         out_vars.push(out_var);
                     } else {
