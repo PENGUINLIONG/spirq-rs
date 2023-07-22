@@ -9,7 +9,10 @@ use anyhow::{anyhow, Error, Result};
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use num_traits::FromPrimitive;
 use spirq_eval::Evaluator;
-use spirq_interface::{Constant, ConstantValue, ExecutionMode, Function, Variable, InputVariable, OutputVariable, PushConstantVariable, DescriptorVariable, SpecConstantVariable};
+use spirq_interface::{
+    Constant, ConstantValue, DescriptorVariable, ExecutionMode, Function, InputVariable,
+    OutputVariable, PushConstantVariable, SpecConstantVariable, Variable,
+};
 use spirq_parse::{Instr, Instrs, InstructionBuilder, SpirvBinary};
 use spirq_types::*;
 use spirv::{AddressingModel, Dim, MemoryModel, Op};
@@ -1034,11 +1037,11 @@ fn make_desc_var(
         _ => return None,
     };
     let desc_var = DescriptorVariable {
-            name,
-            desc_bind,
-            desc_ty,
-            ty,
-            bind_count,
+        name,
+        desc_bind,
+        desc_ty,
+        ty,
+        bind_count,
     };
     let var = Variable::Descriptor(desc_var);
     Some(var)
@@ -1166,9 +1169,9 @@ impl<'a> ReflectIntermediate<'a> {
         for constant in self.interp.constants() {
             if let Some(spec_id) = constant.spec_id {
                 let spec_const_var = SpecConstantVariable {
-                        name: constant.name.clone(),
-                        spec_id,
-                        ty: constant.ty.clone(),
+                    name: constant.name.clone(),
+                    spec_id,
+                    ty: constant.ty.clone(),
                 };
                 let spec = Variable::SpecConstant(spec_const_var);
                 vars.push(spec);
@@ -1242,12 +1245,14 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
         imgs = imgs
             .drain(..)
             .filter_map(|image_var| {
-                    if image_var.desc_bind == sampler_var.desc_bind && image_var.bind_count == sampler_var.bind_count {
-                        combined_imgs.push(image_var);
-                        None
-                    } else {
-                        Some(image_var)
-                    }
+                if image_var.desc_bind == sampler_var.desc_bind
+                    && image_var.bind_count == sampler_var.bind_count
+                {
+                    combined_imgs.push(image_var);
+                    None
+                } else {
+                    Some(image_var)
+                }
             })
             .collect();
 
@@ -1259,26 +1264,26 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
             // For any texture that can be combined with this sampler,
             // create a new combined image sampler.
             for img_var in combined_imgs {
-                    if let Type::SampledImage(img_ty) = img_var.ty {
-                        let sampled_img_ty = SampledImageType {
-                            scalar_ty: img_ty.scalar_ty.clone(),
-                            dim: img_ty.dim,
-                            is_array: img_ty.is_array,
-                            is_multisampled: img_ty.is_multisampled,
-                        };
-                        let combined_img_sampler_ty = CombinedImageSamplerType { sampled_img_ty };
-                        let out_desc_var = DescriptorVariable {
-                            name: img_var.name.clone(),
-                            desc_bind: sampler_var.desc_bind,
-                            desc_ty: DescriptorType::combined_image_sampler(),
-                            ty: Type::CombinedImageSampler(combined_img_sampler_ty.clone()),
-                            bind_count: sampler_var.bind_count,
-                        };
-                        let out_var = Variable::Descriptor(out_desc_var);
-                        out_vars.push(out_var);
-                    } else {
-                        unreachable!();
-                    }
+                if let Type::SampledImage(img_ty) = img_var.ty {
+                    let sampled_img_ty = SampledImageType {
+                        scalar_ty: img_ty.scalar_ty.clone(),
+                        dim: img_ty.dim,
+                        is_array: img_ty.is_array,
+                        is_multisampled: img_ty.is_multisampled,
+                    };
+                    let combined_img_sampler_ty = CombinedImageSamplerType { sampled_img_ty };
+                    let out_desc_var = DescriptorVariable {
+                        name: img_var.name.clone(),
+                        desc_bind: sampler_var.desc_bind,
+                        desc_ty: DescriptorType::combined_image_sampler(),
+                        ty: Type::CombinedImageSampler(combined_img_sampler_ty.clone()),
+                        bind_count: sampler_var.bind_count,
+                    };
+                    let out_var = Variable::Descriptor(out_desc_var);
+                    out_vars.push(out_var);
+                } else {
+                    unreachable!();
+                }
             }
         }
     }

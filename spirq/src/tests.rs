@@ -68,7 +68,7 @@ fn test_vs_input_loc() {
         .vars
         .into_iter()
         .filter_map(|x| {
-            if let Variable::Input (in_var) = x {
+            if let Variable::Input(in_var) = x {
                 Some(in_var.location)
             } else {
                 None
@@ -190,7 +190,7 @@ fn test_desc_tys() {
         .vars
         .into_iter()
         .filter_map(|x| {
-            if let Variable::Descriptor(desc_var) = x{
+            if let Variable::Descriptor(desc_var) = x {
                 Some((desc_var.desc_bind, desc_var.desc_ty))
             } else {
                 None
@@ -375,8 +375,11 @@ fn test_spec_const_arrays() {
         .vars
         .iter()
         .filter_map(|x| {
-            if let Variable::Descriptor(desc_var) = x{
-                Some((desc_var.desc_bind, (desc_var.bind_count, desc_var.ty.size())))
+            if let Variable::Descriptor(desc_var) = x {
+                Some((
+                    desc_var.desc_bind,
+                    (desc_var.bind_count, desc_var.ty.size()),
+                ))
             } else {
                 None
             }
@@ -419,7 +422,7 @@ fn test_ray_tracing() {
         .vars
         .into_iter()
         .filter_map(|x| {
-            if let Variable::Descriptor(desc_var) = x{
+            if let Variable::Descriptor(desc_var) = x {
                 Some((desc_var.desc_bind, desc_var.desc_ty))
             } else {
                 None
@@ -466,8 +469,7 @@ fn test_combine_image_sampler() {
         .vars
         .into_iter()
         .filter_map(|x| {
-            if let Variable::Descriptor(desc_var) = x
-            {
+            if let Variable::Descriptor(desc_var) = x {
                 Some((desc_var.desc_bind, desc_var.desc_ty))
             } else {
                 None

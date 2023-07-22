@@ -1,8 +1,11 @@
 use clap::Parser;
 use serde_json::json;
 use spirq::{
-    var::{InputVariable, OutputVariable, PushConstantVariable, DescriptorVariable, SpecConstantVariable},
     ty::{StructMember, Type},
+    var::{
+        DescriptorVariable, InputVariable, OutputVariable, PushConstantVariable,
+        SpecConstantVariable,
+    },
     AccessType, DescriptorType, EntryPoint, ReflectConfig, SpirvBinary,
 };
 use std::{
@@ -494,11 +497,7 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
         use spirq::Variable::*;
         match var {
             Input(input_var) => {
-                let InputVariable {
-                    name,
-                    location,
-                    ty,
-                } = input_var;
+                let InputVariable { name, location, ty } = input_var;
 
                 let j = json!({
                     "Name": name.as_ref(),
@@ -509,11 +508,7 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 inputs.push(j);
             }
             Output(output_var) => {
-                let OutputVariable {
-                    name,
-                    location,
-                    ty,
-                } = output_var;
+                let OutputVariable { name, location, ty } = output_var;
 
                 let j = json!({
                     "Name": name.as_ref(),
@@ -552,11 +547,7 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 push_consts.push(j);
             }
             SpecConstant(spec_const_var) => {
-                let SpecConstantVariable {
-                    name,
-                    spec_id,
-                    ty,
-                } = spec_const_var;
+                let SpecConstantVariable { name, spec_id, ty } = spec_const_var;
 
                 let j = json!({
                     "Name": name.as_ref(),

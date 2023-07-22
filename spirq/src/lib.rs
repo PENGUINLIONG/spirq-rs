@@ -65,9 +65,9 @@ mod tests;
 
 use std::fmt;
 
+pub use spirq_interface as var;
 pub use spirq_parse as parse;
 pub use spirq_types as ty;
-pub use spirq_interface as var;
 
 pub mod error {
     pub use anyhow::{Error, Result};
@@ -76,7 +76,7 @@ pub use reflect::{ExecutionModel, ReflectConfig};
 
 pub use spirq_interface::{
     Constant, ConstantValue, DescriptorBinding, ExecutionMode, Function, InterfaceLocation,
-    Locator, SpecId, Variable, SpirvVariable
+    Locator, SpecId, SpirvVariable, Variable,
 };
 pub use spirq_types::{AccessType, DescriptorType, SpirvType, Type};
 
