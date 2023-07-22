@@ -777,36 +777,36 @@ impl Type {
     declr_ty_accessor! {
         [Type]
         is_scalar -> Scalar,
-        is_vec -> Vector,
-        is_mat -> Matrix,
-        is_img -> Image,
+        is_vector -> Vector,
+        is_matrix -> Matrix,
+        is_image -> Image,
         is_sampler -> Sampler,
-        is_combined_img_sampler -> CombinedImageSampler,
-        is_sampled_img -> SampledImage,
-        is_storage_img -> StorageImage,
+        is_combined_image_sampler -> CombinedImageSampler,
+        is_sampled_image -> SampledImage,
+        is_storage_image -> StorageImage,
         is_subpass_data -> SubpassData,
-        is_arr -> Array,
+        is_array -> Array,
         is_struct -> Struct,
         is_accel_struct -> AccelStruct,
-        is_devaddr -> DeviceAddress,
-        is_devptr -> DevicePointer,
+        is_device_address -> DeviceAddress,
+        is_device_pointer -> DevicePointer,
     }
     declr_ty_downcast! {
         [Type]
         as_scalar -> Scalar(ScalarType),
-        as_vec -> Vector(VectorType),
-        as_mat -> Matrix(MatrixType),
-        as_img -> Image(ImageType),
+        as_vector -> Vector(VectorType),
+        as_matrix -> Matrix(MatrixType),
+        as_image -> Image(ImageType),
         as_sampler -> Sampler(SamplerType),
-        as_combined_img_sampler -> CombinedImageSampler(CombinedImageSamplerType),
-        as_sampled_img -> SampledImage(SampledImageType),
-        as_storage_img -> StorageImage(StorageImageType),
+        as_combined_image_sampler -> CombinedImageSampler(CombinedImageSamplerType),
+        as_sampled_image -> SampledImage(SampledImageType),
+        as_storage_image -> StorageImage(StorageImageType),
         as_subpass_data -> SubpassData(SubpassDataType),
-        as_arr -> Array(ArrayType),
+        as_array -> Array(ArrayType),
         as_struct -> Struct(StructType),
         as_accel_struct -> AccelStruct(AccelStructType),
-        as_devaddr -> DeviceAddress(DeviceAddressType),
-        as_devptr -> DevicePointer(PointerType),
+        as_device_address -> DeviceAddress(DeviceAddressType),
+        as_device_pointer -> DevicePointer(PointerType),
     }
     fn mutate_impl<F: Fn(Type) -> Type>(self, f: Rc<F>) -> Type {
         use Type::*;
@@ -869,27 +869,94 @@ impl fmt::Display for Type {
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum DescriptorType {
     /// `VK_DESCRIPTOR_TYPE_SAMPLER`
-    Sampler(),
+    Sampler,
     /// `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`
-    CombinedImageSampler(),
+    CombinedImageSampler,
     /// `VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE`
-    SampledImage(),
+    SampledImage,
     /// `VK_DESCRIPTOR_TYPE_STORAGE_IMAGE`
-    StorageImage(AccessType),
+    StorageImage {
+        access_ty: AccessType,
+    },
     /// `VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER`.
-    UniformTexelBuffer(),
+    UniformTexelBuffer,
     /// `VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER`.
-    StorageTexelBuffer(AccessType),
+    StorageTexelBuffer {
+        access_ty: AccessType,
+    },
     /// `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER` or
     /// `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC` depending on how you gonna
     /// use it.
-    UniformBuffer(),
+    UniformBuffer,
     /// `VK_DESCRIPTOR_TYPE_STORAGE_BUFFER` or
     /// `VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC` depending on how you gonna
     /// use it.
-    StorageBuffer(AccessType),
+    StorageBuffer {
+        access_ty: AccessType,
+    },
     /// `VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT` and its input attachment index.
-    InputAttachment(u32),
+    InputAttachment {
+        input_attachment_index: u32
+    },
     /// `VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR`
-    AccelStruct(),
+    AccelStruct,
+}
+impl DescriptorType {
+    pub fn sampler() -> Self {
+        Self::Sampler
+    }
+    pub fn combined_image_sampler() -> Self {
+        Self::CombinedImageSampler
+    }
+    pub fn sampled_image() -> Self {
+        Self::SampledImage
+    }
+    pub fn storage_image(access_ty: AccessType) -> Self {
+        Self::StorageImage { access_ty }
+    }
+    pub fn read_only_storage_image() -> Self {
+        Self::storage_image(AccessType::ReadOnly)
+    }
+    pub fn write_only_storage_image() -> Self {
+        Self::storage_image(AccessType::WriteOnly)
+    }
+    pub fn read_write_storage_image() -> Self {
+        Self::storage_image(AccessType::ReadWrite)
+    }
+    pub fn uniform_texel_buffer() -> Self {
+        Self::UniformTexelBuffer
+    }
+    pub fn storage_texel_buffer(access_ty: AccessType) -> Self {
+        Self::StorageTexelBuffer { access_ty }
+    }
+    pub fn read_only_storage_texel_buffer() -> Self {
+        Self::storage_texel_buffer(AccessType::ReadOnly)
+    }
+    pub fn write_only_storage_texel_buffer() -> Self {
+        Self::storage_texel_buffer(AccessType::WriteOnly)
+    }
+    pub fn read_write_storage_texel_buffer() -> Self {
+        Self::storage_texel_buffer(AccessType::ReadWrite)
+    }
+    pub fn uniform_buffer() -> Self {
+        Self::UniformBuffer
+    }
+    pub fn storage_buffer(access_ty: AccessType) -> Self {
+        Self::StorageBuffer { access_ty }
+    }
+    pub fn read_only_storage_buffer() -> Self {
+        Self::storage_buffer(AccessType::ReadOnly)
+    }
+    pub fn write_only_storage_buffer() -> Self {
+        Self::storage_buffer(AccessType::WriteOnly)
+    }
+    pub fn read_write_storage_buffer() -> Self {
+        Self::storage_buffer(AccessType::ReadWrite)
+    }
+    pub fn input_attachment(input_attachment_index: u32) -> Self {
+        Self::InputAttachment { input_attachment_index }
+    }
+    pub fn accel_struct() -> Self {
+        Self::AccelStruct
+    }
 }

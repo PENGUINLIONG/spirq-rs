@@ -2,7 +2,7 @@ use clap::Parser;
 use serde_json::json;
 use spirq::{
     ty::{StructMember, Type},
-    EntryPoint, ReflectConfig, SpirvBinary,
+    EntryPoint, ReflectConfig, SpirvBinary, DescriptorType, AccessType,
 };
 use std::{
     borrow::Borrow,
@@ -443,6 +443,26 @@ fn ty2json(ty: &Type) -> serde_json::Value {
         _ => json!(ty.to_string()),
     }
 }
+fn desc_ty2json(desc_ty: &DescriptorType) -> serde_json::Value {
+    match desc_ty {
+        DescriptorType::Sampler => json!("Sampler"),
+        DescriptorType::CombinedImageSampler => json!("CombinedImageSampler"),
+        DescriptorType::SampledImage => json!("SampledImage"),
+        DescriptorType::StorageImage { access_ty: AccessType::ReadOnly } => json!("StorageImage(ReadOnly)"),
+        DescriptorType::StorageImage { access_ty: AccessType::WriteOnly } => json!("StorageImage(WriteOnly)"),
+        DescriptorType::StorageImage { access_ty: AccessType::ReadWrite } => json!("StorageImage(ReadWrite)"),
+        DescriptorType::UniformTexelBuffer => json!("UniformTexelBuffer"),
+        DescriptorType::StorageTexelBuffer { access_ty: AccessType::ReadOnly } => json!("StorageTexelBuffer(ReadOnly)"),
+        DescriptorType::StorageTexelBuffer { access_ty: AccessType::WriteOnly } => json!("StorageTexelBuffer(WriteOnly)"),
+        DescriptorType::StorageTexelBuffer { access_ty: AccessType::ReadWrite } => json!("StorageTexelBuffer(ReadWrite)"),
+        DescriptorType::UniformBuffer => json!("UniformBuffer"),
+        DescriptorType::StorageBuffer { access_ty: AccessType::ReadOnly } => json!("StorageBuffer(ReadOnly)"),
+        DescriptorType::StorageBuffer { access_ty: AccessType::WriteOnly } => json!("StorageBuffer(WriteOnly)"),
+        DescriptorType::StorageBuffer { access_ty: AccessType::ReadWrite } => json!("StorageBuffer(ReadWrite)"),
+        DescriptorType::InputAttachment { input_attachment_index } => json!(format!("InputAttachment({})", input_attachment_index)),
+        DescriptorType::AccelStruct => json!("AccelStruct"),
+    }
+}
 fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
     let mut inputs = Vec::new();
     let mut outputs = Vec::new();
@@ -481,7 +501,7 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                     "Name": name.as_ref(),
                     "Set": desc_bind.set(),
                     "Binding": desc_bind.bind(),
-                    "DescriptorType": format!("{desc_ty:?}"),
+                    "DescriptorType": desc_ty2json(&desc_ty),
                     "Type": ty2json(&ty),
                     "Count": nbind,
                 });

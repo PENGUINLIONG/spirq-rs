@@ -20,7 +20,7 @@ impl TypeRegistry {
                 Ok(())
             }
             Entry::Occupied(mut entry) => {
-                if entry.get().is_devaddr() && ty.is_devptr() {
+                if entry.get().is_device_address() && ty.is_device_pointer() {
                     entry.insert(ty);
                     Ok(())
                 } else {

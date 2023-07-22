@@ -1001,36 +1001,36 @@ fn make_desc_var(
                 let access = deco_reg
                     .get_desc_access_ty(var_id, &ty)
                     .unwrap_or(AccessType::ReadWrite);
-                DescriptorType::StorageBuffer(access)
+                DescriptorType::storage_buffer(access)
             } else {
-                DescriptorType::UniformBuffer()
+                DescriptorType::uniform_buffer()
             }
         }
         Type::SampledImage(sampled_img_ty) => match sampled_img_ty.dim {
-            Dim::DimBuffer => DescriptorType::UniformTexelBuffer(),
-            _ => DescriptorType::SampledImage(),
+            Dim::DimBuffer => DescriptorType::uniform_texel_buffer(),
+            _ => DescriptorType::sampled_image(),
         },
         Type::StorageImage(store_img_ty) => {
             let access = deco_reg
                 .get_desc_access_ty(var_id, &ty)
                 .unwrap_or(AccessType::ReadWrite);
             match store_img_ty.dim {
-                Dim::DimBuffer => DescriptorType::StorageTexelBuffer(access),
-                _ => DescriptorType::StorageImage(access),
+                Dim::DimBuffer => DescriptorType::storage_texel_buffer(access),
+                _ => DescriptorType::storage_image(access),
             }
         }
-        Type::Sampler(_) => DescriptorType::Sampler(),
+        Type::Sampler(_) => DescriptorType::sampler(),
         Type::CombinedImageSampler(combined_img_sampler_ty) => {
             match combined_img_sampler_ty.sampled_img_ty.dim {
-                Dim::DimBuffer => DescriptorType::UniformTexelBuffer(),
-                _ => DescriptorType::CombinedImageSampler(),
+                Dim::DimBuffer => DescriptorType::uniform_texel_buffer(),
+                _ => DescriptorType::combined_image_sampler(),
             }
         }
         Type::SubpassData(_) => {
             let input_attm_idx = deco_reg.get_var_input_attm_idx(var_id).unwrap_or_default();
-            DescriptorType::InputAttachment(input_attm_idx)
+            DescriptorType::input_attachment(input_attm_idx)
         }
-        Type::AccelStruct(_) => DescriptorType::AccelStruct(),
+        Type::AccelStruct(_) => DescriptorType::accel_struct(),
         _ => return None,
     };
 
@@ -1222,11 +1222,11 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
     for var in vars {
         if let Variable::Descriptor { desc_ty, .. } = &var {
             match desc_ty {
-                DescriptorType::Sampler() => {
+                DescriptorType::Sampler => {
                     samplers.push(var);
                     continue;
                 }
-                DescriptorType::SampledImage() => {
+                DescriptorType::SampledImage => {
                     imgs.push(var);
                     continue;
                 }
@@ -1283,8 +1283,8 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
                         let out_var = Variable::Descriptor {
                             name,
                             desc_bind: sampler_desc_bind,
-                            desc_ty: DescriptorType::CombinedImageSampler(),
-                            ty: Type::CombinedImageSampler(combined_img_sampler_ty),
+                            desc_ty: DescriptorType::combined_image_sampler(),
+                            ty: Type::CombinedImageSampler(combined_img_sampler_ty.clone()),
                             nbind: sampler_nbind,
                         };
                         out_vars.push(out_var);

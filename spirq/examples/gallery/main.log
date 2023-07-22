@@ -8,9 +8,9 @@
                     "iImg1d",
                 ),
                 desc_bind: (set=1, bind=0),
-                desc_ty: StorageImage(
-                    ReadOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: ReadOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim1D,
@@ -26,9 +26,9 @@
                     "iImg2d",
                 ),
                 desc_bind: (set=1, bind=1),
-                desc_ty: StorageImage(
-                    ReadOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: ReadOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim2D,
@@ -44,9 +44,9 @@
                     "iImg3d",
                 ),
                 desc_bind: (set=1, bind=2),
-                desc_ty: StorageImage(
-                    ReadOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: ReadOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim3D,
@@ -62,9 +62,9 @@
                     "iImg1dArr",
                 ),
                 desc_bind: (set=1, bind=3),
-                desc_ty: StorageImage(
-                    ReadOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: ReadOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim1D,
@@ -80,9 +80,9 @@
                     "iImg2dArr",
                 ),
                 desc_bind: (set=1, bind=4),
-                desc_ty: StorageImage(
-                    ReadOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: ReadOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim2D,
@@ -98,9 +98,9 @@
                     "iImgCube",
                 ),
                 desc_bind: (set=1, bind=5),
-                desc_ty: StorageImage(
-                    ReadOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: ReadOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimCube,
@@ -116,9 +116,9 @@
                     "iImgCubeArr",
                 ),
                 desc_bind: (set=1, bind=6),
-                desc_ty: StorageImage(
-                    ReadOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: ReadOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimCube,
@@ -134,9 +134,9 @@
                     "iImgBuf",
                 ),
                 desc_bind: (set=1, bind=7),
-                desc_ty: StorageTexelBuffer(
-                    ReadOnly,
-                ),
+                desc_ty: StorageTexelBuffer {
+                    access_ty: ReadOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimBuffer,
@@ -152,9 +152,9 @@
                     "uImg1d",
                 ),
                 desc_bind: (set=2, bind=0),
-                desc_ty: StorageImage(
-                    ReadOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: ReadOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim1D,
@@ -170,9 +170,9 @@
                     "uImg2d",
                 ),
                 desc_bind: (set=2, bind=1),
-                desc_ty: StorageImage(
-                    ReadOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: ReadOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim2D,
@@ -188,9 +188,9 @@
                     "uImg3d",
                 ),
                 desc_bind: (set=2, bind=2),
-                desc_ty: StorageImage(
-                    ReadOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: ReadOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim3D,
@@ -206,9 +206,9 @@
                     "uImg1dArr",
                 ),
                 desc_bind: (set=2, bind=3),
-                desc_ty: StorageImage(
-                    ReadOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: ReadOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim1D,
@@ -224,9 +224,9 @@
                     "uImg2dArr",
                 ),
                 desc_bind: (set=2, bind=4),
-                desc_ty: StorageImage(
-                    ReadOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: ReadOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim2D,
@@ -242,9 +242,9 @@
                     "uImgCube",
                 ),
                 desc_bind: (set=2, bind=5),
-                desc_ty: StorageImage(
-                    ReadOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: ReadOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimCube,
@@ -260,9 +260,9 @@
                     "uImgCubeArr",
                 ),
                 desc_bind: (set=2, bind=6),
-                desc_ty: StorageImage(
-                    ReadOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: ReadOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimCube,
@@ -278,9 +278,9 @@
                     "uImgBuf",
                 ),
                 desc_bind: (set=2, bind=7),
-                desc_ty: StorageTexelBuffer(
-                    ReadOnly,
-                ),
+                desc_ty: StorageTexelBuffer {
+                    access_ty: ReadOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimBuffer,
@@ -296,9 +296,9 @@
                     "fImg1D",
                 ),
                 desc_bind: (set=3, bind=0),
-                desc_ty: StorageImage(
-                    WriteOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: WriteOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim1D,
@@ -314,9 +314,9 @@
                     "fImg2D",
                 ),
                 desc_bind: (set=3, bind=1),
-                desc_ty: StorageImage(
-                    WriteOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: WriteOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim2D,
@@ -332,9 +332,9 @@
                     "fImg3D",
                 ),
                 desc_bind: (set=3, bind=2),
-                desc_ty: StorageImage(
-                    WriteOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: WriteOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim3D,
@@ -350,9 +350,9 @@
                     "fImgCube",
                 ),
                 desc_bind: (set=3, bind=3),
-                desc_ty: StorageImage(
-                    WriteOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: WriteOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimCube,
@@ -368,9 +368,9 @@
                     "fImg2DRect",
                 ),
                 desc_bind: (set=3, bind=4),
-                desc_ty: StorageImage(
-                    WriteOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: WriteOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimRect,
@@ -386,9 +386,9 @@
                     "fImg1DArray",
                 ),
                 desc_bind: (set=3, bind=5),
-                desc_ty: StorageImage(
-                    WriteOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: WriteOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim1D,
@@ -404,9 +404,9 @@
                     "fImg2DArray",
                 ),
                 desc_bind: (set=3, bind=6),
-                desc_ty: StorageImage(
-                    WriteOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: WriteOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim2D,
@@ -422,9 +422,9 @@
                     "fImgCubeArray",
                 ),
                 desc_bind: (set=3, bind=7),
-                desc_ty: StorageImage(
-                    WriteOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: WriteOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimCube,
@@ -440,9 +440,9 @@
                     "fImgBuffer",
                 ),
                 desc_bind: (set=3, bind=8),
-                desc_ty: StorageTexelBuffer(
-                    WriteOnly,
-                ),
+                desc_ty: StorageTexelBuffer {
+                    access_ty: WriteOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimBuffer,
@@ -458,9 +458,9 @@
                     "fImg2DMS",
                 ),
                 desc_bind: (set=3, bind=9),
-                desc_ty: StorageImage(
-                    WriteOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: WriteOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim2D,
@@ -476,9 +476,9 @@
                     "fImg2DMSArray",
                 ),
                 desc_bind: (set=3, bind=10),
-                desc_ty: StorageImage(
-                    WriteOnly,
-                ),
+                desc_ty: StorageImage {
+                    access_ty: WriteOnly,
+                },
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim2D,
@@ -2735,9 +2735,9 @@
                     "ssbo",
                 ),
                 desc_bind: (set=13, bind=0),
-                desc_ty: StorageBuffer(
-                    ReadWrite,
-                ),
+                desc_ty: StorageBuffer {
+                    access_ty: ReadWrite,
+                },
                 ty: Struct(
                     StructType {
                         name: Some(
@@ -3516,9 +3516,9 @@
                     "iAttm",
                 ),
                 desc_bind: (set=14, bind=0),
-                desc_ty: InputAttachment(
-                    0,
-                ),
+                desc_ty: InputAttachment {
+                    input_attachment_index: 0,
+                },
                 ty: SubpassData(
                     SubpassDataType {
                         scalar_ty: Integer {
@@ -3535,9 +3535,9 @@
                     "iAttmMS",
                 ),
                 desc_bind: (set=14, bind=1),
-                desc_ty: InputAttachment(
-                    1,
-                ),
+                desc_ty: InputAttachment {
+                    input_attachment_index: 1,
+                },
                 ty: SubpassData(
                     SubpassDataType {
                         scalar_ty: Integer {
@@ -3554,9 +3554,9 @@
                     "uAttm",
                 ),
                 desc_bind: (set=14, bind=2),
-                desc_ty: InputAttachment(
-                    2,
-                ),
+                desc_ty: InputAttachment {
+                    input_attachment_index: 2,
+                },
                 ty: SubpassData(
                     SubpassDataType {
                         scalar_ty: Integer {
@@ -3573,9 +3573,9 @@
                     "uAttmMS",
                 ),
                 desc_bind: (set=14, bind=3),
-                desc_ty: InputAttachment(
-                    3,
-                ),
+                desc_ty: InputAttachment {
+                    input_attachment_index: 3,
+                },
                 ty: SubpassData(
                     SubpassDataType {
                         scalar_ty: Integer {
@@ -3592,9 +3592,9 @@
                     "fAttm",
                 ),
                 desc_bind: (set=14, bind=4),
-                desc_ty: InputAttachment(
-                    4,
-                ),
+                desc_ty: InputAttachment {
+                    input_attachment_index: 4,
+                },
                 ty: SubpassData(
                     SubpassDataType {
                         scalar_ty: Float {
@@ -3610,9 +3610,9 @@
                     "fAttmMS",
                 ),
                 desc_bind: (set=14, bind=5),
-                desc_ty: InputAttachment(
-                    5,
-                ),
+                desc_ty: InputAttachment {
+                    input_attachment_index: 5,
+                },
                 ty: SubpassData(
                     SubpassDataType {
                         scalar_ty: Float {

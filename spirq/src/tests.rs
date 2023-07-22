@@ -197,37 +197,37 @@ fn test_desc_tys() {
     assert!(desc_binds.contains_key(&DescriptorBinding::new(0, 0)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(),
-        DescriptorType::UniformBuffer()
+        DescriptorType::uniform_buffer()
     );
     assert!(desc_binds.contains_key(&DescriptorBinding::new(0, 1)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 1)).unwrap(),
-        DescriptorType::StorageBuffer(AccessType::ReadWrite)
+        DescriptorType::storage_buffer(AccessType::ReadWrite)
     );
     assert!(desc_binds.contains_key(&DescriptorBinding::new(1, 0)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(1, 0)).unwrap(),
-        DescriptorType::CombinedImageSampler()
+        DescriptorType::combined_image_sampler()
     );
     assert!(desc_binds.contains_key(&DescriptorBinding::new(3, 4)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(3, 4)).unwrap(),
-        DescriptorType::StorageImage(AccessType::ReadOnly)
+        DescriptorType::storage_image(AccessType::ReadOnly)
     );
     assert!(desc_binds.contains_key(&DescriptorBinding::new(3, 5)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(3, 5)).unwrap(),
-        DescriptorType::StorageImage(AccessType::WriteOnly)
+        DescriptorType::storage_image(AccessType::WriteOnly)
     );
     assert!(desc_binds.contains_key(&DescriptorBinding::new(1, 3)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(1, 3)).unwrap(),
-        DescriptorType::InputAttachment(3)
+        DescriptorType::input_attachment(3)
     );
     assert!(desc_binds.contains_key(&DescriptorBinding::new(0, 3)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 3)).unwrap(),
-        DescriptorType::UniformTexelBuffer()
+        DescriptorType::uniform_texel_buffer()
     );
     assert!(!desc_binds.contains_key(&DescriptorBinding::new(0, 2)));
 }
@@ -437,7 +437,7 @@ fn test_ray_tracing() {
         .collect::<HashMap<_, _>>();
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(),
-        DescriptorType::AccelStruct()
+        DescriptorType::accel_struct()
     );
 }
 #[test]
@@ -488,15 +488,15 @@ fn test_combine_image_sampler() {
     assert_eq!(desc_binds.len(), 3);
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(),
-        DescriptorType::SampledImage()
+        DescriptorType::sampled_image()
     );
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 1)).unwrap(),
-        DescriptorType::Sampler()
+        DescriptorType::sampler()
     );
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(1, 1)).unwrap(),
-        DescriptorType::CombinedImageSampler()
+        DescriptorType::combined_image_sampler()
     );
 }
 #[test]
@@ -540,7 +540,7 @@ fn test_old_store_buf() {
         .collect::<HashMap<_, _>>();
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(),
-        DescriptorType::StorageBuffer(AccessType::ReadWrite)
+        DescriptorType::StorageBuffer { access_ty: AccessType::ReadWrite }
     );
 }
 #[test]
@@ -626,12 +626,12 @@ fn test_matrix_stride() {
                     let struct_ty = ty.as_struct().unwrap();
                     {
                         assert!(struct_ty.members[0].offset == Some(0));
-                        let mat_ty = struct_ty.members[0].ty.as_mat().unwrap();
+                        let mat_ty = struct_ty.members[0].ty.as_matrix().unwrap();
                         assert!(mat_ty.stride == Some(16));
                     }
                     {
                         assert!(struct_ty.members[1].offset == Some(32));
-                        let mat_ty = struct_ty.members[1].ty.as_mat().unwrap();
+                        let mat_ty = struct_ty.members[1].ty.as_matrix().unwrap();
                         assert!(mat_ty.stride == Some(16));
                     }
                 }
@@ -639,25 +639,25 @@ fn test_matrix_stride() {
                     let struct_ty = ty.as_struct().unwrap();
                     {
                         assert!(struct_ty.members[0].offset == Some(0));
-                        let mat_ty = struct_ty.members[0].ty.as_mat().unwrap();
+                        let mat_ty = struct_ty.members[0].ty.as_matrix().unwrap();
                         assert!(mat_ty.stride == Some(8));
                     }
                     {
                         assert!(struct_ty.members[1].offset == Some(16));
-                        let mat_ty = struct_ty.members[1].ty.as_mat().unwrap();
+                        let mat_ty = struct_ty.members[1].ty.as_matrix().unwrap();
                         assert!(mat_ty.stride == Some(16));
                     }
                 }
                 2 => {
                     let struct_ty = ty.as_struct().unwrap();
                     assert!(struct_ty.members[0].offset == Some(0));
-                    let mat_ty = struct_ty.members[0].ty.as_mat().unwrap();
+                    let mat_ty = struct_ty.members[0].ty.as_matrix().unwrap();
                     assert!(mat_ty.stride == Some(16));
                 }
                 3 => {
                     let struct_ty = ty.as_struct().unwrap();
                     assert!(struct_ty.members[0].offset == Some(0));
-                    let mat_ty = struct_ty.members[0].ty.as_mat().unwrap();
+                    let mat_ty = struct_ty.members[0].ty.as_matrix().unwrap();
                     assert!(mat_ty.stride == Some(8));
                 }
                 _ => {}

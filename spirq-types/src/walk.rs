@@ -94,7 +94,7 @@ impl<'a> Iterator for Walk<'a> {
                     } else {
                         vec![seg]
                     };
-                    if child_ty.is_struct() || child_ty.is_arr() {
+                    if child_ty.is_struct() || child_ty.is_array() {
                         // Found composite type, step into it.
                         LoopEnd::Push(WalkFrame {
                             sym_stem: Some(sym),
