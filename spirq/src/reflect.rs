@@ -1157,11 +1157,17 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
 
     for var in vars {
         match &var {
-            Variable::Descriptor { desc_ty: DescriptorType::Sampler, .. } => {
+            Variable::Descriptor {
+                desc_ty: DescriptorType::Sampler,
+                ..
+            } => {
                 samplers.push(var.clone());
                 continue;
             }
-            Variable::Descriptor { desc_ty: DescriptorType::SampledImage, .. } => {
+            Variable::Descriptor {
+                desc_ty: DescriptorType::SampledImage,
+                ..
+            } => {
                 imgs.push(var.clone());
                 continue;
             }
@@ -1174,19 +1180,25 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
         let mut combined_imgs = Vec::new();
         imgs = imgs
             .drain(..)
-            .filter_map(|image_var| {
-                match (&sampler_var, &image_var) {
-                    (
-                        Variable::Descriptor { desc_bind: sampler_desc_bind, bind_count: sampler_bind_count, .. },
-                        Variable::Descriptor { desc_bind: image_desc_bind, bind_count: image_bind_count, .. },
-                    ) if sampler_desc_bind == image_desc_bind && sampler_bind_count == image_bind_count => {
-                        combined_imgs.push(image_var.clone());
-                        None
+            .filter_map(|image_var| match (&sampler_var, &image_var) {
+                (
+                    Variable::Descriptor {
+                        desc_bind: sampler_desc_bind,
+                        bind_count: sampler_bind_count,
+                        ..
                     },
-                    _ => {
-                        Some(image_var)
-                    }
+                    Variable::Descriptor {
+                        desc_bind: image_desc_bind,
+                        bind_count: image_bind_count,
+                        ..
+                    },
+                ) if sampler_desc_bind == image_desc_bind
+                    && sampler_bind_count == image_bind_count =>
+                {
+                    combined_imgs.push(image_var.clone());
+                    None
                 }
+                _ => Some(image_var),
             })
             .collect();
 
@@ -1199,7 +1211,13 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
             // create a new combined image sampler.
             for img_var in combined_imgs {
                 match img_var {
-                    Variable::Descriptor { name, ty: Type::SampledImage(image_ty), desc_bind, bind_count, .. } => {
+                    Variable::Descriptor {
+                        name,
+                        ty: Type::SampledImage(image_ty),
+                        desc_bind,
+                        bind_count,
+                        ..
+                    } => {
                         let sampled_image_ty = SampledImageType {
                             scalar_ty: image_ty.scalar_ty.clone(),
                             dim: image_ty.dim,
@@ -1215,7 +1233,7 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
                             bind_count: bind_count,
                         };
                         out_vars.push(out_var);
-                    },
+                    }
                     _ => unreachable!(),
                 }
             }

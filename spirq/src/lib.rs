@@ -89,6 +89,6 @@ pub mod prelude {
         error::{Error, Result},
         parse::SpirvBinary,
         ty::{AccessType, DescriptorType, SpirvType, Type},
-        var::{DescriptorBinding, InterfaceLocation, Variable, SpecId},
+        var::{DescriptorBinding, InterfaceLocation, SpecId, Variable},
     };
 }
