@@ -9,6 +9,8 @@
 //! ## How-to
 //!
 //! ```ignore
+//! use spirq::prelude::*;
+//!
 //! let entry_points = ReflectConfig::new()
 //!     // Load SPIR-V data into `[u32]` buffer `spv_words`.
 //!     .spv(spv_words)
@@ -56,27 +58,27 @@
 //! [`EntryPoint`]: struct.EntryPoint.html
 //! [`reflect`]: reflect/struct.ReflectConfig.html#method.reflect
 //! [`Type`]: ty/enum.Type.html
-pub mod analysis;
+mod instr;
+
 pub mod entry_point;
 pub mod inspect;
-mod instr;
 pub mod reflect;
 pub mod reflect_cfg;
+
 #[cfg(test)]
 mod tests;
 
+pub use spirq_core::annotation;
 pub use spirq_core::constant;
+pub use spirq_core::error;
 pub use spirq_core::evaluator;
 pub use spirq_core::func;
 pub use spirq_core::locator;
+pub use spirq_core::spirv;
 pub use spirq_core::ty;
 pub use spirq_core::var;
 
 pub use spirq_parse as parse;
-
-pub mod error {
-    pub use anyhow::{Error, Result};
-}
 
 pub use reflect_cfg::ReflectConfig;
 
@@ -87,7 +89,6 @@ pub mod prelude {
         constant::ConstantValue,
         entry_point::{EntryPoint, ExecutionModel},
         error::{Error, Result},
-        func::ExecutionMode,
         locator::{DescriptorBinding, InterfaceLocation, SpecId},
         parse::SpirvBinary,
         ty::{AccessType, SpirvType, Type},

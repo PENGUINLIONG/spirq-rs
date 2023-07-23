@@ -1,15 +1,13 @@
 //! Reflection procedures and types.
-use anyhow::{anyhow, Error, Result};
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use num_traits::FromPrimitive;
-pub use spirv::Decoration;
-use spirv::{AddressingModel, Dim, MemoryModel, Op};
+use spirq_core::error::{anyhow, Error, Result};
 use std::collections::hash_map::Entry;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 
 use crate::{
-    analysis::{DecorationRegistry, NameRegistry},
+    annotation::{DecorationRegistry, NameRegistry},
     constant::{Constant, ConstantValue},
     entry_point::{EntryPoint, ExecutionModel},
     evaluator::Evaluator,
@@ -18,6 +16,7 @@ use crate::{
     instr::*,
     parse::{Instr, Instrs},
     reflect_cfg::ReflectConfig,
+    spirv::{self, Op},
     ty::{
         AccelStructType, AccessType, ArrayType, CombinedImageSamplerType, DeviceAddressType,
         ImageType, MatrixAxisOrder, MatrixType, PointerType, RayQueryType, SampledImageType,
@@ -228,7 +227,7 @@ impl<'a> ReflectIntermediate<'a> {
                     Type::Scalar(scalar_ty) => scalar_ty.clone(),
                     _ => return Err(broken_nested_ty(op.ty_id)),
                 };
-                if op.dim == Dim::DimSubpassData {
+                if op.dim == spirv::Dim::DimSubpassData {
                     let subpass_data_ty = SubpassDataType {
                         scalar_ty,
                         is_multisampled: op.is_multisampled,
@@ -291,11 +290,13 @@ impl<'a> ReflectIntermediate<'a> {
                 // FIXME: Workaround old storage buffers.
                 if self
                     .deco_reg
-                    .contains(op.element_ty_id, Decoration::BufferBlock)
+                    .contains(op.element_ty_id, spirv::Decoration::BufferBlock)
                 {
-                    let _ =
-                        self.deco_reg
-                            .set(op.ty_id, Decoration::BufferBlock, &[] as &'static [u32]);
+                    let _ = self.deco_reg.set(
+                        op.ty_id,
+                        spirv::Decoration::BufferBlock,
+                        &[] as &'static [u32],
+                    );
                 }
                 let element_ty = if let Ok(x) = self.ty_reg.get(op.element_ty_id) {
                     x
@@ -319,7 +320,7 @@ impl<'a> ReflectIntermediate<'a> {
                 };
                 let stride = self
                     .deco_reg
-                    .get_u32(op.ty_id, Decoration::ArrayStride)
+                    .get_u32(op.ty_id, spirv::Decoration::ArrayStride)
                     .map(|x| x as usize);
 
                 let arr_ty = if let Ok(stride) = stride {
@@ -348,7 +349,7 @@ impl<'a> ReflectIntermediate<'a> {
                 };
                 let stride = self
                     .deco_reg
-                    .get_u32(op.ty_id, Decoration::ArrayStride)
+                    .get_u32(op.ty_id, spirv::Decoration::ArrayStride)
                     .map(|x| x as usize);
                 let arr_ty = if let Ok(stride) = stride {
                     // Unsized data arrays.
@@ -394,19 +395,21 @@ impl<'a> ReflectIntermediate<'a> {
                         element_ty = &mut *arr_ty.element_ty;
                     }
                     if let Type::Matrix(ref mut mat_ty) = element_ty {
-                        let mat_stride =
-                            self.deco_reg
-                                .get_member_u32(op.ty_id, i, Decoration::MatrixStride);
+                        let mat_stride = self.deco_reg.get_member_u32(
+                            op.ty_id,
+                            i,
+                            spirv::Decoration::MatrixStride,
+                        );
                         if let Ok(mat_stride) = mat_stride {
                             mat_ty.stride = Some(mat_stride as usize);
                         }
 
                         let is_row_major =
                             self.deco_reg
-                                .contains_member(op.ty_id, i, Decoration::RowMajor);
+                                .contains_member(op.ty_id, i, spirv::Decoration::RowMajor);
                         let is_col_major =
                             self.deco_reg
-                                .contains_member(op.ty_id, i, Decoration::ColMajor);
+                                .contains_member(op.ty_id, i, spirv::Decoration::ColMajor);
 
                         mat_ty.axis_order = if is_row_major {
                             Some(MatrixAxisOrder::RowMajor)
@@ -432,7 +435,7 @@ impl<'a> ReflectIntermediate<'a> {
                     // accessible we don't have to worry about them.
                     let offset = self
                         .deco_reg
-                        .get_member_u32(op.ty_id, i, Decoration::Offset)
+                        .get_member_u32(op.ty_id, i, spirv::Decoration::Offset)
                         .map(|x| x as usize)
                         .ok();
                     let access_ty = self
@@ -463,7 +466,7 @@ impl<'a> ReflectIntermediate<'a> {
                     // it's a uniform block or a buffer block.
                     let is_storage_buffer = self
                         .deco_reg
-                        .contains(op.target_ty_id, Decoration::BufferBlock);
+                        .contains(op.target_ty_id, spirv::Decoration::BufferBlock);
                     let store_cls = if op.store_cls == StorageClass::Uniform && is_storage_buffer {
                         StorageClass::StorageBuffer
                     } else {
@@ -532,7 +535,9 @@ impl<'a> ReflectIntermediate<'a> {
             Op::SpecConstantTrue | Op::SpecConstantFalse | Op::SpecConstant => {
                 let op = OpConstantScalarCommonSPQ::try_from(instr)?;
                 let name = self.name_reg.get(op.const_id).map(ToString::to_string);
-                let spec_id = self.deco_reg.get_u32(op.const_id, Decoration::SpecId)?;
+                let spec_id = self
+                    .deco_reg
+                    .get_u32(op.const_id, spirv::Decoration::SpecId)?;
                 let ty = self.ty_reg.get(op.ty_id)?.clone();
                 let constant = if let Some(user_value) = self.cfg.spec_values.get(&spec_id) {
                     Constant::new(name, ty, user_value.clone())
@@ -597,7 +602,7 @@ impl FunctionInspector {
     }
 }
 impl Inspector for FunctionInspector {
-    fn inspect(&mut self, itm: &mut ReflectIntermediate<'_>, instr: &Instr) -> anyhow::Result<()> {
+    fn inspect(&mut self, itm: &mut ReflectIntermediate<'_>, instr: &Instr) -> Result<()> {
         let opcode = instr.op();
         match opcode {
             Op::Function => {
@@ -699,13 +704,13 @@ pub fn reflect<'a, I: Inspector>(
         if instr.op() == Op::MemoryModel {
             let op = OpMemoryModel::try_from(instr)?;
             match op.addr_model {
-                AddressingModel::Logical => {}
-                AddressingModel::PhysicalStorageBuffer64 => {}
+                spirv::AddressingModel::Logical => {}
+                spirv::AddressingModel::PhysicalStorageBuffer64 => {}
                 _ => return Err(anyhow!("unsupported addressing model")),
             }
             match op.mem_model {
-                MemoryModel::GLSL450 => {}
-                MemoryModel::Vulkan => {}
+                spirv::MemoryModel::GLSL450 => {}
+                spirv::MemoryModel::Vulkan => {}
                 _ => return Err(anyhow!("unsupported memory model")),
             }
         } else {
@@ -944,7 +949,7 @@ fn make_desc_var(
             }
         }
         Type::SampledImage(sampled_img_ty) => match sampled_img_ty.dim {
-            Dim::DimBuffer => DescriptorType::uniform_texel_buffer(),
+            spirv::Dim::DimBuffer => DescriptorType::uniform_texel_buffer(),
             _ => DescriptorType::sampled_image(),
         },
         Type::StorageImage(store_img_ty) => {
@@ -952,14 +957,14 @@ fn make_desc_var(
                 .get_desc_access_ty(var_id, &ty)
                 .unwrap_or(AccessType::ReadWrite);
             match store_img_ty.dim {
-                Dim::DimBuffer => DescriptorType::storage_texel_buffer(access),
+                spirv::Dim::DimBuffer => DescriptorType::storage_texel_buffer(access),
                 _ => DescriptorType::storage_image(access),
             }
         }
         Type::Sampler(_) => DescriptorType::sampler(),
         Type::CombinedImageSampler(combined_img_sampler_ty) => {
             match combined_img_sampler_ty.sampled_img_ty.dim {
-                Dim::DimBuffer => DescriptorType::uniform_texel_buffer(),
+                spirv::Dim::DimBuffer => DescriptorType::uniform_texel_buffer(),
                 _ => DescriptorType::combined_image_sampler(),
             }
         }

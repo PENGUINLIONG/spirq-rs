@@ -349,7 +349,6 @@ dependencies = [
 name = "spirq"
 version = "0.6.4"
 dependencies = [
- "anyhow",
  "byteorder",
  "bytes",
  "fnv",
@@ -359,7 +358,6 @@ dependencies = [
  "ordered-float",
  "spirq-core",
  "spirq-parse",
- "spirv",
 ]
 
 [[package]]

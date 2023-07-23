@@ -1,9 +1,9 @@
-use anyhow::Result;
 use std::collections::HashMap;
 
 use crate::{
     constant::ConstantValue,
     entry_point::EntryPoint,
+    error::Result,
     inspect::{FnInspector, Inspector},
     locator::SpecId,
     parse::{Instr, SpirvBinary},

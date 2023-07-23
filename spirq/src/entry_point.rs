@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::{func::ExecutionMode, var::Variable};
+use crate::{func::ExecutionMode, spirv, var::Variable};
 
 pub use spirv::ExecutionModel;
 
@@ -8,7 +8,7 @@ pub use spirv::ExecutionModel;
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct EntryPoint {
     /// Entry point execution model.
-    pub exec_model: ExecutionModel,
+    pub exec_model: spirv::ExecutionModel,
     /// Name of the entry point.
     pub name: String,
     /// Variables that contains specialization constant, input, output and

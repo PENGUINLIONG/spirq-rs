@@ -1,7 +1,9 @@
-use anyhow::{anyhow, Result};
 use std::collections::{HashMap, HashSet};
 
-use crate::constant::Constant;
+use crate::{
+    constant::Constant,
+    error::{anyhow, Result},
+};
 
 type VariableId = u32;
 type FunctionId = u32;

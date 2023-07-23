@@ -115,25 +115,25 @@ impl<'a> DecorationRegistry<'a> {
     }
 
     /// Get the location-component pair of an interface variable.
-    pub(crate) fn get_var_location(&self, var_id: VariableId) -> Result<InterfaceLocation> {
+    pub fn get_var_location(&self, var_id: VariableId) -> Result<InterfaceLocation> {
         let comp = self.get_u32(var_id, Decoration::Component).unwrap_or(0);
         self.get_u32(var_id, Decoration::Location)
             .map(|loc| InterfaceLocation::new(loc, comp))
     }
     /// Get the set-binding pair of a descriptor resource.
-    pub(crate) fn get_var_desc_bind(&self, var_id: VariableId) -> Result<DescriptorBinding> {
+    pub fn get_var_desc_bind(&self, var_id: VariableId) -> Result<DescriptorBinding> {
         let desc_set = self.get_u32(var_id, Decoration::DescriptorSet).unwrap_or(0);
         self.get_u32(var_id, Decoration::Binding)
             .map(|bind_point| DescriptorBinding::new(desc_set, bind_point))
     }
     /// Get the set-binding pair of a descriptor resource, but the binding point
     /// is forced to 0 if it's not specified in SPIR-V source.
-    pub(crate) fn get_var_desc_bind_or_default(&self, var_id: VariableId) -> DescriptorBinding {
+    pub fn get_var_desc_bind_or_default(&self, var_id: VariableId) -> DescriptorBinding {
         self.get_var_desc_bind(var_id)
             .unwrap_or(DescriptorBinding::new(0, 0))
     }
     /// Get the access type of an memory object.
-    pub(crate) fn get_desc_access_ty(&self, id: InstrId, ty: &Type) -> Option<AccessType> {
+    pub fn get_desc_access_ty(&self, id: InstrId, ty: &Type) -> Option<AccessType> {
         self.get_access_ty_from_deco(id).and_then(|x| {
             // Use the stricter one.
             if x == AccessType::ReadWrite {
@@ -146,7 +146,7 @@ impl<'a> DecorationRegistry<'a> {
             }
         })
     }
-    pub(crate) fn get_access_ty_from_deco(&self, id: InstrId) -> Option<AccessType> {
+    pub fn get_access_ty_from_deco(&self, id: InstrId) -> Option<AccessType> {
         let write_only = self.contains(id, Decoration::NonReadable);
         let read_only = self.contains(id, Decoration::NonWritable);
         match (write_only, read_only) {
@@ -156,7 +156,7 @@ impl<'a> DecorationRegistry<'a> {
             (false, false) => Some(AccessType::ReadWrite),
         }
     }
-    pub(crate) fn get_member_access_ty_from_deco(
+    pub fn get_member_access_ty_from_deco(
         &self,
         id: InstrId,
         member_idx: u32,
@@ -172,7 +172,7 @@ impl<'a> DecorationRegistry<'a> {
     }
 
     /// Get the input attachment index of the variable.
-    pub(crate) fn get_var_input_attm_idx(&self, var_id: VariableId) -> Result<u32> {
+    pub fn get_var_input_attm_idx(&self, var_id: VariableId) -> Result<u32> {
         self.get_u32(var_id, Decoration::InputAttachmentIndex)
     }
 }
