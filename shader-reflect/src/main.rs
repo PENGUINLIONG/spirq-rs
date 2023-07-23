@@ -421,13 +421,13 @@ fn ty2json(ty: &Type) -> serde_json::Value {
             "Kind": "Matrix",
             "AxisOrder": x.axis_order.map(|x| format!("{:?}", x)),
             "VectorType": x.vector_ty.to_string(),
-            "Count": x.vector_count,
+            "Count": x.nvector,
             "Stride": x.stride,
         }),
         Type::Array(x) => json!({
             "Kind": "Array",
             "ElementType": ty2json(&*x.element_ty),
-            "Count": x.element_count,
+            "Count": x.nelement,
             "Stride": x.stride
         }),
         Type::Struct(x) => json!({
@@ -472,7 +472,7 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 desc_bind,
                 desc_ty,
                 ty,
-                bind_count,
+                nbind,
             } => {
                 let j = json!({
                     "Name": name.as_ref(),
@@ -480,7 +480,7 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                     "Binding": desc_bind.bind(),
                     "DescriptorType": format!("{desc_ty:?}"),
                     "Type": ty2json(&ty),
-                    "Count": bind_count,
+                    "Count": nbind,
                 });
                 descs.push(j);
             }

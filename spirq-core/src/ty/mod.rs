@@ -118,16 +118,16 @@ pub struct VectorType {
     /// Vector scalar type.
     pub scalar_ty: ScalarType,
     /// Number of scalar components in the vector.
-    pub scalar_count: u32,
+    pub nscalar: u32,
 }
 impl SpirvType for VectorType {
     fn min_size(&self) -> Option<usize> {
-        Some(self.scalar_ty.min_size()? * self.scalar_count as usize)
+        Some(self.scalar_ty.min_size()? * self.nscalar as usize)
     }
 }
 impl fmt::Display for VectorType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "vec{}<{}>", self.scalar_count, self.scalar_ty)
+        write!(f, "vec{}<{}>", self.nscalar, self.scalar_ty)
     }
 }
 
@@ -147,7 +147,7 @@ pub struct MatrixType {
     /// Matrix vector type.
     pub vector_ty: VectorType,
     /// Number of vectors in the matrix.
-    pub vector_count: u32,
+    pub nvector: u32,
     /// Axis order of the matrix. Valid SPIR-V never gives a `None` major.
     pub axis_order: Option<MatrixAxisOrder>,
     /// Stride between vectors in the matrix. Valid SPIR-V never gives a `None`
@@ -156,7 +156,7 @@ pub struct MatrixType {
 }
 impl SpirvType for MatrixType {
     fn min_size(&self) -> Option<usize> {
-        Some(self.stride? * self.vector_count as usize)
+        Some(self.stride? * self.nvector as usize)
     }
 }
 impl fmt::Display for MatrixType {
@@ -166,8 +166,8 @@ impl fmt::Display for MatrixType {
             Some(MatrixAxisOrder::RowMajor) => "RowMajor",
             None => "AxisOrder?",
         };
-        let nrow = self.vector_ty.scalar_count;
-        let ncol = self.vector_count;
+        let nrow = self.vector_ty.nscalar;
+        let ncol = self.nvector;
         let scalar_ty = &self.vector_ty.scalar_ty;
         let stride = match self.stride {
             Some(x) => x.to_string(),
@@ -392,7 +392,7 @@ pub struct ArrayType {
     pub element_ty: Box<Type>,
     /// Number of elements in the array. None if the array length is only known
     /// at runtime.
-    pub element_count: Option<u32>,
+    pub nelement: Option<u32>,
     /// Stride between elements in the array. None if the array doesn't have
     /// a explicitly specified layout. For example, an array of descriptor
     /// resources doesn't have a physical layout.
@@ -400,10 +400,10 @@ pub struct ArrayType {
 }
 impl SpirvType for ArrayType {
     fn min_size(&self) -> Option<usize> {
-        Some(self.stride? * self.element_count.unwrap_or(0).max(1) as usize)
+        Some(self.stride? * self.nelement.unwrap_or(0).max(1) as usize)
     }
     fn size(&self) -> Option<usize> {
-        Some(self.stride? * self.element_count.unwrap_or(0) as usize)
+        Some(self.stride? * self.nelement.unwrap_or(0) as usize)
     }
     fn member_offset(&self, member_index: usize) -> Option<usize> {
         Some(self.stride? * member_index)
@@ -414,7 +414,7 @@ impl SpirvType for ArrayType {
 }
 impl fmt::Display for ArrayType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let Some(nrepeat) = self.element_count {
+        if let Some(nrepeat) = self.nelement {
             write!(f, "[{}; {}]", self.element_ty, nrepeat)
         } else {
             write!(f, "[{}]", self.element_ty)
@@ -810,7 +810,7 @@ impl Type {
             Array(src) => {
                 let dst = ArrayType {
                     element_ty: Box::new(src.element_ty.mutate_impl(f.clone())),
-                    element_count: src.element_count,
+                    nelement: src.nelement,
                     stride: src.stride,
                 };
                 Type::Array(dst)
@@ -865,21 +865,21 @@ impl fmt::Display for Type {
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum DescriptorType {
     /// `VK_DESCRIPTOR_TYPE_SAMPLER`
-    Sampler,
+    Sampler(),
     /// `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`
-    CombinedImageSampler,
+    CombinedImageSampler(),
     /// `VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE`
-    SampledImage,
+    SampledImage(),
     /// `VK_DESCRIPTOR_TYPE_STORAGE_IMAGE`
     StorageImage(AccessType),
     /// `VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER`.
-    UniformTexelBuffer,
+    UniformTexelBuffer(),
     /// `VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER`.
     StorageTexelBuffer(AccessType),
     /// `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER` or
     /// `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC` depending on how you gonna
     /// use it.
-    UniformBuffer,
+    UniformBuffer(),
     /// `VK_DESCRIPTOR_TYPE_STORAGE_BUFFER` or
     /// `VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC` depending on how you gonna
     /// use it.
@@ -887,5 +887,5 @@ pub enum DescriptorType {
     /// `VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT` and its input attachment index.
     InputAttachment(u32),
     /// `VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR`
-    AccelStruct,
+    AccelStruct(),
 }

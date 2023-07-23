@@ -204,7 +204,7 @@ fn test_desc_tys() {
     assert!(desc_binds.contains_key(&DescriptorBinding::new(0, 0)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(),
-        DescriptorType::UniformBuffer
+        DescriptorType::UniformBuffer()
     );
     assert!(desc_binds.contains_key(&DescriptorBinding::new(0, 1)));
     assert_eq!(
@@ -214,7 +214,7 @@ fn test_desc_tys() {
     assert!(desc_binds.contains_key(&DescriptorBinding::new(1, 0)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(1, 0)).unwrap(),
-        DescriptorType::CombinedImageSampler
+        DescriptorType::CombinedImageSampler()
     );
     assert!(desc_binds.contains_key(&DescriptorBinding::new(3, 4)));
     assert_eq!(
@@ -234,7 +234,7 @@ fn test_desc_tys() {
     assert!(desc_binds.contains_key(&DescriptorBinding::new(0, 3)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 3)).unwrap(),
-        DescriptorType::UniformTexelBuffer
+        DescriptorType::UniformTexelBuffer()
     );
     assert!(!desc_binds.contains_key(&DescriptorBinding::new(0, 2)));
 }
@@ -304,12 +304,10 @@ fn test_dyn_multibind() {
         .into_iter()
         .filter_map(|x| {
             if let Variable::Descriptor {
-                desc_bind,
-                bind_count,
-                ..
+                desc_bind, nbind, ..
             } = x
             {
-                Some((desc_bind, bind_count))
+                Some((desc_bind, nbind))
             } else {
                 None
             }
@@ -386,12 +384,12 @@ fn test_spec_const_arrays() {
         .filter_map(|x| {
             if let Variable::Descriptor {
                 desc_bind,
-                bind_count,
+                nbind,
                 ty,
                 ..
             } = x
             {
-                Some((desc_bind, (bind_count, ty.size())))
+                Some((desc_bind, (nbind, ty.size())))
             } else {
                 None
             }
@@ -446,7 +444,7 @@ fn test_ray_tracing() {
         .collect::<HashMap<_, _>>();
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(),
-        DescriptorType::AccelStruct
+        DescriptorType::AccelStruct()
     );
 }
 #[test]
@@ -497,15 +495,15 @@ fn test_combine_image_sampler() {
     assert_eq!(desc_binds.len(), 3);
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(),
-        DescriptorType::SampledImage
+        DescriptorType::SampledImage()
     );
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 1)).unwrap(),
-        DescriptorType::Sampler
+        DescriptorType::Sampler()
     );
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(1, 1)).unwrap(),
-        DescriptorType::CombinedImageSampler
+        DescriptorType::CombinedImageSampler()
     );
 }
 #[test]

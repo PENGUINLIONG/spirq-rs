@@ -197,7 +197,7 @@ impl<'a> ReflectIntermediate<'a> {
                 if let Type::Scalar(scalar_ty) = self.ty_reg.get(op.scalar_ty_id)? {
                     let vector_ty = VectorType {
                         scalar_ty: scalar_ty.clone(),
-                        scalar_count: op.scalar_count,
+                        nscalar: op.nscalar,
                     };
                     self.ty_reg.set(op.ty_id, Type::Vector(vector_ty))?;
                 } else {
@@ -209,7 +209,7 @@ impl<'a> ReflectIntermediate<'a> {
                 if let Type::Vector(vector_ty) = self.ty_reg.get(op.vector_ty_id)? {
                     let mat_ty = MatrixType {
                         vector_ty: vector_ty.clone(),
-                        vector_count: op.vector_count,
+                        nvector: op.nvector,
                         axis_order: None,
                         stride: None,
                     };
@@ -310,7 +310,7 @@ impl<'a> ReflectIntermediate<'a> {
                 // behavior of `glslang` is to treat the specialization
                 // constants as normal constants, then I would say...
                 // probably it's fine to size array with them?
-                let element_count = match self.interp.get_value(op.element_count_const_id)? {
+                let nelement = match self.interp.get_value(op.nelement_const_id)? {
                     ConstantValue::S32(x) if *x > 0 => *x as u32,
                     ConstantValue::U32(x) if *x > 0 => *x,
                     _ => return Err(anyhow!("invalid array size")),
@@ -324,14 +324,14 @@ impl<'a> ReflectIntermediate<'a> {
                     // Sized data arrays.
                     ArrayType {
                         element_ty: Box::new(element_ty.clone()),
-                        element_count: Some(element_count),
+                        nelement: Some(nelement),
                         stride: Some(stride),
                     }
                 } else {
                     // Multiple descriptor binding points grouped into an array.
                     ArrayType {
                         element_ty: Box::new(element_ty.clone()),
-                        element_count: Some(element_count),
+                        nelement: Some(nelement),
                         stride: None,
                     }
                 };
@@ -352,7 +352,7 @@ impl<'a> ReflectIntermediate<'a> {
                     // Unsized data arrays.
                     ArrayType {
                         element_ty: Box::new(element_ty.clone()),
-                        element_count: None,
+                        nelement: None,
                         stride: Some(stride),
                     }
                 } else {
@@ -360,7 +360,7 @@ impl<'a> ReflectIntermediate<'a> {
                     // whose size is unknown at compile time.
                     ArrayType {
                         element_ty: Box::new(element_ty.clone()),
-                        element_count: None,
+                        nelement: None,
                         stride: None,
                     }
                 };
@@ -507,7 +507,7 @@ impl<'a> ReflectIntermediate<'a> {
                 let value = match instr.op() {
                     Op::ConstantTrue => ConstantValue::from(true),
                     Op::ConstantFalse => ConstantValue::from(false),
-                    Op::Constant => ConstantValue::try_from_dwords(op.value, &ty)?,
+                    Op::Constant => ConstantValue::from(op.value).to_typed(&ty)?,
                     _ => return Ok(()),
                 };
                 let name = self
@@ -542,7 +542,7 @@ impl<'a> ReflectIntermediate<'a> {
                     let value = match opcode {
                         Op::SpecConstantTrue => ConstantValue::from(true),
                         Op::SpecConstantFalse => ConstantValue::from(false),
-                        Op::SpecConstant => ConstantValue::try_from_dwords(op.value, &ty)?,
+                        Op::SpecConstant => ConstantValue::from(op.value).to_typed(&ty)?,
                         _ => unreachable!(),
                     };
                     Constant::new_spec(name, ty, value, spec_id)
@@ -895,12 +895,12 @@ fn make_desc_var(
     ty: &Type,
 ) -> Option<Variable> {
     // Unwrap multi-binding.
-    let (bind_count, ty) = match ty {
+    let (nbind, ty) = match ty {
         Type::Array(arr_ty) => {
             // `nrepeat=None` is no longer considered invalid because of
             // the adoption of `SPV_EXT_descriptor_indexing`. This
             // shader extension has been supported in Vulkan 1.2.
-            let nrepeat = arr_ty.element_count.unwrap_or(0);
+            let nrepeat = arr_ty.nelement.unwrap_or(0);
             (nrepeat, &*arr_ty.element_ty)
         }
         _ => (1, ty),
@@ -943,12 +943,12 @@ fn make_desc_var(
                     .unwrap_or(AccessType::ReadWrite);
                 DescriptorType::StorageBuffer(access)
             } else {
-                DescriptorType::UniformBuffer
+                DescriptorType::UniformBuffer()
             }
         }
         Type::SampledImage(sampled_image_ty) => match sampled_image_ty.dim {
-            spirv::Dim::DimBuffer => DescriptorType::UniformTexelBuffer,
-            _ => DescriptorType::SampledImage,
+            spirv::Dim::DimBuffer => DescriptorType::UniformTexelBuffer(),
+            _ => DescriptorType::SampledImage(),
         },
         Type::StorageImage(store_image_ty) => {
             let access = deco_reg
@@ -959,18 +959,18 @@ fn make_desc_var(
                 _ => DescriptorType::StorageImage(access),
             }
         }
-        Type::Sampler(_) => DescriptorType::Sampler,
+        Type::Sampler(_) => DescriptorType::Sampler(),
         Type::CombinedImageSampler(combined_img_sampler_ty) => {
             match combined_img_sampler_ty.sampled_image_ty.dim {
-                spirv::Dim::DimBuffer => DescriptorType::UniformTexelBuffer,
-                _ => DescriptorType::CombinedImageSampler,
+                spirv::Dim::DimBuffer => DescriptorType::UniformTexelBuffer(),
+                _ => DescriptorType::CombinedImageSampler(),
             }
         }
         Type::SubpassData(_) => {
             let input_attm_idx = deco_reg.get_var_input_attm_idx(var_id).unwrap_or_default();
             DescriptorType::InputAttachment(input_attm_idx)
         }
-        Type::AccelStruct(_) => DescriptorType::AccelStruct,
+        Type::AccelStruct(_) => DescriptorType::AccelStruct(),
         _ => return None,
     };
     let var = Variable::Descriptor {
@@ -978,7 +978,7 @@ fn make_desc_var(
         desc_bind,
         desc_ty,
         ty,
-        bind_count,
+        nbind,
     };
     Some(var)
 }
@@ -1158,14 +1158,14 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
     for var in vars {
         match &var {
             Variable::Descriptor {
-                desc_ty: DescriptorType::Sampler,
+                desc_ty: DescriptorType::Sampler(),
                 ..
             } => {
                 samplers.push(var.clone());
                 continue;
             }
             Variable::Descriptor {
-                desc_ty: DescriptorType::SampledImage,
+                desc_ty: DescriptorType::SampledImage(),
                 ..
             } => {
                 imgs.push(var.clone());
@@ -1184,17 +1184,15 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
                 (
                     Variable::Descriptor {
                         desc_bind: sampler_desc_bind,
-                        bind_count: sampler_bind_count,
+                        nbind: sampler_nbind,
                         ..
                     },
                     Variable::Descriptor {
                         desc_bind: image_desc_bind,
-                        bind_count: image_bind_count,
+                        nbind: image_nbind,
                         ..
                     },
-                ) if sampler_desc_bind == image_desc_bind
-                    && sampler_bind_count == image_bind_count =>
-                {
+                ) if sampler_desc_bind == image_desc_bind && sampler_nbind == image_nbind => {
                     combined_imgs.push(image_var.clone());
                     None
                 }
@@ -1215,7 +1213,7 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
                         name,
                         ty: Type::SampledImage(image_ty),
                         desc_bind,
-                        bind_count,
+                        nbind,
                         ..
                     } => {
                         let sampled_image_ty = SampledImageType {
@@ -1228,9 +1226,9 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
                         let out_var = Variable::Descriptor {
                             name: name.clone(),
                             desc_bind: desc_bind,
-                            desc_ty: DescriptorType::CombinedImageSampler,
+                            desc_ty: DescriptorType::CombinedImageSampler(),
                             ty: Type::CombinedImageSampler(combined_img_sampler_ty.clone()),
-                            bind_count: bind_count,
+                            nbind: nbind,
                         };
                         out_vars.push(out_var);
                     }

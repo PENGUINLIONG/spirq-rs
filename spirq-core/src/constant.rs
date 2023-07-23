@@ -1,4 +1,6 @@
 //! Constant and specialization constant representations.
+use std::convert::TryFrom;
+
 use ordered_float::OrderedFloat;
 
 use crate::{
@@ -9,12 +11,35 @@ use crate::{
 
 /// Typed constant value.
 #[non_exhaustive]
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub enum ConstantValue {
+    Typeless(Box<[u8]>),
     Bool(bool),
     S32(i32),
     U32(u32),
     F32(OrderedFloat<f32>),
+}
+impl From<&[u32]> for ConstantValue {
+    fn from(x: &[u32]) -> Self {
+        let bytes = x.iter().flat_map(|x| x.to_ne_bytes()).collect();
+        ConstantValue::Typeless(bytes)
+    }
+}
+impl From<&[u8]> for ConstantValue {
+    fn from(x: &[u8]) -> Self {
+        let bytes = x.to_owned().into_boxed_slice();
+        ConstantValue::Typeless(bytes)
+    }
+}
+impl From<[u8; 4]> for ConstantValue {
+    fn from(x: [u8; 4]) -> Self {
+        ConstantValue::try_from(&x as &[u8]).unwrap()
+    }
+}
+impl From<[u8; 8]> for ConstantValue {
+    fn from(x: [u8; 8]) -> Self {
+        ConstantValue::try_from(&x as &[u8]).unwrap()
+    }
 }
 impl From<bool> for ConstantValue {
     fn from(x: bool) -> Self {
@@ -37,29 +62,12 @@ impl From<f32> for ConstantValue {
     }
 }
 impl ConstantValue {
-    pub fn try_from_dwords(x: &[u32], ty: &Type) -> Result<Self> {
-        match x.len() {
-            1 => {
-                let bytes = u32::to_ne_bytes(x[0]);
-                Self::try_from_bytes(&bytes, ty)
-            }
-            2 => {
-                let mut bytes: [u8; 8] = [0; 8];
-                let lower_bytes = u32::to_ne_bytes(x[0]);
-                let upper_bytes = u32::to_ne_bytes(x[1]);
-                (&mut bytes[0..4]).copy_from_slice(&lower_bytes);
-                (&mut bytes[4..8]).copy_from_slice(&upper_bytes);
-                Self::try_from_bytes(&bytes, ty)
-            }
-            _ => {
-                return Err(anyhow!(
-                    "cannot parse constant value from {} dwords",
-                    x.len()
-                ))
-            }
-        }
-    }
-    pub fn try_from_bytes(x: &[u8], ty: &Type) -> Result<Self> {
+    pub fn to_typed(&self, ty: &Type) -> Result<Self> {
+        let x = match self {
+            Self::Typeless(x) => x,
+            _ => return Err(anyhow!("{self:?} is already typed")),
+        };
+
         if let Some(scalar_ty) = ty.as_scalar() {
             match scalar_ty {
                 ScalarType::Boolean => Ok(ConstantValue::Bool(x.iter().any(|x| x != &0))),
