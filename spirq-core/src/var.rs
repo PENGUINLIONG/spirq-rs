@@ -106,7 +106,7 @@ pub enum Variable {
         /// `GL_EXT_nonuniform_qualifier` and SPIR-V extension
         /// `SPV_EXT_descriptor_indexing`. Dynamic multi-binding is only
         /// supported in Vulkan 1.2.
-        nbind: u32,
+        bind_count: u32,
     },
     /// Push constant.
     PushConstant {

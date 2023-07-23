@@ -195,21 +195,21 @@ impl<'a> ReflectIntermediate<'a> {
             Op::TypeVector => {
                 let op = OpTypeVector::try_from(instr)?;
                 if let Type::Scalar(scalar_ty) = self.ty_reg.get(op.scalar_ty_id)? {
-                    let vec_ty = VectorType {
+                    let vector_ty = VectorType {
                         scalar_ty: scalar_ty.clone(),
-                        scalar_count: op.nscalar,
+                        scalar_count: op.scalar_count,
                     };
-                    self.ty_reg.set(op.ty_id, Type::Vector(vec_ty))?;
+                    self.ty_reg.set(op.ty_id, Type::Vector(vector_ty))?;
                 } else {
                     return Err(broken_nested_ty(op.ty_id));
                 }
             }
             Op::TypeMatrix => {
                 let op = OpTypeMatrix::try_from(instr)?;
-                if let Type::Vector(vec_ty) = self.ty_reg.get(op.vec_ty_id)? {
+                if let Type::Vector(vector_ty) = self.ty_reg.get(op.vector_ty_id)? {
                     let mat_ty = MatrixType {
-                        vector_ty: vec_ty.clone(),
-                        vector_count: op.nvec,
+                        vector_ty: vector_ty.clone(),
+                        vector_count: op.vector_count,
                         axis_order: None,
                         stride: None,
                     };
@@ -246,7 +246,7 @@ impl<'a> ReflectIntermediate<'a> {
                         2 => None,
                         _ => return Err(anyhow!("unsupported image depth type")),
                     };
-                    let img_ty = ImageType {
+                    let image_ty = ImageType {
                         scalar_ty,
                         dim: op.dim,
                         is_depth,
@@ -255,7 +255,7 @@ impl<'a> ReflectIntermediate<'a> {
                         is_sampled,
                         fmt: op.color_fmt,
                     };
-                    self.ty_reg.set(op.ty_id, Type::Image(img_ty))?;
+                    self.ty_reg.set(op.ty_id, Type::Image(image_ty))?;
                 }
             }
             Op::TypeSampler => {
@@ -266,14 +266,14 @@ impl<'a> ReflectIntermediate<'a> {
             }
             Op::TypeSampledImage => {
                 let op = OpTypeSampledImage::try_from(instr)?;
-                if let Type::Image(img_ty) = self.ty_reg.get(op.img_ty_id)? {
-                    let sampled_img_ty = SampledImageType {
-                        scalar_ty: img_ty.scalar_ty.clone(),
-                        dim: img_ty.dim,
-                        is_array: img_ty.is_array,
-                        is_multisampled: img_ty.is_multisampled,
+                if let Type::Image(image_ty) = self.ty_reg.get(op.image_ty_id)? {
+                    let sampled_image_ty = SampledImageType {
+                        scalar_ty: image_ty.scalar_ty.clone(),
+                        dim: image_ty.dim,
+                        is_array: image_ty.is_array,
+                        is_multisampled: image_ty.is_multisampled,
                     };
-                    let combined_img_sampler_ty = CombinedImageSamplerType { sampled_img_ty };
+                    let combined_img_sampler_ty = CombinedImageSamplerType { sampled_image_ty };
                     self.ty_reg.set(
                         op.ty_id,
                         Type::CombinedImageSampler(combined_img_sampler_ty),
@@ -895,7 +895,7 @@ fn make_desc_var(
     ty: &Type,
 ) -> Option<Variable> {
     // Unwrap multi-binding.
-    let (nbind, ty) = match ty {
+    let (bind_count, ty) = match ty {
         Type::Array(arr_ty) => {
             // `nrepeat=None` is no longer considered invalid because of
             // the adoption of `SPV_EXT_descriptor_indexing`. This
@@ -908,25 +908,25 @@ fn make_desc_var(
 
     // Elevate image type to concrete storage/sampled image type.
     let ty = match ty {
-        Type::Image(img_ty) => {
-            if let Some(false) = img_ty.is_sampled {
+        Type::Image(image_ty) => {
+            if let Some(false) = image_ty.is_sampled {
                 // Guaranteed a storage image.
-                let storage_img_ty = StorageImageType {
-                    dim: img_ty.dim,
-                    is_array: img_ty.is_array,
-                    is_multisampled: img_ty.is_multisampled,
-                    fmt: img_ty.fmt,
+                let storage_image_ty = StorageImageType {
+                    dim: image_ty.dim,
+                    is_array: image_ty.is_array,
+                    is_multisampled: image_ty.is_multisampled,
+                    fmt: image_ty.fmt,
                 };
-                Type::StorageImage(storage_img_ty)
+                Type::StorageImage(storage_image_ty)
             } else {
                 // Potentially a sampled image.
-                let sampled_img_ty = SampledImageType {
-                    dim: img_ty.dim,
-                    scalar_ty: img_ty.scalar_ty.clone(),
-                    is_array: img_ty.is_array,
-                    is_multisampled: img_ty.is_multisampled,
+                let sampled_image_ty = SampledImageType {
+                    dim: image_ty.dim,
+                    scalar_ty: image_ty.scalar_ty.clone(),
+                    is_array: image_ty.is_array,
+                    is_multisampled: image_ty.is_multisampled,
                 };
-                Type::SampledImage(sampled_img_ty)
+                Type::SampledImage(sampled_image_ty)
             }
         }
         _ => ty.clone(),
@@ -946,22 +946,22 @@ fn make_desc_var(
                 DescriptorType::UniformBuffer
             }
         }
-        Type::SampledImage(sampled_img_ty) => match sampled_img_ty.dim {
+        Type::SampledImage(sampled_image_ty) => match sampled_image_ty.dim {
             spirv::Dim::DimBuffer => DescriptorType::UniformTexelBuffer,
             _ => DescriptorType::SampledImage,
         },
-        Type::StorageImage(store_img_ty) => {
+        Type::StorageImage(store_image_ty) => {
             let access = deco_reg
                 .get_desc_access_ty(var_id, &ty)
                 .unwrap_or(AccessType::ReadWrite);
-            match store_img_ty.dim {
+            match store_image_ty.dim {
                 spirv::Dim::DimBuffer => DescriptorType::StorageTexelBuffer(access),
                 _ => DescriptorType::StorageImage(access),
             }
         }
         Type::Sampler(_) => DescriptorType::Sampler,
         Type::CombinedImageSampler(combined_img_sampler_ty) => {
-            match combined_img_sampler_ty.sampled_img_ty.dim {
+            match combined_img_sampler_ty.sampled_image_ty.dim {
                 spirv::Dim::DimBuffer => DescriptorType::UniformTexelBuffer,
                 _ => DescriptorType::CombinedImageSampler,
             }
@@ -978,7 +978,7 @@ fn make_desc_var(
         desc_bind,
         desc_ty,
         ty,
-        nbind,
+        bind_count,
     };
     Some(var)
 }
@@ -1177,9 +1177,9 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
             .filter_map(|image_var| {
                 match (&sampler_var, &image_var) {
                     (
-                        Variable::Descriptor { desc_bind: sampler_desc_bind, nbind: sampler_nbind, .. },
-                        Variable::Descriptor { desc_bind: image_desc_bind, nbind: image_nbind, .. },
-                    ) if sampler_desc_bind == image_desc_bind && sampler_nbind == image_nbind => {
+                        Variable::Descriptor { desc_bind: sampler_desc_bind, bind_count: sampler_bind_count, .. },
+                        Variable::Descriptor { desc_bind: image_desc_bind, bind_count: image_bind_count, .. },
+                    ) if sampler_desc_bind == image_desc_bind && sampler_bind_count == image_bind_count => {
                         combined_imgs.push(image_var.clone());
                         None
                     },
@@ -1199,20 +1199,20 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
             // create a new combined image sampler.
             for img_var in combined_imgs {
                 match img_var {
-                    Variable::Descriptor { name, ty: Type::SampledImage(img_ty), desc_bind, nbind, .. } => {
-                        let sampled_img_ty = SampledImageType {
-                            scalar_ty: img_ty.scalar_ty.clone(),
-                            dim: img_ty.dim,
-                            is_array: img_ty.is_array,
-                            is_multisampled: img_ty.is_multisampled,
+                    Variable::Descriptor { name, ty: Type::SampledImage(image_ty), desc_bind, bind_count, .. } => {
+                        let sampled_image_ty = SampledImageType {
+                            scalar_ty: image_ty.scalar_ty.clone(),
+                            dim: image_ty.dim,
+                            is_array: image_ty.is_array,
+                            is_multisampled: image_ty.is_multisampled,
                         };
-                        let combined_img_sampler_ty = CombinedImageSamplerType { sampled_img_ty };
+                        let combined_img_sampler_ty = CombinedImageSamplerType { sampled_image_ty };
                         let out_var = Variable::Descriptor {
                             name: name.clone(),
                             desc_bind: desc_bind,
                             desc_ty: DescriptorType::CombinedImageSampler,
                             ty: Type::CombinedImageSampler(combined_img_sampler_ty.clone()),
-                            nbind: nbind,
+                            bind_count: bind_count,
                         };
                         out_vars.push(out_var);
                     },

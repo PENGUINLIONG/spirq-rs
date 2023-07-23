@@ -305,11 +305,11 @@ fn test_dyn_multibind() {
         .filter_map(|x| {
             if let Variable::Descriptor {
                 desc_bind,
-                nbind,
+                bind_count,
                 ..
             } = x
             {
-                Some((desc_bind, nbind))
+                Some((desc_bind, bind_count))
             } else {
                 None
             }
@@ -386,12 +386,12 @@ fn test_spec_const_arrays() {
         .filter_map(|x| {
             if let Variable::Descriptor {
                 desc_bind,
-                nbind,
+                bind_count,
                 ty,
                 ..
             } = x
             {
-                Some((desc_bind, (nbind, ty.size())))
+                Some((desc_bind, (bind_count, ty.size())))
             } else {
                 None
             }

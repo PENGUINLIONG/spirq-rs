@@ -257,7 +257,7 @@ impl fmt::Display for SamplerType {
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct CombinedImageSamplerType {
-    pub sampled_img_ty: SampledImageType,
+    pub sampled_image_ty: SampledImageType,
 }
 impl SpirvType for CombinedImageSamplerType {
     fn min_size(&self) -> Option<usize> {
@@ -266,7 +266,7 @@ impl SpirvType for CombinedImageSamplerType {
 }
 impl fmt::Display for CombinedImageSamplerType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "CombinedImageSampler<{}>", self.sampled_img_ty)
+        write!(f, "CombinedImageSampler<{}>", self.sampled_image_ty)
     }
 }
 

@@ -19,7 +19,7 @@
                         fmt: Rgba32i,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -37,7 +37,7 @@
                         fmt: Rgba16i,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -55,7 +55,7 @@
                         fmt: Rgba8i,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -73,7 +73,7 @@
                         fmt: Rgba32i,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -91,7 +91,7 @@
                         fmt: Rgba32i,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -109,7 +109,7 @@
                         fmt: Rgba32i,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -127,7 +127,7 @@
                         fmt: Rgba32i,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -145,7 +145,7 @@
                         fmt: Rgba32i,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -163,7 +163,7 @@
                         fmt: Rgba32ui,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -181,7 +181,7 @@
                         fmt: Rgba16ui,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -199,7 +199,7 @@
                         fmt: Rgba8ui,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -217,7 +217,7 @@
                         fmt: Rgba32ui,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -235,7 +235,7 @@
                         fmt: Rgba32ui,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -253,7 +253,7 @@
                         fmt: Rgba32ui,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -271,7 +271,7 @@
                         fmt: Rgba32ui,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -289,7 +289,7 @@
                         fmt: Rgba32ui,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -307,7 +307,7 @@
                         fmt: Rgba32f,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -325,7 +325,7 @@
                         fmt: Rgba16f,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -343,7 +343,7 @@
                         fmt: R32f,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -361,7 +361,7 @@
                         fmt: Rgba8,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -379,7 +379,7 @@
                         fmt: Rgba8Snorm,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -397,7 +397,7 @@
                         fmt: Rgba32f,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -415,7 +415,7 @@
                         fmt: Rgba32f,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -433,7 +433,7 @@
                         fmt: Rgba32f,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -451,7 +451,7 @@
                         fmt: Rgba32f,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -469,7 +469,7 @@
                         fmt: Rgba32f,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -487,7 +487,7 @@
                         fmt: Rgba32f,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -497,7 +497,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: true,
@@ -508,7 +508,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -518,7 +518,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: true,
@@ -529,7 +529,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -539,7 +539,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: true,
@@ -550,7 +550,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -560,7 +560,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: true,
@@ -571,7 +571,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -581,7 +581,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: true,
@@ -592,7 +592,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -602,7 +602,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: true,
@@ -613,7 +613,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -623,7 +623,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: true,
@@ -634,7 +634,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -644,7 +644,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: true,
@@ -655,7 +655,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -665,7 +665,7 @@
                 desc_ty: UniformTexelBuffer,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: true,
@@ -676,7 +676,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -686,7 +686,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: true,
@@ -697,7 +697,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -707,7 +707,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: true,
@@ -718,7 +718,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -728,7 +728,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: false,
@@ -739,7 +739,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -749,7 +749,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: false,
@@ -760,7 +760,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -770,7 +770,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: false,
@@ -781,7 +781,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -791,7 +791,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: false,
@@ -802,7 +802,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -812,7 +812,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: false,
@@ -823,7 +823,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -833,7 +833,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: false,
@@ -844,7 +844,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -854,7 +854,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: false,
@@ -865,7 +865,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -875,7 +875,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: false,
@@ -886,7 +886,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -896,7 +896,7 @@
                 desc_ty: UniformTexelBuffer,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: false,
@@ -907,7 +907,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -917,7 +917,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: false,
@@ -928,7 +928,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -938,7 +938,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Integer {
                                 bits: 32,
                                 is_signed: false,
@@ -949,7 +949,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -959,7 +959,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -969,7 +969,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -979,7 +979,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -989,7 +989,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -999,7 +999,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -1009,7 +1009,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1019,7 +1019,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -1029,7 +1029,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1039,7 +1039,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -1049,7 +1049,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1059,7 +1059,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -1069,7 +1069,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1079,7 +1079,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -1089,7 +1089,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1099,7 +1099,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -1109,7 +1109,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1119,7 +1119,7 @@
                 desc_ty: UniformTexelBuffer,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -1129,7 +1129,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1139,7 +1139,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -1149,7 +1149,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1159,7 +1159,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -1169,7 +1169,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1179,7 +1179,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -1189,7 +1189,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1199,7 +1199,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -1209,7 +1209,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1219,7 +1219,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -1229,7 +1229,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1239,7 +1239,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -1249,7 +1249,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1259,7 +1259,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -1269,7 +1269,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1279,7 +1279,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -1289,7 +1289,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1299,7 +1299,7 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
+                        sampled_image_ty: SampledImageType {
                             scalar_ty: Float {
                                 bits: 32,
                             },
@@ -1309,7 +1309,7 @@
                         },
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1320,7 +1320,7 @@
                 ty: Sampler(
                     SamplerType,
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1331,7 +1331,7 @@
                 ty: Sampler(
                     SamplerType,
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1350,7 +1350,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1369,7 +1369,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1388,7 +1388,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1407,7 +1407,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1426,7 +1426,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1445,7 +1445,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1464,7 +1464,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1483,7 +1483,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1502,7 +1502,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1521,7 +1521,7 @@
                         is_multisampled: true,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1540,7 +1540,7 @@
                         is_multisampled: true,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1559,7 +1559,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1578,7 +1578,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1597,7 +1597,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1616,7 +1616,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1635,7 +1635,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1654,7 +1654,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1673,7 +1673,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1692,7 +1692,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1711,7 +1711,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1730,7 +1730,7 @@
                         is_multisampled: true,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1749,7 +1749,7 @@
                         is_multisampled: true,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1767,7 +1767,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1785,7 +1785,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1803,7 +1803,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1821,7 +1821,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1839,7 +1839,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1857,7 +1857,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1875,7 +1875,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1893,7 +1893,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1911,7 +1911,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1929,7 +1929,7 @@
                         is_multisampled: true,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -1947,7 +1947,7 @@
                         is_multisampled: true,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -2728,7 +2728,7 @@
                         ],
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -3509,7 +3509,7 @@
                         ],
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -3528,7 +3528,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -3547,7 +3547,7 @@
                         is_multisampled: true,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -3566,7 +3566,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -3585,7 +3585,7 @@
                         is_multisampled: true,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -3603,7 +3603,7 @@
                         is_multisampled: false,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -3621,7 +3621,7 @@
                         is_multisampled: true,
                     },
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
             Descriptor {
                 name: Some(
@@ -3632,7 +3632,7 @@
                 ty: AccelStruct(
                     AccelStructType,
                 ),
-                nbind: 1,
+                bind_count: 1,
             },
         ],
         exec_modes: [

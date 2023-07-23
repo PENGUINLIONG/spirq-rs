@@ -98,12 +98,12 @@ define_ops! {
     OpTypeVector {
         ty_id: TypeId = read_u32(),
         scalar_ty_id: TypeId = read_u32(),
-        nscalar: u32 = read_u32(),
+        scalar_count: u32 = read_u32(),
     }
     OpTypeMatrix {
         ty_id: TypeId = read_u32(),
-        vec_ty_id: TypeId = read_u32(),
-        nvec: u32 = read_u32(),
+        vector_ty_id: TypeId = read_u32(),
+        vector_count: u32 = read_u32(),
     }
     OpTypeImage {
         ty_id: TypeId = read_u32(),
@@ -120,7 +120,7 @@ define_ops! {
     }
     OpTypeSampledImage {
         ty_id: TypeId = read_u32(),
-        img_ty_id: TypeId = read_u32(),
+        image_ty_id: TypeId = read_u32(),
     }
     OpTypeArray {
         ty_id: TypeId = read_u32(),
