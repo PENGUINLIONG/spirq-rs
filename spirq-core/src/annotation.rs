@@ -3,8 +3,8 @@ use fnv::FnvHashMap as HashMap;
 
 use crate::{
     error::{anyhow, Result},
-    locator::{DescriptorBinding, InterfaceLocation},
     ty::{AccessType, Type},
+    var::{DescriptorBinding, InterfaceLocation},
 };
 
 pub use spirv::Decoration;

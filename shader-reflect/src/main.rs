@@ -2,7 +2,6 @@ use clap::Parser;
 use serde_json::json;
 use spirq::prelude::*;
 use spirq::ty;
-use spirq::var;
 use std::{
     borrow::Borrow,
     fs::File,
@@ -490,9 +489,7 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
     let mut spec_consts = Vec::new();
     for var in entry_point.vars.iter() {
         match var {
-            Variable::Input(input_var) => {
-                let var::InputVariable { name, location, ty } = input_var;
-
+            Variable::Input{ name, location, ty } => {
                 let j = json!({
                     "Name": name.as_ref(),
                     "Location": location.loc(),
@@ -501,9 +498,7 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 });
                 inputs.push(j);
             }
-            Variable::Output(output_var) => {
-                let var::OutputVariable { name, location, ty } = output_var;
-
+            Variable::Output{ name, location, ty } => {
                 let j = json!({
                     "Name": name.as_ref(),
                     "Location": location.loc(),
@@ -512,15 +507,13 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 });
                 outputs.push(j);
             }
-            Variable::Descriptor(desc_var) => {
-                let var::DescriptorVariable {
-                    name,
-                    desc_bind,
-                    desc_ty,
-                    ty,
-                    bind_count,
-                } = desc_var;
-
+            Variable::Descriptor{
+                name,
+                desc_bind,
+                desc_ty,
+                ty,
+                bind_count,
+            } => {
                 let j = json!({
                     "Name": name.as_ref(),
                     "Set": desc_bind.set(),
@@ -531,18 +524,14 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 });
                 descs.push(j);
             }
-            Variable::PushConstant(push_const_var) => {
-                let var::PushConstantVariable { name, ty } = push_const_var;
-
+            Variable::PushConstant{ name, ty } => {
                 let j = json!({
                     "Name": name.as_ref(),
                     "Type": ty2json(&ty),
                 });
                 push_consts.push(j);
             }
-            Variable::SpecConstant(spec_const_var) => {
-                let var::SpecConstantVariable { name, spec_id, ty } = spec_const_var;
-
+            Variable::SpecConstant{ name, spec_id, ty } => {
                 let j = json!({
                     "Name": name.as_ref(),
                     "SpecId": spec_id,

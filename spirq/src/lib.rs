@@ -73,7 +73,6 @@ pub use spirq_core::constant;
 pub use spirq_core::error;
 pub use spirq_core::evaluator;
 pub use spirq_core::func;
-pub use spirq_core::locator;
 pub use spirq_core::parse;
 pub use spirq_core::spirv;
 pub use spirq_core::ty;
@@ -88,9 +87,8 @@ pub mod prelude {
         constant::ConstantValue,
         entry_point::{EntryPoint, ExecutionModel},
         error::{Error, Result},
-        locator::{DescriptorBinding, InterfaceLocation, SpecId},
         parse::SpirvBinary,
-        ty::{AccessType, SpirvType, Type},
-        var::{DescriptorType, SpirvVariable, Variable},
+        ty::{AccessType, DescriptorType, SpirvType, Type},
+        var::{DescriptorBinding, InterfaceLocation, Variable, SpecId},
     };
 }

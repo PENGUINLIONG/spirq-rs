@@ -860,3 +860,93 @@ impl fmt::Display for Type {
         }
     }
 }
+
+/// Descriptor type matching `VkDescriptorType`.
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub enum DescriptorType {
+    /// `VK_DESCRIPTOR_TYPE_SAMPLER`
+    Sampler,
+    /// `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`
+    CombinedImageSampler,
+    /// `VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE`
+    SampledImage,
+    /// `VK_DESCRIPTOR_TYPE_STORAGE_IMAGE`
+    StorageImage { access_ty: AccessType },
+    /// `VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER`.
+    UniformTexelBuffer,
+    /// `VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER`.
+    StorageTexelBuffer { access_ty: AccessType },
+    /// `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER` or
+    /// `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC` depending on how you gonna
+    /// use it.
+    UniformBuffer,
+    /// `VK_DESCRIPTOR_TYPE_STORAGE_BUFFER` or
+    /// `VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC` depending on how you gonna
+    /// use it.
+    StorageBuffer { access_ty: AccessType },
+    /// `VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT` and its input attachment index.
+    InputAttachment { input_attachment_index: u32 },
+    /// `VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR`
+    AccelStruct,
+}
+impl DescriptorType {
+    pub fn sampler() -> Self {
+        Self::Sampler
+    }
+    pub fn combined_image_sampler() -> Self {
+        Self::CombinedImageSampler
+    }
+    pub fn sampled_image() -> Self {
+        Self::SampledImage
+    }
+    pub fn storage_image(access_ty: AccessType) -> Self {
+        Self::StorageImage { access_ty }
+    }
+    pub fn read_only_storage_image() -> Self {
+        Self::storage_image(AccessType::ReadOnly)
+    }
+    pub fn write_only_storage_image() -> Self {
+        Self::storage_image(AccessType::WriteOnly)
+    }
+    pub fn read_write_storage_image() -> Self {
+        Self::storage_image(AccessType::ReadWrite)
+    }
+    pub fn uniform_texel_buffer() -> Self {
+        Self::UniformTexelBuffer
+    }
+    pub fn storage_texel_buffer(access_ty: AccessType) -> Self {
+        Self::StorageTexelBuffer { access_ty }
+    }
+    pub fn read_only_storage_texel_buffer() -> Self {
+        Self::storage_texel_buffer(AccessType::ReadOnly)
+    }
+    pub fn write_only_storage_texel_buffer() -> Self {
+        Self::storage_texel_buffer(AccessType::WriteOnly)
+    }
+    pub fn read_write_storage_texel_buffer() -> Self {
+        Self::storage_texel_buffer(AccessType::ReadWrite)
+    }
+    pub fn uniform_buffer() -> Self {
+        Self::UniformBuffer
+    }
+    pub fn storage_buffer(access_ty: AccessType) -> Self {
+        Self::StorageBuffer { access_ty }
+    }
+    pub fn read_only_storage_buffer() -> Self {
+        Self::storage_buffer(AccessType::ReadOnly)
+    }
+    pub fn write_only_storage_buffer() -> Self {
+        Self::storage_buffer(AccessType::WriteOnly)
+    }
+    pub fn read_write_storage_buffer() -> Self {
+        Self::storage_buffer(AccessType::ReadWrite)
+    }
+    pub fn input_attachment(input_attachment_index: u32) -> Self {
+        Self::InputAttachment {
+            input_attachment_index,
+        }
+    }
+    pub fn accel_struct() -> Self {
+        Self::AccelStruct
+    }
+}

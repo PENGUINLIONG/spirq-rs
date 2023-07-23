@@ -3,8 +3,8 @@ use ordered_float::OrderedFloat;
 
 use crate::{
     error::{anyhow, Result},
-    locator::SpecId,
     ty::{ScalarType, Type},
+    var::SpecId,
 };
 
 /// Typed constant value.

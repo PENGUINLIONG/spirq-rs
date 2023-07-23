@@ -5,9 +5,9 @@ use crate::{
     entry_point::EntryPoint,
     error::Result,
     inspect::{FnInspector, Inspector},
-    locator::SpecId,
     parse::{Instr, SpirvBinary},
     reflect::{reflect, FunctionInspector, ReflectIntermediate},
+    var::SpecId,
 };
 
 /// Reflection configuration builder.

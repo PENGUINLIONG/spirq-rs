@@ -1,267 +1,149 @@
 use crate::{
     error::{anyhow, Result},
-    locator::{DescriptorBinding, InterfaceLocation, Locator, SpecId},
-    ty::{AccessType, PointerType, StorageClass, Type, Walk},
+    ty::{DescriptorType, PointerType, StorageClass, Type, Walk},
 };
 use fnv::FnvHashMap as HashMap;
+use std::fmt;
 
 type VariableId = u32;
 
-pub trait SpirvVariable {
-    /// Debug name of this variable.
-    fn name(&self) -> Option<&str>;
-    /// Locator of the variable.
-    fn locator(&self) -> Locator;
-    /// Concrete type of the variable.
-    fn ty(&self) -> &Type;
-    /// Enumerate variable members in post-order.
-    fn walk<'a>(&'a self) -> Walk<'a> {
-        self.ty().walk()
+/// Descriptor set and binding point carrier.
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Default, Clone, Copy)]
+pub struct DescriptorBinding(u32, u32);
+impl DescriptorBinding {
+    pub fn new(desc_set: u32, bind_point: u32) -> Self {
+        DescriptorBinding(desc_set, bind_point)
+    }
+
+    pub fn set(&self) -> u32 {
+        self.0
+    }
+    pub fn bind(&self) -> u32 {
+        self.1
+    }
+    pub fn into_inner(self) -> (u32, u32) {
+        (self.0, self.1)
+    }
+}
+impl fmt::Display for DescriptorBinding {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "(set={}, bind={})", self.0, self.1)
+    }
+}
+impl fmt::Debug for DescriptorBinding {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        (self as &dyn fmt::Display).fmt(f)
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct InputVariable {
-    pub name: Option<String>,
-    // Interface location of input.
-    pub location: InterfaceLocation,
-    /// The concrete SPIR-V type definition of descriptor resource.
-    pub ty: Type,
+/// Interface variable location and component.
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Default, Clone, Copy)]
+pub struct InterfaceLocation(u32, u32);
+impl InterfaceLocation {
+    pub fn new(loc: u32, comp: u32) -> Self {
+        InterfaceLocation(loc, comp)
+    }
+
+    pub fn loc(&self) -> u32 {
+        self.0
+    }
+    pub fn comp(&self) -> u32 {
+        self.1
+    }
+    pub fn into_inner(self) -> (u32, u32) {
+        (self.0, self.1)
+    }
 }
-impl SpirvVariable for InputVariable {
-    fn name(&self) -> Option<&str> {
-        self.name.as_ref().map(|x| x as &str)
+impl fmt::Display for InterfaceLocation {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "(loc={}, comp={})", self.0, self.1)
     }
-    fn locator(&self) -> Locator {
-        Locator::Input(self.location)
-    }
-    fn ty(&self) -> &Type {
-        &self.ty
+}
+impl fmt::Debug for InterfaceLocation {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        (self as &dyn fmt::Display).fmt(f)
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct OutputVariable {
-    pub name: Option<String>,
-    // Interface location of output.
-    pub location: InterfaceLocation,
-    /// The concrete SPIR-V type definition of descriptor resource.
-    pub ty: Type,
-}
-impl SpirvVariable for OutputVariable {
-    fn name(&self) -> Option<&str> {
-        self.name.as_ref().map(|x| x as &str)
-    }
-    fn locator(&self) -> Locator {
-        Locator::Output(self.location)
-    }
-    fn ty(&self) -> &Type {
-        &self.ty
-    }
-}
-
-/// Descriptor type matching `VkDescriptorType`.
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub enum DescriptorType {
-    /// `VK_DESCRIPTOR_TYPE_SAMPLER`
-    Sampler,
-    /// `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`
-    CombinedImageSampler,
-    /// `VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE`
-    SampledImage,
-    /// `VK_DESCRIPTOR_TYPE_STORAGE_IMAGE`
-    StorageImage { access_ty: AccessType },
-    /// `VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER`.
-    UniformTexelBuffer,
-    /// `VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER`.
-    StorageTexelBuffer { access_ty: AccessType },
-    /// `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER` or
-    /// `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC` depending on how you gonna
-    /// use it.
-    UniformBuffer,
-    /// `VK_DESCRIPTOR_TYPE_STORAGE_BUFFER` or
-    /// `VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC` depending on how you gonna
-    /// use it.
-    StorageBuffer { access_ty: AccessType },
-    /// `VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT` and its input attachment index.
-    InputAttachment { input_attachment_index: u32 },
-    /// `VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR`
-    AccelStruct,
-}
-impl DescriptorType {
-    pub fn sampler() -> Self {
-        Self::Sampler
-    }
-    pub fn combined_image_sampler() -> Self {
-        Self::CombinedImageSampler
-    }
-    pub fn sampled_image() -> Self {
-        Self::SampledImage
-    }
-    pub fn storage_image(access_ty: AccessType) -> Self {
-        Self::StorageImage { access_ty }
-    }
-    pub fn read_only_storage_image() -> Self {
-        Self::storage_image(AccessType::ReadOnly)
-    }
-    pub fn write_only_storage_image() -> Self {
-        Self::storage_image(AccessType::WriteOnly)
-    }
-    pub fn read_write_storage_image() -> Self {
-        Self::storage_image(AccessType::ReadWrite)
-    }
-    pub fn uniform_texel_buffer() -> Self {
-        Self::UniformTexelBuffer
-    }
-    pub fn storage_texel_buffer(access_ty: AccessType) -> Self {
-        Self::StorageTexelBuffer { access_ty }
-    }
-    pub fn read_only_storage_texel_buffer() -> Self {
-        Self::storage_texel_buffer(AccessType::ReadOnly)
-    }
-    pub fn write_only_storage_texel_buffer() -> Self {
-        Self::storage_texel_buffer(AccessType::WriteOnly)
-    }
-    pub fn read_write_storage_texel_buffer() -> Self {
-        Self::storage_texel_buffer(AccessType::ReadWrite)
-    }
-    pub fn uniform_buffer() -> Self {
-        Self::UniformBuffer
-    }
-    pub fn storage_buffer(access_ty: AccessType) -> Self {
-        Self::StorageBuffer { access_ty }
-    }
-    pub fn read_only_storage_buffer() -> Self {
-        Self::storage_buffer(AccessType::ReadOnly)
-    }
-    pub fn write_only_storage_buffer() -> Self {
-        Self::storage_buffer(AccessType::WriteOnly)
-    }
-    pub fn read_write_storage_buffer() -> Self {
-        Self::storage_buffer(AccessType::ReadWrite)
-    }
-    pub fn input_attachment(input_attachment_index: u32) -> Self {
-        Self::InputAttachment {
-            input_attachment_index,
-        }
-    }
-    pub fn accel_struct() -> Self {
-        Self::AccelStruct
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct DescriptorVariable {
-    pub name: Option<String>,
-    // Binding point of descriptor resource.
-    pub desc_bind: DescriptorBinding,
-    /// Descriptor resource type matching `VkDescriptorType`.
-    pub desc_ty: DescriptorType,
-    /// The concrete SPIR-V type definition of descriptor resource.
-    pub ty: Type,
-    /// Number of bindings at the binding point. All descriptors can have
-    /// multiple binding points. If the multi-binding is dynamic, 0 will be
-    /// returned.
-    ///
-    /// For more information about dynamic multi-binding, please refer to
-    /// Vulkan extension `VK_EXT_descriptor_indexing`, GLSL extension
-    /// `GL_EXT_nonuniform_qualifier` and SPIR-V extension
-    /// `SPV_EXT_descriptor_indexing`. Dynamic multi-binding is only
-    /// supported in Vulkan 1.2.
-    pub bind_count: u32,
-}
-impl SpirvVariable for DescriptorVariable {
-    fn name(&self) -> Option<&str> {
-        self.name.as_ref().map(|x| x as &str)
-    }
-    fn locator(&self) -> Locator {
-        Locator::Descriptor(self.desc_bind)
-    }
-    fn ty(&self) -> &Type {
-        &self.ty
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct PushConstantVariable {
-    pub name: Option<String>,
-    /// The concrete SPIR-V type definition of descriptor resource.
-    pub ty: Type,
-}
-impl SpirvVariable for PushConstantVariable {
-    fn name(&self) -> Option<&str> {
-        self.name.as_ref().map(|x| x as &str)
-    }
-    fn locator(&self) -> Locator {
-        Locator::PushConstant
-    }
-    fn ty(&self) -> &Type {
-        &self.ty
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct SpecConstantVariable {
-    pub name: Option<String>,
-    /// Specialization constant ID.
-    pub spec_id: SpecId,
-    /// The concrete SPIR-V type definition of descriptor resource.
-    pub ty: Type,
-}
-impl SpirvVariable for SpecConstantVariable {
-    fn name(&self) -> Option<&str> {
-        self.name.as_ref().map(|x| x as &str)
-    }
-    fn locator(&self) -> Locator {
-        Locator::SpecConstant(self.spec_id)
-    }
-    fn ty(&self) -> &Type {
-        &self.ty
-    }
-}
+/// Specialization constant ID.
+pub type SpecId = u32;
 
 /// A SPIR-V variable - interface variables, descriptor resources and push
 /// constants.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Variable {
     /// Input interface variable.
-    Input(InputVariable),
+    Input {
+        name: Option<String>,
+        // Interface location of input.
+        location: InterfaceLocation,
+        /// The concrete SPIR-V type definition of descriptor resource.
+        ty: Type,
+    },
     /// Output interface variable.
-    Output(OutputVariable),
+    Output {
+        name: Option<String>,
+        // Interface location of output.
+        location: InterfaceLocation,
+        /// The concrete SPIR-V type definition of descriptor resource.
+        ty: Type,
+    },
     /// Descriptor resource.
-    Descriptor(DescriptorVariable),
+    Descriptor {
+        name: Option<String>,
+        // Binding point of descriptor resource.
+        desc_bind: DescriptorBinding,
+        /// Descriptor resource type matching `VkDescriptorType`.
+        desc_ty: DescriptorType,
+        /// The concrete SPIR-V type definition of descriptor resource.
+        ty: Type,
+        /// Number of bindings at the binding point. All descriptors can have
+        /// multiple binding points. If the multi-binding is dynamic, 0 will be
+        /// returned.
+        ///
+        /// For more information about dynamic multi-binding, please refer to
+        /// Vulkan extension `VK_EXT_descriptor_indexing`, GLSL extension
+        /// `GL_EXT_nonuniform_qualifier` and SPIR-V extension
+        /// `SPV_EXT_descriptor_indexing`. Dynamic multi-binding is only
+        /// supported in Vulkan 1.2.
+        bind_count: u32,
+    },
     /// Push constant.
-    PushConstant(PushConstantVariable),
+    PushConstant {
+        name: Option<String>,
+        /// The concrete SPIR-V type definition of descriptor resource.
+        ty: Type,
+    },
     /// Specialization constant.
-    SpecConstant(SpecConstantVariable),
+    SpecConstant {
+        name: Option<String>,
+        /// Specialization constant ID.
+        spec_id: SpecId,
+        /// The concrete SPIR-V type definition of descriptor resource.
+        ty: Type,
+    },
 }
-impl SpirvVariable for Variable {
-    fn name(&self) -> Option<&str> {
+impl Variable {
+    pub fn name(&self) -> Option<&str> {
         match self {
-            Variable::Input(x) => x.name(),
-            Variable::Output(x) => x.name(),
-            Variable::Descriptor(x) => x.name(),
-            Variable::PushConstant(x) => x.name(),
-            Variable::SpecConstant(x) => x.name(),
+            Variable::Input { name, .. } => name.as_deref(),
+            Variable::Output { name, .. } => name.as_deref(),
+            Variable::Descriptor { name, .. } => name.as_deref(),
+            Variable::PushConstant { name, .. } => name.as_deref(),
+            Variable::SpecConstant { name, .. } => name.as_deref(),
         }
     }
-    fn locator(&self) -> Locator {
+    pub fn ty(&self) -> &Type {
         match self {
-            Variable::Input(x) => x.locator(),
-            Variable::Output(x) => x.locator(),
-            Variable::Descriptor(x) => x.locator(),
-            Variable::PushConstant(x) => x.locator(),
-            Variable::SpecConstant(x) => x.locator(),
+            Variable::Input { ty, .. } => ty,
+            Variable::Output { ty, .. } => ty,
+            Variable::Descriptor { ty, .. } => ty,
+            Variable::PushConstant { ty, .. } => ty,
+            Variable::SpecConstant { ty, .. } => ty,
         }
     }
-    fn ty(&self) -> &Type {
-        match self {
-            Variable::Input(x) => x.ty(),
-            Variable::Output(x) => x.ty(),
-            Variable::Descriptor(x) => x.ty(),
-            Variable::PushConstant(x) => x.ty(),
-            Variable::SpecConstant(x) => x.ty(),
-        }
+    pub fn walk<'a>(&'a self) -> Walk<'a> {
+        self.ty().walk()
     }
 }
 

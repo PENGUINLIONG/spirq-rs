@@ -4,7 +4,6 @@ pub mod annotation;
 pub mod constant;
 pub mod evaluator;
 pub mod func;
-pub mod locator;
 pub mod parse;
 pub mod ty;
 pub mod var;

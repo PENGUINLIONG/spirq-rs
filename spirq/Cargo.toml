@@ -20,7 +20,7 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 spirq-core = { version = "0.6.4", path = "../spirq-core" }
 num-traits = "0.2"
-num-derive = "0.3"
+num-derive = "0.4"
 fnv = "1.0.7"
 ordered-float = "3.4.0"
 
