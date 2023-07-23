@@ -1,3 +1,4 @@
+//! Annotation instruction (decorations and names) utilities.
 use fnv::FnvHashMap as HashMap;
 
 use crate::{

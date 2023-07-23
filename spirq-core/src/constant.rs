@@ -1,3 +1,4 @@
+//! Constant and specialization constant representations.
 use ordered_float::OrderedFloat;
 
 use crate::{
@@ -6,6 +7,7 @@ use crate::{
     ty::{ScalarType, Type},
 };
 
+/// Typed constant value.
 #[non_exhaustive]
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub enum ConstantValue {
@@ -116,7 +118,7 @@ impl ConstantValue {
     }
 }
 
-/// Reflection intermediate of constants and specialization constant.
+/// Constant or specialization constant record.
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct Constant {
     pub name: Option<String>,
@@ -129,6 +131,8 @@ pub struct Constant {
     pub spec_id: Option<SpecId>,
 }
 impl Constant {
+    /// Create a constant record with name, type and value. `ty` must be a
+    /// `ScalarType`.
     pub fn new(name: Option<String>, ty: Type, value: ConstantValue) -> Self {
         Self {
             name,
@@ -137,6 +141,9 @@ impl Constant {
             spec_id: None,
         }
     }
+    /// Create an intermediate constant record with type and value. Intermediate
+    /// constants don't have names because they contribute to subexpressions in
+    /// arithmetic.
     pub fn new_itm(ty: Type, value: ConstantValue) -> Self {
         Self {
             name: None,
@@ -145,6 +152,8 @@ impl Constant {
             spec_id: None,
         }
     }
+    /// Create a specialization constant record with name, type, default value
+    /// and a `SpecId`.
     pub fn new_spec(name: Option<String>, ty: Type, value: ConstantValue, spec_id: SpecId) -> Self {
         Self {
             name,

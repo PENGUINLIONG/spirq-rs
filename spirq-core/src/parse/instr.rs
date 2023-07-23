@@ -173,26 +173,3 @@ impl<'a> Operands<'a> {
         Ok(rv)
     }
 }
-
-#[macro_export]
-macro_rules! define_ops {
-    ($($opcode:ident { $($field:ident: $type:ty = $read_fn:ident(),)+ })+) => {
-        $(
-            pub struct $opcode<'a> {
-                $( pub $field: $type, )*
-                _ph: ::std::marker::PhantomData<&'a ()>,
-            }
-            impl<'a> TryFrom<&'a Instr> for $opcode<'a> {
-                type Error = ::spirq_parse::error::Error;
-                fn try_from(instr: &'a Instr) -> ::spirq_parse::error::Result<Self> {
-                    let mut operands = instr.operands();
-                    let op = $opcode {
-                        $( $field: operands.$read_fn()?, )+
-                        _ph: ::std::marker::PhantomData,
-                    };
-                    Ok(op)
-                }
-            }
-        )+
-    };
-}

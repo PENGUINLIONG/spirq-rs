@@ -74,11 +74,10 @@ pub use spirq_core::error;
 pub use spirq_core::evaluator;
 pub use spirq_core::func;
 pub use spirq_core::locator;
+pub use spirq_core::parse;
 pub use spirq_core::spirv;
 pub use spirq_core::ty;
 pub use spirq_core::var;
-
-pub use spirq_parse as parse;
 
 pub use reflect_cfg::ReflectConfig;
 

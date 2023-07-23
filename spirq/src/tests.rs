@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use crate::ty;
-use fnv::{FnvHashSet as HashSet, FnvHashMap as HashMap};
+use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use inline_spirv::*;
 
 macro_rules! gen_entries(

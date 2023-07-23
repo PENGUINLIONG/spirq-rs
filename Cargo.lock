@@ -357,7 +357,6 @@ dependencies = [
  "num-traits",
  "ordered-float",
  "spirq-core",
- "spirq-parse",
 ]
 
 [[package]]
@@ -366,16 +365,8 @@ version = "0.6.4"
 dependencies = [
  "anyhow",
  "fnv",
- "ordered-float",
- "spirv",
-]
-
-[[package]]
-name = "spirq-parse"
-version = "0.6.4"
-dependencies = [
- "anyhow",
  "num-traits",
+ "ordered-float",
  "spirv",
 ]
 

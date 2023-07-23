@@ -1,9 +1,6 @@
 use std::convert::TryFrom;
 
-use crate::{
-    parse::{define_ops, Instr},
-    spirv,
-};
+use crate::{parse::Instr, spirv};
 
 type InstrId = u32;
 type FunctionId = InstrId;
@@ -13,6 +10,29 @@ type ConstantId = InstrId;
 type SpecConstantId = InstrId;
 
 type MemberIdx = u32;
+
+#[macro_export]
+macro_rules! define_ops {
+    ($($opcode:ident { $($field:ident: $type:ty = $read_fn:ident(),)+ })+) => {
+        $(
+            pub struct $opcode<'a> {
+                $( pub $field: $type, )*
+                _ph: ::std::marker::PhantomData<&'a ()>,
+            }
+            impl<'a> TryFrom<&'a Instr> for $opcode<'a> {
+                type Error = ::spirq_core::error::Error;
+                fn try_from(instr: &'a Instr) -> ::spirq_core::error::Result<Self> {
+                    let mut operands = instr.operands();
+                    let op = $opcode {
+                        $( $field: operands.$read_fn()?, )+
+                        _ph: ::std::marker::PhantomData,
+                    };
+                    Ok(op)
+                }
+            }
+        )+
+    };
+}
 
 // Be aware that the order of the read methods is important.
 define_ops! {

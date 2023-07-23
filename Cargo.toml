@@ -2,6 +2,5 @@
 members = [
     "spirq",
     "spirq-core",
-    "spirq-parse",
     "shader-reflect",
 ]

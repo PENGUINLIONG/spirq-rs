@@ -1,3 +1,4 @@
+//! Entry-point function record.
 use std::fmt;
 
 use crate::{func::ExecutionMode, spirv, var::Variable};
