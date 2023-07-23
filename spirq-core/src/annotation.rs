@@ -1,7 +1,7 @@
-use anyhow::{anyhow, Result};
-use std::collections::HashMap;
+use fnv::FnvHashMap as HashMap;
 
 use crate::{
+    error::{anyhow, Result},
     locator::{DescriptorBinding, InterfaceLocation},
     ty::{AccessType, Type},
 };

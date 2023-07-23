@@ -365,6 +365,7 @@ name = "spirq-core"
 version = "0.6.4"
 dependencies = [
  "anyhow",
+ "fnv",
  "ordered-float",
  "spirv",
 ]

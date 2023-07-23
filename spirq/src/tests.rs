@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use crate::ty;
+use fnv::{FnvHashSet as HashSet, FnvHashMap as HashMap};
 use inline_spirv::*;
-use std::collections::{HashMap, HashSet};
 
 macro_rules! gen_entries(
     ($stage:ident, $src:expr, $lang:ident) => {{

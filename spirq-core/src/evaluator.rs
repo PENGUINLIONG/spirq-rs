@@ -1,8 +1,10 @@
-use crate::constant::{Constant, ConstantValue};
-use crate::ty::{ScalarType, Type};
-use anyhow::{anyhow, Error, Result};
-use spirv::Op;
-use std::collections::{hash_map::Entry, HashMap};
+use crate::{
+    constant::{Constant, ConstantValue},
+    error::{anyhow, Error, Result},
+    spirv::Op,
+    ty::{ScalarType, Type},
+};
+use fnv::FnvHashMap as HashMap;
 
 type InstrId = u32;
 
@@ -24,12 +26,13 @@ pub struct Evaluator {
 impl Evaluator {
     pub fn new() -> Self {
         Self {
-            ext_instr_set: HashMap::new(),
-            values: HashMap::new(),
+            ext_instr_set: HashMap::default(),
+            values: HashMap::default(),
         }
     }
 
     pub fn import_ext_instr_set(&mut self, id: InstrId, name: String) -> Result<()> {
+        use std::collections::hash_map::Entry;
         match self.ext_instr_set.entry(id) {
             Entry::Vacant(entry) => {
                 entry.insert(name);
@@ -46,6 +49,7 @@ impl Evaluator {
     }
 
     pub fn set(&mut self, id: InstrId, constant: Constant) -> Result<&Constant> {
+        use std::collections::hash_map::Entry;
         match self.values.entry(id) {
             Entry::Vacant(entry) => Ok(entry.insert(constant)),
             Entry::Occupied(_) => Err(anyhow!("constant id {} already exists", id)),

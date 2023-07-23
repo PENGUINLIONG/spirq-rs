@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 
 use crate::{
     constant::Constant,

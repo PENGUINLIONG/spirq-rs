@@ -18,6 +18,7 @@ maintenance = { status = "actively-developed" }
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+fnv = "1.0.7"
 spirv = "0.2"
 anyhow = "1.0"
 ordered-float = "3.4"

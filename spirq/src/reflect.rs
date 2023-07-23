@@ -1,15 +1,15 @@
 //! Reflection procedures and types.
-use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
-use num_traits::FromPrimitive;
-use spirq_core::error::{anyhow, Error, Result};
-use std::collections::hash_map::Entry;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
+
+use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
+use num_traits::FromPrimitive;
 
 use crate::{
     annotation::{DecorationRegistry, NameRegistry},
     constant::{Constant, ConstantValue},
     entry_point::{EntryPoint, ExecutionModel},
+    error::{anyhow, Error, Result},
     evaluator::Evaluator,
     func::{ExecutionMode, Function, FunctionRegistry},
     inspect::Inspector,
@@ -728,6 +728,7 @@ pub fn reflect<'a, I: Inspector>(
                 name: op.name,
                 exec_modes: Default::default(),
             };
+            use std::collections::hash_map::Entry;
             match entry_point_declrs.entry(op.func_id) {
                 Entry::Occupied(_) => return Err(anyhow!("duplicate entry point at a same id")),
                 Entry::Vacant(e) => {

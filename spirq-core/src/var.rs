@@ -1,9 +1,9 @@
 use crate::{
+    error::{anyhow, Result},
     locator::{DescriptorBinding, InterfaceLocation, Locator, SpecId},
     ty::{AccessType, PointerType, StorageClass, Type, Walk},
 };
-use anyhow::{anyhow, Result};
-use std::collections::HashMap;
+use fnv::FnvHashMap as HashMap;
 
 type VariableId = u32;
 

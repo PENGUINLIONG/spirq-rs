@@ -1,8 +1,10 @@
-use crate::ty::{ScalarType, Type};
-use anyhow::{anyhow, Result};
 use ordered_float::OrderedFloat;
 
-use crate::locator::SpecId;
+use crate::{
+    error::{anyhow, Result},
+    locator::SpecId,
+    ty::{ScalarType, Type},
+};
 
 #[non_exhaustive]
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]

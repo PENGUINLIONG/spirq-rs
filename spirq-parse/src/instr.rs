@@ -1,8 +1,9 @@
 //!  SPIR-V instruction parser.
-use anyhow::{anyhow, Result};
 use num_traits::FromPrimitive;
 use spirv::Op;
 use std::{borrow::Borrow, fmt, ops::Deref};
+
+use crate::error::{anyhow, Result};
 
 pub struct Instrs<'a>(&'a [u32]);
 impl<'a> Instrs<'a> {

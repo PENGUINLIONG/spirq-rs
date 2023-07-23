@@ -1,9 +1,11 @@
-use std::collections::HashMap;
+use fnv::FnvHashMap as HashMap;
 
-use super::Type;
-use anyhow::{anyhow, Result};
+use crate::{
+    error::{anyhow, Result},
+    ty::Type,
+};
 
-pub type TypeId = u32;
+type TypeId = u32;
 
 #[derive(Default)]
 pub struct TypeRegistry {
