@@ -895,7 +895,7 @@ fn make_desc_var(
     ty: &Type,
 ) -> Option<Variable> {
     // Unwrap multi-binding.
-    let (bind_count, ty) = match ty {
+    let (nbind, ty) = match ty {
         Type::Array(arr_ty) => {
             // `nrepeat=None` is no longer considered invalid because of
             // the adoption of `SPV_EXT_descriptor_indexing`. This
@@ -941,36 +941,36 @@ fn make_desc_var(
                 let access = deco_reg
                     .get_desc_access_ty(var_id, &ty)
                     .unwrap_or(AccessType::ReadWrite);
-                DescriptorType::storage_buffer(access)
+                DescriptorType::StorageBuffer(access)
             } else {
-                DescriptorType::uniform_buffer()
+                DescriptorType::UniformBuffer
             }
         }
         Type::SampledImage(sampled_img_ty) => match sampled_img_ty.dim {
-            spirv::Dim::DimBuffer => DescriptorType::uniform_texel_buffer(),
-            _ => DescriptorType::sampled_image(),
+            spirv::Dim::DimBuffer => DescriptorType::UniformTexelBuffer,
+            _ => DescriptorType::SampledImage,
         },
         Type::StorageImage(store_img_ty) => {
             let access = deco_reg
                 .get_desc_access_ty(var_id, &ty)
                 .unwrap_or(AccessType::ReadWrite);
             match store_img_ty.dim {
-                spirv::Dim::DimBuffer => DescriptorType::storage_texel_buffer(access),
-                _ => DescriptorType::storage_image(access),
+                spirv::Dim::DimBuffer => DescriptorType::StorageTexelBuffer(access),
+                _ => DescriptorType::StorageImage(access),
             }
         }
-        Type::Sampler(_) => DescriptorType::sampler(),
+        Type::Sampler(_) => DescriptorType::Sampler,
         Type::CombinedImageSampler(combined_img_sampler_ty) => {
             match combined_img_sampler_ty.sampled_img_ty.dim {
-                spirv::Dim::DimBuffer => DescriptorType::uniform_texel_buffer(),
-                _ => DescriptorType::combined_image_sampler(),
+                spirv::Dim::DimBuffer => DescriptorType::UniformTexelBuffer,
+                _ => DescriptorType::CombinedImageSampler,
             }
         }
         Type::SubpassData(_) => {
             let input_attm_idx = deco_reg.get_var_input_attm_idx(var_id).unwrap_or_default();
-            DescriptorType::input_attachment(input_attm_idx)
+            DescriptorType::InputAttachment(input_attm_idx)
         }
-        Type::AccelStruct(_) => DescriptorType::accel_struct(),
+        Type::AccelStruct(_) => DescriptorType::AccelStruct,
         _ => return None,
     };
     let var = Variable::Descriptor {
@@ -978,7 +978,7 @@ fn make_desc_var(
         desc_bind,
         desc_ty,
         ty,
-        bind_count,
+        nbind,
     };
     Some(var)
 }
@@ -1177,9 +1177,9 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
             .filter_map(|image_var| {
                 match (&sampler_var, &image_var) {
                     (
-                        Variable::Descriptor { desc_bind: sampler_desc_bind, bind_count: sampler_bind_count, .. },
-                        Variable::Descriptor { desc_bind: image_desc_bind, bind_count: image_bind_count, .. },
-                    ) if sampler_desc_bind == image_desc_bind && sampler_bind_count == image_bind_count => {
+                        Variable::Descriptor { desc_bind: sampler_desc_bind, nbind: sampler_nbind, .. },
+                        Variable::Descriptor { desc_bind: image_desc_bind, nbind: image_nbind, .. },
+                    ) if sampler_desc_bind == image_desc_bind && sampler_nbind == image_nbind => {
                         combined_imgs.push(image_var.clone());
                         None
                     },
@@ -1199,7 +1199,7 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
             // create a new combined image sampler.
             for img_var in combined_imgs {
                 match img_var {
-                    Variable::Descriptor { name, ty: Type::SampledImage(img_ty), desc_bind, bind_count, .. } => {
+                    Variable::Descriptor { name, ty: Type::SampledImage(img_ty), desc_bind, nbind, .. } => {
                         let sampled_img_ty = SampledImageType {
                             scalar_ty: img_ty.scalar_ty.clone(),
                             dim: img_ty.dim,
@@ -1210,9 +1210,9 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
                         let out_var = Variable::Descriptor {
                             name: name.clone(),
                             desc_bind: desc_bind,
-                            desc_ty: DescriptorType::combined_image_sampler(),
+                            desc_ty: DescriptorType::CombinedImageSampler,
                             ty: Type::CombinedImageSampler(combined_img_sampler_ty.clone()),
-                            bind_count: bind_count,
+                            nbind: nbind,
                         };
                         out_vars.push(out_var);
                     },

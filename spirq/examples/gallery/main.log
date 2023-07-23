@@ -8,9 +8,9 @@
                     "iImg1d",
                 ),
                 desc_bind: (set=1, bind=0),
-                desc_ty: StorageImage {
-                    access_ty: ReadOnly,
-                },
+                desc_ty: StorageImage(
+                    ReadOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim1D,
@@ -19,16 +19,16 @@
                         fmt: Rgba32i,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "iImg2d",
                 ),
                 desc_bind: (set=1, bind=1),
-                desc_ty: StorageImage {
-                    access_ty: ReadOnly,
-                },
+                desc_ty: StorageImage(
+                    ReadOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim2D,
@@ -37,16 +37,16 @@
                         fmt: Rgba16i,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "iImg3d",
                 ),
                 desc_bind: (set=1, bind=2),
-                desc_ty: StorageImage {
-                    access_ty: ReadOnly,
-                },
+                desc_ty: StorageImage(
+                    ReadOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim3D,
@@ -55,16 +55,16 @@
                         fmt: Rgba8i,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "iImg1dArr",
                 ),
                 desc_bind: (set=1, bind=3),
-                desc_ty: StorageImage {
-                    access_ty: ReadOnly,
-                },
+                desc_ty: StorageImage(
+                    ReadOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim1D,
@@ -73,16 +73,16 @@
                         fmt: Rgba32i,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "iImg2dArr",
                 ),
                 desc_bind: (set=1, bind=4),
-                desc_ty: StorageImage {
-                    access_ty: ReadOnly,
-                },
+                desc_ty: StorageImage(
+                    ReadOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim2D,
@@ -91,16 +91,16 @@
                         fmt: Rgba32i,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "iImgCube",
                 ),
                 desc_bind: (set=1, bind=5),
-                desc_ty: StorageImage {
-                    access_ty: ReadOnly,
-                },
+                desc_ty: StorageImage(
+                    ReadOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimCube,
@@ -109,16 +109,16 @@
                         fmt: Rgba32i,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "iImgCubeArr",
                 ),
                 desc_bind: (set=1, bind=6),
-                desc_ty: StorageImage {
-                    access_ty: ReadOnly,
-                },
+                desc_ty: StorageImage(
+                    ReadOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimCube,
@@ -127,16 +127,16 @@
                         fmt: Rgba32i,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "iImgBuf",
                 ),
                 desc_bind: (set=1, bind=7),
-                desc_ty: StorageTexelBuffer {
-                    access_ty: ReadOnly,
-                },
+                desc_ty: StorageTexelBuffer(
+                    ReadOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimBuffer,
@@ -145,16 +145,16 @@
                         fmt: Rgba32i,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "uImg1d",
                 ),
                 desc_bind: (set=2, bind=0),
-                desc_ty: StorageImage {
-                    access_ty: ReadOnly,
-                },
+                desc_ty: StorageImage(
+                    ReadOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim1D,
@@ -163,16 +163,16 @@
                         fmt: Rgba32ui,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "uImg2d",
                 ),
                 desc_bind: (set=2, bind=1),
-                desc_ty: StorageImage {
-                    access_ty: ReadOnly,
-                },
+                desc_ty: StorageImage(
+                    ReadOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim2D,
@@ -181,16 +181,16 @@
                         fmt: Rgba16ui,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "uImg3d",
                 ),
                 desc_bind: (set=2, bind=2),
-                desc_ty: StorageImage {
-                    access_ty: ReadOnly,
-                },
+                desc_ty: StorageImage(
+                    ReadOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim3D,
@@ -199,16 +199,16 @@
                         fmt: Rgba8ui,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "uImg1dArr",
                 ),
                 desc_bind: (set=2, bind=3),
-                desc_ty: StorageImage {
-                    access_ty: ReadOnly,
-                },
+                desc_ty: StorageImage(
+                    ReadOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim1D,
@@ -217,16 +217,16 @@
                         fmt: Rgba32ui,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "uImg2dArr",
                 ),
                 desc_bind: (set=2, bind=4),
-                desc_ty: StorageImage {
-                    access_ty: ReadOnly,
-                },
+                desc_ty: StorageImage(
+                    ReadOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim2D,
@@ -235,16 +235,16 @@
                         fmt: Rgba32ui,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "uImgCube",
                 ),
                 desc_bind: (set=2, bind=5),
-                desc_ty: StorageImage {
-                    access_ty: ReadOnly,
-                },
+                desc_ty: StorageImage(
+                    ReadOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimCube,
@@ -253,16 +253,16 @@
                         fmt: Rgba32ui,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "uImgCubeArr",
                 ),
                 desc_bind: (set=2, bind=6),
-                desc_ty: StorageImage {
-                    access_ty: ReadOnly,
-                },
+                desc_ty: StorageImage(
+                    ReadOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimCube,
@@ -271,16 +271,16 @@
                         fmt: Rgba32ui,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "uImgBuf",
                 ),
                 desc_bind: (set=2, bind=7),
-                desc_ty: StorageTexelBuffer {
-                    access_ty: ReadOnly,
-                },
+                desc_ty: StorageTexelBuffer(
+                    ReadOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimBuffer,
@@ -289,16 +289,16 @@
                         fmt: Rgba32ui,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fImg1D",
                 ),
                 desc_bind: (set=3, bind=0),
-                desc_ty: StorageImage {
-                    access_ty: WriteOnly,
-                },
+                desc_ty: StorageImage(
+                    WriteOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim1D,
@@ -307,16 +307,16 @@
                         fmt: Rgba32f,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fImg2D",
                 ),
                 desc_bind: (set=3, bind=1),
-                desc_ty: StorageImage {
-                    access_ty: WriteOnly,
-                },
+                desc_ty: StorageImage(
+                    WriteOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim2D,
@@ -325,16 +325,16 @@
                         fmt: Rgba16f,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fImg3D",
                 ),
                 desc_bind: (set=3, bind=2),
-                desc_ty: StorageImage {
-                    access_ty: WriteOnly,
-                },
+                desc_ty: StorageImage(
+                    WriteOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim3D,
@@ -343,16 +343,16 @@
                         fmt: R32f,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fImgCube",
                 ),
                 desc_bind: (set=3, bind=3),
-                desc_ty: StorageImage {
-                    access_ty: WriteOnly,
-                },
+                desc_ty: StorageImage(
+                    WriteOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimCube,
@@ -361,16 +361,16 @@
                         fmt: Rgba8,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fImg2DRect",
                 ),
                 desc_bind: (set=3, bind=4),
-                desc_ty: StorageImage {
-                    access_ty: WriteOnly,
-                },
+                desc_ty: StorageImage(
+                    WriteOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimRect,
@@ -379,16 +379,16 @@
                         fmt: Rgba8Snorm,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fImg1DArray",
                 ),
                 desc_bind: (set=3, bind=5),
-                desc_ty: StorageImage {
-                    access_ty: WriteOnly,
-                },
+                desc_ty: StorageImage(
+                    WriteOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim1D,
@@ -397,16 +397,16 @@
                         fmt: Rgba32f,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fImg2DArray",
                 ),
                 desc_bind: (set=3, bind=6),
-                desc_ty: StorageImage {
-                    access_ty: WriteOnly,
-                },
+                desc_ty: StorageImage(
+                    WriteOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim2D,
@@ -415,16 +415,16 @@
                         fmt: Rgba32f,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fImgCubeArray",
                 ),
                 desc_bind: (set=3, bind=7),
-                desc_ty: StorageImage {
-                    access_ty: WriteOnly,
-                },
+                desc_ty: StorageImage(
+                    WriteOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimCube,
@@ -433,16 +433,16 @@
                         fmt: Rgba32f,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fImgBuffer",
                 ),
                 desc_bind: (set=3, bind=8),
-                desc_ty: StorageTexelBuffer {
-                    access_ty: WriteOnly,
-                },
+                desc_ty: StorageTexelBuffer(
+                    WriteOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: DimBuffer,
@@ -451,16 +451,16 @@
                         fmt: Rgba32f,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fImg2DMS",
                 ),
                 desc_bind: (set=3, bind=9),
-                desc_ty: StorageImage {
-                    access_ty: WriteOnly,
-                },
+                desc_ty: StorageImage(
+                    WriteOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim2D,
@@ -469,16 +469,16 @@
                         fmt: Rgba32f,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fImg2DMSArray",
                 ),
                 desc_bind: (set=3, bind=10),
-                desc_ty: StorageImage {
-                    access_ty: WriteOnly,
-                },
+                desc_ty: StorageImage(
+                    WriteOnly,
+                ),
                 ty: StorageImage(
                     StorageImageType {
                         dim: Dim2D,
@@ -487,7 +487,7 @@
                         fmt: Rgba32f,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -508,7 +508,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -529,7 +529,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -550,7 +550,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -571,7 +571,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -592,7 +592,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -613,7 +613,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -634,7 +634,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -655,7 +655,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -676,7 +676,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -697,7 +697,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -718,7 +718,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -739,7 +739,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -760,7 +760,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -781,7 +781,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -802,7 +802,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -823,7 +823,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -844,7 +844,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -865,7 +865,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -886,7 +886,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -907,7 +907,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -928,7 +928,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -949,7 +949,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -969,7 +969,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -989,7 +989,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1009,7 +1009,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1029,7 +1029,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1049,7 +1049,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1069,7 +1069,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1089,7 +1089,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1109,7 +1109,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1129,7 +1129,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1149,7 +1149,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1169,7 +1169,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1189,7 +1189,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1209,7 +1209,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1229,7 +1229,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1249,7 +1249,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1269,7 +1269,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1289,7 +1289,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1309,7 +1309,7 @@
                         },
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1320,7 +1320,7 @@
                 ty: Sampler(
                     SamplerType,
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1331,7 +1331,7 @@
                 ty: Sampler(
                     SamplerType,
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1350,7 +1350,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1369,7 +1369,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1388,7 +1388,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1407,7 +1407,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1426,7 +1426,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1445,7 +1445,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1464,7 +1464,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1483,7 +1483,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1502,7 +1502,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1521,7 +1521,7 @@
                         is_multisampled: true,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1540,7 +1540,7 @@
                         is_multisampled: true,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1559,7 +1559,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1578,7 +1578,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1597,7 +1597,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1616,7 +1616,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1635,7 +1635,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1654,7 +1654,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1673,7 +1673,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1692,7 +1692,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1711,7 +1711,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1730,7 +1730,7 @@
                         is_multisampled: true,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1749,7 +1749,7 @@
                         is_multisampled: true,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1767,7 +1767,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1785,7 +1785,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1803,7 +1803,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1821,7 +1821,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1839,7 +1839,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1857,7 +1857,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1875,7 +1875,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1893,7 +1893,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1911,7 +1911,7 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1929,7 +1929,7 @@
                         is_multisampled: true,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -1947,7 +1947,7 @@
                         is_multisampled: true,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -2728,16 +2728,16 @@
                         ],
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "ssbo",
                 ),
                 desc_bind: (set=13, bind=0),
-                desc_ty: StorageBuffer {
-                    access_ty: ReadWrite,
-                },
+                desc_ty: StorageBuffer(
+                    ReadWrite,
+                ),
                 ty: Struct(
                     StructType {
                         name: Some(
@@ -3509,16 +3509,16 @@
                         ],
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "iAttm",
                 ),
                 desc_bind: (set=14, bind=0),
-                desc_ty: InputAttachment {
-                    input_attachment_index: 0,
-                },
+                desc_ty: InputAttachment(
+                    0,
+                ),
                 ty: SubpassData(
                     SubpassDataType {
                         scalar_ty: Integer {
@@ -3528,16 +3528,16 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "iAttmMS",
                 ),
                 desc_bind: (set=14, bind=1),
-                desc_ty: InputAttachment {
-                    input_attachment_index: 1,
-                },
+                desc_ty: InputAttachment(
+                    1,
+                ),
                 ty: SubpassData(
                     SubpassDataType {
                         scalar_ty: Integer {
@@ -3547,16 +3547,16 @@
                         is_multisampled: true,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "uAttm",
                 ),
                 desc_bind: (set=14, bind=2),
-                desc_ty: InputAttachment {
-                    input_attachment_index: 2,
-                },
+                desc_ty: InputAttachment(
+                    2,
+                ),
                 ty: SubpassData(
                     SubpassDataType {
                         scalar_ty: Integer {
@@ -3566,16 +3566,16 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "uAttmMS",
                 ),
                 desc_bind: (set=14, bind=3),
-                desc_ty: InputAttachment {
-                    input_attachment_index: 3,
-                },
+                desc_ty: InputAttachment(
+                    3,
+                ),
                 ty: SubpassData(
                     SubpassDataType {
                         scalar_ty: Integer {
@@ -3585,16 +3585,16 @@
                         is_multisampled: true,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fAttm",
                 ),
                 desc_bind: (set=14, bind=4),
-                desc_ty: InputAttachment {
-                    input_attachment_index: 4,
-                },
+                desc_ty: InputAttachment(
+                    4,
+                ),
                 ty: SubpassData(
                     SubpassDataType {
                         scalar_ty: Float {
@@ -3603,16 +3603,16 @@
                         is_multisampled: false,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
                     "fAttmMS",
                 ),
                 desc_bind: (set=14, bind=5),
-                desc_ty: InputAttachment {
-                    input_attachment_index: 5,
-                },
+                desc_ty: InputAttachment(
+                    5,
+                ),
                 ty: SubpassData(
                     SubpassDataType {
                         scalar_ty: Float {
@@ -3621,7 +3621,7 @@
                         is_multisampled: true,
                     },
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
             Descriptor {
                 name: Some(
@@ -3632,7 +3632,7 @@
                 ty: AccelStruct(
                     AccelStructType,
                 ),
-                bind_count: 1,
+                nbind: 1,
             },
         ],
         exec_modes: [

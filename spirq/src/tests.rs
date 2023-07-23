@@ -204,37 +204,37 @@ fn test_desc_tys() {
     assert!(desc_binds.contains_key(&DescriptorBinding::new(0, 0)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(),
-        DescriptorType::uniform_buffer()
+        DescriptorType::UniformBuffer
     );
     assert!(desc_binds.contains_key(&DescriptorBinding::new(0, 1)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 1)).unwrap(),
-        DescriptorType::storage_buffer(AccessType::ReadWrite)
+        DescriptorType::StorageBuffer(AccessType::ReadWrite)
     );
     assert!(desc_binds.contains_key(&DescriptorBinding::new(1, 0)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(1, 0)).unwrap(),
-        DescriptorType::combined_image_sampler()
+        DescriptorType::CombinedImageSampler
     );
     assert!(desc_binds.contains_key(&DescriptorBinding::new(3, 4)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(3, 4)).unwrap(),
-        DescriptorType::storage_image(AccessType::ReadOnly)
+        DescriptorType::StorageImage(AccessType::ReadOnly)
     );
     assert!(desc_binds.contains_key(&DescriptorBinding::new(3, 5)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(3, 5)).unwrap(),
-        DescriptorType::storage_image(AccessType::WriteOnly)
+        DescriptorType::StorageImage(AccessType::WriteOnly)
     );
     assert!(desc_binds.contains_key(&DescriptorBinding::new(1, 3)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(1, 3)).unwrap(),
-        DescriptorType::input_attachment(3)
+        DescriptorType::InputAttachment(3)
     );
     assert!(desc_binds.contains_key(&DescriptorBinding::new(0, 3)));
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 3)).unwrap(),
-        DescriptorType::uniform_texel_buffer()
+        DescriptorType::UniformTexelBuffer
     );
     assert!(!desc_binds.contains_key(&DescriptorBinding::new(0, 2)));
 }
@@ -305,11 +305,11 @@ fn test_dyn_multibind() {
         .filter_map(|x| {
             if let Variable::Descriptor {
                 desc_bind,
-                bind_count,
+                nbind,
                 ..
             } = x
             {
-                Some((desc_bind, bind_count))
+                Some((desc_bind, nbind))
             } else {
                 None
             }
@@ -386,12 +386,12 @@ fn test_spec_const_arrays() {
         .filter_map(|x| {
             if let Variable::Descriptor {
                 desc_bind,
-                bind_count,
+                nbind,
                 ty,
                 ..
             } = x
             {
-                Some((desc_bind, (bind_count, ty.size())))
+                Some((desc_bind, (nbind, ty.size())))
             } else {
                 None
             }
@@ -446,7 +446,7 @@ fn test_ray_tracing() {
         .collect::<HashMap<_, _>>();
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(),
-        DescriptorType::accel_struct()
+        DescriptorType::AccelStruct
     );
 }
 #[test]
@@ -497,15 +497,15 @@ fn test_combine_image_sampler() {
     assert_eq!(desc_binds.len(), 3);
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(),
-        DescriptorType::sampled_image()
+        DescriptorType::SampledImage
     );
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 1)).unwrap(),
-        DescriptorType::sampler()
+        DescriptorType::Sampler
     );
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(1, 1)).unwrap(),
-        DescriptorType::combined_image_sampler()
+        DescriptorType::CombinedImageSampler
     );
 }
 #[test]
@@ -549,9 +549,7 @@ fn test_old_store_buf() {
         .collect::<HashMap<_, _>>();
     assert_eq!(
         *desc_binds.get(&DescriptorBinding::new(0, 0)).unwrap(),
-        DescriptorType::StorageBuffer {
-            access_ty: AccessType::ReadWrite
-        }
+        DescriptorType::StorageBuffer(AccessType::ReadWrite)
     );
 }
 #[test]
