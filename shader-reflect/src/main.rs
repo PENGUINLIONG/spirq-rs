@@ -1,9 +1,7 @@
 use clap::Parser;
 use serde_json::json;
-use spirq::{
-    ty::{StructMember, Type},
-    EntryPoint, ReflectConfig, SpirvBinary,
-};
+use spirq::prelude::*;
+use spirq::ty;
 use std::{
     borrow::Borrow,
     fs::File,
@@ -410,7 +408,7 @@ fn get_spirv_bianry(path: &str, args: &Args) -> SpirvBinary {
     read_spirv_bianry(path)
 }
 
-fn member2json(member: &StructMember) -> serde_json::Value {
+fn member2json(member: &ty::StructMember) -> serde_json::Value {
     json!({
         "Name": member.name,
         "Offset": member.offset,
@@ -421,15 +419,15 @@ fn ty2json(ty: &Type) -> serde_json::Value {
     match ty {
         Type::Matrix(x) => json!({
             "Kind": "Matrix",
-            "AxisOrder": x.major.map(|x| format!("{:?}", x)),
-            "VectorType": x.vec_ty.to_string(),
-            "Count": x.nvec,
+            "AxisOrder": x.axis_order.map(|x| format!("{:?}", x)),
+            "VectorType": x.vector_ty.to_string(),
+            "Count": x.nvector,
             "Stride": x.stride,
         }),
         Type::Array(x) => json!({
             "Kind": "Array",
-            "ElementType": ty2json(&*x.proto_ty),
-            "Count": x.nrepeat,
+            "ElementType": ty2json(&*x.element_ty),
+            "Count": x.nelement,
             "Stride": x.stride
         }),
         Type::Struct(x) => json!({
@@ -450,7 +448,7 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
     let mut push_consts = Vec::new();
     let mut spec_consts = Vec::new();
     for var in entry_point.vars.iter() {
-        use spirq::Variable::*;
+        use Variable::*;
         match var {
             Input { name, location, ty } => {
                 let j = json!({
@@ -511,8 +509,15 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
             .operands
             .iter()
             .map(|operand| {
+                let value = match operand.value {
+                    ConstantValue::Bool(x) => x.to_string(),
+                    ConstantValue::S32(x) => x.to_string(),
+                    ConstantValue::U32(x) => x.to_string(),
+                    ConstantValue::F32(x) => x.to_string(),
+                    _ => todo!(),
+                };
                 json!({
-                    "Value": operand.value.to_u32(),
+                    "Value": value,
                     "SpecId": operand.spec_id,
                 })
             })

@@ -9,6 +9,8 @@
 //! ## How-to
 //!
 //! ```ignore
+//! use spirq::prelude::*;
+//!
 //! let entry_points = ReflectConfig::new()
 //!     // Load SPIR-V data into `[u32]` buffer `spv_words`.
 //!     .spv(spv_words)
@@ -56,102 +58,37 @@
 //! [`EntryPoint`]: struct.EntryPoint.html
 //! [`reflect`]: reflect/struct.ReflectConfig.html#method.reflect
 //! [`Type`]: ty/enum.Type.html
-mod consts;
-pub mod error;
-mod inspect;
 mod instr;
-pub mod parse;
+
+pub mod entry_point;
+pub mod inspect;
 pub mod reflect;
+pub mod reflect_cfg;
+
 #[cfg(test)]
 mod tests;
-pub mod ty;
-pub mod walk;
 
-use std::convert::TryInto;
-use std::fmt;
-use std::iter::FromIterator;
+pub use spirq_core::annotation;
+pub use spirq_core::constant;
+pub use spirq_core::error;
+pub use spirq_core::evaluator;
+pub use spirq_core::func;
+pub use spirq_core::parse;
+pub use spirq_core::spirv;
+pub use spirq_core::ty;
+pub use spirq_core::var;
 
-pub use error::{Error, Result};
-pub use reflect::{
-    AccessType, ConstantValue, DescriptorBinding, DescriptorType, ExecutionMode, ExecutionModel,
-    InterfaceLocation, Locator, ReflectConfig, Variable,
-};
+pub use reflect_cfg::ReflectConfig;
 
-/// SPIR-V program binary.
-#[derive(Debug, Default, Clone)]
-pub struct SpirvBinary(Vec<u32>);
-impl From<Vec<u32>> for SpirvBinary {
-    fn from(x: Vec<u32>) -> Self {
-        SpirvBinary(x)
-    }
-}
-impl From<&[u32]> for SpirvBinary {
-    fn from(x: &[u32]) -> Self {
-        SpirvBinary(x.to_owned())
-    }
-}
-impl FromIterator<u32> for SpirvBinary {
-    fn from_iter<I: IntoIterator<Item = u32>>(iter: I) -> Self {
-        SpirvBinary(iter.into_iter().collect::<Vec<u32>>())
-    }
-}
-impl From<&[u8]> for SpirvBinary {
-    fn from(x: &[u8]) -> Self {
-        if x.len() == 0 {
-            return SpirvBinary::default();
-        }
-        x.chunks_exact(4)
-            .map(|x| x.try_into().unwrap())
-            .map(match x[0] {
-                0x03 => u32::from_le_bytes,
-                0x07 => u32::from_be_bytes,
-                _ => return SpirvBinary::default(),
-            })
-            .collect::<SpirvBinary>()
-    }
-}
-impl From<Vec<u8>> for SpirvBinary {
-    fn from(x: Vec<u8>) -> Self {
-        SpirvBinary::from(x.as_ref() as &[u8])
-    }
-}
-
-impl SpirvBinary {
-    pub fn words(&self) -> &[u32] {
-        &self.0
-    }
-    pub fn into_words(self) -> Vec<u32> {
-        self.0
-    }
-}
-
-// SPIR-V program entry points.
-
-/// Representing an entry point described in a SPIR-V.
-#[derive(Clone, PartialEq, Eq, Hash)]
-pub struct EntryPoint {
-    /// Entry point execution model.
-    pub exec_model: ExecutionModel,
-    /// Name of the entry point.
-    pub name: String,
-    /// Variables that contains specialization constant, input, output and
-    /// descriptor type information.
-    ///
-    /// Note that it is possible that multiple resources are bound to a same
-    /// `Locator` so this is not a map.
-    pub vars: Vec<Variable>,
-    /// Execution modes the entry point will execute in, including predefined
-    /// compute shader local sizes and specialization constant IDs of local
-    /// sizes.
-    pub exec_modes: Vec<ExecutionMode>,
-}
-impl fmt::Debug for EntryPoint {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct(&self.name)
-            .field("exec_model", &self.exec_model)
-            .field("name", &self.name)
-            .field("vars", &self.vars)
-            .field("exec_modes", &self.exec_modes)
-            .finish()
-    }
+// Re-exports.
+pub mod prelude {
+    pub use super::ReflectConfig;
+    pub use super::{
+        constant::ConstantValue,
+        entry_point::{EntryPoint, ExecutionModel},
+        error::{Error, Result},
+        parse::SpirvBinary,
+        ty::{AccessType, DescriptorType, SpirvType, Type},
+        var::{DescriptorBinding, InterfaceLocation, SpecId, Variable},
+    };
 }

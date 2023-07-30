@@ -497,10 +497,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Signed(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: true,
+                            },
                             dim: Dim1D,
                             is_array: false,
                             is_multisampled: false,
@@ -517,10 +518,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Signed(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: true,
+                            },
                             dim: Dim2D,
                             is_array: false,
                             is_multisampled: false,
@@ -537,10 +539,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Signed(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: true,
+                            },
                             dim: Dim3D,
                             is_array: false,
                             is_multisampled: false,
@@ -557,10 +560,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Signed(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: true,
+                            },
                             dim: DimCube,
                             is_array: false,
                             is_multisampled: false,
@@ -577,10 +581,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Signed(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: true,
+                            },
                             dim: DimRect,
                             is_array: false,
                             is_multisampled: false,
@@ -597,10 +602,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Signed(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: true,
+                            },
                             dim: Dim1D,
                             is_array: true,
                             is_multisampled: false,
@@ -617,10 +623,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Signed(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: true,
+                            },
                             dim: Dim2D,
                             is_array: true,
                             is_multisampled: false,
@@ -637,10 +644,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Signed(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: true,
+                            },
                             dim: DimCube,
                             is_array: true,
                             is_multisampled: false,
@@ -657,10 +665,11 @@
                 desc_ty: UniformTexelBuffer,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Signed(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: true,
+                            },
                             dim: DimBuffer,
                             is_array: false,
                             is_multisampled: false,
@@ -677,10 +686,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Signed(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: true,
+                            },
                             dim: Dim2D,
                             is_array: false,
                             is_multisampled: true,
@@ -697,10 +707,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Signed(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: true,
+                            },
                             dim: Dim2D,
                             is_array: true,
                             is_multisampled: true,
@@ -717,10 +728,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Unsigned(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: false,
+                            },
                             dim: Dim1D,
                             is_array: false,
                             is_multisampled: false,
@@ -737,10 +749,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Unsigned(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: false,
+                            },
                             dim: Dim2D,
                             is_array: false,
                             is_multisampled: false,
@@ -757,10 +770,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Unsigned(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: false,
+                            },
                             dim: Dim3D,
                             is_array: false,
                             is_multisampled: false,
@@ -777,10 +791,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Unsigned(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: false,
+                            },
                             dim: DimCube,
                             is_array: false,
                             is_multisampled: false,
@@ -797,10 +812,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Unsigned(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: false,
+                            },
                             dim: DimRect,
                             is_array: false,
                             is_multisampled: false,
@@ -817,10 +833,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Unsigned(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: false,
+                            },
                             dim: Dim1D,
                             is_array: true,
                             is_multisampled: false,
@@ -837,10 +854,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Unsigned(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: false,
+                            },
                             dim: Dim2D,
                             is_array: true,
                             is_multisampled: false,
@@ -857,10 +875,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Unsigned(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: false,
+                            },
                             dim: DimCube,
                             is_array: true,
                             is_multisampled: false,
@@ -877,10 +896,11 @@
                 desc_ty: UniformTexelBuffer,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Unsigned(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: false,
+                            },
                             dim: DimBuffer,
                             is_array: false,
                             is_multisampled: false,
@@ -897,10 +917,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Unsigned(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: false,
+                            },
                             dim: Dim2D,
                             is_array: false,
                             is_multisampled: true,
@@ -917,10 +938,11 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Unsigned(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Integer {
+                                bits: 32,
+                                is_signed: false,
+                            },
                             dim: Dim2D,
                             is_array: true,
                             is_multisampled: true,
@@ -937,10 +959,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: Dim1D,
                             is_array: false,
                             is_multisampled: false,
@@ -957,10 +979,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: Dim2D,
                             is_array: false,
                             is_multisampled: false,
@@ -977,10 +999,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: Dim3D,
                             is_array: false,
                             is_multisampled: false,
@@ -997,10 +1019,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: DimCube,
                             is_array: false,
                             is_multisampled: false,
@@ -1017,10 +1039,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: DimRect,
                             is_array: false,
                             is_multisampled: false,
@@ -1037,10 +1059,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: Dim1D,
                             is_array: true,
                             is_multisampled: false,
@@ -1057,10 +1079,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: Dim2D,
                             is_array: true,
                             is_multisampled: false,
@@ -1077,10 +1099,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: DimCube,
                             is_array: true,
                             is_multisampled: false,
@@ -1097,10 +1119,10 @@
                 desc_ty: UniformTexelBuffer,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: DimBuffer,
                             is_array: false,
                             is_multisampled: false,
@@ -1117,10 +1139,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: Dim2D,
                             is_array: false,
                             is_multisampled: true,
@@ -1137,10 +1159,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: Dim2D,
                             is_array: true,
                             is_multisampled: true,
@@ -1157,10 +1179,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: Dim1D,
                             is_array: false,
                             is_multisampled: false,
@@ -1177,10 +1199,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: Dim2D,
                             is_array: false,
                             is_multisampled: false,
@@ -1197,10 +1219,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: DimCube,
                             is_array: false,
                             is_multisampled: false,
@@ -1217,10 +1239,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: DimRect,
                             is_array: false,
                             is_multisampled: false,
@@ -1237,10 +1259,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: Dim1D,
                             is_array: true,
                             is_multisampled: false,
@@ -1257,10 +1279,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: Dim2D,
                             is_array: true,
                             is_multisampled: false,
@@ -1277,10 +1299,10 @@
                 desc_ty: CombinedImageSampler,
                 ty: CombinedImageSampler(
                     CombinedImageSamplerType {
-                        sampled_img_ty: SampledImageType {
-                            scalar_ty: Float(
-                                4,
-                            ),
+                        sampled_image_ty: SampledImageType {
+                            scalar_ty: Float {
+                                bits: 32,
+                            },
                             dim: DimCube,
                             is_array: true,
                             is_multisampled: false,
@@ -1295,7 +1317,9 @@
                 ),
                 desc_bind: (set=8, bind=0),
                 desc_ty: Sampler,
-                ty: Sampler,
+                ty: Sampler(
+                    SamplerType,
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -1304,7 +1328,9 @@
                 ),
                 desc_bind: (set=8, bind=1),
                 desc_ty: Sampler,
-                ty: Sampler,
+                ty: Sampler(
+                    SamplerType,
+                ),
                 nbind: 1,
             },
             Descriptor {
@@ -1315,9 +1341,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Signed(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: true,
+                        },
                         dim: Dim1D,
                         is_array: false,
                         is_multisampled: false,
@@ -1333,9 +1360,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Signed(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: true,
+                        },
                         dim: Dim2D,
                         is_array: false,
                         is_multisampled: false,
@@ -1351,9 +1379,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Signed(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: true,
+                        },
                         dim: Dim3D,
                         is_array: false,
                         is_multisampled: false,
@@ -1369,9 +1398,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Signed(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: true,
+                        },
                         dim: DimCube,
                         is_array: false,
                         is_multisampled: false,
@@ -1387,9 +1417,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Signed(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: true,
+                        },
                         dim: DimRect,
                         is_array: false,
                         is_multisampled: false,
@@ -1405,9 +1436,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Signed(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: true,
+                        },
                         dim: Dim1D,
                         is_array: true,
                         is_multisampled: false,
@@ -1423,9 +1455,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Signed(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: true,
+                        },
                         dim: Dim2D,
                         is_array: true,
                         is_multisampled: false,
@@ -1441,9 +1474,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Signed(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: true,
+                        },
                         dim: DimCube,
                         is_array: true,
                         is_multisampled: false,
@@ -1459,9 +1493,10 @@
                 desc_ty: UniformTexelBuffer,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Signed(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: true,
+                        },
                         dim: DimBuffer,
                         is_array: false,
                         is_multisampled: false,
@@ -1477,9 +1512,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Signed(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: true,
+                        },
                         dim: Dim2D,
                         is_array: false,
                         is_multisampled: true,
@@ -1495,9 +1531,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Signed(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: true,
+                        },
                         dim: Dim2D,
                         is_array: true,
                         is_multisampled: true,
@@ -1513,9 +1550,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Unsigned(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: false,
+                        },
                         dim: Dim1D,
                         is_array: false,
                         is_multisampled: false,
@@ -1531,9 +1569,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Unsigned(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: false,
+                        },
                         dim: Dim2D,
                         is_array: false,
                         is_multisampled: false,
@@ -1549,9 +1588,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Unsigned(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: false,
+                        },
                         dim: Dim3D,
                         is_array: false,
                         is_multisampled: false,
@@ -1567,9 +1607,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Unsigned(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: false,
+                        },
                         dim: DimCube,
                         is_array: false,
                         is_multisampled: false,
@@ -1585,9 +1626,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Unsigned(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: false,
+                        },
                         dim: DimRect,
                         is_array: false,
                         is_multisampled: false,
@@ -1603,9 +1645,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Unsigned(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: false,
+                        },
                         dim: Dim1D,
                         is_array: true,
                         is_multisampled: false,
@@ -1621,9 +1664,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Unsigned(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: false,
+                        },
                         dim: Dim2D,
                         is_array: true,
                         is_multisampled: false,
@@ -1639,9 +1683,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Unsigned(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: false,
+                        },
                         dim: DimCube,
                         is_array: true,
                         is_multisampled: false,
@@ -1657,9 +1702,10 @@
                 desc_ty: UniformTexelBuffer,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Unsigned(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: false,
+                        },
                         dim: DimBuffer,
                         is_array: false,
                         is_multisampled: false,
@@ -1675,9 +1721,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Unsigned(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: false,
+                        },
                         dim: Dim2D,
                         is_array: false,
                         is_multisampled: true,
@@ -1693,9 +1740,10 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Unsigned(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: false,
+                        },
                         dim: Dim2D,
                         is_array: true,
                         is_multisampled: true,
@@ -1711,9 +1759,9 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Float(
-                            4,
-                        ),
+                        scalar_ty: Float {
+                            bits: 32,
+                        },
                         dim: Dim1D,
                         is_array: false,
                         is_multisampled: false,
@@ -1729,9 +1777,9 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Float(
-                            4,
-                        ),
+                        scalar_ty: Float {
+                            bits: 32,
+                        },
                         dim: Dim2D,
                         is_array: false,
                         is_multisampled: false,
@@ -1747,9 +1795,9 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Float(
-                            4,
-                        ),
+                        scalar_ty: Float {
+                            bits: 32,
+                        },
                         dim: Dim3D,
                         is_array: false,
                         is_multisampled: false,
@@ -1765,9 +1813,9 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Float(
-                            4,
-                        ),
+                        scalar_ty: Float {
+                            bits: 32,
+                        },
                         dim: DimCube,
                         is_array: false,
                         is_multisampled: false,
@@ -1783,9 +1831,9 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Float(
-                            4,
-                        ),
+                        scalar_ty: Float {
+                            bits: 32,
+                        },
                         dim: DimRect,
                         is_array: false,
                         is_multisampled: false,
@@ -1801,9 +1849,9 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Float(
-                            4,
-                        ),
+                        scalar_ty: Float {
+                            bits: 32,
+                        },
                         dim: Dim1D,
                         is_array: true,
                         is_multisampled: false,
@@ -1819,9 +1867,9 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Float(
-                            4,
-                        ),
+                        scalar_ty: Float {
+                            bits: 32,
+                        },
                         dim: Dim2D,
                         is_array: true,
                         is_multisampled: false,
@@ -1837,9 +1885,9 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Float(
-                            4,
-                        ),
+                        scalar_ty: Float {
+                            bits: 32,
+                        },
                         dim: DimCube,
                         is_array: true,
                         is_multisampled: false,
@@ -1855,9 +1903,9 @@
                 desc_ty: UniformTexelBuffer,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Float(
-                            4,
-                        ),
+                        scalar_ty: Float {
+                            bits: 32,
+                        },
                         dim: DimBuffer,
                         is_array: false,
                         is_multisampled: false,
@@ -1873,9 +1921,9 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Float(
-                            4,
-                        ),
+                        scalar_ty: Float {
+                            bits: 32,
+                        },
                         dim: Dim2D,
                         is_array: false,
                         is_multisampled: true,
@@ -1891,9 +1939,9 @@
                 desc_ty: SampledImage,
                 ty: SampledImage(
                     SampledImageType {
-                        scalar_ty: Float(
-                            4,
-                        ),
+                        scalar_ty: Float {
+                            bits: 32,
+                        },
                         dim: Dim2D,
                         is_array: true,
                         is_multisampled: true,
@@ -1917,10 +1965,12 @@
                                 name: Some(
                                     "ds",
                                 ),
-                                offset: 0,
+                                offset: Some(
+                                    0,
+                                ),
                                 ty: Array(
                                     ArrayType {
-                                        proto_ty: Struct(
+                                        element_ty: Struct(
                                             StructType {
                                                 name: Some(
                                                     "Data",
@@ -1930,11 +1980,14 @@
                                                         name: Some(
                                                             "i0",
                                                         ),
-                                                        offset: 0,
+                                                        offset: Some(
+                                                            0,
+                                                        ),
                                                         ty: Scalar(
-                                                            Signed(
-                                                                4,
-                                                            ),
+                                                            Integer {
+                                                                bits: 32,
+                                                                is_signed: true,
+                                                            },
                                                         ),
                                                         access_ty: ReadWrite,
                                                     },
@@ -1942,12 +1995,15 @@
                                                         name: Some(
                                                             "i1",
                                                         ),
-                                                        offset: 8,
+                                                        offset: Some(
+                                                            8,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Signed(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Integer {
+                                                                    bits: 32,
+                                                                    is_signed: true,
+                                                                },
                                                                 nscalar: 2,
                                                             },
                                                         ),
@@ -1957,12 +2013,15 @@
                                                         name: Some(
                                                             "i2",
                                                         ),
-                                                        offset: 16,
+                                                        offset: Some(
+                                                            16,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Signed(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Integer {
+                                                                    bits: 32,
+                                                                    is_signed: true,
+                                                                },
                                                                 nscalar: 3,
                                                             },
                                                         ),
@@ -1972,12 +2031,15 @@
                                                         name: Some(
                                                             "i3",
                                                         ),
-                                                        offset: 32,
+                                                        offset: Some(
+                                                            32,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Signed(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Integer {
+                                                                    bits: 32,
+                                                                    is_signed: true,
+                                                                },
                                                                 nscalar: 4,
                                                             },
                                                         ),
@@ -1987,11 +2049,14 @@
                                                         name: Some(
                                                             "u0",
                                                         ),
-                                                        offset: 48,
+                                                        offset: Some(
+                                                            48,
+                                                        ),
                                                         ty: Scalar(
-                                                            Unsigned(
-                                                                4,
-                                                            ),
+                                                            Integer {
+                                                                bits: 32,
+                                                                is_signed: false,
+                                                            },
                                                         ),
                                                         access_ty: ReadWrite,
                                                     },
@@ -1999,12 +2064,15 @@
                                                         name: Some(
                                                             "u1",
                                                         ),
-                                                        offset: 56,
+                                                        offset: Some(
+                                                            56,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Unsigned(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Integer {
+                                                                    bits: 32,
+                                                                    is_signed: false,
+                                                                },
                                                                 nscalar: 2,
                                                             },
                                                         ),
@@ -2014,12 +2082,15 @@
                                                         name: Some(
                                                             "u2",
                                                         ),
-                                                        offset: 64,
+                                                        offset: Some(
+                                                            64,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Unsigned(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Integer {
+                                                                    bits: 32,
+                                                                    is_signed: false,
+                                                                },
                                                                 nscalar: 3,
                                                             },
                                                         ),
@@ -2029,12 +2100,15 @@
                                                         name: Some(
                                                             "u3",
                                                         ),
-                                                        offset: 80,
+                                                        offset: Some(
+                                                            80,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Unsigned(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Integer {
+                                                                    bits: 32,
+                                                                    is_signed: false,
+                                                                },
                                                                 nscalar: 4,
                                                             },
                                                         ),
@@ -2044,11 +2118,13 @@
                                                         name: Some(
                                                             "f0",
                                                         ),
-                                                        offset: 96,
+                                                        offset: Some(
+                                                            96,
+                                                        ),
                                                         ty: Scalar(
-                                                            Float(
-                                                                4,
-                                                            ),
+                                                            Float {
+                                                                bits: 32,
+                                                            },
                                                         ),
                                                         access_ty: ReadWrite,
                                                     },
@@ -2056,12 +2132,14 @@
                                                         name: Some(
                                                             "f1",
                                                         ),
-                                                        offset: 104,
+                                                        offset: Some(
+                                                            104,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Float(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Float {
+                                                                    bits: 32,
+                                                                },
                                                                 nscalar: 2,
                                                             },
                                                         ),
@@ -2071,12 +2149,14 @@
                                                         name: Some(
                                                             "f2",
                                                         ),
-                                                        offset: 112,
+                                                        offset: Some(
+                                                            112,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Float(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Float {
+                                                                    bits: 32,
+                                                                },
                                                                 nscalar: 3,
                                                             },
                                                         ),
@@ -2086,12 +2166,14 @@
                                                         name: Some(
                                                             "f3",
                                                         ),
-                                                        offset: 128,
+                                                        offset: Some(
+                                                            128,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Float(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Float {
+                                                                    bits: 32,
+                                                                },
                                                                 nscalar: 4,
                                                             },
                                                         ),
@@ -2101,17 +2183,19 @@
                                                         name: Some(
                                                             "fMat0",
                                                         ),
-                                                        offset: 144,
+                                                        offset: Some(
+                                                            144,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 2,
                                                                 },
-                                                                nvec: 2,
-                                                                major: Some(
+                                                                nvector: 2,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2125,17 +2209,19 @@
                                                         name: Some(
                                                             "fMat1",
                                                         ),
-                                                        offset: 176,
+                                                        offset: Some(
+                                                            176,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 3,
                                                                 },
-                                                                nvec: 2,
-                                                                major: Some(
+                                                                nvector: 2,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2149,17 +2235,19 @@
                                                         name: Some(
                                                             "fMat2",
                                                         ),
-                                                        offset: 208,
+                                                        offset: Some(
+                                                            208,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 4,
                                                                 },
-                                                                nvec: 2,
-                                                                major: Some(
+                                                                nvector: 2,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2173,17 +2261,19 @@
                                                         name: Some(
                                                             "fMat3",
                                                         ),
-                                                        offset: 240,
+                                                        offset: Some(
+                                                            240,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 2,
                                                                 },
-                                                                nvec: 3,
-                                                                major: Some(
+                                                                nvector: 3,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2197,17 +2287,19 @@
                                                         name: Some(
                                                             "fMat4",
                                                         ),
-                                                        offset: 288,
+                                                        offset: Some(
+                                                            288,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 3,
                                                                 },
-                                                                nvec: 3,
-                                                                major: Some(
+                                                                nvector: 3,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2221,17 +2313,19 @@
                                                         name: Some(
                                                             "fMat5",
                                                         ),
-                                                        offset: 336,
+                                                        offset: Some(
+                                                            336,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 4,
                                                                 },
-                                                                nvec: 3,
-                                                                major: Some(
+                                                                nvector: 3,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2245,17 +2339,19 @@
                                                         name: Some(
                                                             "fMat6",
                                                         ),
-                                                        offset: 384,
+                                                        offset: Some(
+                                                            384,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 2,
                                                                 },
-                                                                nvec: 4,
-                                                                major: Some(
+                                                                nvector: 4,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2269,17 +2365,19 @@
                                                         name: Some(
                                                             "fMat7",
                                                         ),
-                                                        offset: 448,
+                                                        offset: Some(
+                                                            448,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 3,
                                                                 },
-                                                                nvec: 4,
-                                                                major: Some(
+                                                                nvector: 4,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2293,17 +2391,19 @@
                                                         name: Some(
                                                             "fMat8",
                                                         ),
-                                                        offset: 512,
+                                                        offset: Some(
+                                                            512,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 4,
                                                                 },
-                                                                nvec: 4,
-                                                                major: Some(
+                                                                nvector: 4,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2317,11 +2417,13 @@
                                                         name: Some(
                                                             "d0",
                                                         ),
-                                                        offset: 576,
+                                                        offset: Some(
+                                                            576,
+                                                        ),
                                                         ty: Scalar(
-                                                            Float(
-                                                                8,
-                                                            ),
+                                                            Float {
+                                                                bits: 64,
+                                                            },
                                                         ),
                                                         access_ty: ReadWrite,
                                                     },
@@ -2329,12 +2431,14 @@
                                                         name: Some(
                                                             "d1",
                                                         ),
-                                                        offset: 592,
+                                                        offset: Some(
+                                                            592,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Float(
-                                                                    8,
-                                                                ),
+                                                                scalar_ty: Float {
+                                                                    bits: 64,
+                                                                },
                                                                 nscalar: 2,
                                                             },
                                                         ),
@@ -2344,12 +2448,14 @@
                                                         name: Some(
                                                             "d2",
                                                         ),
-                                                        offset: 608,
+                                                        offset: Some(
+                                                            608,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Float(
-                                                                    8,
-                                                                ),
+                                                                scalar_ty: Float {
+                                                                    bits: 64,
+                                                                },
                                                                 nscalar: 3,
                                                             },
                                                         ),
@@ -2359,12 +2465,14 @@
                                                         name: Some(
                                                             "d3",
                                                         ),
-                                                        offset: 640,
+                                                        offset: Some(
+                                                            640,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Float(
-                                                                    8,
-                                                                ),
+                                                                scalar_ty: Float {
+                                                                    bits: 64,
+                                                                },
                                                                 nscalar: 4,
                                                             },
                                                         ),
@@ -2374,17 +2482,19 @@
                                                         name: Some(
                                                             "dMat0",
                                                         ),
-                                                        offset: 672,
+                                                        offset: Some(
+                                                            672,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 2,
                                                                 },
-                                                                nvec: 2,
-                                                                major: Some(
+                                                                nvector: 2,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2398,17 +2508,19 @@
                                                         name: Some(
                                                             "dMat1",
                                                         ),
-                                                        offset: 704,
+                                                        offset: Some(
+                                                            704,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 3,
                                                                 },
-                                                                nvec: 2,
-                                                                major: Some(
+                                                                nvector: 2,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2422,17 +2534,19 @@
                                                         name: Some(
                                                             "dMat2",
                                                         ),
-                                                        offset: 768,
+                                                        offset: Some(
+                                                            768,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 4,
                                                                 },
-                                                                nvec: 2,
-                                                                major: Some(
+                                                                nvector: 2,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2446,17 +2560,19 @@
                                                         name: Some(
                                                             "dMat3",
                                                         ),
-                                                        offset: 832,
+                                                        offset: Some(
+                                                            832,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 2,
                                                                 },
-                                                                nvec: 3,
-                                                                major: Some(
+                                                                nvector: 3,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2470,17 +2586,19 @@
                                                         name: Some(
                                                             "dMat4",
                                                         ),
-                                                        offset: 896,
+                                                        offset: Some(
+                                                            896,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 3,
                                                                 },
-                                                                nvec: 3,
-                                                                major: Some(
+                                                                nvector: 3,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2494,17 +2612,19 @@
                                                         name: Some(
                                                             "dMat5",
                                                         ),
-                                                        offset: 992,
+                                                        offset: Some(
+                                                            992,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 4,
                                                                 },
-                                                                nvec: 3,
-                                                                major: Some(
+                                                                nvector: 3,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2518,17 +2638,19 @@
                                                         name: Some(
                                                             "dMat6",
                                                         ),
-                                                        offset: 1088,
+                                                        offset: Some(
+                                                            1088,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 2,
                                                                 },
-                                                                nvec: 4,
-                                                                major: Some(
+                                                                nvector: 4,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2542,17 +2664,19 @@
                                                         name: Some(
                                                             "dMat7",
                                                         ),
-                                                        offset: 1152,
+                                                        offset: Some(
+                                                            1152,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 3,
                                                                 },
-                                                                nvec: 4,
-                                                                major: Some(
+                                                                nvector: 4,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2566,17 +2690,19 @@
                                                         name: Some(
                                                             "dMat8",
                                                         ),
-                                                        offset: 1280,
+                                                        offset: Some(
+                                                            1280,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 4,
                                                                 },
-                                                                nvec: 4,
-                                                                major: Some(
+                                                                nvector: 4,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2589,7 +2715,7 @@
                                                 ],
                                             },
                                         ),
-                                        nrepeat: Some(
+                                        nelement: Some(
                                             4,
                                         ),
                                         stride: Some(
@@ -2622,10 +2748,12 @@
                                 name: Some(
                                     "ds",
                                 ),
-                                offset: 0,
+                                offset: Some(
+                                    0,
+                                ),
                                 ty: Array(
                                     ArrayType {
-                                        proto_ty: Struct(
+                                        element_ty: Struct(
                                             StructType {
                                                 name: Some(
                                                     "Data",
@@ -2635,11 +2763,14 @@
                                                         name: Some(
                                                             "i0",
                                                         ),
-                                                        offset: 0,
+                                                        offset: Some(
+                                                            0,
+                                                        ),
                                                         ty: Scalar(
-                                                            Signed(
-                                                                4,
-                                                            ),
+                                                            Integer {
+                                                                bits: 32,
+                                                                is_signed: true,
+                                                            },
                                                         ),
                                                         access_ty: ReadWrite,
                                                     },
@@ -2647,12 +2778,15 @@
                                                         name: Some(
                                                             "i1",
                                                         ),
-                                                        offset: 8,
+                                                        offset: Some(
+                                                            8,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Signed(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Integer {
+                                                                    bits: 32,
+                                                                    is_signed: true,
+                                                                },
                                                                 nscalar: 2,
                                                             },
                                                         ),
@@ -2662,12 +2796,15 @@
                                                         name: Some(
                                                             "i2",
                                                         ),
-                                                        offset: 16,
+                                                        offset: Some(
+                                                            16,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Signed(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Integer {
+                                                                    bits: 32,
+                                                                    is_signed: true,
+                                                                },
                                                                 nscalar: 3,
                                                             },
                                                         ),
@@ -2677,12 +2814,15 @@
                                                         name: Some(
                                                             "i3",
                                                         ),
-                                                        offset: 32,
+                                                        offset: Some(
+                                                            32,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Signed(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Integer {
+                                                                    bits: 32,
+                                                                    is_signed: true,
+                                                                },
                                                                 nscalar: 4,
                                                             },
                                                         ),
@@ -2692,11 +2832,14 @@
                                                         name: Some(
                                                             "u0",
                                                         ),
-                                                        offset: 48,
+                                                        offset: Some(
+                                                            48,
+                                                        ),
                                                         ty: Scalar(
-                                                            Unsigned(
-                                                                4,
-                                                            ),
+                                                            Integer {
+                                                                bits: 32,
+                                                                is_signed: false,
+                                                            },
                                                         ),
                                                         access_ty: ReadWrite,
                                                     },
@@ -2704,12 +2847,15 @@
                                                         name: Some(
                                                             "u1",
                                                         ),
-                                                        offset: 56,
+                                                        offset: Some(
+                                                            56,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Unsigned(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Integer {
+                                                                    bits: 32,
+                                                                    is_signed: false,
+                                                                },
                                                                 nscalar: 2,
                                                             },
                                                         ),
@@ -2719,12 +2865,15 @@
                                                         name: Some(
                                                             "u2",
                                                         ),
-                                                        offset: 64,
+                                                        offset: Some(
+                                                            64,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Unsigned(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Integer {
+                                                                    bits: 32,
+                                                                    is_signed: false,
+                                                                },
                                                                 nscalar: 3,
                                                             },
                                                         ),
@@ -2734,12 +2883,15 @@
                                                         name: Some(
                                                             "u3",
                                                         ),
-                                                        offset: 80,
+                                                        offset: Some(
+                                                            80,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Unsigned(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Integer {
+                                                                    bits: 32,
+                                                                    is_signed: false,
+                                                                },
                                                                 nscalar: 4,
                                                             },
                                                         ),
@@ -2749,11 +2901,13 @@
                                                         name: Some(
                                                             "f0",
                                                         ),
-                                                        offset: 96,
+                                                        offset: Some(
+                                                            96,
+                                                        ),
                                                         ty: Scalar(
-                                                            Float(
-                                                                4,
-                                                            ),
+                                                            Float {
+                                                                bits: 32,
+                                                            },
                                                         ),
                                                         access_ty: ReadWrite,
                                                     },
@@ -2761,12 +2915,14 @@
                                                         name: Some(
                                                             "f1",
                                                         ),
-                                                        offset: 104,
+                                                        offset: Some(
+                                                            104,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Float(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Float {
+                                                                    bits: 32,
+                                                                },
                                                                 nscalar: 2,
                                                             },
                                                         ),
@@ -2776,12 +2932,14 @@
                                                         name: Some(
                                                             "f2",
                                                         ),
-                                                        offset: 112,
+                                                        offset: Some(
+                                                            112,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Float(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Float {
+                                                                    bits: 32,
+                                                                },
                                                                 nscalar: 3,
                                                             },
                                                         ),
@@ -2791,12 +2949,14 @@
                                                         name: Some(
                                                             "f3",
                                                         ),
-                                                        offset: 128,
+                                                        offset: Some(
+                                                            128,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Float(
-                                                                    4,
-                                                                ),
+                                                                scalar_ty: Float {
+                                                                    bits: 32,
+                                                                },
                                                                 nscalar: 4,
                                                             },
                                                         ),
@@ -2806,17 +2966,19 @@
                                                         name: Some(
                                                             "fMat0",
                                                         ),
-                                                        offset: 144,
+                                                        offset: Some(
+                                                            144,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 2,
                                                                 },
-                                                                nvec: 2,
-                                                                major: Some(
+                                                                nvector: 2,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2830,17 +2992,19 @@
                                                         name: Some(
                                                             "fMat1",
                                                         ),
-                                                        offset: 160,
+                                                        offset: Some(
+                                                            160,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 3,
                                                                 },
-                                                                nvec: 2,
-                                                                major: Some(
+                                                                nvector: 2,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2854,17 +3018,19 @@
                                                         name: Some(
                                                             "fMat2",
                                                         ),
-                                                        offset: 192,
+                                                        offset: Some(
+                                                            192,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 4,
                                                                 },
-                                                                nvec: 2,
-                                                                major: Some(
+                                                                nvector: 2,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2878,17 +3044,19 @@
                                                         name: Some(
                                                             "fMat3",
                                                         ),
-                                                        offset: 224,
+                                                        offset: Some(
+                                                            224,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 2,
                                                                 },
-                                                                nvec: 3,
-                                                                major: Some(
+                                                                nvector: 3,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2902,17 +3070,19 @@
                                                         name: Some(
                                                             "fMat4",
                                                         ),
-                                                        offset: 256,
+                                                        offset: Some(
+                                                            256,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 3,
                                                                 },
-                                                                nvec: 3,
-                                                                major: Some(
+                                                                nvector: 3,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2926,17 +3096,19 @@
                                                         name: Some(
                                                             "fMat5",
                                                         ),
-                                                        offset: 304,
+                                                        offset: Some(
+                                                            304,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 4,
                                                                 },
-                                                                nvec: 3,
-                                                                major: Some(
+                                                                nvector: 3,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2950,17 +3122,19 @@
                                                         name: Some(
                                                             "fMat6",
                                                         ),
-                                                        offset: 352,
+                                                        offset: Some(
+                                                            352,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 2,
                                                                 },
-                                                                nvec: 4,
-                                                                major: Some(
+                                                                nvector: 4,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2974,17 +3148,19 @@
                                                         name: Some(
                                                             "fMat7",
                                                         ),
-                                                        offset: 384,
+                                                        offset: Some(
+                                                            384,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 3,
                                                                 },
-                                                                nvec: 4,
-                                                                major: Some(
+                                                                nvector: 4,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -2998,17 +3174,19 @@
                                                         name: Some(
                                                             "fMat8",
                                                         ),
-                                                        offset: 448,
+                                                        offset: Some(
+                                                            448,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        4,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 32,
+                                                                    },
                                                                     nscalar: 4,
                                                                 },
-                                                                nvec: 4,
-                                                                major: Some(
+                                                                nvector: 4,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -3022,11 +3200,13 @@
                                                         name: Some(
                                                             "d0",
                                                         ),
-                                                        offset: 512,
+                                                        offset: Some(
+                                                            512,
+                                                        ),
                                                         ty: Scalar(
-                                                            Float(
-                                                                8,
-                                                            ),
+                                                            Float {
+                                                                bits: 64,
+                                                            },
                                                         ),
                                                         access_ty: ReadWrite,
                                                     },
@@ -3034,12 +3214,14 @@
                                                         name: Some(
                                                             "d1",
                                                         ),
-                                                        offset: 528,
+                                                        offset: Some(
+                                                            528,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Float(
-                                                                    8,
-                                                                ),
+                                                                scalar_ty: Float {
+                                                                    bits: 64,
+                                                                },
                                                                 nscalar: 2,
                                                             },
                                                         ),
@@ -3049,12 +3231,14 @@
                                                         name: Some(
                                                             "d2",
                                                         ),
-                                                        offset: 544,
+                                                        offset: Some(
+                                                            544,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Float(
-                                                                    8,
-                                                                ),
+                                                                scalar_ty: Float {
+                                                                    bits: 64,
+                                                                },
                                                                 nscalar: 3,
                                                             },
                                                         ),
@@ -3064,12 +3248,14 @@
                                                         name: Some(
                                                             "d3",
                                                         ),
-                                                        offset: 576,
+                                                        offset: Some(
+                                                            576,
+                                                        ),
                                                         ty: Vector(
                                                             VectorType {
-                                                                scalar_ty: Float(
-                                                                    8,
-                                                                ),
+                                                                scalar_ty: Float {
+                                                                    bits: 64,
+                                                                },
                                                                 nscalar: 4,
                                                             },
                                                         ),
@@ -3079,17 +3265,19 @@
                                                         name: Some(
                                                             "dMat0",
                                                         ),
-                                                        offset: 608,
+                                                        offset: Some(
+                                                            608,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 2,
                                                                 },
-                                                                nvec: 2,
-                                                                major: Some(
+                                                                nvector: 2,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -3103,17 +3291,19 @@
                                                         name: Some(
                                                             "dMat1",
                                                         ),
-                                                        offset: 640,
+                                                        offset: Some(
+                                                            640,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 3,
                                                                 },
-                                                                nvec: 2,
-                                                                major: Some(
+                                                                nvector: 2,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -3127,17 +3317,19 @@
                                                         name: Some(
                                                             "dMat2",
                                                         ),
-                                                        offset: 704,
+                                                        offset: Some(
+                                                            704,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 4,
                                                                 },
-                                                                nvec: 2,
-                                                                major: Some(
+                                                                nvector: 2,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -3151,17 +3343,19 @@
                                                         name: Some(
                                                             "dMat3",
                                                         ),
-                                                        offset: 768,
+                                                        offset: Some(
+                                                            768,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 2,
                                                                 },
-                                                                nvec: 3,
-                                                                major: Some(
+                                                                nvector: 3,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -3175,17 +3369,19 @@
                                                         name: Some(
                                                             "dMat4",
                                                         ),
-                                                        offset: 832,
+                                                        offset: Some(
+                                                            832,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 3,
                                                                 },
-                                                                nvec: 3,
-                                                                major: Some(
+                                                                nvector: 3,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -3199,17 +3395,19 @@
                                                         name: Some(
                                                             "dMat5",
                                                         ),
-                                                        offset: 928,
+                                                        offset: Some(
+                                                            928,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 4,
                                                                 },
-                                                                nvec: 3,
-                                                                major: Some(
+                                                                nvector: 3,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -3223,17 +3421,19 @@
                                                         name: Some(
                                                             "dMat6",
                                                         ),
-                                                        offset: 1024,
+                                                        offset: Some(
+                                                            1024,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 2,
                                                                 },
-                                                                nvec: 4,
-                                                                major: Some(
+                                                                nvector: 4,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -3247,17 +3447,19 @@
                                                         name: Some(
                                                             "dMat7",
                                                         ),
-                                                        offset: 1088,
+                                                        offset: Some(
+                                                            1088,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 3,
                                                                 },
-                                                                nvec: 4,
-                                                                major: Some(
+                                                                nvector: 4,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -3271,17 +3473,19 @@
                                                         name: Some(
                                                             "dMat8",
                                                         ),
-                                                        offset: 1216,
+                                                        offset: Some(
+                                                            1216,
+                                                        ),
                                                         ty: Matrix(
                                                             MatrixType {
-                                                                vec_ty: VectorType {
-                                                                    scalar_ty: Float(
-                                                                        8,
-                                                                    ),
+                                                                vector_ty: VectorType {
+                                                                    scalar_ty: Float {
+                                                                        bits: 64,
+                                                                    },
                                                                     nscalar: 4,
                                                                 },
-                                                                nvec: 4,
-                                                                major: Some(
+                                                                nvector: 4,
+                                                                axis_order: Some(
                                                                     ColumnMajor,
                                                                 ),
                                                                 stride: Some(
@@ -3294,7 +3498,7 @@
                                                 ],
                                             },
                                         ),
-                                        nrepeat: None,
+                                        nelement: None,
                                         stride: Some(
                                             1344,
                                         ),
@@ -3317,9 +3521,10 @@
                 ),
                 ty: SubpassData(
                     SubpassDataType {
-                        scalar_ty: Signed(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: true,
+                        },
                         is_multisampled: false,
                     },
                 ),
@@ -3335,9 +3540,10 @@
                 ),
                 ty: SubpassData(
                     SubpassDataType {
-                        scalar_ty: Signed(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: true,
+                        },
                         is_multisampled: true,
                     },
                 ),
@@ -3353,9 +3559,10 @@
                 ),
                 ty: SubpassData(
                     SubpassDataType {
-                        scalar_ty: Unsigned(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: false,
+                        },
                         is_multisampled: false,
                     },
                 ),
@@ -3371,9 +3578,10 @@
                 ),
                 ty: SubpassData(
                     SubpassDataType {
-                        scalar_ty: Unsigned(
-                            4,
-                        ),
+                        scalar_ty: Integer {
+                            bits: 32,
+                            is_signed: false,
+                        },
                         is_multisampled: true,
                     },
                 ),
@@ -3389,9 +3597,9 @@
                 ),
                 ty: SubpassData(
                     SubpassDataType {
-                        scalar_ty: Float(
-                            4,
-                        ),
+                        scalar_ty: Float {
+                            bits: 32,
+                        },
                         is_multisampled: false,
                     },
                 ),
@@ -3407,9 +3615,9 @@
                 ),
                 ty: SubpassData(
                     SubpassDataType {
-                        scalar_ty: Float(
-                            4,
-                        ),
+                        scalar_ty: Float {
+                            bits: 32,
+                        },
                         is_multisampled: true,
                     },
                 ),
@@ -3421,7 +3629,9 @@
                 ),
                 desc_bind: (set=15, bind=0),
                 desc_ty: AccelStruct,
-                ty: AccelStruct,
+                ty: AccelStruct(
+                    AccelStructType,
+                ),
                 nbind: 1,
             },
         ],

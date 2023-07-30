@@ -1,8 +1,7 @@
-use super::ty;
-use super::*;
+use crate::prelude::*;
+use crate::ty;
+use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use inline_spirv::*;
-use std::collections::{HashMap, HashSet};
-use std::convert::TryFrom;
 
 macro_rules! gen_entries(
     ($stage:ident, $src:expr, $lang:ident) => {{
@@ -142,7 +141,13 @@ fn test_spec_consts() {
     let spec_ids = entry
         .vars
         .into_iter()
-        .filter_map(|x| x.spec_id())
+        .filter_map(|x| {
+            if let Variable::SpecConstant { spec_id, .. } = x {
+                Some(spec_id)
+            } else {
+                None
+            }
+        })
         .collect::<HashSet<_>>();
     assert!(spec_ids.contains(&233));
     assert!(spec_ids.contains(&234));
@@ -347,13 +352,11 @@ fn test_spec_const_arrays() {
         frag,
         vulkan1_2
     );
-    let double_num_buf: [u8; 8] = f64::to_ne_bytes(4.0 as f64);
-    let num_buf: &'static [u32] = &[7];
     let entries = ReflectConfig::new()
         .spv(SPV)
         .combine_img_samplers(true)
-        .specialize(1, ConstantValue::from(double_num_buf))
-        .specialize(3, ConstantValue::try_from(num_buf).unwrap())
+        .specialize(1, ConstantValue::from(4.0 as f32))
+        .specialize(3, ConstantValue::from(7 as u32))
         .specialize(4, ConstantValue::from(9 as i32))
         .reflect()
         .unwrap();
@@ -386,7 +389,7 @@ fn test_spec_const_arrays() {
                 ..
             } = x
             {
-                Some((desc_bind, (*nbind, ty.nbyte())))
+                Some((desc_bind, (nbind, ty.nbyte())))
             } else {
                 None
             }
@@ -395,15 +398,15 @@ fn test_spec_const_arrays() {
     assert_eq!(spec_consts.len(), 1);
     assert_eq!(
         *spec_consts.get(&2).unwrap(),
-        ty::Type::Scalar(ty::ScalarType::Unsigned(4))
+        ty::Type::Scalar(ty::ScalarType::u32())
     );
     assert_eq!(
         *descs.get(&DescriptorBinding::new(0, 0)).unwrap(),
-        (64, None)
+        (&64, None)
     );
     assert_eq!(
         *descs.get(&DescriptorBinding::new(0, 1)).unwrap(),
-        (1, Some(128))
+        (&1, Some(128))
     );
 }
 #[test]
@@ -629,39 +632,39 @@ fn test_matrix_stride() {
                 0 => {
                     let struct_ty = ty.as_struct().unwrap();
                     {
-                        assert!(struct_ty.members[0].offset == 0);
-                        let mat_ty = struct_ty.members[0].ty.as_mat().unwrap();
+                        assert!(struct_ty.members[0].offset == Some(0));
+                        let mat_ty = struct_ty.members[0].ty.as_matrix().unwrap();
                         assert!(mat_ty.stride == Some(16));
                     }
                     {
-                        assert!(struct_ty.members[1].offset == 32);
-                        let mat_ty = struct_ty.members[1].ty.as_mat().unwrap();
+                        assert!(struct_ty.members[1].offset == Some(32));
+                        let mat_ty = struct_ty.members[1].ty.as_matrix().unwrap();
                         assert!(mat_ty.stride == Some(16));
                     }
                 }
                 1 => {
                     let struct_ty = ty.as_struct().unwrap();
                     {
-                        assert!(struct_ty.members[0].offset == 0);
-                        let mat_ty = struct_ty.members[0].ty.as_mat().unwrap();
+                        assert!(struct_ty.members[0].offset == Some(0));
+                        let mat_ty = struct_ty.members[0].ty.as_matrix().unwrap();
                         assert!(mat_ty.stride == Some(8));
                     }
                     {
-                        assert!(struct_ty.members[1].offset == 16);
-                        let mat_ty = struct_ty.members[1].ty.as_mat().unwrap();
+                        assert!(struct_ty.members[1].offset == Some(16));
+                        let mat_ty = struct_ty.members[1].ty.as_matrix().unwrap();
                         assert!(mat_ty.stride == Some(16));
                     }
                 }
                 2 => {
                     let struct_ty = ty.as_struct().unwrap();
-                    assert!(struct_ty.members[0].offset == 0);
-                    let mat_ty = struct_ty.members[0].ty.as_mat().unwrap();
+                    assert!(struct_ty.members[0].offset == Some(0));
+                    let mat_ty = struct_ty.members[0].ty.as_matrix().unwrap();
                     assert!(mat_ty.stride == Some(16));
                 }
                 3 => {
                     let struct_ty = ty.as_struct().unwrap();
-                    assert!(struct_ty.members[0].offset == 0);
-                    let mat_ty = struct_ty.members[0].ty.as_mat().unwrap();
+                    assert!(struct_ty.members[0].offset == Some(0));
+                    let mat_ty = struct_ty.members[0].ty.as_matrix().unwrap();
                     assert!(mat_ty.stride == Some(8));
                 }
                 _ => {}

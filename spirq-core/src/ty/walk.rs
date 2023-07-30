@@ -57,13 +57,13 @@ impl<'a> Iterator for Walk<'a> {
                     } else {
                         Seg::Index(i)
                     };
-                    Some((&member.ty, member.offset, seg))
+                    Some((&member.ty, member.offset.unwrap_or_default(), seg))
                 }
                 Type::Array(arr_ty) => {
                     // Unsized buffer are treated as 0-sized.
-                    if i < arr_ty.nrepeat.unwrap_or_default() as usize {
+                    if i < arr_ty.nelement.unwrap_or_default() as usize {
                         Some((
-                            &arr_ty.proto_ty,
+                            &arr_ty.element_ty,
                             arr_ty.stride.unwrap_or_default() * i,
                             Seg::Index(i),
                         ))
@@ -94,7 +94,7 @@ impl<'a> Iterator for Walk<'a> {
                     } else {
                         vec![seg]
                     };
-                    if child_ty.is_struct() || child_ty.is_arr() {
+                    if child_ty.is_struct() || child_ty.is_array() {
                         // Found composite type, step into it.
                         LoopEnd::Push(WalkFrame {
                             sym_stem: Some(sym),

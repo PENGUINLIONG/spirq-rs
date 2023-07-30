@@ -1,784 +1,236 @@
 //! Reflection procedures and types.
-use crate::consts::*;
-use crate::error::{Error, Result};
-use crate::inspect::{FnInspector, Inspector, NopInspector};
-use crate::instr::*;
-use crate::parse::{Instr, Instrs};
-use crate::ty::*;
-use crate::walk::Walk;
-use crate::{EntryPoint, SpirvBinary};
-use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
-use std::fmt;
-use std::iter::Peekable;
-use std::ops::RangeInclusive;
 
-use spirv::Dim;
-pub use spirv::{Decoration, ExecutionModel, StorageClass};
+use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
+use num_traits::FromPrimitive;
 
-// Public types.
+use crate::{
+    annotation::{DecorationRegistry, NameRegistry},
+    constant::{Constant, ConstantValue},
+    entry_point::{EntryPoint, ExecutionModel},
+    error::{anyhow, Error, Result},
+    evaluator::Evaluator,
+    func::{ExecutionMode, Function, FunctionRegistry},
+    inspect::Inspector,
+    instr::*,
+    parse::{Instr, Instrs},
+    reflect_cfg::ReflectConfig,
+    spirv::{self, Op},
+    ty::{
+        AccelStructType, AccessType, ArrayType, CombinedImageSamplerType, DescriptorType,
+        DeviceAddressType, ImageType, MatrixAxisOrder, MatrixType, PointerType, RayQueryType,
+        SampledImageType, SamplerType, ScalarType, StorageClass, StorageImageType, StructMember,
+        StructType, SubpassDataType, Type, TypeRegistry, VectorType,
+    },
+    var::{Variable, VariableAlloc, VariableRegistry},
+};
 
-/// Descriptor set and binding point carrier.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Default, Clone, Copy)]
-pub struct DescriptorBinding(u32, u32);
-impl DescriptorBinding {
-    pub fn new(desc_set: u32, bind_point: u32) -> Self {
-        DescriptorBinding(desc_set, bind_point)
-    }
-
-    pub fn set(&self) -> u32 {
-        self.0
-    }
-    pub fn bind(&self) -> u32 {
-        self.1
-    }
-    pub fn into_inner(self) -> (u32, u32) {
-        (self.0, self.1)
-    }
-}
-impl fmt::Display for DescriptorBinding {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "(set={}, bind={})", self.0, self.1)
-    }
-}
-impl fmt::Debug for DescriptorBinding {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        (self as &dyn fmt::Display).fmt(f)
-    }
-}
-
-/// Interface variable location and component.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Default, Clone, Copy)]
-pub struct InterfaceLocation(u32, u32);
-impl InterfaceLocation {
-    pub fn new(loc: u32, comp: u32) -> Self {
-        InterfaceLocation(loc, comp)
-    }
-
-    pub fn loc(&self) -> u32 {
-        self.0
-    }
-    pub fn comp(&self) -> u32 {
-        self.1
-    }
-    pub fn into_inner(self) -> (u32, u32) {
-        (self.0, self.1)
-    }
-}
-impl fmt::Display for InterfaceLocation {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "(loc={}, comp={})", self.0, self.1)
-    }
-}
-impl fmt::Debug for InterfaceLocation {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        (self as &dyn fmt::Display).fmt(f)
-    }
-}
-
-/// Specialization constant ID.
-pub type SpecId = u32;
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug, Default)]
-pub struct ConstantValue {
-    buf: [u8; 8],
-}
-impl TryFrom<&[u32]> for ConstantValue {
-    type Error = Error;
-    fn try_from(x: &[u32]) -> Result<Self> {
-        let mut buf: [u8; 8] = [0; 8];
-        match x.len() {
-            1 => {
-                let bytes = u32::to_ne_bytes(x[0]);
-                (&mut buf[0..4]).copy_from_slice(&bytes);
-            }
-            2 => {
-                let lower_bytes = u32::to_ne_bytes(x[0]);
-                let upper_bytes = u32::to_ne_bytes(x[1]);
-                (&mut buf[0..4]).copy_from_slice(&lower_bytes);
-                (&mut buf[4..8]).copy_from_slice(&upper_bytes);
-            }
-            _ => return Err(Error::UNSUPPORTED_CONST_VALUE),
-        }
-        Ok(ConstantValue { buf })
-    }
-}
-impl TryFrom<&[u8]> for ConstantValue {
-    type Error = Error;
-    fn try_from(x: &[u8]) -> Result<Self> {
-        let mut buf: [u8; 8] = [0; 8];
-        match x.len() {
-            4 => (&mut buf[0..4]).copy_from_slice(&x),
-            8 => (&mut buf[0..8]).copy_from_slice(&x),
-            _ => return Err(Error::UNSUPPORTED_CONST_VALUE),
-        }
-        Ok(ConstantValue { buf })
-    }
-}
-impl From<[u8; 4]> for ConstantValue {
-    fn from(x: [u8; 4]) -> Self {
-        let mut out = ConstantValue::default();
-        out.buf[0..4].copy_from_slice(&x);
-        out
-    }
-}
-impl From<[u8; 8]> for ConstantValue {
-    fn from(x: [u8; 8]) -> Self {
-        let mut out = ConstantValue::default();
-        out.buf[0..8].copy_from_slice(&x);
-        out
-    }
-}
-impl From<bool> for ConstantValue {
-    fn from(x: bool) -> Self {
-        let mut out = ConstantValue::default();
-        out.buf[0] = if x { 1 } else { 0 };
-        out
-    }
-}
-impl From<u32> for ConstantValue {
-    fn from(x: u32) -> Self {
-        Self::from(u32::to_ne_bytes(x))
-    }
-}
-impl From<i32> for ConstantValue {
-    fn from(x: i32) -> Self {
-        Self::from(i32::to_ne_bytes(x))
-    }
-}
-impl From<f32> for ConstantValue {
-    fn from(x: f32) -> Self {
-        Self::from(f32::to_ne_bytes(x))
-    }
-}
-impl From<u64> for ConstantValue {
-    fn from(x: u64) -> Self {
-        Self::from(u64::to_ne_bytes(x))
-    }
-}
-impl From<i64> for ConstantValue {
-    fn from(x: i64) -> Self {
-        Self::from(i64::to_ne_bytes(x))
-    }
-}
-impl From<f64> for ConstantValue {
-    fn from(x: f64) -> Self {
-        Self::from(f64::to_ne_bytes(x))
-    }
-}
-impl ConstantValue {
-    pub fn to_bool(&self) -> bool {
-        self.to_u64() != 0
-    }
-    pub fn to_s32(&self) -> i32 {
-        self.to_s64() as i32
-    }
-    pub fn to_u32(&self) -> u32 {
-        self.to_u64() as u32
-    }
-    pub fn to_s64(&self) -> i64 {
-        i64::from_ne_bytes(self.buf)
-    }
-    pub fn to_u64(&self) -> u64 {
-        u64::from_ne_bytes(self.buf)
-    }
-}
-
-/// Variable locator.
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
-pub enum Locator {
-    Input(InterfaceLocation),
-    Output(InterfaceLocation),
-    Descriptor(DescriptorBinding),
-    PushConstant,
-    SpecConstant(SpecId),
-}
+type ConstantId = u32;
+type FunctionId = u32;
+type TypeId = u32;
+type VariableId = u32;
 
 // Intermediate types used in reflection.
 
-/// Reflection intermediate of constants and specialization constant.
-#[derive(PartialEq, Eq, Hash, Clone, Debug)]
-pub struct Constant {
-    /// Type of constant.
-    pub ty: Type,
-    /// Defined value of constant, or default value of specialization constant.
-    pub value: ConstantValue,
-    /// Specialization constant ID, notice that this is NOT an instruction ID.
-    /// It is used to identify specialization constants for graphics libraries.
-    pub spec_id: Option<SpecId>,
-}
-
-/// Descriptor type matching `VkDescriptorType`.
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub enum DescriptorType {
-    /// `VK_DESCRIPTOR_TYPE_SAMPLER`
-    Sampler(),
-    /// `VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER`
-    CombinedImageSampler(),
-    /// `VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE`
-    SampledImage(),
-    /// `VK_DESCRIPTOR_TYPE_STORAGE_IMAGE`
-    StorageImage(AccessType),
-    /// `VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER`.
-    UniformTexelBuffer(),
-    /// `VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER`.
-    StorageTexelBuffer(AccessType),
-    /// `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER` or
-    /// `VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC` depending on how you gonna
-    /// use it.
-    UniformBuffer(),
-    /// `VK_DESCRIPTOR_TYPE_STORAGE_BUFFER` or
-    /// `VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC` depending on how you gonna
-    /// use it.
-    StorageBuffer(AccessType),
-    /// `VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT` and its input attachment index.
-    InputAttachment(u32),
-    /// `VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR`
-    AccelStruct(),
-}
-
-/// A SPIR-V variable - interface variables, descriptor resources and push
-/// constants.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum Variable {
-    /// Input interface variable.
-    Input {
-        name: Option<String>,
-        // Interface location of input.
-        location: InterfaceLocation,
-        /// The concrete SPIR-V type definition of descriptor resource.
-        ty: Type,
-    },
-    /// Output interface variable.
-    Output {
-        name: Option<String>,
-        // Interface location of output.
-        location: InterfaceLocation,
-        /// The concrete SPIR-V type definition of descriptor resource.
-        ty: Type,
-    },
-    /// Descriptor resource.
-    Descriptor {
-        name: Option<String>,
-        // Binding point of descriptor resource.
-        desc_bind: DescriptorBinding,
-        /// Descriptor resource type matching `VkDescriptorType`.
-        desc_ty: DescriptorType,
-        /// The concrete SPIR-V type definition of descriptor resource.
-        ty: Type,
-        /// Number of bindings at the binding point. All descriptors can have
-        /// multiple binding points. If the multi-binding is dynamic, 0 will be
-        /// returned.
-        ///
-        /// For more information about dynamic multi-binding, please refer to
-        /// Vulkan extension `VK_EXT_descriptor_indexing`, GLSL extension
-        /// `GL_EXT_nonuniform_qualifier` and SPIR-V extension
-        /// `SPV_EXT_descriptor_indexing`. Dynamic multi-binding is only
-        /// supported in Vulkan 1.2.
-        nbind: u32,
-    },
-    /// Push constant.
-    PushConstant {
-        name: Option<String>,
-        /// The concrete SPIR-V type definition of descriptor resource.
-        ty: Type,
-    },
-    /// Specialization constant.
-    SpecConstant {
-        name: Option<String>,
-        /// Specialization constant ID.
-        spec_id: SpecId,
-        /// The type of the specialization constant.
-        ty: Type,
-    },
-}
-impl Variable {
-    /// Debug name of this variable.
-    pub fn name(&self) -> Option<&str> {
-        match self {
-            Variable::Input { name, .. } => name.as_ref().map(|x| x as &str),
-            Variable::Output { name, .. } => name.as_ref().map(|x| x as &str),
-            Variable::Descriptor { name, .. } => name.as_ref().map(|x| x as &str),
-            Variable::PushConstant { name, .. } => name.as_ref().map(|x| x as &str),
-            Variable::SpecConstant { name, .. } => name.as_ref().map(|x| x as &str),
-        }
-    }
-    /// Remove name of the variable.
-    pub fn clear_name(&mut self) {
-        match self {
-            Variable::Input { name, .. } => *name = None,
-            Variable::Output { name, .. } => *name = None,
-            Variable::Descriptor { name, .. } => *name = None,
-            Variable::PushConstant { name, .. } => *name = None,
-            Variable::SpecConstant { name, .. } => *name = None,
-        }
-    }
-    /// Locator of the variable.
-    pub fn locator(&self) -> Locator {
-        match self {
-            Variable::Input { location, .. } => Locator::Input(*location),
-            Variable::Output { location, .. } => Locator::Output(*location),
-            Variable::Descriptor { desc_bind, .. } => Locator::Descriptor(*desc_bind),
-            Variable::PushConstant { .. } => Locator::PushConstant,
-            Variable::SpecConstant { spec_id, .. } => Locator::SpecConstant(*spec_id),
-        }
-    }
-    /// Descriptor type if it's a descriptor resource.
-    pub fn desc_ty(&self) -> Option<DescriptorType> {
-        if let Variable::Descriptor { desc_ty, .. } = self {
-            Some(desc_ty.clone())
-        } else {
-            None
-        }
-    }
-    /// Specialization constant ID if it's a specialization constant.
-    pub fn spec_id(&self) -> Option<SpecId> {
-        if let Variable::SpecConstant { spec_id, .. } = self {
-            Some(*spec_id)
-        } else {
-            None
-        }
-    }
-    /// Concrete type of the variable.
-    pub fn ty(&self) -> &Type {
-        match self {
-            Variable::Input { ty, .. } => ty,
-            Variable::Output { ty, .. } => ty,
-            Variable::Descriptor { ty, .. } => ty,
-            Variable::PushConstant { ty, .. } => ty,
-            Variable::SpecConstant { ty, .. } => ty,
-        }
-    }
-    /// Number of bindings at the binding point it it's a descriptor resource.
-    pub fn nbind(&self) -> Option<u32> {
-        if let Variable::Descriptor { nbind, .. } = self {
-            Some(*nbind)
-        } else {
-            None
-        }
-    }
-    /// Enumerate variable members in post-order.
-    pub fn walk<'a>(&'a self) -> Walk<'a> {
-        self.ty().walk()
-    }
-}
-/// Function reflection intermediate.
-#[derive(Default, Debug, Clone)]
-pub struct FunctionIntermediate {
-    pub accessed_vars: HashSet<VariableId>,
-    pub callees: HashSet<InstrId>,
-}
 struct EntryPointDeclartion<'a> {
-    pub func_id: FunctionId,
-    pub name: &'a str,
-    pub exec_model: ExecutionModel,
-}
-/// SPIR-V execution mode.
-#[derive(PartialEq, Eq, Hash, Clone, Debug)]
-pub struct ExecutionMode {
-    pub exec_mode: spirv::ExecutionMode,
-    pub operands: Vec<Constant>,
+    name: &'a str,
+    exec_model: ExecutionModel,
+    exec_modes: Vec<ExecutionModeDeclaration>,
 }
 enum ExecutionModeOperand {
     Literal(u32),
     Id(ConstantId),
 }
 struct ExecutionModeDeclaration {
-    pub func_id: FunctionId,
-    pub exec_mode: spirv::ExecutionMode,
-    pub operands: Vec<ExecutionModeOperand>,
-}
-
-/// Access type of a variable.
-#[repr(u32)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum AccessType {
-    /// The variable can be accessed by read.
-    ReadOnly = 1,
-    /// The variable can be accessed by write.
-    WriteOnly = 2,
-    /// The variable can be accessed by read or by write.
-    ReadWrite = 3,
+    func_id: FunctionId,
+    exec_mode: spirv::ExecutionMode,
+    operands: Vec<ExecutionModeOperand>,
 }
 
 // The actual reflection to take place.
 
+fn is_ty_op(op: Op) -> bool {
+    match op {
+        Op::TypeVoid => true,
+        Op::TypeBool => true,
+        Op::TypeInt => true,
+        Op::TypeFloat => true,
+        Op::TypeVector => true,
+        Op::TypeMatrix => true,
+        Op::TypeImage => true,
+        Op::TypeSampler => true,
+        Op::TypeSampledImage => true,
+        Op::TypeArray => true,
+        Op::TypeRuntimeArray => true,
+        Op::TypeStruct => true,
+        Op::TypeOpaque => true,
+        Op::TypePointer => true,
+        Op::TypeFunction => true,
+        Op::TypeEvent => true,
+        Op::TypeDeviceEvent => true,
+        Op::TypeReserveId => true,
+        Op::TypeQueue => true,
+        Op::TypePipe => true,
+        Op::TypeForwardPointer => true,
+        Op::TypePipeStorage => true,
+        Op::TypeNamedBarrier => true,
+        Op::TypeRayQueryKHR => true,
+        Op::TypeAccelerationStructureKHR => true,
+        Op::TypeCooperativeMatrixNV => true,
+        Op::TypeVmeImageINTEL => true,
+        Op::TypeAvcImePayloadINTEL => true,
+        Op::TypeAvcRefPayloadINTEL => true,
+        Op::TypeAvcSicPayloadINTEL => true,
+        Op::TypeAvcMcePayloadINTEL => true,
+        Op::TypeAvcMceResultINTEL => true,
+        Op::TypeAvcImeResultINTEL => true,
+        Op::TypeAvcImeResultSingleReferenceStreamoutINTEL => true,
+        Op::TypeAvcImeResultDualReferenceStreamoutINTEL => true,
+        Op::TypeAvcImeSingleReferenceStreaminINTEL => true,
+        Op::TypeAvcImeDualReferenceStreaminINTEL => true,
+        Op::TypeAvcRefResultINTEL => true,
+        Op::TypeAvcSicResultINTEL => true,
+        _ => false,
+    }
+}
+fn is_const_op(op: Op) -> bool {
+    match op {
+        Op::ConstantTrue => true,
+        Op::ConstantFalse => true,
+        Op::Constant => true,
+        Op::ConstantComposite => true,
+        Op::ConstantSampler => true,
+        Op::ConstantNull => true,
+        Op::ConstantPipeStorage => true,
+        Op::SpecConstantTrue => true,
+        Op::SpecConstantFalse => true,
+        Op::SpecConstant => true,
+        Op::SpecConstantComposite => true,
+        Op::SpecConstantOp => true,
+        _ => false,
+    }
+}
+fn is_atomic_load_op(op: Op) -> bool {
+    match op {
+        Op::AtomicLoad => true,
+        Op::AtomicExchange => true,
+        Op::AtomicCompareExchange => true,
+        Op::AtomicCompareExchangeWeak => true,
+        Op::AtomicIIncrement => true,
+        Op::AtomicIDecrement => true,
+        Op::AtomicIAdd => true,
+        Op::AtomicISub => true,
+        Op::AtomicSMin => true,
+        Op::AtomicUMin => true,
+        Op::AtomicSMax => true,
+        Op::AtomicUMax => true,
+        Op::AtomicAnd => true,
+        Op::AtomicOr => true,
+        Op::AtomicXor => true,
+        _ => false,
+    }
+}
+fn is_atomic_store_op(op: Op) -> bool {
+    match op {
+        Op::AtomicStore => true,
+        _ => false,
+    }
+}
+
 /// SPIR-V reflection intermediate.
 pub struct ReflectIntermediate<'a> {
-    cfg: &'a ReflectConfig,
-    entry_point_declrs: Vec<EntryPointDeclartion<'a>>,
-    exec_mode_declrs: Vec<ExecutionModeDeclaration>,
-    vars: Vec<Variable>,
-
-    name_map: HashMap<(InstrId, Option<u32>), &'a str>,
-    deco_map: HashMap<(InstrId, Option<u32>, u32), &'a [u32]>,
-    ty_map: HashMap<TypeId, Type>,
-    var_map: HashMap<VariableId, usize>,
-    const_map: HashMap<ConstantId, Constant>,
-    ptr_map: HashMap<TypeId, TypeId>,
-    func_map: HashMap<FunctionId, FunctionIntermediate>,
-    declr_map: HashMap<Locator, InstrId>,
+    pub cfg: &'a ReflectConfig,
+    pub name_reg: NameRegistry<'a>,
+    pub deco_reg: DecorationRegistry<'a>,
+    pub ty_reg: TypeRegistry,
+    pub var_reg: VariableRegistry,
+    pub func_reg: FunctionRegistry,
+    pub interp: Evaluator,
 }
 impl<'a> ReflectIntermediate<'a> {
     pub fn new(cfg: &'a ReflectConfig) -> Self {
         ReflectIntermediate {
             cfg,
-            entry_point_declrs: Default::default(),
-            exec_mode_declrs: Default::default(),
-            vars: Default::default(),
-            name_map: Default::default(),
-            deco_map: Default::default(),
-            ty_map: Default::default(),
-            var_map: Default::default(),
-            const_map: Default::default(),
-            ptr_map: Default::default(),
-            func_map: Default::default(),
-            declr_map: Default::default(),
-        }
-    }
 
-    /// Check if a result (like a variable declaration result) or a memeber of a
-    /// result (like a structure definition result) has the given decoration.
-    pub fn contains_deco(&self, id: InstrId, member_idx: Option<u32>, deco: Decoration) -> bool {
-        self.deco_map.contains_key(&(id, member_idx, deco as u32))
-    }
-    /// Get the single-word decoration of an instruction result.
-    pub fn get_deco_u32(&self, id: InstrId, deco: Decoration) -> Option<u32> {
-        self.get_deco_list(id, deco).and_then(|x| x.get(0)).cloned()
-    }
-    /// Get the single-word decoration of a member of an instruction result.
-    pub fn get_member_deco_u32(
-        &self,
-        id: InstrId,
-        member_idx: u32,
-        deco: Decoration,
-    ) -> Option<u32> {
-        self.get_member_deco_list(id, member_idx, deco)
-            .and_then(|x| x.get(0))
-            .cloned()
-    }
-    /// Get the multi-word declaration of a instruction result.
-    pub fn get_deco_list(&self, id: InstrId, deco: Decoration) -> Option<&'a [u32]> {
-        self.deco_map.get(&(id, None, deco as u32)).cloned()
-    }
-    /// Get the multi-word declaration of a member of an instruction result.
-    pub fn get_member_deco_list(
-        &self,
-        id: InstrId,
-        member_idx: u32,
-        deco: Decoration,
-    ) -> Option<&'a [u32]> {
-        self.deco_map
-            .get(&(id, Some(member_idx), deco as u32))
-            .cloned()
-    }
-    /// Get the location-component pair of an interface variable.
-    pub fn get_var_location(&self, var_id: VariableId) -> Option<InterfaceLocation> {
-        let comp = self
-            .get_deco_u32(var_id, Decoration::Component)
-            .unwrap_or(0);
-        self.get_deco_u32(var_id, Decoration::Location)
-            .map(|loc| InterfaceLocation(loc, comp))
-    }
-    /// Get the set-binding pair of a descriptor resource.
-    pub fn get_var_desc_bind(&self, var_id: VariableId) -> Option<DescriptorBinding> {
-        let desc_set = self
-            .get_deco_u32(var_id, Decoration::DescriptorSet)
-            .unwrap_or(0);
-        self.get_deco_u32(var_id, Decoration::Binding)
-            .map(|bind_point| DescriptorBinding::new(desc_set, bind_point))
-    }
-    /// Get the set-binding pair of a descriptor resource, but the binding point
-    /// is forced to 0 if it's not specified in SPIR-V source.
-    pub fn get_var_desc_bind_or_default(&self, var_id: VariableId) -> DescriptorBinding {
-        self.get_var_desc_bind(var_id)
-            .unwrap_or(DescriptorBinding(0, 0))
-    }
-    /// Get the type identified by `ty_id`.
-    pub fn get_ty(&self, ty_id: TypeId) -> Result<&Type> {
-        self.ty_map.get(&ty_id).ok_or(Error::TY_NOT_FOUND)
-    }
-    fn get_deco_or_member_deco_u32(
-        &self,
-        ty_id: TypeId,
-        member_idx: Option<u32>,
-        deco: Decoration,
-    ) -> Result<u32> {
-        self.get_deco_u32(ty_id, deco)
-            .or_else(|| member_idx.and_then(|i| self.get_member_deco_u32(ty_id, i, deco)))
-            .ok_or(Error::MISSING_DECO)
-    }
-    fn put_ty(&mut self, ty_id: TypeId, ty: Type) -> Result<()> {
-        use std::collections::hash_map::Entry::Vacant;
-        match self.ty_map.entry(ty_id) {
-            Vacant(entry) => {
-                entry.insert(ty);
-                Ok(())
-            }
-            _ => Err(Error::ID_COLLISION),
+            name_reg: Default::default(),
+            deco_reg: Default::default(),
+            ty_reg: Default::default(),
+            var_reg: Default::default(),
+            func_reg: Default::default(),
+            interp: Default::default(),
         }
-    }
-    /// Get the variable identified by `var_id`.
-    pub fn get_var(&self, var_id: VariableId) -> Option<&Variable> {
-        let ivar = *self.var_map.get(&var_id)?;
-        let var = &self.vars[ivar];
-        Some(var)
-    }
-    /// Get the constant identified by `const_id`. Specialization constants are
-    /// also stored as constants. Array extents specified by specialization
-    /// constants are not statically known.
-    pub fn get_const(&self, const_id: ConstantId) -> Result<&Constant> {
-        self.const_map.get(&const_id).ok_or(Error::CONST_NOT_FOUND)
-    }
-    fn put_const(&mut self, const_id: ConstantId, constant: Constant) -> Result<()> {
-        use std::collections::hash_map::Entry::Vacant;
-        match self.const_map.entry(const_id) {
-            Vacant(entry) => {
-                entry.insert(constant);
-                Ok(())
-            }
-            _ => Err(Error::ID_COLLISION),
-        }
-    }
-    fn put_lit_const(
-        &mut self,
-        const_id: ConstantId,
-        ty_id: TypeId,
-        value: ConstantValue,
-        spec_id: Option<SpecId>,
-    ) -> Result<()> {
-        let constant = Constant {
-            ty: self.get_ty(ty_id)?.clone(),
-            value,
-            spec_id,
-        };
-        self.put_const(const_id, constant)
-    }
-    fn get_any_name(&self, id: InstrId, member_idx: Option<u32>) -> Option<String> {
-        if self.cfg.gen_unique_names {
-            if let Some(member_idx) = member_idx {
-                Some(format!("_{}_{}", id, member_idx))
-            } else {
-                Some(format!("_{}", id))
-            }
-        } else {
-            self.name_map
-                .get(&(id, member_idx))
-                .map(|x| (*x).to_owned())
-        }
-    }
-    /// Get the human-friendly name of an instruction result.
-    pub fn get_name(&self, id: InstrId) -> Option<String> {
-        self.get_any_name(id, None)
-    }
-    /// Get the human-friendly name of a member of an instruction result.
-    pub fn get_member_name(&self, id: InstrId, member_idx: u32) -> Option<String> {
-        self.get_any_name(id, Some(member_idx))
-    }
-    pub fn get_func(&self, func_id: FunctionId) -> Option<&FunctionIntermediate> {
-        self.func_map.get(&func_id)
-    }
-    pub fn get_var_name(&self, locator: Locator) -> Option<String> {
-        let instr_id = *self.declr_map.get(&locator)?;
-        self.get_name(instr_id)
-    }
-    pub fn get_desc_access_ty(&self, id: InstrId, ty: &Type) -> Option<AccessType> {
-        self.get_access_ty_from_deco(id, None).and_then(|x| {
-            // Use the stricter one.
-            if x == AccessType::ReadWrite {
-                match ty.access_ty() {
-                    Some(x) => Some(x),
-                    None => Some(AccessType::ReadWrite),
-                }
-            } else {
-                Some(x)
-            }
-        })
-    }
-    pub fn get_access_ty_from_deco(
-        &self,
-        id: InstrId,
-        member_idx: Option<u32>,
-    ) -> Option<AccessType> {
-        let write_only = self.contains_deco(id, member_idx, Decoration::NonReadable);
-        let read_only = self.contains_deco(id, member_idx, Decoration::NonWritable);
-        match (write_only, read_only) {
-            (true, true) => None,
-            (true, false) => Some(AccessType::WriteOnly),
-            (false, true) => Some(AccessType::ReadOnly),
-            (false, false) => Some(AccessType::ReadWrite),
-        }
-    }
-    /// Resolve one recurring layer of pointers to the pointer that refer to the
-    /// data directly. `ty_id` should be refer to a pointer type. Returns the ID
-    /// of the type the pointer points to.
-    pub fn access_chain(&self, ty_id: TypeId) -> Option<TypeId> {
-        self.ptr_map.get(&ty_id).cloned()
     }
 }
+fn broken_nested_ty(id: TypeId) -> Error {
+    Error::msg(format!("broken nested type: {}", id))
+}
 impl<'a> ReflectIntermediate<'a> {
-    fn populate_entry_points(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>) -> Result<()> {
-        while let Some(instr) = instrs.peek() {
-            if instr.opcode() != OP_ENTRY_POINT {
-                break;
-            }
-            let op = OpEntryPoint::try_from(instr)?;
-            let entry_point_declr = EntryPointDeclartion {
-                exec_model: op.exec_model,
-                func_id: op.func_id,
-                name: op.name,
-            };
-            self.entry_point_declrs.push(entry_point_declr);
-            instrs.next();
-        }
-        Ok(())
-    }
-    fn populate_exec_modes(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>) -> Result<()> {
-        while let Some(instr) = instrs.peek() {
-            let exec_mode_declr = match instr.opcode() {
-                OP_EXECUTION_MODE => {
-                    let op = OpExecutionModeCommonSPQ::try_from(instr)?;
-                    ExecutionModeDeclaration {
-                        func_id: op.func_id,
-                        exec_mode: op.execution_mode,
-                        operands: op
-                            .params
-                            .iter()
-                            .map(|x| ExecutionModeOperand::Literal(*x))
-                            .collect(),
-                    }
-                }
-                OP_EXECUTION_MODE_ID => {
-                    let op = OpExecutionModeCommonSPQ::try_from(instr)?;
-                    ExecutionModeDeclaration {
-                        func_id: op.func_id,
-                        exec_mode: op.execution_mode,
-                        operands: op
-                            .params
-                            .iter()
-                            .map(|x| ExecutionModeOperand::Id(*x))
-                            .collect(),
-                    }
-                }
-                _ => break,
-            };
-            self.exec_mode_declrs.push(exec_mode_declr);
-            instrs.next();
-        }
-        Ok(())
-    }
-    fn populate_names(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>) -> Result<()> {
-        // Extract naming. Names are generally produced as debug information by
-        // `glslValidator` but it might be in absence.
-        while let Some(instr) = instrs.peek() {
-            if !is_debug_op(instr.opcode()) {
-                break;
-            }
-            let (key, value) = match instr.opcode() {
-                OP_NAME => {
-                    let op = OpName::try_from(instr)?;
-                    ((op.target_id, None), op.name)
-                }
-                OP_MEMBER_NAME => {
-                    let op = OpMemberName::try_from(instr)?;
-                    ((op.target_id, Some(op.member_idx)), op.name)
-                }
-                _ => {
-                    instrs.next();
-                    continue;
-                }
-            };
-            if !value.is_empty() {
-                let collision = self.name_map.insert(key, value);
-                if collision.is_some() {
-                    return Err(Error::NAME_COLLISION);
-                }
-            }
-            instrs.next();
-        }
-        Ok(())
-    }
-    fn populate_decos(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>) -> Result<()> {
-        while let Some(instr) = instrs.peek() {
-            let (key, value) = match instr.opcode() {
-                OP_DECORATE => {
-                    let op = OpDecorate::try_from(instr)?;
-                    ((op.target_id, None, op.deco), op.params)
-                }
-                OP_MEMBER_DECORATE => {
-                    let op = OpMemberDecorate::try_from(instr)?;
-                    ((op.target_id, Some(op.member_idx), op.deco), op.params)
-                }
-                x => {
-                    if is_deco_op(x) {
-                        instrs.next();
-                        continue;
-                    } else {
-                        break;
-                    }
-                }
-            };
-            let collision = self.deco_map.insert(key, value);
-            if collision.is_some() {
-                return Err(Error::DECO_COLLISION);
-            }
-            instrs.next();
-        }
-        Ok(())
-    }
-    fn populate_one_ty(&mut self, instr: &Instr<'a>) -> Result<()> {
-        let ty_record: Option<(TypeId, Type)> = match instr.opcode() {
-            OP_TYPE_FUNCTION => None,
-            OP_TYPE_VOID => {
+    fn populate_one_ty(&mut self, instr: &Instr) -> Result<()> {
+        match instr.op() {
+            Op::TypeFunction => {}
+            Op::TypeVoid => {
                 let op = OpTypeVoid::try_from(instr)?;
-                let scalar_ty = ScalarType::void();
-                Some((op.ty_id, Type::Scalar(scalar_ty)))
+                let scalar_ty = ScalarType::Void;
+                self.ty_reg.set(op.ty_id, Type::Scalar(scalar_ty))?;
             }
-            OP_TYPE_BOOL => {
+            Op::TypeBool => {
                 let op = OpTypeBool::try_from(instr)?;
-                let scalar_ty = ScalarType::boolean();
-                Some((op.ty_id, Type::Scalar(scalar_ty)))
+                let scalar_ty = ScalarType::Boolean;
+                self.ty_reg.set(op.ty_id, Type::Scalar(scalar_ty))?;
             }
-            OP_TYPE_INT => {
+            Op::TypeInt => {
                 let op = OpTypeInt::try_from(instr)?;
-                let scalar_ty = ScalarType::int(op.nbyte >> 3, op.is_signed);
-                Some((op.ty_id, Type::Scalar(scalar_ty)))
-            }
-            OP_TYPE_FLOAT => {
-                let op = OpTypeFloat::try_from(instr)?;
-                let scalar_ty = ScalarType::float(op.nbyte >> 3);
-                Some((op.ty_id, Type::Scalar(scalar_ty)))
-            }
-            OP_TYPE_VECTOR => {
-                let op = OpTypeVector::try_from(instr)?;
-                if let Type::Scalar(scalar_ty) = self.get_ty(op.scalar_ty_id)? {
-                    let vec_ty = VectorType::new(scalar_ty.clone(), op.nscalar);
-                    Some((op.ty_id, Type::Vector(vec_ty)))
-                } else {
-                    return Err(Error::BROKEN_NESTED_TY);
-                }
-            }
-            OP_TYPE_MATRIX => {
-                let op = OpTypeMatrix::try_from(instr)?;
-                if let Type::Vector(vec_ty) = self.get_ty(op.vec_ty_id)? {
-                    let mat_ty = MatrixType::new(vec_ty.clone(), op.nvec);
-                    Some((op.ty_id, Type::Matrix(mat_ty)))
-                } else {
-                    return Err(Error::BROKEN_NESTED_TY);
-                }
-            }
-            OP_TYPE_IMAGE => {
-                let op = OpTypeImage::try_from(instr)?;
-                let scalar_ty = match self.get_ty(op.scalar_ty_id)? {
-                    Type::Scalar(scalar_ty) => scalar_ty.clone(),
-                    _ => return Err(Error::BROKEN_NESTED_TY),
+                let scalar_ty = ScalarType::Integer {
+                    bits: op.bits,
+                    is_signed: op.is_signed,
                 };
-                let img_ty = if op.dim == Dim::DimSubpassData {
+                self.ty_reg.set(op.ty_id, Type::Scalar(scalar_ty))?;
+            }
+            Op::TypeFloat => {
+                let op = OpTypeFloat::try_from(instr)?;
+                let scalar_ty = ScalarType::Float { bits: op.bits };
+                self.ty_reg.set(op.ty_id, Type::Scalar(scalar_ty))?;
+            }
+            Op::TypeVector => {
+                let op = OpTypeVector::try_from(instr)?;
+                if let Type::Scalar(scalar_ty) = self.ty_reg.get(op.scalar_ty_id)? {
+                    let vector_ty = VectorType {
+                        scalar_ty: scalar_ty.clone(),
+                        nscalar: op.nscalar,
+                    };
+                    self.ty_reg.set(op.ty_id, Type::Vector(vector_ty))?;
+                } else {
+                    return Err(broken_nested_ty(op.ty_id));
+                }
+            }
+            Op::TypeMatrix => {
+                let op = OpTypeMatrix::try_from(instr)?;
+                if let Type::Vector(vector_ty) = self.ty_reg.get(op.vector_ty_id)? {
+                    let mat_ty = MatrixType {
+                        vector_ty: vector_ty.clone(),
+                        nvector: op.nvector,
+                        axis_order: None,
+                        stride: None,
+                    };
+                    self.ty_reg.set(op.ty_id, Type::Matrix(mat_ty))?;
+                } else {
+                    return Err(broken_nested_ty(op.ty_id));
+                }
+            }
+            Op::TypeImage => {
+                let op = OpTypeImage::try_from(instr)?;
+                let scalar_ty = match self.ty_reg.get(op.scalar_ty_id)? {
+                    Type::Scalar(scalar_ty) => scalar_ty.clone(),
+                    _ => return Err(broken_nested_ty(op.ty_id)),
+                };
+                if op.dim == spirv::Dim::DimSubpassData {
                     let subpass_data_ty = SubpassDataType {
                         scalar_ty,
                         is_multisampled: op.is_multisampled,
                     };
-                    Type::SubpassData(subpass_data_ty)
+                    self.ty_reg
+                        .set(op.ty_id, Type::SubpassData(subpass_data_ty))?;
                 } else {
                     // Only unit types allowed to be stored in storage images
                     // can have given format.
@@ -786,15 +238,15 @@ impl<'a> ReflectIntermediate<'a> {
                         0 => None,
                         1 => Some(true),
                         2 => Some(false),
-                        _ => return Err(Error::UNSUPPORTED_IMG_CFG),
+                        _ => return Err(anyhow!("unsupported image sampling type")),
                     };
                     let is_depth = match op.is_depth {
                         0 => Some(false),
                         1 => Some(true),
                         2 => None,
-                        _ => return Err(Error::UNSUPPORTED_IMG_CFG),
+                        _ => return Err(anyhow!("unsupported image depth type")),
                     };
-                    let img_ty = ImageType {
+                    let image_ty = ImageType {
                         scalar_ty,
                         dim: op.dim,
                         is_depth,
@@ -803,965 +255,870 @@ impl<'a> ReflectIntermediate<'a> {
                         is_sampled,
                         fmt: op.color_fmt,
                     };
-                    Type::Image(img_ty)
-                };
-                Some((op.ty_id, img_ty))
+                    self.ty_reg.set(op.ty_id, Type::Image(image_ty))?;
+                }
             }
-            OP_TYPE_SAMPLER => {
+            Op::TypeSampler => {
                 let op = OpTypeSampler::try_from(instr)?;
                 // Note that SPIR-V doesn't discriminate color and depth/stencil
                 // samplers. `sampler` and `samplerShadow` means the same thing.
-                Some((op.ty_id, Type::Sampler()))
+                self.ty_reg.set(op.ty_id, Type::Sampler(SamplerType {}))?;
             }
-            OP_TYPE_SAMPLED_IMAGE => {
+            Op::TypeSampledImage => {
                 let op = OpTypeSampledImage::try_from(instr)?;
-                if let Type::Image(img_ty) = self.get_ty(op.img_ty_id)? {
-                    let sampled_img_ty = SampledImageType {
-                        scalar_ty: img_ty.scalar_ty.clone(),
-                        dim: img_ty.dim,
-                        is_array: img_ty.is_array,
-                        is_multisampled: img_ty.is_multisampled,
+                if let Type::Image(image_ty) = self.ty_reg.get(op.image_ty_id)? {
+                    let sampled_image_ty = SampledImageType {
+                        scalar_ty: image_ty.scalar_ty.clone(),
+                        dim: image_ty.dim,
+                        is_array: image_ty.is_array,
+                        is_multisampled: image_ty.is_multisampled,
                     };
-                    let combined_img_sampler_ty = CombinedImageSamplerType { sampled_img_ty };
-                    Some((
+                    let combined_img_sampler_ty = CombinedImageSamplerType { sampled_image_ty };
+                    self.ty_reg.set(
                         op.ty_id,
                         Type::CombinedImageSampler(combined_img_sampler_ty),
-                    ))
+                    )?;
                 } else {
-                    return Err(Error::BROKEN_NESTED_TY);
+                    return Err(broken_nested_ty(op.ty_id));
                 }
             }
-            OP_TYPE_ARRAY => {
+            Op::TypeArray => {
                 let op = OpTypeArray::try_from(instr)?;
                 // FIXME: Workaround old storage buffers.
-                if self.contains_deco(op.proto_ty_id, None, Decoration::BufferBlock) {
-                    let key = (op.ty_id, None, Decoration::BufferBlock as u32);
-                    let _ = self.deco_map.insert(key, &[] as &'static [u32]);
+                if self
+                    .deco_reg
+                    .contains(op.element_ty_id, spirv::Decoration::BufferBlock)
+                {
+                    let _ = self.deco_reg.set(
+                        op.ty_id,
+                        spirv::Decoration::BufferBlock,
+                        &[] as &'static [u32],
+                    );
                 }
-                let proto_ty = if let Ok(x) = self.get_ty(op.proto_ty_id) {
+                let element_ty = if let Ok(x) = self.ty_reg.get(op.element_ty_id) {
                     x
                 } else {
                     return Ok(());
                 };
 
-                let nrepeat = self
-                    .get_const(op.nrepeat_const_id)?
-                    // Some notes about specialization constants.
-                    //
-                    // Using specialization constants for array sizes might lead
-                    // to UNDEFINED BEHAVIOR because structure size MUST be
-                    // definitive at compile time and CANNOT be specialized at
-                    // runtime according to Khronos members, but the default
-                    // behavior of `glslang` is to treat the specialization
-                    // constants as normal constants, then I would say...
-                    // probably it's fine to size array with them?
-                    .value
-                    .to_u32();
+                // Some notes about specialization constants.
+                //
+                // Using specialization constants for array sizes might lead
+                // to UNDEFINED BEHAVIOR because structure size MUST be
+                // definitive at compile time and CANNOT be specialized at
+                // runtime according to Khronos members, but the default
+                // behavior of `glslang` is to treat the specialization
+                // constants as normal constants, then I would say...
+                // probably it's fine to size array with them?
+                let nelement = match self.interp.get_value(op.nelement_const_id)? {
+                    ConstantValue::S32(x) if *x > 0 => *x as u32,
+                    ConstantValue::U32(x) if *x > 0 => *x,
+                    _ => return Err(anyhow!("invalid array size")),
+                };
                 let stride = self
-                    .get_deco_u32(op.ty_id, Decoration::ArrayStride)
+                    .deco_reg
+                    .get_u32(op.ty_id, spirv::Decoration::ArrayStride)
                     .map(|x| x as usize);
 
-                let arr_ty = if let Some(stride) = stride {
-                    ArrayType::new(&proto_ty, nrepeat, stride)
+                let arr_ty = if let Ok(stride) = stride {
+                    // Sized data arrays.
+                    ArrayType {
+                        element_ty: Box::new(element_ty.clone()),
+                        nelement: Some(nelement),
+                        stride: Some(stride),
+                    }
                 } else {
-                    ArrayType::new_multibind(&proto_ty, nrepeat)
+                    // Multiple descriptor binding points grouped into an array.
+                    ArrayType {
+                        element_ty: Box::new(element_ty.clone()),
+                        nelement: Some(nelement),
+                        stride: None,
+                    }
                 };
-                Some((op.ty_id, Type::Array(arr_ty)))
+                self.ty_reg.set(op.ty_id, Type::Array(arr_ty))?;
             }
-            OP_TYPE_RUNTIME_ARRAY => {
+            Op::TypeRuntimeArray => {
                 let op = OpTypeRuntimeArray::try_from(instr)?;
-                let proto_ty = if let Ok(x) = self.get_ty(op.proto_ty_id) {
+                let element_ty = if let Ok(x) = self.ty_reg.get(op.element_ty_id) {
                     x
                 } else {
                     return Ok(());
                 };
                 let stride = self
-                    .get_deco_u32(op.ty_id, Decoration::ArrayStride)
+                    .deco_reg
+                    .get_u32(op.ty_id, spirv::Decoration::ArrayStride)
                     .map(|x| x as usize);
-                let arr_ty = if let Some(stride) = stride {
-                    ArrayType::new_unsized(&proto_ty, stride)
+                let arr_ty = if let Ok(stride) = stride {
+                    // Unsized data arrays.
+                    ArrayType {
+                        element_ty: Box::new(element_ty.clone()),
+                        nelement: None,
+                        stride: Some(stride),
+                    }
                 } else {
-                    ArrayType::new_unsized_multibind(&proto_ty)
+                    // Multiple descriptor binding points grouped into an array
+                    // whose size is unknown at compile time.
+                    ArrayType {
+                        element_ty: Box::new(element_ty.clone()),
+                        nelement: None,
+                        stride: None,
+                    }
                 };
-                Some((op.ty_id, Type::Array(arr_ty)))
+                self.ty_reg.set(op.ty_id, Type::Array(arr_ty))?;
             }
-            OP_TYPE_STRUCT => {
+            Op::TypeStruct => {
                 let op = OpTypeStruct::try_from(instr)?;
-                let struct_name = self.get_name(op.ty_id);
-                let mut struct_ty = StructType::new(struct_name);
+                let struct_name =
+                    self.name_reg
+                        .get(op.ty_id)
+                        .map(ToOwned::to_owned)
+                        .or_else(|| {
+                            if self.cfg.gen_unique_names {
+                                Some(format!("type_{}", op.ty_id))
+                            } else {
+                                None
+                            }
+                        });
+                let mut members = Vec::new();
                 for (i, &member_ty_id) in op.member_ty_ids.iter().enumerate() {
                     let i = i as u32;
-                    let mut member_ty = if let Ok(member_ty) = self.get_ty(member_ty_id) {
+                    let mut member_ty = if let Ok(member_ty) = self.ty_reg.get(member_ty_id) {
                         member_ty.clone()
                     } else {
                         return Ok(());
                     };
-                    let mut proto_ty = &mut member_ty;
-                    while let Type::Array(arr_ty) = proto_ty {
-                        proto_ty = &mut *arr_ty.proto_ty;
+                    let mut element_ty = &mut member_ty;
+                    while let Type::Array(arr_ty) = element_ty {
+                        element_ty = &mut *arr_ty.element_ty;
                     }
-                    if let Type::Matrix(ref mut mat_ty) = proto_ty {
-                        let mat_stride =
-                            self.get_member_deco_u32(op.ty_id, i, Decoration::MatrixStride);
-                        if let Some(mat_stride) = mat_stride {
+                    if let Type::Matrix(ref mut mat_ty) = element_ty {
+                        let mat_stride = self.deco_reg.get_member_u32(
+                            op.ty_id,
+                            i,
+                            spirv::Decoration::MatrixStride,
+                        );
+                        if let Ok(mat_stride) = mat_stride {
                             mat_ty.stride = Some(mat_stride as usize);
                         }
 
-                        let major = if self.contains_deco(op.ty_id, Some(i), Decoration::RowMajor) {
+                        let is_row_major =
+                            self.deco_reg
+                                .contains_member(op.ty_id, i, spirv::Decoration::RowMajor);
+                        let is_col_major =
+                            self.deco_reg
+                                .contains_member(op.ty_id, i, spirv::Decoration::ColMajor);
+
+                        mat_ty.axis_order = if is_row_major {
                             Some(MatrixAxisOrder::RowMajor)
-                        } else if self.contains_deco(op.ty_id, Some(i), Decoration::ColMajor) {
+                        } else if is_col_major {
                             Some(MatrixAxisOrder::ColumnMajor)
                         } else {
                             None
                         };
-                        if let Some(major) = major {
-                            mat_ty.major = Some(major);
-                        }
                     }
-                    let name = self.get_member_name(op.ty_id, i);
-                    if let Some(offset) = self
-                        .get_member_deco_u32(op.ty_id, i, Decoration::Offset)
+                    let name = self
+                        .name_reg
+                        .get_member(op.ty_id, i)
+                        .map(ToOwned::to_owned)
+                        .or_else(|| {
+                            if self.cfg.gen_unique_names {
+                                Some(format!("type_{}_member_{}", op.ty_id, i))
+                            } else {
+                                None
+                            }
+                        });
+                    // For shader input/output blocks there are no offset
+                    // decoration. Since these variables are not externally
+                    // accessible we don't have to worry about them.
+                    let offset = self
+                        .deco_reg
+                        .get_member_u32(op.ty_id, i, spirv::Decoration::Offset)
                         .map(|x| x as usize)
-                    {
-                        let access_ty = self
-                            .get_access_ty_from_deco(op.ty_id, Some(i))
-                            .ok_or(Error::ACCESS_CONFLICT)?;
-                        let member = StructMember {
-                            name,
-                            offset,
-                            ty: member_ty.clone(),
-                            access_ty,
-                        };
-                        struct_ty.members.push(member);
-                    } else {
-                        // For shader input/output blocks there are no offset
-                        // decoration. Since these variables are not externally
-                        // accessible we don't have to worry about them.
-                        return Ok(());
-                    }
+                        .ok();
+                    let access_ty = self
+                        .deco_reg
+                        .get_member_access_ty_from_deco(op.ty_id, i)
+                        .ok_or_else(|| anyhow!("missing access type"))?;
+                    let member = StructMember {
+                        name,
+                        offset,
+                        ty: member_ty.clone(),
+                        access_ty,
+                    };
+                    members.push(member);
                 }
+                let struct_ty = StructType {
+                    name: struct_name,
+                    members: members,
+                };
                 // Don't have to shrink-to-fit because the types in `ty_map`
                 // won't be used directly and will be cloned later.
-                Some((op.ty_id, Type::Struct(struct_ty)))
+                self.ty_reg.set(op.ty_id, Type::Struct(struct_ty))?;
             }
-            OP_TYPE_POINTER => {
+            Op::TypePointer => {
                 let op = OpTypePointer::try_from(instr)?;
-                if self.ptr_map.insert(op.ty_id, op.target_ty_id).is_some() {
-                    return Err(Error::ID_COLLISION);
-                }
-
-                if let Ok(pointee_ty) = self.get_ty(op.target_ty_id) {
-                    let ty = Type::DevicePointer(PointerType::new(pointee_ty));
-                    use std::collections::hash_map::Entry;
-                    match self.ty_map.entry(op.ty_id) {
-                        Entry::Vacant(entry) => {
-                            entry.insert(ty);
-                        }
-                        Entry::Occupied(mut entry) => {
-                            if !entry.get().is_devaddr() {
-                                return Err(Error::ID_COLLISION);
-                            }
-                            entry.insert(ty);
-                        }
-                    }
+                if let Ok(pointee_ty) = self.ty_reg.get(op.target_ty_id) {
+                    // Before SPIR-V 1.3, there is no `StorageBuffer` storage
+                    // class. And from a pointer perspective you can't tell if
+                    // it's a uniform block or a buffer block.
+                    let is_storage_buffer = self
+                        .deco_reg
+                        .contains(op.target_ty_id, spirv::Decoration::BufferBlock);
+                    let store_cls = if op.store_cls == StorageClass::Uniform && is_storage_buffer {
+                        StorageClass::StorageBuffer
+                    } else {
+                        op.store_cls
+                    };
+                    let pointer_ty = PointerType {
+                        pointee_ty: Box::new(pointee_ty.clone()),
+                        store_cls,
+                    };
+                    self.ty_reg.set(op.ty_id, Type::DevicePointer(pointer_ty))?;
                 } else {
                     // Ignore unknown types. Currently only funtion pointers can
                     // step into this.
+                    return Ok(());
                 }
-                return Ok(());
             }
-            OP_TYPE_FORWARD_POINTER => {
+            Op::TypeForwardPointer => {
                 let op = OpTypeForwardPointer::try_from(instr)?;
-                if self
-                    .ty_map
-                    .insert(op.ty_id, Type::DeviceAddress())
-                    .is_some()
-                {
-                    return Err(Error::ID_COLLISION);
-                } else {
-                    return Ok(());
-                }
+                self.ty_reg
+                    .set(op.ty_id, Type::DeviceAddress(DeviceAddressType {}))?;
             }
-            OP_TYPE_ACCELERATION_STRUCTURE_KHR => {
+            Op::TypeAccelerationStructureKHR => {
                 let op = OpTypeAccelerationStructureKHR::try_from(instr)?;
-                Some((op.ty_id, Type::AccelStruct()))
+                self.ty_reg
+                    .set(op.ty_id, Type::AccelStruct(AccelStructType {}))?;
             }
-            OP_TYPE_RAY_QUERY => {
+            Op::TypeRayQueryKHR => {
                 let op = OpTypeRayQueryKHR::try_from(instr)?;
-                Some((op.ty_id, Type::RayQuery()))
+                self.ty_reg.set(op.ty_id, Type::RayQuery(RayQueryType {}))?;
             }
-            _ => return Err(Error::UNSUPPORTED_TY),
-        };
-
-        if let Some((ty_id, mut ty)) = ty_record {
-            // Propagate matrix stride.
-            if let Ok(mat_stride) =
-                self.get_deco_or_member_deco_u32(ty_id, None, Decoration::MatrixStride)
-            {
-                ty = ty.mutate(|x| {
-                    if let Type::Matrix(mut mat_ty) = x {
-                        mat_ty.stride = Some(mat_stride as usize);
-                        Type::Matrix(mat_ty)
-                    } else {
-                        x
-                    }
-                });
-            }
-            // Propagate array stride.
-            if let Ok(arr_stride) =
-                self.get_deco_or_member_deco_u32(ty_id, None, Decoration::ArrayStride)
-            {
-                ty = ty.mutate(|x| {
-                    if let Type::Array(mut arr_ty) = x {
-                        arr_ty.stride = Some(arr_stride as usize);
-                        Type::Array(arr_ty)
-                    } else {
-                        x
-                    }
-                })
-            }
-            self.put_ty(ty_id, ty)
-        } else {
-            Ok(())
+            _ => return Err(anyhow!("unexpected opcode {:?}", instr.op())),
         }
+        Ok(())
     }
-    fn populate_one_const(&mut self, instr: &Instr<'a>) -> Result<()> {
-        let op = OpConstantScalarCommonSPQ::try_from(instr)?;
-        match instr.opcode() {
-            OP_CONSTANT_TRUE => {
-                self.put_lit_const(op.const_id, op.ty_id, ConstantValue::from(true), None)
-            }
-            OP_CONSTANT_FALSE => {
-                self.put_lit_const(op.const_id, op.ty_id, ConstantValue::from(false), None)
-            }
-            OP_CONSTANT => self.put_lit_const(
-                op.const_id,
-                op.ty_id,
-                ConstantValue::try_from(op.value)?,
-                None,
-            ),
-            _ => Ok(()),
-        }
-    }
-    fn populate_one_spec_const_op(&mut self, instr: &Instr<'a>) -> Result<()> {
-        let op = OpSpecConstantHeadSPQ::try_from(instr)?;
-        match op.opcode {
-            OP_SCONVERT => {
-                let op = OpSpecConstantUnaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(a), None)
-            }
-            OP_UCONVERT => {
-                let op = OpSpecConstantUnaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(a), None)
-            }
-            OP_SNEGATE => {
-                let op = OpSpecConstantUnaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_s32();
-                let value = a.overflowing_neg().0;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
-            }
-            OP_NOT => {
-                let op = OpSpecConstantUnaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32();
-                let value = a.overflowing_neg().0;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
-            }
-            OP_IADD => {
-                let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32();
-                let b = self.get_const(op.b_id)?.value.to_u32();
-                let value = a.overflowing_add(b).0;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
-            }
-            OP_ISUB => {
-                let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32();
-                let b = self.get_const(op.b_id)?.value.to_u32();
-                let value = a.overflowing_sub(b).0;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
-            }
-            OP_IMUL => {
-                let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32();
-                let b = self.get_const(op.b_id)?.value.to_u32();
-                let value = a.overflowing_mul(b).0;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
-            }
-            OP_UDIV => {
-                let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32();
-                let b = self.get_const(op.b_id)?.value.to_u32();
-                let value = a.overflowing_div(b).0;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
-            }
-            OP_SDIV => {
-                let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_s32();
-                let b = self.get_const(op.b_id)?.value.to_s32();
-                let value = a.overflowing_div(b).0;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
-            }
-            OP_UMOD => {
-                let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32();
-                let b = self.get_const(op.b_id)?.value.to_u32();
-                let value = a.overflowing_rem_euclid(b).0;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
-            }
-            OP_SREM => {
-                let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_s32();
-                let b = self.get_const(op.b_id)?.value.to_s32();
-                let value = a.overflowing_rem(b).0;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
-            }
-            OP_SMOD => {
-                let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_s32();
-                let b = self.get_const(op.b_id)?.value.to_s32();
-                let value = a.overflowing_rem_euclid(b).0;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
-            }
-            OP_SHIFT_RIGHT_LOGICAL => {
-                let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32();
-                let b = self.get_const(op.b_id)?.value.to_u32();
-                let value = a.overflowing_shr(b).0;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
-            }
-            // Rust don't have a arithmetic shift.
-            //OP_SHIFT_RIGHT_ARITHMETIC => {}
-            OP_SHIFT_LEFT_LOGICAL => {
-                let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32();
-                let b = self.get_const(op.b_id)?.value.to_u32();
-                let value = a.overflowing_shl(b).0;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
-            }
-            OP_BITWISE_OR => {
-                let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32();
-                let b = self.get_const(op.b_id)?.value.to_u32();
-                let value = a | b;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
-            }
-            OP_BITWISE_XOR => {
-                let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32();
-                let b = self.get_const(op.b_id)?.value.to_u32();
-                let value = a ^ b;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
-            }
-            OP_BITWISE_AND => {
-                let op = OpSpecConstantBinaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_u32();
-                let b = self.get_const(op.b_id)?.value.to_u32();
-                let value = a & b;
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
-            }
-            OP_SELECT => {
-                let op = OpSpecConstantTertiaryOpCommonSPQ::try_from(instr)?;
-                let a = self.get_const(op.a_id)?.value.to_bool();
-                let b = self.get_const(op.b_id)?.value;
-                let c = self.get_const(op.c_id)?.value;
-                let value = if a { b } else { c };
-                self.put_lit_const(op.spec_const_id, op.ty_id, ConstantValue::from(value), None)
-            }
-            OP_FCONVERT
-            | OP_VECTOR_SHUFFLE
-            | OP_COMPOSITE_EXTRACT
-            | OP_COMPOSITE_INSERT
-            | OP_LOGICAL_OR
-            | OP_LOGICAL_AND
-            | OP_LOGICAL_NOT
-            | OP_LOGICAL_EQUAL
-            | OP_LOGICAL_NOT_EQUAL
-            | OP_IEQUAL
-            | OP_INOT_EQUAL
-            | OP_ULESS_THAN
-            | OP_SLESS_THAN
-            | OP_UGREATER_THAN
-            | OP_SGREATER_THAN
-            | OP_ULESS_THAN_EQUAL
-            | OP_SLESS_THAN_EQUAL
-            | OP_UGREATER_THAN_EQUAL
-            | OP_SGREATER_THAN_EQUAL
-            | OP_QUANTIZE_TO_F16 => {
-                // Maybe these ops can be supported in the future, but seems
-                // unnecessary ATM.
-                Ok(())
-            }
-            _ => Err(Error::UNSUPPORTED_SPEC),
-        }
-    }
-    fn populate_one_spec_const(&mut self, instr: &Instr<'a>) -> Result<()> {
-        match instr.opcode() {
-            OP_SPEC_CONSTANT_TRUE | OP_SPEC_CONSTANT_FALSE | OP_SPEC_CONSTANT => {
+    fn populate_one_const(&mut self, instr: &Instr) -> Result<()> {
+        let opcode = instr.op();
+        match opcode {
+            Op::ConstantTrue | Op::ConstantFalse | Op::Constant => {
                 let op = OpConstantScalarCommonSPQ::try_from(instr)?;
-                let spec_id = self
-                    .get_deco_u32(op.const_id, Decoration::SpecId)
-                    .ok_or(Error::MISSING_DECO)?;
-
-                if let Some(x) = self.cfg.spec_values.get(&spec_id) {
-                    self.put_lit_const(op.const_id, op.ty_id, x.clone(), None)
-                } else {
-                    match instr.opcode() {
-                        OP_SPEC_CONSTANT_TRUE => self.put_lit_const(
-                            op.const_id,
-                            op.ty_id,
-                            ConstantValue::from(true),
-                            Some(spec_id),
-                        ),
-                        OP_SPEC_CONSTANT_FALSE => self.put_lit_const(
-                            op.const_id,
-                            op.ty_id,
-                            ConstantValue::from(false),
-                            Some(spec_id),
-                        ),
-                        OP_SPEC_CONSTANT => self.put_lit_const(
-                            op.const_id,
-                            op.ty_id,
-                            ConstantValue::try_from(op.value)?,
-                            Some(spec_id),
-                        ),
-                        _ => unreachable!(),
-                    }
-                }
-            }
-            // `SpecId` decorations will be specified to each of the
-            // constituents so we don't have to register a
-            // `Constant` for the composite of them.
-            // `Constant` is registered only for those will be
-            // interacting with Vulkan.
-            OP_SPEC_CONSTANT_COMPOSITE => {
-                //let op = OpSpecConstantComposite::try_from(instr)?;
-                //let constant = Constant {
-                //    // Empty value to annotate a specialization constant. We
-                //    // have nothing like a `SpecId` to access such
-                //    // specialization constant so it's unnecesary to resolve
-                //    // it's default value. Same applies to `OpSpecConstantOp`.
-                //    value: &[] as &'static [u32],
-                //    spec_id: None,
-                //};
-                //(op.spec_const_id, constant)
+                let ty = self.ty_reg.get(op.ty_id)?.clone();
+                let value = match instr.op() {
+                    Op::ConstantTrue => ConstantValue::from(true),
+                    Op::ConstantFalse => ConstantValue::from(false),
+                    Op::Constant => ConstantValue::from(op.value).to_typed(&ty)?,
+                    _ => return Ok(()),
+                };
+                let name = self
+                    .name_reg
+                    .get(op.const_id)
+                    .map(ToOwned::to_owned)
+                    .or_else(|| {
+                        if self.cfg.gen_unique_names {
+                            Some(format!("const_{}", op.const_id))
+                        } else {
+                            None
+                        }
+                    });
+                let constant = Constant::new(name, ty, value);
+                self.interp.set(op.const_id, constant)?;
                 Ok(())
             }
-            OP_SPEC_CONSTANT_OP => {
-                let res = self.populate_one_spec_const_op(instr);
-                // Tolerate unfound constants during constant capture. The
-                // absence of constant is only critical when it's used as array
-                // size.
-                if res == Err(Error::CONST_NOT_FOUND) {
-                    return Ok(());
-                }
-                res
+            Op::ConstantComposite
+            | Op::ConstantSampler
+            | Op::ConstantNull
+            | Op::ConstantPipeStorage => Ok(()),
+            Op::SpecConstantTrue | Op::SpecConstantFalse | Op::SpecConstant => {
+                let op = OpConstantScalarCommonSPQ::try_from(instr)?;
+                let name = self.name_reg.get(op.const_id).map(ToString::to_string);
+                let spec_id = self
+                    .deco_reg
+                    .get_u32(op.const_id, spirv::Decoration::SpecId)?;
+                let ty = self.ty_reg.get(op.ty_id)?.clone();
+                let constant = if let Some(user_value) = self.cfg.spec_values.get(&spec_id) {
+                    Constant::new(name, ty, user_value.clone())
+                } else {
+                    let value = match opcode {
+                        Op::SpecConstantTrue => ConstantValue::from(true),
+                        Op::SpecConstantFalse => ConstantValue::from(false),
+                        Op::SpecConstant => ConstantValue::from(op.value).to_typed(&ty)?,
+                        _ => unreachable!(),
+                    };
+                    Constant::new_spec(name, ty, value, spec_id)
+                };
+                self.interp.set(op.const_id, constant)?;
+                Ok(())
             }
-            _ => Err(Error::UNSUPPORTED_SPEC),
+            // `SpecId` decorations will be specified to each of the constituents so we don't have to register a `Constant` for the composite of them. `Constant` is registered only for those will be interacting with Vulkan.
+            Op::SpecConstantComposite => Ok(()),
+            Op::SpecConstantOp => {
+                let op = OpSpecConstantHeadSPQ::try_from(instr)?;
+                let opcode = Op::from_u32(op.opcode)
+                    .ok_or_else(|| anyhow!("invalid specialization constant op opcode"))?;
+                let result_id = op.spec_const_id;
+                let result_ty = self.ty_reg.get(op.ty_id)?;
+                self.interp
+                    .interpret(opcode, result_id, result_ty, &instr.as_ref()[4..])?;
+                Ok(())
+            }
+            _ => Err(anyhow!("unexpected opcode {:?}", instr.op())),
         }
     }
-    fn populate_one_var(&mut self, instr: &Instr<'a>) -> Result<()> {
-        fn extract_proto_ty<'a>(ty: &'a Type) -> Result<(u32, &'a Type)> {
-            match ty {
-                Type::Array(arr_ty) => {
-                    // `nrepeat=None` is no longer considered invalid because of
-                    // the adoption of `SPV_EXT_descriptor_indexing`. This
-                    // shader extension has been supported in Vulkan 1.2.
-                    let nrepeat = arr_ty.nrepeat.unwrap_or(0);
-                    Ok((nrepeat, &arr_ty.proto_ty))
-                }
-                _ => Ok((1, &ty)),
-            }
-        }
-
+    fn populate_one_var(&mut self, instr: &Instr) -> Result<()> {
         let op = OpVariable::try_from(instr)?;
-        let ty_id = self
-            .access_chain(op.ty_id)
-            .ok_or(Error::BROKEN_ACCESS_CHAIN)?;
-        let ty = if let Ok(ty) = self.get_ty(ty_id) {
-            ty
+        let ptr_ty = if let Ok(ty) = self.ty_reg.get(op.ty_id) {
+            match ty {
+                Type::DevicePointer(ptr_ty) => ptr_ty.clone(),
+                _ => return Err(broken_nested_ty(op.ty_id)),
+            }
         } else {
-            // If a variable is declared based on a unregistered type, very
-            // likely it's a input/output block passed between shader stages. We
-            // can safely ignore them.
             return Ok(());
         };
-        let name = self.get_name(op.var_id);
-        let var = match op.store_cls {
-            StorageClass::Input => {
-                if let Some(location) = self.get_var_location(op.var_id) {
-                    let var = Variable::Input {
-                        name,
-                        location,
-                        ty: ty.clone(),
-                    };
-                    // There can be interface blocks for input and output but
-                    // there won't be any for attribute inputs nor for
-                    // attachment outputs, so we just ignore structs and arrays
-                    // or something else here.
-                    Some(var)
-                } else {
-                    // Ignore built-in interface varaibles whichh have no
-                    // location assigned.
-                    None
-                }
-            }
-            StorageClass::Output => {
-                if let Some(location) = self.get_var_location(op.var_id) {
-                    let var = Variable::Output {
-                        name,
-                        location,
-                        ty: ty.clone(),
-                    };
-                    Some(var)
-                } else {
-                    None
-                }
-            }
-            StorageClass::PushConstant => {
-                // Push constants have no global offset. Offsets are applied to
-                // members.
-                if let Type::Struct(_) = ty {
-                    let var = Variable::PushConstant {
-                        name,
-                        ty: ty.clone(),
-                    };
-                    Some(var)
-                } else {
-                    return Err(Error::TY_NOT_FOUND);
-                }
-            }
-            StorageClass::Uniform => {
-                let (nbind, ty) = extract_proto_ty(ty)?;
-                let desc_bind = self.get_var_desc_bind_or_default(op.var_id);
+        let name = self.name_reg.get(op.var_id).map(ToString::to_string);
+        let var = VariableAlloc {
+            name,
+            ptr_ty,
+            store_cls: op.store_cls,
+        };
+        self.var_reg.set(op.var_id, var)?;
+        Ok(())
+    }
+}
 
-                // For SPIR-V versions <= 1.3 in which `BufferBlock` is not
-                // deprecated.
-                let var = if self.contains_deco(ty_id, None, Decoration::BufferBlock) {
-                    let access = self
-                        .get_desc_access_ty(op.var_id, ty)
-                        .ok_or(Error::ACCESS_CONFLICT)?;
-                    let desc_ty = DescriptorType::StorageBuffer(access);
-                    Variable::Descriptor {
-                        name,
-                        desc_bind,
-                        desc_ty,
-                        ty: ty.clone(),
-                        nbind,
-                    }
+pub struct FunctionInspector {
+    cur_func: Option<(FunctionId, Function)>,
+    access_chain_map: HashMap<VariableId, VariableId>,
+}
+impl FunctionInspector {
+    pub fn new() -> Self {
+        Self {
+            cur_func: None,
+            access_chain_map: HashMap::default(),
+        }
+    }
+}
+impl Inspector for FunctionInspector {
+    fn inspect(&mut self, itm: &mut ReflectIntermediate<'_>, instr: &Instr) -> Result<()> {
+        let opcode = instr.op();
+        match opcode {
+            Op::Function => {
+                let op = OpFunction::try_from(instr)?;
+                let func_id = op.func_id;
+                self.cur_func = Some((func_id, Function::default()));
+            }
+            Op::FunctionEnd => {
+                if let Some((func_id, func)) = self.cur_func.take() {
+                    itm.func_reg.set(func_id, func)?;
                 } else {
-                    let desc_ty = DescriptorType::UniformBuffer();
-                    Variable::Descriptor {
-                        name,
-                        desc_bind,
-                        desc_ty,
-                        ty: ty.clone(),
-                        nbind,
-                    }
-                };
-                Some(var)
+                    return Err(anyhow!("unexpected OpFunctionEnd"));
+                }
+                self.cur_func = None;
             }
-            StorageClass::StorageBuffer => {
-                let (nbind, ty) = extract_proto_ty(ty)?;
-                let desc_bind = self.get_var_desc_bind_or_default(op.var_id);
-                let access = self
-                    .get_desc_access_ty(op.var_id, ty)
-                    .ok_or(Error::ACCESS_CONFLICT)?;
-                let desc_ty = DescriptorType::StorageBuffer(access);
-                let var = Variable::Descriptor {
-                    name,
-                    desc_bind,
-                    desc_ty,
-                    ty: ty.clone(),
-                    nbind,
-                };
-                Some(var)
-            }
-            StorageClass::UniformConstant => {
-                let (nbind, ty) = extract_proto_ty(ty)?;
-                let desc_bind = self.get_var_desc_bind_or_default(op.var_id);
-                let var = match &ty {
-                    Type::Image(img_ty) => {
-                        if let Some(false) = img_ty.is_sampled {
-                            // Guaranteed a storage image.
-                            let access = self
-                                .get_desc_access_ty(op.var_id, ty)
-                                .ok_or(Error::ACCESS_CONFLICT)?;
-                            let desc_ty = match img_ty.dim {
-                                Dim::DimBuffer => DescriptorType::StorageTexelBuffer(access),
-                                _ => DescriptorType::StorageImage(access),
-                            };
-                            let storage_img_ty = StorageImageType {
-                                dim: img_ty.dim,
-                                is_array: img_ty.is_array,
-                                is_multisampled: img_ty.is_multisampled,
-                                fmt: img_ty.fmt,
-                            };
-                            Variable::Descriptor {
-                                name,
-                                desc_bind,
-                                desc_ty,
-                                ty: Type::StorageImage(storage_img_ty),
-                                nbind,
-                            }
-                        } else {
-                            // Potentially a sampled image.
-                            let desc_ty = match img_ty.dim {
-                                Dim::DimBuffer => DescriptorType::UniformTexelBuffer(),
-                                _ => DescriptorType::SampledImage(),
-                            };
-                            let sampled_img_ty = SampledImageType {
-                                dim: img_ty.dim,
-                                scalar_ty: img_ty.scalar_ty.clone(),
-                                is_array: img_ty.is_array,
-                                is_multisampled: img_ty.is_multisampled,
-                            };
-                            Variable::Descriptor {
-                                name,
-                                desc_bind,
-                                desc_ty,
-                                ty: Type::SampledImage(sampled_img_ty),
-                                nbind,
-                            }
-                        }
-                    }
-                    Type::Sampler() => {
-                        let desc_ty = DescriptorType::Sampler();
-                        Variable::Descriptor {
-                            name,
-                            desc_bind,
-                            desc_ty,
-                            ty: ty.clone(),
-                            nbind,
-                        }
-                    }
-                    Type::CombinedImageSampler(combined_img_sampler_ty) => {
-                        let desc_ty = match combined_img_sampler_ty.sampled_img_ty.dim {
-                            Dim::DimBuffer => DescriptorType::UniformTexelBuffer(),
-                            _ => DescriptorType::CombinedImageSampler(),
-                        };
-                        Variable::Descriptor {
-                            name,
-                            desc_bind,
-                            desc_ty,
-                            ty: ty.clone(),
-                            nbind,
-                        }
-                    }
-                    Type::SubpassData(_) => {
-                        let input_attm_idx = self
-                            .get_deco_u32(op.var_id, Decoration::InputAttachmentIndex)
-                            .ok_or(Error::MISSING_DECO)?;
-                        let desc_ty = DescriptorType::InputAttachment(input_attm_idx);
-                        Variable::Descriptor {
-                            name,
-                            desc_bind,
-                            desc_ty,
-                            ty: ty.clone(),
-                            nbind,
-                        }
-                    }
-                    Type::AccelStruct() => {
-                        let desc_ty = DescriptorType::AccelStruct();
-                        Variable::Descriptor {
-                            name,
-                            desc_bind,
-                            desc_ty,
-                            ty: ty.clone(),
-                            nbind,
-                        }
-                    }
-                    _ => return Err(Error::UNSUPPORTED_TY),
-                };
-                Some(var)
+            Op::FunctionCall => {
+                let op = OpFunctionCall::try_from(instr)?;
+                let func_id = op.func_id;
+                let func = itm.func_reg.get_mut(func_id)?;
+                func.callees.insert(func_id);
             }
             _ => {
-                // Leak out unknown storage classes.
+                if let Some((_func_id, func)) = self.cur_func.as_mut() {
+                    let op = instr.op();
+                    if op == Op::AccessChain {
+                        let op = OpAccessChain::try_from(instr)?;
+                        if self
+                            .access_chain_map
+                            .insert(op.var_id, op.accessed_var_id)
+                            .is_some()
+                        {
+                            return Err(anyhow!("duplicate access chain at a same id"));
+                        }
+                    } else if op == Op::Load || is_atomic_load_op(op) {
+                        let op = OpLoad::try_from(instr)?;
+                        let mut var_id = op.var_id;
+                        // Resolve access chain.
+                        if let Some(&x) = self.access_chain_map.get(&var_id) {
+                            var_id = x
+                        }
+                        func.accessed_vars.insert(var_id);
+                    } else if op == Op::Store || is_atomic_store_op(op) {
+                        let op = OpStore::try_from(instr)?;
+                        let mut var_id = op.var_id;
+                        // Resolve access chain.
+                        if let Some(&x) = self.access_chain_map.get(&var_id) {
+                            var_id = x
+                        }
+                        func.accessed_vars.insert(var_id);
+                    }
+                } else {
+                    return Err(anyhow!("unexpected opcode {:?}", instr.op()));
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+pub fn reflect<'a, I: Inspector>(
+    itm: &mut ReflectIntermediate<'a>,
+    mut inspector: I,
+) -> Result<Vec<EntryPoint>> {
+    // Don't change the order. See _2.4 Logical Layout of a Module_ of the
+    // SPIR-V specification for more information.
+    let mut instrs = Instrs::new(itm.cfg.spv.words()).peekable();
+
+    let mut entry_point_declrs = HashMap::default();
+
+    // 1. All OpCapability instructions.
+    while let Some(instr) = instrs.peek().cloned() {
+        if instr.op() == Op::Capability {
+            instrs.next();
+        } else {
+            break;
+        }
+    }
+    // 2. Optional OpExtension instructions (extensions to SPIR-V).
+    while let Some(instr) = instrs.peek().cloned() {
+        if instr.op() == Op::Extension {
+            instrs.next();
+        } else {
+            break;
+        }
+    }
+    // 3. Optional OpExtInstImport instructions.
+    while let Some(instr) = instrs.peek().cloned() {
+        if instr.op() == Op::ExtInstImport {
+            let op = OpExtInstImport::try_from(instr)?;
+            itm.interp
+                .import_ext_instr_set(op.instr_set_id, op.name.to_owned())?;
+            instrs.next();
+        } else {
+            break;
+        }
+    }
+    // 4. The single required OpMemoryModel instruction.
+    if let Some(instr) = instrs.next() {
+        if instr.op() == Op::MemoryModel {
+            let op = OpMemoryModel::try_from(instr)?;
+            match op.addr_model {
+                spirv::AddressingModel::Logical => {}
+                spirv::AddressingModel::PhysicalStorageBuffer64 => {}
+                _ => return Err(anyhow!("unsupported addressing model")),
+            }
+            match op.mem_model {
+                spirv::MemoryModel::GLSL450 => {}
+                spirv::MemoryModel::Vulkan => {}
+                _ => return Err(anyhow!("unsupported memory model")),
+            }
+        } else {
+            return Err(anyhow!("expected OpMemoryModel, but got {:?}", instr.op()));
+        }
+    } else {
+        return Err(anyhow!("expected OpMemoryModel, but got nothing"));
+    }
+    // 5. All entry point declarations, using OpEntryPoint.
+    while let Some(instr) = instrs.peek().cloned() {
+        if instr.op() == Op::EntryPoint {
+            let op = OpEntryPoint::try_from(instr)?;
+            let entry_point_declr = EntryPointDeclartion {
+                exec_model: op.exec_model,
+                name: op.name,
+                exec_modes: Default::default(),
+            };
+            use std::collections::hash_map::Entry;
+            match entry_point_declrs.entry(op.func_id) {
+                Entry::Occupied(_) => return Err(anyhow!("duplicate entry point at a same id")),
+                Entry::Vacant(e) => {
+                    e.insert(entry_point_declr);
+                }
+            }
+            instrs.next();
+        } else {
+            break;
+        }
+    }
+    // 6. All execution-mode declarations, using OpExecutionMode or
+    //    OpExecutionModeId.
+    while let Some(instr) = instrs.peek().cloned() {
+        let op = instr.op();
+        match op {
+            Op::ExecutionMode | Op::ExecutionModeId => {
+                let mut operands = instr.operands();
+                let operand_ctor = match op {
+                    Op::ExecutionMode => |x: &u32| ExecutionModeOperand::Literal(*x),
+                    Op::ExecutionModeId => |x: &u32| ExecutionModeOperand::Id(*x),
+                    _ => unreachable!(),
+                };
+
+                let func_id = operands.read_u32()?;
+                let exec_mode = operands.read_enum::<spirv::ExecutionMode>()?;
+                let operands = operands
+                    .read_list()?
+                    .into_iter()
+                    .map(operand_ctor)
+                    .collect();
+                let exec_mode_declr = ExecutionModeDeclaration {
+                    func_id,
+                    exec_mode,
+                    operands,
+                };
+                entry_point_declrs
+                    .get_mut(&func_id)
+                    .ok_or(anyhow!("execution mode for non-existing entry point"))?
+                    .exec_modes
+                    .push(exec_mode_declr);
+                instrs.next();
+            }
+            _ => break,
+        }
+    }
+    // 7. These debug instructions, which must be grouped in the following
+    //    order:
+    //   a. All OpString, OpSourceExtension, OpSource, and
+    //      OpSourceContinued, without forward references.
+    //   b. All OpName and all OpMemberName.
+    //   c. All OpModuleProcessed instructions.
+    while let Some(instr) = instrs.peek().cloned() {
+        match instr.op() {
+            Op::String
+            | Op::SourceExtension
+            | Op::Source
+            | Op::SourceContinued
+            | Op::ModuleProcessed => {
+                instrs.next();
+            }
+            Op::Name => {
+                let op = OpName::try_from(instr)?;
+                if !op.name.is_empty() {
+                    // Ignore empty names.
+                    itm.name_reg.set(op.target_id, op.name);
+                }
+                instrs.next();
+            }
+            Op::MemberName => {
+                let op = OpMemberName::try_from(instr)?;
+                if !op.name.is_empty() {
+                    itm.name_reg
+                        .set_member(op.target_id, op.member_idx, op.name);
+                }
+                instrs.next();
+            }
+            _ => break,
+        }
+    }
+    // 8. All annotation instructions:
+    //   a. All decoration instructions.
+    while let Some(instr) = instrs.peek().cloned() {
+        match instr.op() {
+            Op::Decorate => {
+                let op = OpDecorate::try_from(instr)?;
+                let deco = op.deco;
+                itm.deco_reg.set(op.target_id, deco, op.params)?;
+                instrs.next();
+            }
+            Op::MemberDecorate => {
+                let op = OpMemberDecorate::try_from(instr)?;
+                let deco = op.deco;
+                itm.deco_reg
+                    .set_member(op.target_id, op.member_idx, deco, op.params)?;
+                instrs.next();
+            }
+            Op::DecorationGroup
+            | Op::GroupDecorate
+            | Op::GroupMemberDecorate
+            | Op::DecorateId
+            | Op::DecorateString
+            | Op::MemberDecorateString => {
+                instrs.next();
+            }
+            _ => break,
+        };
+    }
+    // 9. All type declarations (OpTypeXXX instructions), all constant
+    //    instructions, and all global variable declarations (all OpVariable
+    //    instructions whose Storage Class is not Function). This is the
+    //    preferred location for OpUndef instructions, though they can also
+    //    appear in function bodies. All operands in all these instructions
+    //    must be declared before being used. Otherwise, they can be in any
+    //    order. This section is the first section to allow use of:
+    //   a. OpLine and OpNoLine debug information.
+    //   b. Non-semantic instructions with OpExtInst.
+    while let Some(instr) = instrs.peek().cloned() {
+        let opcode = instr.op();
+        if let Op::Line | Op::NoLine = opcode {
+            instrs.next();
+            continue;
+        }
+        if is_ty_op(opcode) {
+            itm.populate_one_ty(instr)?;
+        } else if opcode == Op::Variable {
+            itm.populate_one_var(instr)?;
+        } else if is_const_op(opcode) {
+            itm.populate_one_const(instr)?;
+        } else {
+            break;
+        }
+        instrs.next();
+    }
+    // 10. All function declarations ("declarations" are functions without a
+    //     body; there is no forward declaration to a function with a body).
+    //     A function declaration is as follows.
+    //   a. Function declaration, using OpFunction.
+    //   b. Function parameter declarations, using OpFunctionParameter.
+    //   c. Function end, using OpFunctionEnd.
+    // 11. All function definitions (functions with a body). A function
+    //     definition is as follows.
+    //   a. Function definition, using OpFunction.
+    //   b. Function parameter declarations, using OpFunctionParameter.
+    //   c. Block.
+    //   d. Block.
+    //   e. ...
+    //   f. Function end, using OpFunctionEnd.
+    while let Some(instr) = instrs.peek().cloned() {
+        let opcode = instr.op();
+        if let Op::Line | Op::NoLine = opcode {
+            instrs.next();
+            continue;
+        }
+        inspector.inspect(itm, instr)?;
+        instrs.next();
+    }
+
+    itm.collect_entry_points(entry_point_declrs)
+}
+
+fn make_desc_var(
+    deco_reg: &DecorationRegistry,
+    name: Option<String>,
+    var_id: VariableId,
+    ptr_ty: &PointerType,
+    ty: &Type,
+) -> Option<Variable> {
+    // Unwrap multi-binding.
+    let (nbind, ty) = match ty {
+        Type::Array(arr_ty) => {
+            // `nrepeat=None` is no longer considered invalid because of
+            // the adoption of `SPV_EXT_descriptor_indexing`. This
+            // shader extension has been supported in Vulkan 1.2.
+            let nrepeat = arr_ty.nelement.unwrap_or(0);
+            (nrepeat, &*arr_ty.element_ty)
+        }
+        _ => (1, ty),
+    };
+
+    // Elevate image type to concrete storage/sampled image type.
+    let ty = match ty {
+        Type::Image(image_ty) => {
+            if let Some(false) = image_ty.is_sampled {
+                // Guaranteed a storage image.
+                let storage_image_ty = StorageImageType {
+                    dim: image_ty.dim,
+                    is_array: image_ty.is_array,
+                    is_multisampled: image_ty.is_multisampled,
+                    fmt: image_ty.fmt,
+                };
+                Type::StorageImage(storage_image_ty)
+            } else {
+                // Potentially a sampled image.
+                let sampled_image_ty = SampledImageType {
+                    dim: image_ty.dim,
+                    scalar_ty: image_ty.scalar_ty.clone(),
+                    is_array: image_ty.is_array,
+                    is_multisampled: image_ty.is_multisampled,
+                };
+                Type::SampledImage(sampled_image_ty)
+            }
+        }
+        _ => ty.clone(),
+    };
+
+    let desc_bind = deco_reg.get_var_desc_bind_or_default(var_id);
+    let desc_ty = match &ty {
+        Type::Struct(_) => {
+            // Compatibility for SPIR-V <= 1.3 is done when
+            // extracting storage class deco for pointer types.
+            if ptr_ty.store_cls == StorageClass::StorageBuffer {
+                let access = deco_reg
+                    .get_desc_access_ty(var_id, &ty)
+                    .unwrap_or(AccessType::ReadWrite);
+                DescriptorType::StorageBuffer(access)
+            } else {
+                DescriptorType::UniformBuffer()
+            }
+        }
+        Type::SampledImage(sampled_image_ty) => match sampled_image_ty.dim {
+            spirv::Dim::DimBuffer => DescriptorType::UniformTexelBuffer(),
+            _ => DescriptorType::SampledImage(),
+        },
+        Type::StorageImage(store_image_ty) => {
+            let access = deco_reg
+                .get_desc_access_ty(var_id, &ty)
+                .unwrap_or(AccessType::ReadWrite);
+            match store_image_ty.dim {
+                spirv::Dim::DimBuffer => DescriptorType::StorageTexelBuffer(access),
+                _ => DescriptorType::StorageImage(access),
+            }
+        }
+        Type::Sampler(_) => DescriptorType::Sampler(),
+        Type::CombinedImageSampler(combined_img_sampler_ty) => {
+            match combined_img_sampler_ty.sampled_image_ty.dim {
+                spirv::Dim::DimBuffer => DescriptorType::UniformTexelBuffer(),
+                _ => DescriptorType::CombinedImageSampler(),
+            }
+        }
+        Type::SubpassData(_) => {
+            let input_attm_idx = deco_reg.get_var_input_attm_idx(var_id).unwrap_or_default();
+            DescriptorType::InputAttachment(input_attm_idx)
+        }
+        Type::AccelStruct(_) => DescriptorType::AccelStruct(),
+        _ => return None,
+    };
+    let var = Variable::Descriptor {
+        name,
+        desc_bind,
+        desc_ty,
+        ty,
+        nbind,
+    };
+    Some(var)
+}
+fn make_var<'a>(
+    deco_reg: &DecorationRegistry<'a>,
+    name: Option<String>,
+    var_id: VariableId,
+    var_alloc: &VariableAlloc,
+) -> Option<Variable> {
+    let ptr_ty = &var_alloc.ptr_ty;
+    let ty = &*ptr_ty.pointee_ty;
+    // Note that the storage class of a variable must be the same as the
+    // pointer.
+    match ptr_ty.store_cls {
+        StorageClass::Input => {
+            if let Ok(location) = deco_reg.get_var_location(var_id) {
+                let var = Variable::Input {
+                    name,
+                    location,
+                    ty: ty.clone(),
+                };
+                // There can be interface blocks for input and output but
+                // there won't be any for attribute inputs nor for
+                // attachment outputs, so we just ignore structs and arrays
+                // or something else here.
+                Some(var)
+            } else {
+                // Ignore built-in interface varaibles whichh have no
+                // location assigned.
                 None
             }
-        };
-
-        if let Some(var) = var {
-            // Register variable.
-            if self.var_map.insert(op.var_id, self.vars.len()).is_some() {
-                return Err(Error::ID_COLLISION);
-            }
-            let locator = var.locator();
-            self.declr_map.insert(locator, op.var_id);
-            self.vars.push(var);
         }
-
-        Ok(())
-    }
-    fn populate_defs(&mut self, instrs: &'_ mut Peekable<Instrs<'a>>) -> Result<()> {
-        // type definitions always follow decorations, so we don't skip
-        // instructions here.
-        while let Some(instr) = instrs.peek() {
-            let opcode = instr.opcode();
-            if is_ty_op(opcode) {
-                self.populate_one_ty(instr)?;
-            } else if opcode == OP_VARIABLE {
-                self.populate_one_var(instr)?;
-            } else if CONST_RANGE.contains(&opcode) {
-                self.populate_one_const(instr)?;
-            } else if SPEC_CONST_RANGE.contains(&opcode) {
-                self.populate_one_spec_const(instr)?;
+        StorageClass::Output => {
+            if let Ok(location) = deco_reg.get_var_location(var_id) {
+                let var = Variable::Output {
+                    name,
+                    location,
+                    ty: ty.clone(),
+                };
+                Some(var)
             } else {
-                break;
-            }
-            instrs.next();
-        }
-        Ok(())
-    }
-    fn populate_access<I: Inspector>(
-        &mut self,
-        instrs: &'_ mut Peekable<Instrs<'a>>,
-        mut inspector: I,
-    ) -> Result<()> {
-        let mut access_chain_map = HashMap::default();
-        let mut func_id: InstrId = !0;
-
-        while let Some(instr) = instrs.peek() {
-            let mut notify_inspector = func_id != !0;
-            // Do our works first.
-            match instr.opcode() {
-                OP_FUNCTION => {
-                    let op = OpFunction::try_from(instr)?;
-                    func_id = op.func_id;
-                    let last = self.func_map.insert(func_id, Default::default());
-                    if last.is_some() {
-                        return Err(Error::ID_COLLISION);
-                    }
-                    notify_inspector = true;
-                }
-                OP_FUNCTION_CALL => {
-                    let op = OpFunctionCall::try_from(instr)?;
-                    let func = self
-                        .func_map
-                        .get_mut(&func_id)
-                        .ok_or(Error::FUNC_NOT_FOUND)?;
-                    func.callees.insert(op.func_id);
-                }
-                OP_LOAD | OP_ATOMIC_LOAD | OP_ATOMIC_EXCHANGE..=OP_ATOMIC_XOR => {
-                    let op = OpLoad::try_from(instr)?;
-                    let mut var_id = op.var_id;
-                    // Resolve access chain.
-                    if let Some(&x) = access_chain_map.get(&var_id) {
-                        var_id = x
-                    }
-                    let func = self
-                        .func_map
-                        .get_mut(&func_id)
-                        .ok_or(Error::FUNC_NOT_FOUND)?;
-                    func.accessed_vars.insert(var_id);
-                }
-                OP_STORE | OP_ATOMIC_STORE => {
-                    let op = OpStore::try_from(instr)?;
-                    let mut var_id = op.var_id;
-                    // Resolve access chain.
-                    if let Some(&x) = access_chain_map.get(&var_id) {
-                        var_id = x
-                    }
-                    let func = self
-                        .func_map
-                        .get_mut(&func_id)
-                        .ok_or(Error::FUNC_NOT_FOUND)?;
-                    func.accessed_vars.insert(var_id);
-                }
-                OP_ACCESS_CHAIN => {
-                    let op = OpAccessChain::try_from(instr)?;
-                    if access_chain_map
-                        .insert(op.var_id, op.accessed_var_id)
-                        .is_some()
-                    {
-                        return Err(Error::ID_COLLISION);
-                    }
-                }
-                OP_FUNCTION_END => {
-                    func_id = !0;
-                }
-                _ => {}
-            }
-            // Then notify the inspector.
-            if notify_inspector {
-                inspector.inspect(&self, instr)
-            }
-
-            instrs.next();
-        }
-        Ok(())
-    }
-
-    pub(crate) fn reflect<I: Inspector>(
-        instrs: Instrs<'a>,
-        cfg: &ReflectConfig,
-        inspector: I,
-    ) -> Result<Vec<EntryPoint>> {
-        fn skip_until_range_inclusive<'a>(
-            instrs: &'_ mut Peekable<Instrs<'a>>,
-            rng: RangeInclusive<u32>,
-        ) {
-            while let Some(instr) = instrs.peek() {
-                if !rng.contains(&instr.opcode()) {
-                    instrs.next();
-                } else {
-                    break;
-                }
+                None
             }
         }
-        fn skip_until<'a>(instrs: &'_ mut Peekable<Instrs<'a>>, pred: fn(u32) -> bool) {
-            while let Some(instr) = instrs.peek() {
-                if !pred(instr.opcode()) {
-                    instrs.next();
-                } else {
-                    break;
-                }
+        StorageClass::PushConstant => {
+            // Push constants have no global offset. Offsets are applied to
+            // members.
+            if let Type::Struct(_) = ty {
+                let var = Variable::PushConstant {
+                    name,
+                    ty: ty.clone(),
+                };
+                Some(var)
+            } else {
+                None
             }
         }
-        // Don't change the order. See _2.4 Logical Layout of a Module_ of the
-        // SPIR-V specification for more information.
-        let mut instrs = instrs.peekable();
-        let mut itm = ReflectIntermediate::new(cfg);
-        skip_until_range_inclusive(&mut instrs, ENTRY_POINT_RANGE);
-        itm.populate_entry_points(&mut instrs)?;
-        itm.populate_exec_modes(&mut instrs)?;
-        if let Some(x) = instrs.peek() {
-            if !is_deco_op(x.opcode()) {
-                skip_until(&mut instrs, is_debug_op);
-                itm.populate_names(&mut instrs)?;
-            }
+        StorageClass::Uniform | StorageClass::StorageBuffer | StorageClass::UniformConstant => {
+            let var = make_desc_var(&deco_reg, name, var_id, &ptr_ty, ty)?;
+            Some(var)
         }
-        skip_until(&mut instrs, is_deco_op);
-        itm.populate_decos(&mut instrs)?;
-        itm.populate_defs(&mut instrs)?;
-        itm.populate_access(&mut instrs, inspector)?;
-        itm.collect_entry_points()
+        _ => {
+            // Leak out unknown storage classes.
+            None
+        }
     }
 }
-
-/// Reflection configuration builder.
-#[derive(Default, Clone)]
-pub struct ReflectConfig {
-    spv: SpirvBinary,
-    ref_all_rscs: bool,
-    combine_img_samplers: bool,
-    gen_unique_names: bool,
-    spec_values: HashMap<SpecId, ConstantValue>,
-}
-impl ReflectConfig {
-    pub fn new() -> Self {
-        Default::default()
-    }
-
-    /// SPIR-V binary to be reflected.
-    pub fn spv<Spv: Into<SpirvBinary>>(&mut self, x: Spv) -> &mut Self {
-        self.spv = x.into();
-        self
-    }
-    /// Reference all defined resources even the resource is not used by an
-    /// entry point. Otherwise and by default, only the referenced resources are
-    /// assigned to entry points.
-    ///
-    /// Can be faster for modules with only entry point; slower for multiple
-    /// entry points.
-    pub fn ref_all_rscs(&mut self, x: bool) -> &mut Self {
-        self.ref_all_rscs = x;
-        self
-    }
-    /// Combine images and samplers sharing a same binding point to combined
-    /// image sampler descriptors.
-    ///
-    /// Faster when disabled, but useful for modules derived from HLSL.
-    pub fn combine_img_samplers(&mut self, x: bool) -> &mut Self {
-        self.combine_img_samplers = x;
-        self
-    }
-    /// Generate unique names for types and struct fields to help further
-    /// processing of the reflection data. Otherwise, the debug names are
-    /// assigned.
-    pub fn gen_unique_names(&mut self, x: bool) -> &mut Self {
-        self.gen_unique_names = x;
-        self
-    }
-    /// Use the provided value for specialization constant at `spec_id`.
-    pub fn specialize(&mut self, spec_id: SpecId, value: ConstantValue) -> &mut Self {
-        self.spec_values.insert(spec_id, value);
-        self
-    }
-
-    /// Reflect the SPIR-V binary and extract all entry points.
-    pub fn reflect(&self) -> Result<Vec<EntryPoint>> {
-        let inspector = NopInspector();
-        ReflectIntermediate::reflect(Instrs::new(self.spv.words()), self, inspector)
-    }
-    /// Reflect the SPIR-V binary and extract all entry points with an inspector
-    /// for customized reflection subroutines.
-    pub fn reflect_inspect<F>(&self, inspector: F) -> Result<Vec<EntryPoint>>
-    where
-        F: FnMut(&ReflectIntermediate<'_>, &Instr<'_>),
-    {
-        let inspector = FnInspector::<F>(inspector);
-        ReflectIntermediate::reflect(Instrs::new(self.spv.words()), self, inspector)
-    }
-}
-
 impl<'a> ReflectIntermediate<'a> {
-    fn collect_fn_vars_impl(&self, func: FunctionId, vars: &mut Vec<VariableId>) {
-        if let Some(func) = self.get_func(func) {
-            vars.extend(func.accessed_vars.iter());
-            for call in func.callees.iter() {
-                self.collect_fn_vars_impl(*call, vars);
-            }
-        }
-    }
-    fn collect_fn_vars(&self, func: FunctionId) -> Vec<VariableId> {
-        let mut accessed_vars = Vec::new();
-        self.collect_fn_vars_impl(func, &mut accessed_vars);
-        accessed_vars
-    }
-    fn collect_entry_point_vars(&self, func_id: FunctionId) -> Result<Vec<Variable>> {
+    fn collect_vars_impl(&self) -> BTreeMap<VariableId, Variable> {
         // `BTreeMap` to ensure a stable order.
         let mut vars = BTreeMap::new();
-        for accessed_var_id in self
-            .collect_fn_vars(func_id)
-            .into_iter()
-            .collect::<HashSet<_>>()
-        {
-            // Sometimes this process would meet interface variables without
-            // locations. These are should built-ins otherwise the SPIR-V is
-            // corrupted. Since we assume the SPIR-V is valid and we don't
-            // collect built-in variable as useful information, we simply ignore
-            // such null-references.
-            if let Some(accessed_var) = self.get_var(accessed_var_id) {
-                vars.entry(accessed_var_id).or_insert(accessed_var.clone());
+        for (var_id, var_alloc) in self.var_reg.iter() {
+            let name = self
+                .name_reg
+                .get(*var_id)
+                .map(ToOwned::to_owned)
+                .or_else(|| {
+                    if self.cfg.gen_unique_names {
+                        Some(format!("var_{}", var_id))
+                    } else {
+                        None
+                    }
+                });
+            if let Some(var) = make_var(&self.deco_reg, name, *var_id, var_alloc) {
+                vars.insert(*var_id, var);
             }
         }
-        Ok(vars.into_values().collect())
+        vars
+    }
+    fn collect_vars(&self) -> Vec<Variable> {
+        self.collect_vars_impl()
+            .into_iter()
+            .map(|(_, var)| var)
+            .collect()
+    }
+
+    fn collect_entry_point_vars(&self, func_id: FunctionId) -> Vec<Variable> {
+        let accessed_var_ids = self
+            .func_reg
+            .collect_fn_vars(func_id)
+            .into_iter()
+            .collect::<HashSet<_>>();
+        let vars = self
+            .collect_vars_impl()
+            .into_iter()
+            .filter_map(|(var_id, var)| {
+                if accessed_var_ids.contains(&var_id) {
+                    Some(var)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+        vars
     }
     fn collect_entry_point_specs(&self) -> Result<Vec<Variable>> {
         // TODO: (penguinlion) Report only specialization constants that have
         // been refered to by the specified function. (Do we actually need this?
         // It might not be an optimization in mind of engineering.)
         let mut vars = Vec::new();
-        for constant in self.const_map.values() {
+        for constant in self.interp.constants() {
             if let Some(spec_id) = constant.spec_id {
-                let locator = Locator::SpecConstant(spec_id);
-                let name = self.get_var_name(locator);
-                let spec = Variable::SpecConstant {
-                    name,
+                let var = Variable::SpecConstant {
+                    name: constant.name.clone(),
                     spec_id,
                     ty: constant.ty.clone(),
                 };
-                vars.push(spec);
+                vars.push(var);
             }
         }
         Ok(vars)
     }
-    fn collect_exec_modes(&self, func_id: FunctionId) -> Result<Vec<ExecutionMode>> {
-        let mut exec_modes = Vec::with_capacity(self.exec_mode_declrs.len());
+    fn collect_exec_modes(
+        &self,
+        func_id: FunctionId,
+        exec_mode_declrs: &[ExecutionModeDeclaration],
+    ) -> Result<Vec<ExecutionMode>> {
+        let mut exec_modes = Vec::with_capacity(exec_mode_declrs.len());
 
-        for declr in self.exec_mode_declrs.iter() {
+        for declr in exec_mode_declrs.iter() {
             if declr.func_id != func_id {
                 continue;
             }
@@ -1769,12 +1126,13 @@ impl<'a> ReflectIntermediate<'a> {
             let mut operands = Vec::with_capacity(declr.operands.len());
             for operand in declr.operands.iter() {
                 let operand = match operand {
-                    ExecutionModeOperand::Literal(x) => Constant {
-                        ty: Type::Scalar(ScalarType::int(32, false)),
-                        value: ConstantValue::from(*x),
-                        spec_id: None,
-                    },
-                    ExecutionModeOperand::Id(x) => self.get_const(*x)?.clone(),
+                    ExecutionModeOperand::Literal(x) => {
+                        let scalar_ty = ScalarType::u32();
+                        let ty = Type::Scalar(scalar_ty);
+                        let value = ConstantValue::from(*x);
+                        Constant::new_itm(ty, value)
+                    }
+                    ExecutionModeOperand::Id(x) => self.interp.get(*x)?.clone(),
                 };
                 operands.push(operand);
             }
@@ -1798,79 +1156,83 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
     let mut out_vars = Vec::<Variable>::new();
 
     for var in vars {
-        if let Variable::Descriptor { desc_ty, .. } = &var {
-            match desc_ty {
-                DescriptorType::Sampler() => {
-                    samplers.push(var);
-                    continue;
-                }
-                DescriptorType::SampledImage() => {
-                    imgs.push(var);
-                    continue;
-                }
-                _ => {}
+        match &var {
+            Variable::Descriptor {
+                desc_ty: DescriptorType::Sampler(),
+                ..
+            } => {
+                samplers.push(var.clone());
+                continue;
             }
+            Variable::Descriptor {
+                desc_ty: DescriptorType::SampledImage(),
+                ..
+            } => {
+                imgs.push(var.clone());
+                continue;
+            }
+            _ => {}
         }
         out_vars.push(var);
     }
 
     for sampler_var in samplers {
-        let (sampler_desc_bind, sampler_nbind) = {
-            if let Variable::Descriptor {
-                desc_bind, nbind, ..
-            } = sampler_var
-            {
-                (desc_bind, nbind)
-            } else {
-                unreachable!();
-            }
-        };
-
         let mut combined_imgs = Vec::new();
         imgs = imgs
             .drain(..)
-            .filter_map(|var| {
-                let succ = var.locator() == Locator::Descriptor(sampler_desc_bind)
-                    && var.nbind() == Some(sampler_nbind);
-                if succ {
-                    combined_imgs.push(var);
+            .filter_map(|image_var| match (&sampler_var, &image_var) {
+                (
+                    Variable::Descriptor {
+                        desc_bind: sampler_desc_bind,
+                        nbind: sampler_nbind,
+                        ..
+                    },
+                    Variable::Descriptor {
+                        desc_bind: image_desc_bind,
+                        nbind: image_nbind,
+                        ..
+                    },
+                ) if sampler_desc_bind == image_desc_bind && sampler_nbind == image_nbind => {
+                    combined_imgs.push(image_var.clone());
                     None
-                } else {
-                    Some(var)
                 }
+                _ => Some(image_var),
             })
             .collect();
 
         if combined_imgs.is_empty() {
             // If the sampler can be combined with no texture, just put it
             // back.
-            out_vars.push(sampler_var);
+            out_vars.push(sampler_var.clone());
         } else {
             // For any texture that can be combined with this sampler,
             // create a new combined image sampler.
             for img_var in combined_imgs {
-                if let Variable::Descriptor { name, ty, .. } = img_var {
-                    if let Type::SampledImage(img_ty) = ty {
-                        let sampled_img_ty = SampledImageType {
-                            scalar_ty: img_ty.scalar_ty.clone(),
-                            dim: img_ty.dim,
-                            is_array: img_ty.is_array,
-                            is_multisampled: img_ty.is_multisampled,
+                match img_var {
+                    Variable::Descriptor {
+                        name,
+                        ty: Type::SampledImage(image_ty),
+                        desc_bind,
+                        nbind,
+                        ..
+                    } => {
+                        let sampled_image_ty = SampledImageType {
+                            scalar_ty: image_ty.scalar_ty.clone(),
+                            dim: image_ty.dim,
+                            is_array: image_ty.is_array,
+                            is_multisampled: image_ty.is_multisampled,
                         };
-                        let combined_img_sampler_ty = CombinedImageSamplerType { sampled_img_ty };
+                        let combined_img_sampler_ty = CombinedImageSamplerType { sampled_image_ty };
                         let out_var = Variable::Descriptor {
-                            name,
-                            desc_bind: sampler_desc_bind,
+                            name: name.clone(),
+                            desc_bind: desc_bind,
                             desc_ty: DescriptorType::CombinedImageSampler(),
-                            ty: Type::CombinedImageSampler(combined_img_sampler_ty),
-                            nbind: sampler_nbind,
+                            ty: Type::CombinedImageSampler(combined_img_sampler_ty.clone()),
+                            nbind: nbind,
                         };
                         out_vars.push(out_var);
-                    } else {
-                        unreachable!();
                     }
-                } else {
-                    unreachable!();
+                    _ => unreachable!(),
                 }
             }
         }
@@ -1882,20 +1244,23 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
 }
 
 impl<'a> ReflectIntermediate<'a> {
-    pub fn collect_entry_points(&self) -> Result<Vec<EntryPoint>> {
-        let mut entry_points = Vec::with_capacity(self.entry_point_declrs.len());
-        for entry_point_declr in self.entry_point_declrs.iter() {
+    fn collect_entry_points(
+        &self,
+        entry_point_declrs: HashMap<FunctionId, EntryPointDeclartion<'a>>,
+    ) -> Result<Vec<EntryPoint>> {
+        let mut entry_points = Vec::with_capacity(entry_point_declrs.len());
+        for (id, entry_point_declr) in entry_point_declrs.iter() {
             let mut vars = if self.cfg.ref_all_rscs {
-                self.vars.clone()
+                self.collect_vars()
             } else {
-                self.collect_entry_point_vars(entry_point_declr.func_id)?
+                self.collect_entry_point_vars(*id)
             };
             if self.cfg.combine_img_samplers {
                 vars = combine_img_samplers(vars);
             }
             let specs = self.collect_entry_point_specs()?;
             vars.extend(specs);
-            let exec_modes = self.collect_exec_modes(entry_point_declr.func_id)?;
+            let exec_modes = self.collect_exec_modes(*id, &entry_point_declr.exec_modes)?;
             let entry_point = EntryPoint {
                 name: entry_point_declr.name.to_owned(),
                 exec_model: entry_point_declr.exec_model,

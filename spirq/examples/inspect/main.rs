@@ -1,6 +1,4 @@
-use num_traits::FromPrimitive;
-use spirq::ReflectConfig;
-use spirv::Op;
+use spirq::{spirv::Op, ReflectConfig};
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -18,12 +16,12 @@ fn main() {
     ReflectConfig::new()
         .spv(spvs.get("spirv-spec.frag").unwrap() as &[u8])
         .ref_all_rscs(true)
-        .reflect_inspect(|itm, instr| match Op::from_u32(instr.opcode()).unwrap() {
+        .reflect_inspect_by(|itm, instr| match instr.op() {
             Op::Function => {
                 let mut operands = instr.operands();
                 let _ty_id = operands.read_u32().unwrap();
                 let func_id = operands.read_u32().unwrap();
-                cur_func_name = itm.get_name(func_id).unwrap();
+                cur_func_name = itm.name_reg.get(func_id).unwrap().to_owned();
                 println!("entered function {}", cur_func_name);
                 nfunc += 1;
             }

@@ -1,13 +1,13 @@
 [package]
-name = "spirq"
+name = "spirq-core"
 version = "0.6.4"
 authors = ["PENGUINLIONG <admin@penguinliong.moe>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
-description = "Light weight SPIR-V query utility for graphics."
+description = "SPIR-Q core feature implementation, a light weight SPIR-V query utility for graphics."
 repository = "https://github.com/PENGUINLIONG/spirq-rs"
 homepage = "https://github.com/PENGUINLIONG/spirq-rs"
-documentation = "https://docs.rs/spirq"
+documentation = "https://docs.rs/spirq-core"
 categories = ["graphics"]
 readme = "README.md"
 keywords = ["spirv", "vulkan", "opengl", "opencl"]
@@ -18,13 +18,8 @@ maintenance = { status = "actively-developed" }
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-spirq-core = { version = "0.6.4", path = "../spirq-core" }
-num-traits = "0.2"
-num-derive = "0.4"
 fnv = "1.0.7"
-ordered-float = "3.4.0"
-
-[dev-dependencies]
-bytes = "1.2"
-byteorder = "1.3"
-inline-spirv = "0.1"
+spirv = "0.2"
+anyhow = "1.0"
+ordered-float = "3.4"
+num-traits = "0.2"
