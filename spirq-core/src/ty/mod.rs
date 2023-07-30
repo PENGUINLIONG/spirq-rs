@@ -13,15 +13,15 @@ pub trait SpirvType {
     /// Minimum size of the type in bytes if it can be represented in-memory.
     /// It's the size of all static members and plus one element if it's an array.
     /// Same as [`wgpu::BindingType::Buffer::min_binding_size`](https://docs.rs/wgpu/latest/wgpu/enum.BindingType.html).
-    fn min_size(&self) -> Option<usize>;
+    fn min_nbyte(&self) -> Option<usize>;
     /// Size of the type in bytes if it can be represented in-memory.
-    fn size(&self) -> Option<usize> {
-        self.min_size()
+    fn nbyte(&self) -> Option<usize> {
+        self.min_nbyte()
     }
     /// Returns true if the type is sized. A sized type can be represented
     /// in-memory. Otherwise the type can only be used as a descriptor resource.
     fn is_sized(&self) -> bool {
-        self.size().is_some()
+        self.nbyte().is_some()
     }
     /// Returns the offset of the i-th member in bytes if it's a composite type.
     fn member_offset(&self, _member_index: usize) -> Option<usize> {
@@ -90,7 +90,7 @@ impl ScalarType {
     }
 }
 impl SpirvType for ScalarType {
-    fn min_size(&self) -> Option<usize> {
+    fn min_nbyte(&self) -> Option<usize> {
         match self {
             Self::Void => None,
             Self::Boolean => None,
@@ -121,8 +121,8 @@ pub struct VectorType {
     pub nscalar: u32,
 }
 impl SpirvType for VectorType {
-    fn min_size(&self) -> Option<usize> {
-        Some(self.scalar_ty.min_size()? * self.nscalar as usize)
+    fn min_nbyte(&self) -> Option<usize> {
+        Some(self.scalar_ty.min_nbyte()? * self.nscalar as usize)
     }
 }
 impl fmt::Display for VectorType {
@@ -155,7 +155,7 @@ pub struct MatrixType {
     pub stride: Option<usize>,
 }
 impl SpirvType for MatrixType {
-    fn min_size(&self) -> Option<usize> {
+    fn min_nbyte(&self) -> Option<usize> {
         Some(self.stride? * self.nvector as usize)
     }
 }
@@ -200,7 +200,7 @@ pub struct ImageType {
     pub fmt: ImageFormat,
 }
 impl SpirvType for ImageType {
-    fn min_size(&self) -> Option<usize> {
+    fn min_nbyte(&self) -> Option<usize> {
         None
     }
 }
@@ -245,7 +245,7 @@ impl fmt::Display for ImageType {
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct SamplerType {}
 impl SpirvType for SamplerType {
-    fn min_size(&self) -> Option<usize> {
+    fn min_nbyte(&self) -> Option<usize> {
         None
     }
 }
@@ -260,7 +260,7 @@ pub struct CombinedImageSamplerType {
     pub sampled_image_ty: SampledImageType,
 }
 impl SpirvType for CombinedImageSamplerType {
-    fn min_size(&self) -> Option<usize> {
+    fn min_nbyte(&self) -> Option<usize> {
         None
     }
 }
@@ -285,7 +285,7 @@ pub struct SampledImageType {
     pub is_multisampled: bool,
 }
 impl SpirvType for SampledImageType {
-    fn min_size(&self) -> Option<usize> {
+    fn min_nbyte(&self) -> Option<usize> {
         None
     }
 }
@@ -332,7 +332,7 @@ pub struct StorageImageType {
     pub fmt: ImageFormat,
 }
 impl SpirvType for StorageImageType {
-    fn min_size(&self) -> Option<usize> {
+    fn min_nbyte(&self) -> Option<usize> {
         None
     }
 }
@@ -371,7 +371,7 @@ pub struct SubpassDataType {
     pub is_multisampled: bool,
 }
 impl SpirvType for SubpassDataType {
-    fn min_size(&self) -> Option<usize> {
+    fn min_nbyte(&self) -> Option<usize> {
         None
     }
 }
@@ -399,10 +399,10 @@ pub struct ArrayType {
     pub stride: Option<usize>,
 }
 impl SpirvType for ArrayType {
-    fn min_size(&self) -> Option<usize> {
+    fn min_nbyte(&self) -> Option<usize> {
         Some(self.stride? * self.nelement.unwrap_or(0).max(1) as usize)
     }
-    fn size(&self) -> Option<usize> {
+    fn nbyte(&self) -> Option<usize> {
         Some(self.stride? * self.nelement.unwrap_or(0) as usize)
     }
     fn member_offset(&self, member_index: usize) -> Option<usize> {
@@ -481,13 +481,13 @@ impl StructType {
     }
 }
 impl SpirvType for StructType {
-    fn min_size(&self) -> Option<usize> {
+    fn min_nbyte(&self) -> Option<usize> {
         let last_member = &self.members.last()?;
-        Some(last_member.offset? + last_member.ty.min_size()?)
+        Some(last_member.offset? + last_member.ty.min_nbyte()?)
     }
-    fn size(&self) -> Option<usize> {
+    fn nbyte(&self) -> Option<usize> {
         let last_member = &self.members.last()?;
-        Some(last_member.offset? + last_member.ty.size()?)
+        Some(last_member.offset? + last_member.ty.nbyte()?)
     }
     fn member_offset(&self, member_index: usize) -> Option<usize> {
         self.members.get(member_index).and_then(|x| x.offset)
@@ -531,7 +531,7 @@ impl fmt::Display for StructType {
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct AccelStructType {}
 impl SpirvType for AccelStructType {
-    fn min_size(&self) -> Option<usize> {
+    fn min_nbyte(&self) -> Option<usize> {
         None
     }
 }
@@ -544,7 +544,7 @@ impl fmt::Display for AccelStructType {
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct DeviceAddressType {}
 impl SpirvType for DeviceAddressType {
-    fn min_size(&self) -> Option<usize> {
+    fn min_nbyte(&self) -> Option<usize> {
         Some(std::mem::size_of::<u64>())
     }
 }
@@ -560,7 +560,7 @@ pub struct PointerType {
     pub store_cls: StorageClass,
 }
 impl SpirvType for PointerType {
-    fn min_size(&self) -> Option<usize> {
+    fn min_nbyte(&self) -> Option<usize> {
         Some(std::mem::size_of::<u64>())
     }
     fn access_ty(&self) -> Option<AccessType> {
@@ -578,7 +578,7 @@ impl fmt::Display for PointerType {
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct RayQueryType {}
 impl SpirvType for RayQueryType {
-    fn min_size(&self) -> Option<usize> {
+    fn min_nbyte(&self) -> Option<usize> {
         None
     }
 }
@@ -656,46 +656,46 @@ pub enum Type {
     /// capability enabled.
     RayQuery(RayQueryType),
 }
-impl SpirvType for Type {
-    fn min_size(&self) -> Option<usize> {
+impl Type {
+    pub fn min_nbyte(&self) -> Option<usize> {
         match self {
-            Type::Scalar(x) => x.min_size(),
-            Type::Vector(x) => x.min_size(),
-            Type::Matrix(x) => x.min_size(),
-            Type::Image(x) => x.min_size(),
-            Type::CombinedImageSampler(x) => x.min_size(),
-            Type::SampledImage(x) => x.min_size(),
-            Type::StorageImage(x) => x.min_size(),
-            Type::Sampler(x) => x.min_size(),
-            Type::SubpassData(x) => x.min_size(),
-            Type::Array(x) => x.min_size(),
-            Type::Struct(x) => x.min_size(),
-            Type::AccelStruct(x) => x.min_size(),
-            Type::DeviceAddress(x) => x.min_size(),
-            Type::DevicePointer(x) => x.min_size(),
-            Type::RayQuery(x) => x.min_size(),
+            Type::Scalar(x) => x.min_nbyte(),
+            Type::Vector(x) => x.min_nbyte(),
+            Type::Matrix(x) => x.min_nbyte(),
+            Type::Image(x) => x.min_nbyte(),
+            Type::CombinedImageSampler(x) => x.min_nbyte(),
+            Type::SampledImage(x) => x.min_nbyte(),
+            Type::StorageImage(x) => x.min_nbyte(),
+            Type::Sampler(x) => x.min_nbyte(),
+            Type::SubpassData(x) => x.min_nbyte(),
+            Type::Array(x) => x.min_nbyte(),
+            Type::Struct(x) => x.min_nbyte(),
+            Type::AccelStruct(x) => x.min_nbyte(),
+            Type::DeviceAddress(x) => x.min_nbyte(),
+            Type::DevicePointer(x) => x.min_nbyte(),
+            Type::RayQuery(x) => x.min_nbyte(),
         }
     }
-    fn size(&self) -> Option<usize> {
+    pub fn nbyte(&self) -> Option<usize> {
         match self {
-            Type::Scalar(x) => x.size(),
-            Type::Vector(x) => x.size(),
-            Type::Matrix(x) => x.size(),
-            Type::Image(x) => x.size(),
-            Type::CombinedImageSampler(x) => x.size(),
-            Type::SampledImage(x) => x.size(),
-            Type::StorageImage(x) => x.size(),
-            Type::Sampler(x) => x.size(),
-            Type::SubpassData(x) => x.size(),
-            Type::Array(x) => x.size(),
-            Type::Struct(x) => x.size(),
-            Type::AccelStruct(x) => x.size(),
-            Type::DeviceAddress(x) => x.size(),
-            Type::DevicePointer(x) => x.size(),
-            Type::RayQuery(x) => x.size(),
+            Type::Scalar(x) => x.nbyte(),
+            Type::Vector(x) => x.nbyte(),
+            Type::Matrix(x) => x.nbyte(),
+            Type::Image(x) => x.nbyte(),
+            Type::CombinedImageSampler(x) => x.nbyte(),
+            Type::SampledImage(x) => x.nbyte(),
+            Type::StorageImage(x) => x.nbyte(),
+            Type::Sampler(x) => x.nbyte(),
+            Type::SubpassData(x) => x.nbyte(),
+            Type::Array(x) => x.nbyte(),
+            Type::Struct(x) => x.nbyte(),
+            Type::AccelStruct(x) => x.nbyte(),
+            Type::DeviceAddress(x) => x.nbyte(),
+            Type::DevicePointer(x) => x.nbyte(),
+            Type::RayQuery(x) => x.nbyte(),
         }
     }
-    fn member_offset(&self, member_index: usize) -> Option<usize> {
+    pub fn member_offset(&self, member_index: usize) -> Option<usize> {
         match self {
             Type::Scalar(x) => x.member_offset(member_index),
             Type::Vector(x) => x.member_offset(member_index),
@@ -714,7 +714,7 @@ impl SpirvType for Type {
             Type::RayQuery(x) => x.member_offset(member_index),
         }
     }
-    fn access_ty(&self) -> Option<AccessType> {
+    pub fn access_ty(&self) -> Option<AccessType> {
         match self {
             Type::Scalar(x) => x.access_ty(),
             Type::Vector(x) => x.access_ty(),
@@ -733,39 +733,7 @@ impl SpirvType for Type {
             Type::RayQuery(x) => x.access_ty(),
         }
     }
-}
-impl Type {
-    pub fn access_ty(&self) -> Option<AccessType> {
-        use Type::*;
-        match self {
-            Scalar(_) => None,
-            Vector(_) => None,
-            Matrix(_) => None,
-            Image(_) => None,
-            Sampler(_) => None,
-            CombinedImageSampler(_) => None,
-            SampledImage(_) => None,
-            StorageImage(_) => None,
-            SubpassData(_) => None,
-            Array(x) => x.element_ty.access_ty(),
-            Struct(x) => x.members.iter().fold(None, |seed, x| match seed {
-                None => Some(x.access_ty),
-                Some(AccessType::ReadOnly) => match x.access_ty {
-                    AccessType::ReadOnly => Some(AccessType::ReadOnly),
-                    _ => Some(AccessType::ReadWrite),
-                },
-                Some(AccessType::WriteOnly) => match x.access_ty {
-                    AccessType::WriteOnly => Some(AccessType::WriteOnly),
-                    _ => Some(AccessType::ReadWrite),
-                },
-                Some(AccessType::ReadWrite) => Some(AccessType::ReadWrite),
-            }),
-            AccelStruct(_) => None,
-            DeviceAddress(_) => None,
-            DevicePointer(x) => x.pointee_ty.access_ty(),
-            RayQuery(_) => None,
-        }
-    }
+
     // Iterate over all entries in the type tree.
     pub fn walk<'a>(&'a self) -> Walk<'a> {
         Walk::new(self)

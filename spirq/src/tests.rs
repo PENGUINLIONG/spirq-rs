@@ -389,7 +389,7 @@ fn test_spec_const_arrays() {
                 ..
             } = x
             {
-                Some((desc_bind, (nbind, ty.size())))
+                Some((desc_bind, (nbind, ty.nbyte())))
             } else {
                 None
             }
