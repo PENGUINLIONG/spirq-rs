@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use crate::{parse::Instr, spirv};
+use crate::{parse::Instr, spirv::*};
 
 type InstrId = u32;
 type FunctionId = InstrId;
@@ -42,19 +42,19 @@ define_ops! {
     }
 
     OpMemoryModel {
-        addr_model: spirv::AddressingModel = read_enum(),
-        mem_model: spirv::MemoryModel = read_enum(),
+        addr_model: AddressingModel = read_enum(),
+        mem_model: MemoryModel = read_enum(),
     }
 
     OpEntryPoint {
-        exec_model: spirv::ExecutionModel = read_enum(),
+        exec_model: ExecutionModel = read_enum(),
         func_id: FunctionId = read_u32(),
         name: &'a str = read_str(),
     }
 
     OpExecutionModeCommonSPQ {
         func_id: FunctionId = read_u32(),
-        execution_mode: spirv::ExecutionMode = read_enum(),
+        execution_mode: ExecutionMode = read_enum(),
         params: &'a [u32] = read_list(),
     }
 
@@ -70,13 +70,13 @@ define_ops! {
 
     OpDecorate {
         target_id: InstrId = read_u32(),
-        deco: spirv::Decoration = read_enum(),
+        deco: Decoration = read_enum(),
         params: &'a [u32] = read_list(),
     }
     OpMemberDecorate {
         target_id: InstrId = read_u32(),
         member_idx: MemberIdx = read_u32(),
-        deco: spirv::Decoration = read_enum(),
+        deco: Decoration = read_enum(),
         params: &'a [u32] = read_list(),
     }
 
@@ -108,12 +108,12 @@ define_ops! {
     OpTypeImage {
         ty_id: TypeId = read_u32(),
         scalar_ty_id: TypeId = read_u32(),
-        dim: spirv::Dim = read_enum(),
+        dim: Dim = read_enum(),
         is_depth: u32 = read_u32(),
         is_array: bool = read_bool(),
         is_multisampled: bool = read_bool(),
         is_sampled: u32 = read_u32(),
-        color_fmt: spirv::ImageFormat = read_enum(),
+        color_fmt: ImageFormat = read_enum(),
     }
     OpTypeSampler {
         ty_id: TypeId = read_u32(),
@@ -137,12 +137,12 @@ define_ops! {
     }
     OpTypePointer {
         ty_id: TypeId = read_u32(),
-        store_cls: spirv::StorageClass = read_enum(),
+        store_cls: StorageClass = read_enum(),
         target_ty_id: TypeId = read_u32(),
     }
     OpTypeForwardPointer {
         ty_id: TypeId = read_u32(),
-        store_cls: spirv::StorageClass = read_enum(),
+        store_cls: StorageClass = read_enum(),
     }
     OpConstantTrue {
         ty_id: TypeId = read_u32(),
@@ -178,7 +178,7 @@ define_ops! {
     OpVariable {
         ty_id: TypeId = read_u32(),
         var_id: VariableId = read_u32(),
-        store_cls: spirv::StorageClass = read_enum(),
+        store_cls: StorageClass = read_enum(),
     }
 
     OpFunction {

@@ -448,8 +448,9 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
     let mut push_consts = Vec::new();
     let mut spec_consts = Vec::new();
     for var in entry_point.vars.iter() {
+        use Variable::*;
         match var {
-            Variable::Input { name, location, ty } => {
+            Input { name, location, ty } => {
                 let j = json!({
                     "Name": name.as_ref(),
                     "Location": location.loc(),
@@ -458,7 +459,7 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 });
                 inputs.push(j);
             }
-            Variable::Output { name, location, ty } => {
+            Output { name, location, ty } => {
                 let j = json!({
                     "Name": name.as_ref(),
                     "Location": location.loc(),
@@ -467,7 +468,7 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 });
                 outputs.push(j);
             }
-            Variable::Descriptor {
+            Descriptor {
                 name,
                 desc_bind,
                 desc_ty,
@@ -484,14 +485,14 @@ fn entry_point2json(entry_point: &EntryPoint) -> serde_json::Value {
                 });
                 descs.push(j);
             }
-            Variable::PushConstant { name, ty } => {
+            PushConstant { name, ty } => {
                 let j = json!({
                     "Name": name.as_ref(),
                     "Type": ty2json(&ty),
                 });
                 push_consts.push(j);
             }
-            Variable::SpecConstant { name, spec_id, ty } => {
+            SpecConstant { name, spec_id, ty } => {
                 let j = json!({
                     "Name": name.as_ref(),
                     "SpecId": spec_id,
