@@ -18,7 +18,7 @@ maintenance = { status = "actively-developed" }
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-spirq = { version = "0.6.4", path = "../spirq" }
+spirq = { version = "1.0.0", path = "../spirq" }
 clap = { version = "4.0.6", features = ["derive"] }
 serde = "1.0"
 serde_json = { version = "1.0", features = ["preserve_order"] }
