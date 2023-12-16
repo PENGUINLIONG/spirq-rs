@@ -617,9 +617,7 @@ impl Inspector for FunctionInspector {
             }
             Op::FunctionCall => {
                 let op = OpFunctionCall::try_from(instr)?;
-                let func_id = op.func_id;
-                let func = itm.func_reg.get_mut(func_id)?;
-                func.callees.insert(func_id);
+                itm.func_reg.called(op.func_id);
             }
             _ => {
                 if let Some((_func_id, func)) = self.cur_func.as_mut() {
