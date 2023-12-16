@@ -1,0 +1,5 @@
+#version 460
+
+void main() {
+    double a = 1.4e32;
+}

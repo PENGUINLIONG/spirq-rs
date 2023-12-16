@@ -36,4 +36,8 @@ mod test {
         let out = Disassembler{}.apply(&spv);
         assert_eq!(out, "; SPIR-V\n; Version: 1.0\n; Generator: 8\n; Bound: 1\n; Schema: 0\n");
     }
+
+    #[test]
+    fn test_nop() {
+    }
 }

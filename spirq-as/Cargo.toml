@@ -1,13 +1,13 @@
 [package]
-name = "spirq-dis"
+name = "spirq-as"
 version = "0.2.3"
 authors = ["PENGUINLIONG <admin@penguinliong.moe>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
-description = "SPIR-V disassembler"
+description = "SPIR-V assembler"
 repository = "https://github.com/PENGUINLIONG/spirq-rs"
 homepage = "https://github.com/PENGUINLIONG/spirq-rs"
-documentation = "https://docs.rs/spirq-dis"
+documentation = "https://docs.rs/spirq-as"
 categories = ["graphics"]
 readme = "README.md"
 keywords = ["spirv"]

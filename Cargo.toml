@@ -3,5 +3,6 @@ members = [
     "spirq",
     "spirq-core",
     "spirq-dis",
+    "spirq-as",
     "shader-reflect",
 ]

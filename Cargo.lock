@@ -349,6 +349,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "spirq-as"
+version = "0.2.3"
+dependencies = [
+ "anyhow",
+ "spirq-core",
+]
+
+[[package]]
 name = "spirq-core"
 version = "1.0.0"
 dependencies = [
@@ -363,6 +371,7 @@ dependencies = [
 name = "spirq-dis"
 version = "0.2.3"
 dependencies = [
+ "anyhow",
  "spirq-core",
 ]
 
