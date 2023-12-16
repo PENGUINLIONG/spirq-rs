@@ -1,5 +1,15 @@
 use std::{convert::TryInto, iter::FromIterator};
 
+use super::Instrs;
+
+pub struct SpirvHeader {
+    pub magic: u32,
+    pub version: u32,
+    pub generator: u32,
+    pub bound: u32,
+    pub schema: u32,
+}
+
 /// SPIR-V program binary.
 #[derive(Debug, Default, Clone)]
 pub struct SpirvBinary(Vec<u32>);
@@ -45,5 +55,23 @@ impl SpirvBinary {
     }
     pub fn into_words(self) -> Vec<u32> {
         self.0
+    }
+
+    pub fn instrs(&self) -> Instrs {
+        Instrs::new(self.words())
+    }
+
+    pub fn header(&self) -> Option<SpirvHeader> {
+        let header = &self.words()[..5];
+        if header.len() < 5 {
+            return None;
+        }
+        Some(SpirvHeader {
+            magic: header[0],
+            version: header[1],
+            generator: header[2],
+            bound: header[3],
+            schema: header[4],
+        })
     }
 }

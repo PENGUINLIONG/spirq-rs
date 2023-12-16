@@ -360,6 +360,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "spirq-dis"
+version = "0.2.3"
+dependencies = [
+ "spirq-core",
+]
+
+[[package]]
 name = "spirv"
 version = "0.2.0+1.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
