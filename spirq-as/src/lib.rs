@@ -111,6 +111,7 @@ impl<'a> Tokenizer<'a> {
         let lit = if Some(&'.') == self.chars.peek() && buf == "1" {
             // Float.
             buf.push('.');
+            self.chars.next(); // Consume the '.'.
 
             // In form of `0x1.2p0`.
             while let Some(c) = self.chars.peek() {
@@ -123,39 +124,37 @@ impl<'a> Tokenizer<'a> {
             }
 
             let mantissa = f64::from_str(buf.as_str())?;
-            let mut exponent_bias = 0;
+            let mut exponent = 0;
 
             if let Some(c) = self.chars.peek() {
                 if c == &'p' || c == &'P' {
                     self.chars.next(); // Consume the 'p' or 'P'.
 
                     // Float with exponent.
-                    let mut exponent_bias_buf = String::new();
+                    let mut exponent_buf = String::new();
                     match self.chars.peek() {
                         Some('+') => {
                             self.chars.next();
                         },
                         Some('-') => {
-                            exponent_bias_buf.push('-');
+                            exponent_buf.push('-');
                             self.chars.next();
                         },
                         _ => {},
                     }
-                    loop {
-                        if let Some(c) = self.chars.peek() {
-                            if c.is_ascii_digit() {
-                                exponent_bias_buf.push(*c);
-                                self.chars.next();
-                            } else {
-                                break;
-                            }
+                    while let Some(c) = self.chars.peek() {
+                        if c.is_ascii_digit() {
+                            exponent_buf.push(*c);
+                            self.chars.next();
+                        } else {
+                            break;
                         }
                     }
-                    exponent_bias = i32::from_str(&exponent_bias_buf)?;
+                    exponent = i32::from_str(&exponent_buf)?;
                 }
             }
 
-            Lit::Float(mantissa, exponent_bias)
+            Lit::Float(mantissa, exponent)
         } else {
             // Integer.
             Lit::Int(i64::from_str_radix(buf.as_str(), 16)?)
@@ -167,16 +166,14 @@ impl<'a> Tokenizer<'a> {
     /// Tokenize a SPIR-V assembly numeric literal that can be decimal, hexadecimal,
     /// decimal and hexadecimal numbers.
     pub fn tokenize_numeric_literal(&mut self) -> Result<Token> {
-        let c = *self.chars.peek()
+        let mut c = *self.chars.peek()
             .ok_or_else(|| anyhow!("unexpected end of input"))?;
 
         let mantissa_sign = match c {
-            '+' => {
-                self.chars.next();
-                1
-            },
             '-' => {
                 self.chars.next();
+                c = *self.chars.peek()
+                    .ok_or_else(|| anyhow!("unexpected end of input"))?;
                 -1
             },
             _ => 1,
@@ -215,9 +212,7 @@ impl<'a> Tokenizer<'a> {
         let mut string = String::new();
         let mut escape = false;
 
-        loop {
-            let c = self.chars.next()
-                .ok_or_else(|| anyhow!("unexpected end of input"))?;
+        while let Some(c) = self.chars.next() {
             if escape {
                 // Escaped character.
                 escape = false;
@@ -241,12 +236,13 @@ impl<'a> Tokenizer<'a> {
 
     pub fn tokenize_ident(&mut self) -> Result<Token> {
         let mut ident = String::new();
-        let mut c = self.chars.next()
-            .ok_or_else(|| anyhow!("unexpected end of input"))?;
-        while c.is_ascii_alphanumeric() || c == '_' {
-            ident.push(c);
-            c = self.chars.next()
-                .ok_or_else(|| anyhow!("unexpected end of input"))?;
+        while let Some(c) = self.chars.peek() {
+            if c.is_ascii_alphanumeric() || c == &'_' {
+                ident.push(*c);
+                self.chars.next();
+            } else {
+                break;
+            }
         }
         return Ok(Token::Ident(ident));
     }
@@ -391,6 +387,64 @@ mod test {
         for (i, token) in tokens.iter().enumerate() {
             match token {
                 Token::Literal(Lit::Int(n)) => assert_eq!(*n, i as i64),
+                _ => panic!("unexpected token: {:?}", token),
+            }
+        }
+    }
+
+    #[test]
+    fn test_tokenize_hexadecimal_floats() {
+        let code = "0x1.0p0 0x1.1p+1 0x1.2p-2 -0x1.3p3 -0x1.4p+4 -0x1.5p-5";
+        let tokens = tokenize(code).unwrap();
+        assert_eq!(tokens.len(), 6);
+        for ((mantissa, exponent), token) in [(1.0, 0), (1.1, 1), (1.2, -2), (-1.3, 3), (-1.4, 4), (-1.5, -5)].iter().zip(tokens.iter()) {
+            match token {
+                Token::Literal(Lit::Float(n, e)) => {
+                    assert_eq!(*n, *mantissa);
+                    assert_eq!(*e, *exponent);
+                },
+                _ => panic!("unexpected token: {:?}", token),
+            }
+        }
+    }
+
+    #[test]
+    fn test_tokenize_string_literals() {
+        let code = r#""" "a" "ab" "abc" "abcd""#;
+        let tokens = tokenize(code).unwrap();
+        assert_eq!(tokens.len(), 5);
+        let expected = ["", "a", "ab", "abc", "abcd"];
+        for (i, token) in tokens.iter().enumerate() {
+            match token {
+                Token::Literal(Lit::String(s)) => assert_eq!(s, expected[i]),
+                _ => panic!("unexpected token: {:?}", token),
+            }
+        }
+    }
+
+    #[test]
+    fn test_tokenize_string_literals_escape() {
+        let code = r#""\"\\\""#;
+        let tokens = tokenize(code).unwrap();
+        assert_eq!(tokens.len(), 1);
+        let expected = r#""\""#;
+        for (i, token) in tokens.iter().enumerate() {
+            match token {
+                Token::Literal(Lit::String(s)) => assert_eq!(s, expected),
+                _ => panic!("unexpected token: {:?}", token),
+            }
+        }
+    }
+
+    #[test]
+    fn test_tokenize_identifiers() {
+        let code = r#"a ab abc abcd abcd1 abcd12 abcd123"#;
+        let tokens = tokenize(code).unwrap();
+        assert_eq!(tokens.len(), 7);
+        let expected = ["a", "ab", "abc", "abcd", "abcd1", "abcd12", "abcd123"];
+        for (i, token) in tokens.iter().enumerate() {
+            match token {
+                Token::Ident(s) => assert_eq!(s, expected[i]),
                 _ => panic!("unexpected token: {:?}", token),
             }
         }
