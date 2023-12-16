@@ -270,6 +270,7 @@ impl<'a> Tokenizer<'a> {
         
             // Punctuations.
             if c == &'=' {
+                self.chars.next(); // Consume the '='.
                 let token = Token::Eq;
                 return Ok(Some(token));
             }
@@ -447,6 +448,37 @@ mod test {
                 Token::Ident(s) => assert_eq!(s, expected[i]),
                 _ => panic!("unexpected token: {:?}", token),
             }
+        }
+    }
+
+    #[test]
+    fn test_tokenize_comments() {
+        let code = r#"; a
+; ab
+; abc
+; abcd
+; abcd1
+; abcd12
+; abcd123"#;
+        let tokens = tokenize(code).unwrap();
+        assert_eq!(tokens.len(), 7);
+        let expected = [" a", " ab", " abc", " abcd", " abcd1", " abcd12", " abcd123"];
+        for (i, token) in tokens.iter().enumerate() {
+            match token {
+                Token::Comment(s) => assert_eq!(s, expected[i]),
+                _ => panic!("unexpected token: {:?}", token),
+            }
+        }
+    }
+
+    #[test]
+    fn test_tokenize_eq() {
+        let code = r#"="#;
+        let tokens = tokenize(code).unwrap();
+        assert_eq!(tokens.len(), 1);
+        match tokens[0] {
+            Token::Eq => {},
+            _ => panic!("unexpected token: {:?}", tokens[0]),
         }
     }
 }
