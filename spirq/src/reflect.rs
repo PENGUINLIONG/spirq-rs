@@ -537,7 +537,12 @@ impl<'a> ReflectIntermediate<'a> {
                     .get_u32(op.const_id, spirv::Decoration::SpecId)?;
                 let ty = self.ty_reg.get(op.ty_id)?.clone();
                 let constant = if let Some(user_value) = self.cfg.spec_values.get(&spec_id) {
-                    Constant::new(name, ty, user_value.clone())
+                    let user_value = if matches!(user_value, ConstantValue::Typeless(_)) {
+                        user_value.to_typed(&ty)?
+                    } else {
+                        user_value.clone()
+                    };
+                    Constant::new(name, ty, user_value)
                 } else {
                     let value = match opcode {
                         Op::SpecConstantTrue => ConstantValue::from(true),
