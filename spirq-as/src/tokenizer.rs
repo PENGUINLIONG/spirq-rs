@@ -57,6 +57,7 @@ impl<'a> Tokenizer<'a> {
         while let Some(c) = self.chars.peek() {
             if c.is_ascii_alphanumeric() || c == &'_' {
                 buf.push(*c);
+                self.chars.next();
             } else {
                 break;
             }
