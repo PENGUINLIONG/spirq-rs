@@ -674,7 +674,8 @@ fn test_matrix_stride() {
 }
 #[test]
 fn test_resource_in_chained_call() {
-    static SPV: &'static [u32] = inline_spirv!(r#"
+    static SPV: &'static [u32] = inline_spirv!(
+        r#"
         #version 450
         layout(set=1, binding=2) buffer _0 {
             int a;
@@ -688,7 +689,11 @@ fn test_resource_in_chained_call() {
         void main() {
             assign_a(1);
         }
-        "#, comp, glsl, vulkan1_2);
+        "#,
+        comp,
+        glsl,
+        vulkan1_2
+    );
     let entry = ReflectConfig::new()
         .spv(SPV)
         .ref_all_rscs(false)
@@ -715,8 +720,5 @@ fn test_resource_in_chained_call() {
         DescriptorType::StorageBuffer(AccessType::ReadWrite)
     );
     // Ensure the unreferenced one is not in the map.
-    assert_eq!(
-        desc_binds.get(&DescriptorBinding::new(1, 3)),
-        None
-    );
+    assert_eq!(desc_binds.get(&DescriptorBinding::new(1, 3)), None);
 }
