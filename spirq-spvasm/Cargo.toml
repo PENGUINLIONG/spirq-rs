@@ -1,0 +1,23 @@
+[package]
+name = "spirq-spvasm"
+version = "0.1.0"
+authors = ["PENGUINLIONG <admin@penguinliong.moe>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "Tools for SPIR-V Assembly interaction."
+repository = "https://github.com/PENGUINLIONG/spirq-rs"
+homepage = "https://github.com/PENGUINLIONG/spirq-rs"
+documentation = "https://docs.rs/spirq-spvasm"
+categories = ["graphics"]
+readme = "README.md"
+keywords = ["spirv", "spvasm"]
+
+[badges]
+maintenance = { status = "actively-developed" }
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+num-traits = "0.2"
+spirq-core = { version = "1.0.0", path = "../spirq-core" }

@@ -37,5 +37,5 @@ out += [
     "",
 ]
 
-with open("spirq-as/src/generated/op_has_result_type_id.rs", "w") as f:
+with open("spirq-spvasm/src/asm/generated/op_has_result_type_id.rs", "w") as f:
     f.write("\n".join(out))
