@@ -26,25 +26,13 @@ pub struct Function {
 
 #[derive(Default)]
 pub struct FunctionRegistry {
-    called: HashSet<FunctionId>,
     func_map: HashMap<FunctionId, Function>,
 }
 impl FunctionRegistry {
-    pub fn called(&mut self, id: FunctionId) {
-        if let Some(func) = self.func_map.get_mut(&id) {
-            func.callees.insert(id);
-        } else {
-            self.called.insert(id);
-        }
-    }
-
-    pub fn set(&mut self, id: FunctionId, mut func: Function) -> Result<()> {
+    pub fn set(&mut self, id: FunctionId, func: Function) -> Result<()> {
         use std::collections::hash_map::Entry;
         match self.func_map.entry(id) {
             Entry::Vacant(entry) => {
-                if self.called.remove(&id) {
-                    func.callees.insert(id);
-                }
                 entry.insert(func);
                 Ok(())
             }
