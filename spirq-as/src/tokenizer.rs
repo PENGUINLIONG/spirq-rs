@@ -8,7 +8,7 @@ use spirq_core::parse::{Instr, SpirvBinary, Instrs, bin::SpirvHeader};
 use spirq_core::ty::TypeRegistry;
 
 #[derive(Debug)]
-enum Lit {
+pub enum Lit {
     Int(i64),
     // Base numeric and the exponent bias. The effect of the bias depends on the
     // actual floating-point type it casts to.
@@ -17,15 +17,16 @@ enum Lit {
 }
 
 #[derive(Debug)]
-enum Token {
+pub enum Token {
     Comment(String),
     Literal(Lit),
     Ident(String),
     IdRef(String),
     Eq,
+    NewLine,
 }
 
-struct Tokenizer<'a> {
+pub struct Tokenizer<'a> {
     chars: Box<Peekable<Chars<'a>>>,
 }
 impl<'a> Tokenizer<'a> {
@@ -266,9 +267,11 @@ impl<'a> Tokenizer<'a> {
         if let Some(c) = self.chars.peek() {
             // Ignore LWS.
             if c.is_ascii_whitespace() {
-                self.chars.next();
                 while let Some(c) = self.chars.peek() {
-                    if c.is_ascii_whitespace() {
+                    if *c == '\n' {
+                        self.chars.next();
+                        return Ok(Some(Token::NewLine));
+                    } else if c.is_ascii_whitespace() {
                         self.chars.next();
                     } else {
                         break;
@@ -330,8 +333,7 @@ impl<'a> Iterator for Tokenizer<'a> {
 }
 
 
-
-fn tokenize(code: &str) -> Result<Vec<Token>> {
+pub fn tokenize(code: &str) -> Result<Vec<Token>> {
     let tokenizer = Tokenizer::new(code);
     let tokens = tokenizer.collect::<Result<Vec<_>>>();
     tokens
@@ -482,12 +484,19 @@ mod test {
 ; abcd12
 ; abcd123"#;
         let tokens = tokenize(code).unwrap();
-        assert_eq!(tokens.len(), 7);
+        assert_eq!(tokens.len(), 13);
         let expected = [" a", " ab", " abc", " abcd", " abcd1", " abcd12", " abcd123"];
         for (i, token) in tokens.iter().enumerate() {
-            match token {
-                Token::Comment(s) => assert_eq!(s, expected[i]),
-                _ => panic!("unexpected token: {:?}", token),
+            if i % 2 == 0 {
+                match token {
+                    Token::Comment(s) => assert_eq!(s, expected[i / 2]),
+                    _ => panic!("unexpected token: {:?}", token),
+                }
+            } else {
+                match token {
+                    Token::NewLine => {},
+                    _ => panic!("unexpected token: {:?}", token),
+                }
             }
         }
     }

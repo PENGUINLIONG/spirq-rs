@@ -130,6 +130,17 @@ impl InstructionBuilder {
         self.inner.extend_from_slice(x);
         self
     }
+    pub fn push_str(mut self, x: &str) -> Self {
+        // FIXME: (penguinliong) Avoid unsafe code.
+        use std::ffi::CString;
+        let cstr = CString::new(x).unwrap();
+        let bytes = cstr.as_bytes_with_nul();
+        let words = bytes.len() / 4 + 1;
+        let ptr = cstr.as_ptr() as *const u32;
+        let slice = unsafe { std::slice::from_raw_parts(ptr, words) };
+        self.inner.extend_from_slice(slice);
+        self
+    }
     pub fn build(mut self) -> Instruction {
         self.inner[0] |= (self.inner.len() as u32) << 16;
         Instruction::from(self.inner)
@@ -150,6 +161,7 @@ impl<'a> Operands<'a> {
         }
     }
     pub fn read_str(&mut self) -> Result<&'a str> {
+        // FIXME: (penguinliong) Avoid unsafe code.
         use std::ffi::CStr;
         use std::os::raw::c_char;
         let ptr = self.0.as_ptr() as *const c_char;
