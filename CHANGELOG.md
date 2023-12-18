@@ -1,5 +1,16 @@
 # Change Log
 
+## v1.0.1
+
+- Fixed resource reference analysis in function calls. (#115)
+- Infer types for specialization constants. (#114)
+
+## v1.0.0
+
+- Celebrate SPIR-Q v1.0! 🎉
+- Major refactorization. Separated foundational structures and routines to `spirq-core` which might be a part of other projects in the future.
+
+
 ## v0.6.4
 
 - Fixed access analysis on DXC outputs. (#105)
