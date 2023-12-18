@@ -672,3 +672,51 @@ fn test_matrix_stride() {
         }
     }
 }
+#[test]
+fn test_resource_in_chained_call() {
+    static SPV: &'static [u32] = inline_spirv!(r#"
+        #version 450
+        layout(set=1, binding=2) buffer _0 {
+            int a;
+        };
+        layout(set=1, binding=3) buffer _1 {
+            int b;
+        };
+        void assign_a(int x) {
+            a = x;
+        }
+        void main() {
+            assign_a(1);
+        }
+        "#, comp, glsl, vulkan1_2);
+    let entry = ReflectConfig::new()
+        .spv(SPV)
+        .ref_all_rscs(false)
+        .reflect()
+        .unwrap()
+        .pop()
+        .unwrap();
+    let desc_binds = entry
+        .vars
+        .into_iter()
+        .filter_map(|x| {
+            if let Variable::Descriptor {
+                desc_bind, desc_ty, ..
+            } = x
+            {
+                Some((desc_bind, desc_ty))
+            } else {
+                None
+            }
+        })
+        .collect::<HashMap<_, _>>();
+    assert_eq!(
+        *desc_binds.get(&DescriptorBinding::new(1, 2)).unwrap(),
+        DescriptorType::StorageBuffer(AccessType::ReadWrite)
+    );
+    // Ensure the unreferenced one is not in the map.
+    assert_eq!(
+        desc_binds.get(&DescriptorBinding::new(1, 3)),
+        None
+    );
+}

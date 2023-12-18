@@ -622,7 +622,11 @@ impl Inspector for FunctionInspector {
             }
             Op::FunctionCall => {
                 let op = OpFunctionCall::try_from(instr)?;
-                itm.func_reg.called(op.func_id);
+                if let Some((_, func)) = self.cur_func.as_mut() {
+                    func.callees.insert(op.func_id);
+                } else {
+                    return Err(anyhow!("unexpected OpFunctionCall"));
+                }
             }
             _ => {
                 if let Some((_func_id, func)) = self.cur_func.as_mut() {
