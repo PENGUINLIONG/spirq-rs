@@ -21,6 +21,7 @@ enum Token {
     Comment(String),
     Literal(Lit),
     Ident(String),
+    IdRef(String),
     Eq,
 }
 
@@ -46,6 +47,20 @@ impl<'a> Tokenizer<'a> {
             self.chars.next();
         }
         return Ok(Token::Comment(comment));
+    }
+
+    pub fn tokenize_idref(&mut self) -> Result<Token> {
+        self.chars.next(); // Consume the '%'.
+
+        let mut buf = String::new();
+        while let Some(c) = self.chars.peek() {
+            if c.is_ascii_alphanumeric() || c == &'_' {
+                buf.push(*c);
+            } else {
+                break;
+            }
+        }
+        return Ok(Token::IdRef(buf));
     }
 
     pub fn tokenize_numeric_literal_decimal(&mut self) -> Result<Lit> {
@@ -261,38 +276,44 @@ impl<'a> Tokenizer<'a> {
                 }
                 return self.tokenize();
             }
-        
+
             // Comments.
             if c == &';' {
                 let token = self.tokenize_comment()?;
                 return Ok(Some(token));
             }
-        
+
             // Punctuations.
             if c == &'=' {
                 self.chars.next(); // Consume the '='.
                 let token = Token::Eq;
                 return Ok(Some(token));
             }
-        
+
+            // IdRefs.
+            if c == &'%' {
+                let token = self.tokenize_idref()?;
+                return Ok(Some(token));
+            }
+
             // Literal numerics.
             if c == &'-' || c.is_ascii_digit() {
                 let token = self.tokenize_numeric_literal();
                 return Ok(Some(token?));
             }
-        
+
             // Literal string.
             if c == &'"' {
                 let token = self.tokenize_string_literal()?;
                 return Ok(Some(token));
             }
-        
+
             // Identifiers.
             if c.is_ascii_alphabetic() || c == &'_' {
                 let token = self.tokenize_ident()?;
                 return Ok(Some(token));
             }
-        
+
             bail!("unexpected character: {}", c);
 
         } else {
@@ -466,6 +487,20 @@ mod test {
         for (i, token) in tokens.iter().enumerate() {
             match token {
                 Token::Comment(s) => assert_eq!(s, expected[i]),
+                _ => panic!("unexpected token: {:?}", token),
+            }
+        }
+    }
+
+    #[test]
+    fn test_tokenize_idref() {
+        let code = r#"%1 %123 %abc %abc123"#;
+        let tokens = tokenize(code).unwrap();
+        assert_eq!(tokens.len(), 4);
+        let expected = ["1", "123", "abc", "abc123"];
+        for (i, token) in tokens.iter().enumerate() {
+            match token {
+                Token::IdRef(s) => assert_eq!(s, expected[i]),
                 _ => panic!("unexpected token: {:?}", token),
             }
         }
