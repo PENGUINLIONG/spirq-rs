@@ -537,7 +537,12 @@ impl<'a> ReflectIntermediate<'a> {
                     .get_u32(op.const_id, spirv::Decoration::SpecId)?;
                 let ty = self.ty_reg.get(op.ty_id)?.clone();
                 let constant = if let Some(user_value) = self.cfg.spec_values.get(&spec_id) {
-                    Constant::new(name, ty, user_value.clone())
+                    let user_value = if matches!(user_value, ConstantValue::Typeless(_)) {
+                        user_value.to_typed(&ty)?
+                    } else {
+                        user_value.clone()
+                    };
+                    Constant::new(name, ty, user_value)
                 } else {
                     let value = match opcode {
                         Op::SpecConstantTrue => ConstantValue::from(true),
@@ -617,9 +622,7 @@ impl Inspector for FunctionInspector {
             }
             Op::FunctionCall => {
                 let op = OpFunctionCall::try_from(instr)?;
-                let func_id = op.func_id;
-                let func = itm.func_reg.get_mut(func_id)?;
-                func.callees.insert(func_id);
+                itm.func_reg.called(op.func_id);
             }
             _ => {
                 if let Some((_func_id, func)) = self.cur_func.as_mut() {
