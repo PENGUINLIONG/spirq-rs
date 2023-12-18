@@ -135,9 +135,7 @@ impl ConstantValue {
                     let x = u64::from_ne_bytes([x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7]]);
                     Ok(ConstantValue::U64(x))
                 }
-                ScalarType::Float { bits: 16 } if x.len() == 4 => {
-                    Ok(ConstantValue::F16())
-                }
+                ScalarType::Float { bits: 16 } if x.len() == 4 => Ok(ConstantValue::F16()),
                 ScalarType::Float { bits: 32 } if x.len() == 4 => {
                     let x = f32::from_ne_bytes([x[0], x[1], x[2], x[3]]);
                     Ok(ConstantValue::F32(OrderedFloat(x)))
