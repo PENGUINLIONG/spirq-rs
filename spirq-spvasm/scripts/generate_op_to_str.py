@@ -14,22 +14,23 @@ for instr in j["instructions"]:
 out = []
 
 out += [
+    "#![allow(unreachable_patterns)]",
     "use anyhow::{bail, Result};",
     "",
-    "pub fn op_from_str(opname: &str) -> Result<u32> {",
-    "    let out: u32 = match opname {",
+    "pub fn op_to_str(opcode: u32) -> Result<&'static str> {",
+    "    let out: &'static str = match opcode {",
 ]
 
 for opname, opcode in name2op.items():
-    out += [f'        "{opname}" => {opcode},']
+    out += [f'        {opcode} => "{opname}",']
 
 out += [
-    '        _ => bail!("Unknown opname: {}", opname),',
+    '        _ => bail!("Unknown opcode: {}", opcode),',
     "    };",
     "    Ok(out)",
     "}",
     "",
 ]
 
-with open("spirq-spvasm/src/generated/op_from_str.rs", "w") as f:
+with open("spirq-spvasm/src/generated/op_to_str.rs", "w") as f:
     f.write("\n".join(out))

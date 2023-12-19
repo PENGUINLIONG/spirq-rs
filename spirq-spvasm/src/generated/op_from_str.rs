@@ -1,5 +1,4 @@
 use anyhow::{bail, Result};
-use num_traits::FromPrimitive;
 
 pub fn op_from_str(opname: &str) -> Result<u32> {
     let out: u32 = match opname {

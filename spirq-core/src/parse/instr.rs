@@ -149,6 +149,13 @@ impl InstructionBuilder {
 
 pub struct Operands<'a>(&'a [u32]);
 impl<'a> Operands<'a> {
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
     pub fn read_bool(&mut self) -> Result<bool> {
         self.read_u32().map(|x| x != 0)
     }
@@ -159,6 +166,12 @@ impl<'a> Operands<'a> {
         } else {
             Err(anyhow!("operand is too short"))
         }
+    }
+    pub fn read_f32(&mut self) -> Result<f32> {
+        self.read_u32().map(|x| f32::from_ne_bytes(x.to_ne_bytes()))
+    }
+    pub fn read_id(&mut self) -> Result<u32> {
+        self.read_u32()
     }
     pub fn read_str(&mut self) -> Result<&'a str> {
         // FIXME: (penguinliong) Avoid unsafe code.

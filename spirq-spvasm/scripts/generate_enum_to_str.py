@@ -24,8 +24,8 @@ out = []
 out += [
     "use anyhow::{bail, Result};",
     "",
-    "pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {",
-    "    let out: u32 = match ety {",
+    "pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {",
+    "    let out: String = match ety {",
 ]
 
 # ValueEnum
@@ -34,14 +34,14 @@ for kind, enumerants in value_enums.items():
         continue
 
     out += [
-        f'        "{kind}" => match name {{',
+        f'        "{kind}" => match value {{',
     ]
     for name, value in enumerants.items():
         out += [
-            f'            "{name}" => {value},',
+            f'            {value} => "{name}".to_owned(),',
         ]
     out += [
-        '            _ => bail!("unknown enum: {}::{}", ety, name)',
+        "            _ => value.to_string(),",
         "        }",
     ]
 
@@ -51,24 +51,19 @@ for kind, enumerants in bit_enums.items():
         continue
 
     out += [
-        f'        "{kind}" => match name {{',
-    ]
-    for name, value in enumerants.items():
-        out += [
-            f'            "{name}" => {value},',
-        ]
-    out += [
-        '            _ => bail!("unknown enum: {}::{}", ety, name)',
+        f'        "{kind}" => match value {{',
+        '            0 => "None".to_owned(),',
+        "            _ => value.to_string(),",
         "        }",
     ]
 
 out += [
-    '        _ => bail!("unknown enum: {}::{}", ety, name),',
+    '        _ => bail!("unknown enum: {}", ety),',
     "    };",
     "    Ok(out)",
     "}",
     "",
 ]
 
-with open("spirq-spvasm/src/generated/enum_from_str.rs", "w") as f:
+with open("spirq-spvasm/src/generated/enum_to_str.rs", "w") as f:
     f.write("\n".join(out))

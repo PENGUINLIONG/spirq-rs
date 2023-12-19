@@ -1,13 +1,10 @@
 use std::iter::Peekable;
-use std::rc::Rc;
 use std::str::Chars;
 use std::str::FromStr;
 
-use anyhow::{anyhow, bail, Error, Result};
-use spirq_core::parse::{Instr, SpirvBinary, Instrs, bin::SpirvHeader};
-use spirq_core::ty::TypeRegistry;
+use anyhow::{anyhow, bail, Result};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Lit {
     Int(i64),
     // Base numeric and the exponent bias. The effect of the bias depends on the
@@ -334,16 +331,15 @@ impl<'a> Iterator for Tokenizer<'a> {
 }
 
 
-pub fn tokenize(code: &str) -> Result<Vec<Token>> {
-    let tokenizer = Tokenizer::new(code);
-    let tokens = tokenizer.collect::<Result<Vec<_>>>();
-    tokens
-}
-
-
 #[cfg(test)]
 mod test {
     use super::*;
+
+    pub fn tokenize(code: &str) -> Result<Vec<Token>> {
+        let tokenizer = Tokenizer::new(code);
+        let tokens = tokenizer.collect::<Result<Vec<_>>>();
+        tokens
+    }
 
     #[test]
     fn test_tokenize_nothing() {
@@ -453,7 +449,7 @@ mod test {
         let tokens = tokenize(code).unwrap();
         assert_eq!(tokens.len(), 1);
         let expected = r#""\""#;
-        for (i, token) in tokens.iter().enumerate() {
+        for (_, token) in tokens.iter().enumerate() {
             match token {
                 Token::Literal(Lit::String(s)) => assert_eq!(s, expected),
                 _ => panic!("unexpected token: {:?}", token),

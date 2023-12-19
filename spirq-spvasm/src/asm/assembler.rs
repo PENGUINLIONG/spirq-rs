@@ -1,10 +1,10 @@
-use std::{iter::Peekable, collections::{HashMap, HashSet}};
+use std::collections::{HashMap, HashSet};
 
 use anyhow::{anyhow, bail, Result};
 use num_traits::FromPrimitive;
-use spirq_core::{spirv::Op, parse::{Instr, InstructionBuilder}};
+use spirq_core::{spirv::Op, parse::InstructionBuilder};
 use super::tokenizer::{Token, Tokenizer, Lit};
-use super::generated;
+use crate::generated;
 
 
 enum IdRef {
@@ -57,32 +57,35 @@ impl Assembler {
             _ => Err(anyhow!("expected opcode")),
         }
     }
+
+    fn str2idref(&self, id: String) -> IdRef {
+        if let Some(id) = id.parse::<u32>().ok() {
+            IdRef::Id(id)
+        } else {
+            IdRef::Name(id)
+        }
+    }
     fn parse_idref(&self, s: &mut TokenStream) -> Result<IdRef> {
         let token = s.next()?.ok_or_else(|| anyhow!("expected idref"))?;
-        match token {
-            Token::IdRef(id) => {
-                if let Some(id) = id.parse::<u32>().ok() {
-                    Ok(IdRef::Id(id))
-                } else {
-                    Ok(IdRef::Name(id))
-                }
-            }
-            _ => Err(anyhow!("expected idref")),
-        }
+        let idref = match token {
+            Token::IdRef(id) => self.str2idref(id),
+            _ => unreachable!(),
+        };
+        Ok(idref)
     }
 
     fn parse_operand(&self, s: &mut TokenStream) -> Result<Operand> {
         let token = s.next()?.ok_or_else(|| anyhow!("expected operand"))?;
         match token {
             Token::IdRef(id) => {
-                let idref = self.parse_idref(s)?;
+                let idref = self.str2idref(id);
                 Ok(Operand::IdRef(idref))
             }
             Token::Literal(lit) => {
-                Ok(Operand::Literal(lit))
+                Ok(Operand::Literal(lit.clone()))
             }
             Token::Ident(ident) => {
-                Ok(Operand::Ident(ident))
+                Ok(Operand::Ident(ident.clone()))
             }
             _ => Err(anyhow!("expected operand, but {:?}", s.peek())),
         }
@@ -140,14 +143,14 @@ impl Assembler {
 
     fn parse_instr(&self, s: &mut TokenStream) -> Result<Option<Instruction>> {
         while let Some(token) = s.peek() {
-            match token.clone() {
+            match token {
                 Token::Comment(_) => {}
                 Token::NewLine => {},
-                Token::Ident(ident) => {
+                Token::Ident(_) => {
                     let instr = self.parse_instr_without_result_id(s)?;
                     return Ok(Some(instr));
                 }
-                Token::IdRef(id) => {
+                Token::IdRef(_) => {
                     let instr = self.parse_instr_with_result_id(s)?;
                     return Ok(Some(instr));
                 }
@@ -168,7 +171,7 @@ impl Assembler {
     }
 
     fn parse(&self, input: &str) -> Result<Vec<Instruction>> {
-        let mut tokenizer = Tokenizer::new(input);
+        let tokenizer = Tokenizer::new(input);
         let mut s = TokenStream {
             tokenizer,
             cache: None,
@@ -211,11 +214,8 @@ impl Assembler {
 
         // Transform name refs to id refs.
         for instr in &mut instrs {
-            let result_id = if let Some(result_id) = &mut instr.result_id {
-                let idref = self.process_idref(result_id)?;
-                Some(idref)
-            } else {
-                None
+            if let Some(result_id) = &mut instr.result_id {
+                *result_id = self.process_idref(&result_id)?;
             };
 
             for operand in &mut instr.operands {
@@ -263,7 +263,7 @@ impl Assembler {
 
             for (i, operand) in operands.enumerate() {
                 match operand {
-                    Operand::IdRef(IdRef::Name(name)) => unreachable!(),
+                    Operand::IdRef(IdRef::Name(_)) => unreachable!(),
                     Operand::IdRef(IdRef::Id(id)) => {
                         builder = builder.push(*id);
                     }
