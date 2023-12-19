@@ -8,6 +8,7 @@ fn print_id(operands: &mut Operands) -> Result<String> {
 fn print_u32(operands: &mut Operands) -> Result<String> {
     Ok(operands.read_u32()?.to_string())
 }
+#[allow(dead_code)]
 fn print_f32(operands: &mut Operands) -> Result<String> {
     Ok(operands.read_f32()?.to_string())
 }

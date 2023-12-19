@@ -1,3 +1,4 @@
+#[allow(unreachable_patterns)]
 use anyhow::{bail, Result};
 
 pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
