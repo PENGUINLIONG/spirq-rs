@@ -4,6 +4,7 @@ use std::convert::TryFrom;
 
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use num_traits::FromPrimitive;
+use spirq_core::parse::Instrs;
 
 use crate::{
     annotation::{DecorationRegistry, NameRegistry},
@@ -14,7 +15,7 @@ use crate::{
     func::{ExecutionMode, Function, FunctionRegistry},
     inspect::Inspector,
     instr::*,
-    parse::{Instr, Instrs},
+    parse::Instr,
     reflect_cfg::ReflectConfig,
     spirv::{self, Op},
     ty::{
@@ -666,45 +667,60 @@ impl Inspector for FunctionInspector {
     }
 }
 
+struct NopFilter<'a>(Instrs<'a>);
+impl<'a> NopFilter<'a> {
+    fn next(&mut self) -> Result<Option<&'a Instr>> {
+        while let Some(instr) = self.0.next()? {
+            if instr.op() != Op::Nop {
+                return Ok(Some(instr));
+            }
+        }
+        Ok(None)
+    }
+    fn peek(&self) -> Option<&'a Instr> {
+        self.0.peek()
+    }
+}
+
 pub fn reflect<'a, I: Inspector>(
     itm: &mut ReflectIntermediate<'a>,
     mut inspector: I,
 ) -> Result<Vec<EntryPoint>> {
     // Don't change the order. See _2.4 Logical Layout of a Module_ of the
     // SPIR-V specification for more information.
-    let mut instrs = Instrs::new(itm.cfg.spv.words()).peekable();
+    let mut instrs = NopFilter(itm.cfg.spv.instrs()?);
 
     let mut entry_point_declrs = HashMap::default();
 
     // 1. All OpCapability instructions.
-    while let Some(instr) = instrs.peek().cloned() {
+    while let Some(instr) = instrs.peek() {
         if instr.op() == Op::Capability {
-            instrs.next();
+            instrs.next()?;
         } else {
             break;
         }
     }
     // 2. Optional OpExtension instructions (extensions to SPIR-V).
-    while let Some(instr) = instrs.peek().cloned() {
+    while let Some(instr) = instrs.peek() {
         if instr.op() == Op::Extension {
-            instrs.next();
+            instrs.next()?;
         } else {
             break;
         }
     }
     // 3. Optional OpExtInstImport instructions.
-    while let Some(instr) = instrs.peek().cloned() {
+    while let Some(instr) = instrs.peek() {
         if instr.op() == Op::ExtInstImport {
             let op = OpExtInstImport::try_from(instr)?;
             itm.interp
                 .import_ext_instr_set(op.instr_set_id, op.name.to_owned())?;
-            instrs.next();
+            instrs.next()?;
         } else {
             break;
         }
     }
     // 4. The single required OpMemoryModel instruction.
-    if let Some(instr) = instrs.next() {
+    if let Some(instr) = instrs.peek() {
         if instr.op() == Op::MemoryModel {
             let op = OpMemoryModel::try_from(instr)?;
             match op.addr_model {
@@ -717,6 +733,7 @@ pub fn reflect<'a, I: Inspector>(
                 spirv::MemoryModel::Vulkan => {}
                 _ => return Err(anyhow!("unsupported memory model")),
             }
+            instrs.next()?;
         } else {
             return Err(anyhow!("expected OpMemoryModel, but got {:?}", instr.op()));
         }
@@ -724,7 +741,7 @@ pub fn reflect<'a, I: Inspector>(
         return Err(anyhow!("expected OpMemoryModel, but got nothing"));
     }
     // 5. All entry point declarations, using OpEntryPoint.
-    while let Some(instr) = instrs.peek().cloned() {
+    while let Some(instr) = instrs.peek() {
         if instr.op() == Op::EntryPoint {
             let op = OpEntryPoint::try_from(instr)?;
             let entry_point_declr = EntryPointDeclartion {
@@ -739,14 +756,14 @@ pub fn reflect<'a, I: Inspector>(
                     e.insert(entry_point_declr);
                 }
             }
-            instrs.next();
+            instrs.next()?;
         } else {
             break;
         }
     }
     // 6. All execution-mode declarations, using OpExecutionMode or
     //    OpExecutionModeId.
-    while let Some(instr) = instrs.peek().cloned() {
+    while let Some(instr) = instrs.peek() {
         let op = instr.op();
         match op {
             Op::ExecutionMode | Op::ExecutionModeId => {
@@ -774,7 +791,7 @@ pub fn reflect<'a, I: Inspector>(
                     .ok_or(anyhow!("execution mode for non-existing entry point"))?
                     .exec_modes
                     .push(exec_mode_declr);
-                instrs.next();
+                instrs.next()?;
             }
             _ => break,
         }
@@ -785,14 +802,14 @@ pub fn reflect<'a, I: Inspector>(
     //      OpSourceContinued, without forward references.
     //   b. All OpName and all OpMemberName.
     //   c. All OpModuleProcessed instructions.
-    while let Some(instr) = instrs.peek().cloned() {
+    while let Some(instr) = instrs.peek() {
         match instr.op() {
             Op::String
             | Op::SourceExtension
             | Op::Source
             | Op::SourceContinued
             | Op::ModuleProcessed => {
-                instrs.next();
+                instrs.next()?;
             }
             Op::Name => {
                 let op = OpName::try_from(instr)?;
@@ -800,7 +817,7 @@ pub fn reflect<'a, I: Inspector>(
                     // Ignore empty names.
                     itm.name_reg.set(op.target_id, op.name);
                 }
-                instrs.next();
+                instrs.next()?;
             }
             Op::MemberName => {
                 let op = OpMemberName::try_from(instr)?;
@@ -808,27 +825,27 @@ pub fn reflect<'a, I: Inspector>(
                     itm.name_reg
                         .set_member(op.target_id, op.member_idx, op.name);
                 }
-                instrs.next();
+                instrs.next()?;
             }
             _ => break,
         }
     }
     // 8. All annotation instructions:
     //   a. All decoration instructions.
-    while let Some(instr) = instrs.peek().cloned() {
+    while let Some(instr) = instrs.peek() {
         match instr.op() {
             Op::Decorate => {
                 let op = OpDecorate::try_from(instr)?;
                 let deco = op.deco;
                 itm.deco_reg.set(op.target_id, deco, op.params)?;
-                instrs.next();
+                instrs.next()?;
             }
             Op::MemberDecorate => {
                 let op = OpMemberDecorate::try_from(instr)?;
                 let deco = op.deco;
                 itm.deco_reg
                     .set_member(op.target_id, op.member_idx, deco, op.params)?;
-                instrs.next();
+                instrs.next()?;
             }
             Op::DecorationGroup
             | Op::GroupDecorate
@@ -836,7 +853,7 @@ pub fn reflect<'a, I: Inspector>(
             | Op::DecorateId
             | Op::DecorateString
             | Op::MemberDecorateString => {
-                instrs.next();
+                instrs.next()?;
             }
             _ => break,
         };
@@ -850,10 +867,10 @@ pub fn reflect<'a, I: Inspector>(
     //    order. This section is the first section to allow use of:
     //   a. OpLine and OpNoLine debug information.
     //   b. Non-semantic instructions with OpExtInst.
-    while let Some(instr) = instrs.peek().cloned() {
+    while let Some(instr) = instrs.peek() {
         let opcode = instr.op();
         if let Op::Line | Op::NoLine = opcode {
-            instrs.next();
+            instrs.next()?;
             continue;
         }
         if is_ty_op(opcode) {
@@ -865,7 +882,7 @@ pub fn reflect<'a, I: Inspector>(
         } else {
             break;
         }
-        instrs.next();
+        instrs.next()?;
     }
     // 10. All function declarations ("declarations" are functions without a
     //     body; there is no forward declaration to a function with a body).
@@ -881,14 +898,14 @@ pub fn reflect<'a, I: Inspector>(
     //   d. Block.
     //   e. ...
     //   f. Function end, using OpFunctionEnd.
-    while let Some(instr) = instrs.peek().cloned() {
+    while let Some(instr) = instrs.peek() {
         let opcode = instr.op();
         if let Op::Line | Op::NoLine = opcode {
-            instrs.next();
+            instrs.next()?;
             continue;
         }
         inspector.inspect(itm, instr)?;
-        instrs.next();
+        instrs.next()?;
     }
 
     itm.collect_entry_points(entry_point_declrs)

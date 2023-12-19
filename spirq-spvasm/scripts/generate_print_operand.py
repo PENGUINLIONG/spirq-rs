@@ -30,6 +30,7 @@ out += [
     "fn print_u32(operands: &mut Operands) -> Result<String> {",
     "    Ok(operands.read_u32()?.to_string())",
     "}",
+    "#[allow(dead_code)]",
     "fn print_f32(operands: &mut Operands) -> Result<String> {",
     "    Ok(operands.read_f32()?.to_string())",
     "}",
@@ -83,9 +84,6 @@ out += [
 ]
 
 for opcode, (opname, op_operand_kinds) in operand_kinds.items():
-    if len(op_operand_kinds) == 0:
-        continue
-
     out += [
         f"        // {opname}",
         f"        {opcode} => {{",

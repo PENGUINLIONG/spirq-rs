@@ -55,7 +55,7 @@ impl Disassembler {
     }
     fn print_lines(&self, instrs: &mut Instrs) -> Result<Vec<String>> {
         let mut out = Vec::new();
-        for instr in instrs {
+        while let Some(instr) = instrs.next()? {
             out.push(self.print_line(instr)?);
         }
         Ok(out)
@@ -73,7 +73,7 @@ impl Disassembler {
             out.push(format!("; Schema: {:x}", header.schema));
         }
 
-        let instrs = self.print_lines(&mut spv.instrs())?;
+        let instrs = self.print_lines(&mut spv.instrs()?)?;
         out.extend(instrs);
         Ok(out.join("\n"))
     }
@@ -95,5 +95,12 @@ mod test {
 
     #[test]
     fn test_nop() {
+        let spv = [
+            0x07230203, 0x00010000, 0x00000008, 0x0000001, 0x00000000,
+            0x00010000
+        ].iter().map(|x| *x as u32).collect::<Vec<_>>();
+        let spv = SpirvBinary::from(spv);
+        let out = Disassembler::new().disassemble(&spv).unwrap();
+        assert_eq!(out, "; SPIR-V\n; Version: 1.0\n; Generator: 8\n; Bound: 1\n; Schema: 0\nOpNop");
     }
 }

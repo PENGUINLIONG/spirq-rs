@@ -1,3 +1,4 @@
+use anyhow::Result;
 use std::{convert::TryInto, iter::FromIterator};
 
 use super::Instrs;
@@ -57,8 +58,9 @@ impl SpirvBinary {
         self.0
     }
 
-    pub fn instrs(&self) -> Instrs {
-        Instrs::new(self.words())
+    pub fn instrs(&self) -> Result<Instrs> {
+        const HEADER_LEN: usize = 5;
+        Instrs::new(&self.words()[HEADER_LEN..])
     }
 
     pub fn header(&self) -> Option<SpirvHeader> {

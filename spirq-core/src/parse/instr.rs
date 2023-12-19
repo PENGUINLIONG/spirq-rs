@@ -1,40 +1,57 @@
 //!  SPIR-V instruction parser.
+use anyhow::bail;
 use num_traits::FromPrimitive;
 use spirv::Op;
 use std::{borrow::Borrow, fmt, ops::Deref};
 
 use crate::error::{anyhow, Result};
 
-pub struct Instrs<'a>(&'a [u32]);
-impl<'a> Instrs<'a> {
-    pub fn new(spv: &'a [u32]) -> Instrs<'a> {
-        const HEADER_LEN: usize = 5;
-        if spv.len() < HEADER_LEN {
-            return Instrs(&[] as &[u32]);
-        }
-        Instrs(&spv[HEADER_LEN..])
-    }
+pub struct Instrs<'a> {
+    inner: &'a [u32],
+    cache: Option<&'a Instr>,
 }
-impl<'a> Iterator for Instrs<'a> {
-    type Item = &'a Instr;
-    fn next(&mut self) -> Option<Self::Item> {
-        while let Some(head) = self.0.first() {
-            // Ignore nops.
-            let opcode = head & 0xFFFF;
-            if opcode == 0 {
-                continue;
+impl<'a> Instrs<'a> {
+    pub fn new(spv: &'a [u32]) -> Result<Instrs<'a>> {
+        let mut out = Instrs {
+            inner: &spv,
+            cache: None,
+        };
+        out.load_next()?;
+        Ok(out)
+    }
+
+    fn load_next(&mut self) -> Result<()> {
+        let mut new_cache = None;
+        while let Some(head) = self.inner.first() {
+            let len = ((*head as u32) >> 16) as usize;
+            // Report zero-length instructions.
+            if len == 0 {
+                bail!("instruction length is zero");
             }
 
-            let len = ((*head as u32) >> 16) as usize;
-            if len <= self.0.len() {
-                let instr = Instr::new(&self.0[..len]);
-                self.0 = &self.0[len..];
-                return Some(instr.unwrap());
+            if len <= self.inner.len() {
+                let instr = Instr::new(&self.inner[..len])?;
+                self.inner = &self.inner[len..];
+                new_cache = Some(instr);
             } else {
-                return None;
+                if len < self.inner.len() {
+                    bail!("instruction is truncated");
+                }
             }
+            break;
         }
-        None
+
+        self.cache = new_cache;
+        Ok(())
+    }
+
+    pub fn peek(&self) -> Option<&'a Instr> {
+        self.cache.clone()
+    }
+    pub fn next(&mut self) -> Result<Option<&'a Instr>> {
+        let last_cache = self.cache.take();
+        self.load_next()?;
+        return Ok(last_cache);
     }
 }
 

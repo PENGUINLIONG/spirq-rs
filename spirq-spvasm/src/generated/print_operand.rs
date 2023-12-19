@@ -59,6 +59,9 @@ fn print_pair_u32_id_list(operands: &mut Operands) -> Result<Vec<String>> {
 pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>> {
     let mut out: Vec<String> = Vec::new();
     match opcode {
+        // OpNop
+        0 => {
+        }
         // OpUndef
         1 => {
         }
@@ -357,6 +360,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         }
         // OpFunctionParameter
         55 => {
+        }
+        // OpFunctionEnd
+        56 => {
         }
         // OpFunctionCall
         57 => {
@@ -1440,6 +1446,12 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
         }
+        // OpEmitVertex
+        218 => {
+        }
+        // OpEndPrimitive
+        219 => {
+        }
         // OpEmitStreamVertex
         220 => {
             // IdRef
@@ -1699,10 +1711,19 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
                 out.extend(print_pair_u32_id_list(operands)?);
             }
         }
+        // OpKill
+        252 => {
+        }
+        // OpReturn
+        253 => {
+        }
         // OpReturnValue
         254 => {
             // IdRef
             out.push(print_id(operands)?);
+        }
+        // OpUnreachable
+        255 => {
         }
         // OpLifetimeStart
         256 => {
@@ -2270,6 +2291,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
         }
+        // OpNoLine
+        317 => {
+        }
         // OpAtomicFlagTestAndSet
         318 => {
             // IdRef
@@ -2780,6 +2804,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
                 out.push(print_id(operands)?);
             }
         }
+        // OpTerminateInvocation
+        4416 => {
+        }
         // OpSubgroupBallotKHR
         4421 => {
             // IdRef
@@ -2861,6 +2888,12 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         4447 => {
             // IdRef
             out.push(print_id(operands)?);
+        }
+        // OpIgnoreIntersectionKHR
+        4448 => {
+        }
+        // OpTerminateRayKHR
+        4449 => {
         }
         // OpSDotKHR
         4450 => {
@@ -3627,6 +3660,12 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
         }
+        // OpIgnoreIntersectionNV
+        5335 => {
+        }
+        // OpTerminateRayNV
+        5336 => {
+        }
         // OpTraceNV
         5337 => {
             // IdRef
@@ -3775,6 +3814,15 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         5362 => {
             // IdRef
             out.push(print_id(operands)?);
+        }
+        // OpBeginInvocationInterlockEXT
+        5364 => {
+        }
+        // OpEndInvocationInterlockEXT
+        5365 => {
+        }
+        // OpDemoteToHelperInvocationEXT
+        5380 => {
         }
         // OpIsHelperInvocationEXT
         5381 => {
