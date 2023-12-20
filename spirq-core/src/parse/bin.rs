@@ -2,7 +2,7 @@ use anyhow::Result;
 use spirv::{MAJOR_VERSION, MINOR_VERSION};
 use std::{convert::TryInto, iter::FromIterator};
 
-use super::{Instrs, Instruction};
+use super::Instrs;
 
 #[derive(Debug, Clone)]
 pub struct SpirvHeader {

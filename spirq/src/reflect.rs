@@ -877,6 +877,8 @@ impl<'a> ReflectIntermediate<'a> {
             }
         }
         // 4. The single required OpMemoryModel instruction.
+        // NOTE: (penguinliong): We relax the requirement here for better
+        // flexibility as a tool.
         if let Some(instr) = instrs.peek() {
             if instr.op() == Op::MemoryModel {
                 let op = OpMemoryModel::try_from(instr)?;
@@ -891,11 +893,7 @@ impl<'a> ReflectIntermediate<'a> {
                     _ => return Err(anyhow!("unsupported memory model")),
                 }
                 instrs.next()?;
-            } else {
-                return Err(anyhow!("expected OpMemoryModel, but got {:?}", instr.op()));
             }
-        } else {
-            return Err(anyhow!("expected OpMemoryModel, but got nothing"));
         }
         // 5. All entry point declarations, using OpEntryPoint.
         while let Some(instr) = instrs.peek() {

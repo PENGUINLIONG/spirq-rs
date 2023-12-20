@@ -12,7 +12,6 @@ fn test_asm_dis_roundtrip() {
 ; Generator: 0; 0
 ; Bound: 0
 ; Schema: 0
-OpMemoryModel Logical GLSL450
 %void = OpTypeVoid
 %void_0 = OpTypeVoid
 %void_1 = OpTypeVoid
