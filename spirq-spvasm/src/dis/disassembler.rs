@@ -1,9 +1,11 @@
+use std::collections::HashMap;
+
 use anyhow::Result;
 use spirq_core::{parse::{Instr, SpirvBinary, Instrs, Operands}, spirv::Op};
 use crate::generated;
 
 pub struct Disassembler {
-    print_header: bool
+    print_header: bool,
 }
 impl Disassembler {
     pub fn new() -> Self {
@@ -17,8 +19,14 @@ impl Disassembler {
         return self
     }
 
-    fn print_operands(&self, opcode: u32, operands: &mut Operands<'_>) -> Result<String> {
-        let operands = generated::print_operand(opcode, operands)?;
+    fn print_id(&self, id: u32, id_names: &HashMap<u32, String>) -> Result<String> {
+        if let Some(name) = id_names.get(&id) {
+            return Ok(format!("%{}", name));
+        }
+        Ok(format!("%{}", id))
+    }
+    fn print_operands(&self, opcode: u32, operands: &mut Operands<'_>, id_names: &HashMap<u32, String>) -> Result<String> {
+        let operands = generated::print_operand(opcode, operands, id_names)?;
         let out = operands.join(" ");
         Ok(out)
     }
@@ -27,7 +35,7 @@ impl Disassembler {
         Ok(opname)
     }
 
-    fn print_line(&self, instr: &Instr) -> Result<String> {
+    fn print_line<'a>(&self, instr: &'a Instr, id_names: &HashMap<u32, String>) -> Result<String> {
         let mut operands = instr.operands();
         let opcode = instr.opcode();
         let result_type_id = if generated::op_has_result_type_id(opcode)? {
@@ -43,29 +51,53 @@ impl Disassembler {
 
         let mut out = String::new();
         if let Some(result_id) = result_id {
-            out = format!("%{} = ", result_id);
+            out.push_str(&self.print_id(result_id, id_names)?);
+            out.push_str(" = ");
         }
         out.push_str(&self.print_opcode(opcode)?);
         if let Some(result_type_id) = result_type_id {
-            out.push_str(&format!(" %{}", result_type_id));
+            out.push_str(&format!(" {}", &self.print_id(result_type_id, id_names)?));
         }
-        let operands_ = self.print_operands(opcode, &mut operands)?;
+        let operands_ = self.print_operands(opcode, &mut operands, id_names)?;
         if !operands_.is_empty() {
             out.push(' ');
             out.push_str(&operands_);
         }
 
-        dbg!(&out);
         Ok(out)
     }
-    fn print_lines(&self, instrs: &mut Instrs) -> Result<Vec<String>> {
+    fn print_lines<'a>(&self, instrs: &'a mut Instrs, id_names: HashMap<u32, String>) -> Result<Vec<String>> {
         let mut out = Vec::new();
         while let Some(instr) = instrs.next()? {
-            out.push(self.print_line(instr)?);
+            out.push(self.print_line(instr, &id_names)?);
         }
         Ok(out)
     }
-    pub fn disassemble(self, spv: &SpirvBinary) -> Result<String> {
+
+    fn collect_names<'a>(&self, spv: &'a SpirvBinary) -> Result<HashMap<u32, String>> {
+        let mut out = HashMap::new();
+
+        let mut instrs = spv.instrs()?;
+        while let Some(instr) = instrs.next()? {
+            if instr.op() == Op::Name {
+                let mut operands = instr.operands();
+                let id = operands.read_id()?;
+                let name = operands.read_str()?;
+                // Sanitize name. Convert all punctuations to underscore.
+                let name = name.chars()
+                    .map(|c| if c.is_ascii_punctuation() { '_' } else { c })
+                    .collect::<String>();
+                out.insert(id, name);
+            }
+        }
+
+        Ok(out)
+    }
+    fn print<'a>(&self, spv: &'a SpirvBinary, id_names: HashMap<u32, String>) -> Result<Vec<String>> {
+        self.print_lines(&mut spv.instrs()?, id_names)
+    }
+
+    pub fn disassemble(&self, spv: &SpirvBinary) -> Result<String> {
         let mut out = Vec::new();
 
         if let Some(header) = spv.header() {
@@ -78,7 +110,10 @@ impl Disassembler {
             out.push(format!("; Schema: {:x}", header.schema));
         }
 
-        let instrs = self.print_lines(&mut spv.instrs()?)?;
+        let id_names = self.collect_names(spv)?;
+        dbg!(&id_names);
+
+        let instrs = self.print(spv, id_names)?;
         out.extend(instrs);
         Ok(out.join("\n"))
     }

@@ -9,7 +9,12 @@ fn test_disassembler() {
     let spv = include_bytes!("../../../assets/moon.spv");
     let spvasm = actual.disassemble(&SpirvBinary::from(spv.as_ref())).unwrap();
     println!("{}", spvasm);
-    let expect = r#"OpCapability Shader
+    let expect = r#"; SPIR-V
+; Version: 1.0
+; Generator: e0000
+; Bound: 97
+; Schema: 0
+OpCapability Shader
 OpCapability RuntimeDescriptorArray
 OpExtension "SPV_EXT_descriptor_indexing"
 %1 = OpExtInstImport "GLSL.std.450"

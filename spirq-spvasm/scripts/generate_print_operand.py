@@ -52,12 +52,18 @@ for operand_kind in j["operand_kinds"]:
 out = []
 
 out += [
+    "use std::collections::HashMap;",
     "use anyhow::{bail, Result};",
     "use spirq_core::parse::Operands;",
     "use super::enum_to_str::enum_to_str;",
     "",
-    "fn print_id(operands: &mut Operands) -> Result<String> {",
-    '    Ok(format!("%{}", operands.read_u32()?))',
+    "fn print_id(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<String> {",
+    "    let id = operands.read_u32()?;",
+    "    if let Some(name) = id_names.get(&id) {",
+    '        Ok(format!("%{}", name))',
+    "    } else {",
+    '        Ok(format!("%{}", id))',
+    "    }",
     "}",
     "fn print_u32(operands: &mut Operands) -> Result<String> {",
     "    Ok(operands.read_u32()?.to_string())",
@@ -76,37 +82,22 @@ out += [
     "        .collect::<Vec<_>>();",
     "    Ok(out)",
     "}",
-    "fn print_pair_id_id_list(operands: &mut Operands) -> Result<Vec<String>> {",
+    "fn print_pair_id_id_list(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {",
     "    let mut out = Vec::new();",
-    "    for pair in operands.read_list()?.chunks(2) {",
-    "        if pair.len() != 2 {",
-    '            bail!("operands does not pair up");',
-    "        }",
-    '        let seg = format!("%{} %{}", pair[0], pair[1]);',
-    "        out.push(seg);",
-    "    }",
+    "    out.push(print_id(operands, id_names)?);",
+    "    out.push(print_id(operands, id_names)?);",
     "    Ok(out)",
     "}",
-    "fn print_pair_id_u32_list(operands: &mut Operands) -> Result<Vec<String>> {",
+    "fn print_pair_id_u32_list(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {",
     "    let mut out = Vec::new();",
-    "    for pair in operands.read_list()?.chunks(2) {",
-    "        if pair.len() != 2 {",
-    '            bail!("operands does not pair up");',
-    "        }",
-    '        let seg = format!("%{} {}", pair[0], pair[1]);',
-    "        out.push(seg);",
-    "    }",
+    "    out.push(print_id(operands, id_names)?);",
+    "    out.push(print_u32(operands)?);",
     "    Ok(out)",
     "}",
-    "fn print_pair_u32_id_list(operands: &mut Operands) -> Result<Vec<String>> {",
+    "fn print_pair_u32_id_list(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {",
     "    let mut out = Vec::new();",
-    "    for pair in operands.read_list()?.chunks(2) {",
-    "        if pair.len() != 2 {",
-    '            bail!("operands does not pair up");',
-    "        }",
-    '        let seg = format!("{} %{}", pair[0], pair[1]);',
-    "        out.push(seg);",
-    "    }",
+    "    out.push(print_u32(operands)?);",
+    "    out.push(print_id(operands, id_names)?);",
     "    Ok(out)",
     "}",
     "",
@@ -149,17 +140,17 @@ def print_operand(kind: str, quantifier: Optional[str], indent: int) -> List[str
         out += [padding + "out.push(print_u32(operands)?);"]
     # Id
     elif kind.startswith("Id"):
-        out += [padding + "out.push(print_id(operands)?);"]
+        out += [padding + "out.push(print_id(operands, id_names)?);"]
     # Pair
     elif kind == "PairIdRefIdRef":
-        out += [padding + "out.extend(print_pair_id_id_list(operands)?);"]
+        out += [padding + "out.extend(print_pair_id_id_list(operands, id_names)?);"]
     elif kind == "PairIdRefLiteralInteger":
-        out += [padding + "out.extend(print_pair_id_u32_list(operands)?);"]
+        out += [padding + "out.extend(print_pair_id_u32_list(operands, id_names)?);"]
     elif kind == "PairLiteralIntegerIdRef":
-        out += [padding + "out.extend(print_pair_u32_id_list(operands)?);"]
+        out += [padding + "out.extend(print_pair_u32_id_list(operands, id_names)?);"]
     # Enum
     else:
-        out += [padding + f"out.extend(print_enum_{kind}(operands)?);"]
+        out += [padding + f"out.extend(print_enum_{kind}(operands, id_names)?);"]
 
     if quantifier == "*":
         out += [
@@ -181,7 +172,8 @@ for kind, (category, parameters) in operand_parameters.items():
     out += [
         "#[allow(non_snake_case)]",
         "#[allow(dead_code)]",
-        f"fn print_enum_{kind}(operands: &mut Operands) -> Result<Vec<String>> {{",
+        "#[allow(unused_variables)]",
+        f"fn print_enum_{kind}(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {{",
         "    let value = operands.read_u32()?;",
         "    #[allow(unused_mut)]",
         f'    let mut out = vec![enum_to_str(&"{kind}", value)?];',
@@ -227,7 +219,7 @@ for kind, (category, parameters) in operand_parameters.items():
     ]
 
 out += [
-    "pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>> {",
+    "pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {",
     "    let mut out: Vec<String> = Vec::new();",
     "    match opcode {",
 ]

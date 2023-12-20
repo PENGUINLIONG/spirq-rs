@@ -1,9 +1,15 @@
+use std::collections::HashMap;
 use anyhow::{bail, Result};
 use spirq_core::parse::Operands;
 use super::enum_to_str::enum_to_str;
 
-fn print_id(operands: &mut Operands) -> Result<String> {
-    Ok(format!("%{}", operands.read_u32()?))
+fn print_id(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<String> {
+    let id = operands.read_u32()?;
+    if let Some(name) = id_names.get(&id) {
+        Ok(format!("%{}", name))
+    } else {
+        Ok(format!("%{}", id))
+    }
 }
 fn print_u32(operands: &mut Operands) -> Result<String> {
     Ok(operands.read_u32()?.to_string())
@@ -22,43 +28,29 @@ fn print_list(operands: &mut Operands) -> Result<Vec<String>> {
         .collect::<Vec<_>>();
     Ok(out)
 }
-fn print_pair_id_id_list(operands: &mut Operands) -> Result<Vec<String>> {
+fn print_pair_id_id_list(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let mut out = Vec::new();
-    for pair in operands.read_list()?.chunks(2) {
-        if pair.len() != 2 {
-            bail!("operands does not pair up");
-        }
-        let seg = format!("%{} %{}", pair[0], pair[1]);
-        out.push(seg);
-    }
+    out.push(print_id(operands, id_names)?);
+    out.push(print_id(operands, id_names)?);
     Ok(out)
 }
-fn print_pair_id_u32_list(operands: &mut Operands) -> Result<Vec<String>> {
+fn print_pair_id_u32_list(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let mut out = Vec::new();
-    for pair in operands.read_list()?.chunks(2) {
-        if pair.len() != 2 {
-            bail!("operands does not pair up");
-        }
-        let seg = format!("%{} {}", pair[0], pair[1]);
-        out.push(seg);
-    }
+    out.push(print_id(operands, id_names)?);
+    out.push(print_u32(operands)?);
     Ok(out)
 }
-fn print_pair_u32_id_list(operands: &mut Operands) -> Result<Vec<String>> {
+fn print_pair_u32_id_list(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let mut out = Vec::new();
-    for pair in operands.read_list()?.chunks(2) {
-        if pair.len() != 2 {
-            bail!("operands does not pair up");
-        }
-        let seg = format!("{} %{}", pair[0], pair[1]);
-        out.push(seg);
-    }
+    out.push(print_u32(operands)?);
+    out.push(print_id(operands, id_names)?);
     Ok(out)
 }
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_ImageOperands(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_ImageOperands(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"ImageOperands", value)?];
@@ -68,54 +60,54 @@ fn print_enum_ImageOperands(operands: &mut Operands) -> Result<Vec<String>> {
     // Bias
     if value & 0x0001 != 0 {
         // IdRef
-        out.push(print_id(operands)?);
+        out.push(print_id(operands, id_names)?);
     }
     // Lod
     if value & 0x0002 != 0 {
         // IdRef
-        out.push(print_id(operands)?);
+        out.push(print_id(operands, id_names)?);
     }
     // Grad
     if value & 0x0004 != 0 {
         // IdRef
-        out.push(print_id(operands)?);
+        out.push(print_id(operands, id_names)?);
         // IdRef
-        out.push(print_id(operands)?);
+        out.push(print_id(operands, id_names)?);
     }
     // ConstOffset
     if value & 0x0008 != 0 {
         // IdRef
-        out.push(print_id(operands)?);
+        out.push(print_id(operands, id_names)?);
     }
     // Offset
     if value & 0x0010 != 0 {
         // IdRef
-        out.push(print_id(operands)?);
+        out.push(print_id(operands, id_names)?);
     }
     // ConstOffsets
     if value & 0x0020 != 0 {
         // IdRef
-        out.push(print_id(operands)?);
+        out.push(print_id(operands, id_names)?);
     }
     // Sample
     if value & 0x0040 != 0 {
         // IdRef
-        out.push(print_id(operands)?);
+        out.push(print_id(operands, id_names)?);
     }
     // MinLod
     if value & 0x0080 != 0 {
         // IdRef
-        out.push(print_id(operands)?);
+        out.push(print_id(operands, id_names)?);
     }
     // MakeTexelAvailableKHR
     if value & 0x0100 != 0 {
         // IdScope
-        out.push(print_id(operands)?);
+        out.push(print_id(operands, id_names)?);
     }
     // MakeTexelVisibleKHR
     if value & 0x0200 != 0 {
         // IdScope
-        out.push(print_id(operands)?);
+        out.push(print_id(operands, id_names)?);
     }
     // NonPrivateTexelKHR
     if value & 0x0400 != 0 {
@@ -135,14 +127,15 @@ fn print_enum_ImageOperands(operands: &mut Operands) -> Result<Vec<String>> {
     // Offsets
     if value & 0x10000 != 0 {
         // IdRef
-        out.push(print_id(operands)?);
+        out.push(print_id(operands, id_names)?);
     }
     Ok(out)
 }
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_FPFastMathMode(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_FPFastMathMode(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"FPFastMathMode", value)?];
@@ -175,7 +168,8 @@ fn print_enum_FPFastMathMode(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_SelectionControl(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_SelectionControl(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"SelectionControl", value)?];
@@ -193,7 +187,8 @@ fn print_enum_SelectionControl(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_LoopControl(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_LoopControl(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"LoopControl", value)?];
@@ -292,7 +287,8 @@ fn print_enum_LoopControl(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_FunctionControl(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_FunctionControl(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"FunctionControl", value)?];
@@ -319,7 +315,8 @@ fn print_enum_FunctionControl(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_MemorySemantics(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_MemorySemantics(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"MemorySemantics", value)?];
@@ -373,7 +370,8 @@ fn print_enum_MemorySemantics(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_MemoryAccess(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_MemoryAccess(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"MemoryAccess", value)?];
@@ -394,12 +392,12 @@ fn print_enum_MemoryAccess(operands: &mut Operands) -> Result<Vec<String>> {
     // MakePointerAvailableKHR
     if value & 0x0008 != 0 {
         // IdScope
-        out.push(print_id(operands)?);
+        out.push(print_id(operands, id_names)?);
     }
     // MakePointerVisibleKHR
     if value & 0x0010 != 0 {
         // IdScope
-        out.push(print_id(operands)?);
+        out.push(print_id(operands, id_names)?);
     }
     // NonPrivatePointerKHR
     if value & 0x0020 != 0 {
@@ -407,19 +405,20 @@ fn print_enum_MemoryAccess(operands: &mut Operands) -> Result<Vec<String>> {
     // AliasScopeINTELMask
     if value & 0x10000 != 0 {
         // IdRef
-        out.push(print_id(operands)?);
+        out.push(print_id(operands, id_names)?);
     }
     // NoAliasINTELMask
     if value & 0x20000 != 0 {
         // IdRef
-        out.push(print_id(operands)?);
+        out.push(print_id(operands, id_names)?);
     }
     Ok(out)
 }
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_KernelProfilingInfo(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_KernelProfilingInfo(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"KernelProfilingInfo", value)?];
@@ -434,7 +433,8 @@ fn print_enum_KernelProfilingInfo(operands: &mut Operands) -> Result<Vec<String>
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_RayFlags(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_RayFlags(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"RayFlags", value)?];
@@ -479,7 +479,8 @@ fn print_enum_RayFlags(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_FragmentShadingRate(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_FragmentShadingRate(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"FragmentShadingRate", value)?];
@@ -500,7 +501,8 @@ fn print_enum_FragmentShadingRate(operands: &mut Operands) -> Result<Vec<String>
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_SourceLanguage(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_SourceLanguage(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"SourceLanguage", value)?];
@@ -548,7 +550,8 @@ fn print_enum_SourceLanguage(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_ExecutionModel(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_ExecutionModel(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"ExecutionModel", value)?];
@@ -611,7 +614,8 @@ fn print_enum_ExecutionModel(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_AddressingModel(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_AddressingModel(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"AddressingModel", value)?];
@@ -635,7 +639,8 @@ fn print_enum_AddressingModel(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_MemoryModel(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_MemoryModel(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"MemoryModel", value)?];
@@ -659,7 +664,8 @@ fn print_enum_MemoryModel(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_ExecutionMode(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_ExecutionMode(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"ExecutionMode", value)?];
@@ -794,25 +800,25 @@ fn print_enum_ExecutionMode(operands: &mut Operands) -> Result<Vec<String>> {
         // SubgroupsPerWorkgroupId
         37 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // LocalSizeId
         38 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // LocalSizeHintId
         39 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // NonCoherentColorAttachmentReadEXT
         4169 => {
@@ -866,30 +872,30 @@ fn print_enum_ExecutionMode(operands: &mut Operands) -> Result<Vec<String>> {
         // MaxNodeRecursionAMDX
         5071 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // StaticNumWorkgroupsAMDX
         5072 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // ShaderIndexAMDX
         5073 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // MaxNumWorkgroupsAMDX
         5077 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // StencilRefUnchangedFrontAMD
         5079 => {
@@ -1018,7 +1024,8 @@ fn print_enum_ExecutionMode(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_StorageClass(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_StorageClass(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"StorageClass", value)?];
@@ -1114,7 +1121,8 @@ fn print_enum_StorageClass(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_Dim(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_Dim(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"Dim", value)?];
@@ -1150,7 +1158,8 @@ fn print_enum_Dim(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_SamplerAddressingMode(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_SamplerAddressingMode(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"SamplerAddressingMode", value)?];
@@ -1177,7 +1186,8 @@ fn print_enum_SamplerAddressingMode(operands: &mut Operands) -> Result<Vec<Strin
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_SamplerFilterMode(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_SamplerFilterMode(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"SamplerFilterMode", value)?];
@@ -1195,7 +1205,8 @@ fn print_enum_SamplerFilterMode(operands: &mut Operands) -> Result<Vec<String>> 
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_ImageFormat(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_ImageFormat(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"ImageFormat", value)?];
@@ -1333,7 +1344,8 @@ fn print_enum_ImageFormat(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_ImageChannelOrder(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_ImageChannelOrder(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"ImageChannelOrder", value)?];
@@ -1405,7 +1417,8 @@ fn print_enum_ImageChannelOrder(operands: &mut Operands) -> Result<Vec<String>> 
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_ImageChannelDataType(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_ImageChannelDataType(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"ImageChannelDataType", value)?];
@@ -1474,7 +1487,8 @@ fn print_enum_ImageChannelDataType(operands: &mut Operands) -> Result<Vec<String
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_FPRoundingMode(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_FPRoundingMode(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"FPRoundingMode", value)?];
@@ -1498,7 +1512,8 @@ fn print_enum_FPRoundingMode(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_FPDenormMode(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_FPDenormMode(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"FPDenormMode", value)?];
@@ -1516,7 +1531,8 @@ fn print_enum_FPDenormMode(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_QuantizationModes(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_QuantizationModes(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"QuantizationModes", value)?];
@@ -1552,7 +1568,8 @@ fn print_enum_QuantizationModes(operands: &mut Operands) -> Result<Vec<String>> 
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_FPOperationMode(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_FPOperationMode(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"FPOperationMode", value)?];
@@ -1570,7 +1587,8 @@ fn print_enum_FPOperationMode(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_OverflowModes(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_OverflowModes(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"OverflowModes", value)?];
@@ -1594,7 +1612,8 @@ fn print_enum_OverflowModes(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_LinkageType(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_LinkageType(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"LinkageType", value)?];
@@ -1615,7 +1634,8 @@ fn print_enum_LinkageType(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_AccessQualifier(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_AccessQualifier(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"AccessQualifier", value)?];
@@ -1636,7 +1656,8 @@ fn print_enum_AccessQualifier(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_HostAccessQualifier(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_HostAccessQualifier(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"HostAccessQualifier", value)?];
@@ -1660,7 +1681,8 @@ fn print_enum_HostAccessQualifier(operands: &mut Operands) -> Result<Vec<String>
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_FunctionParameterAttribute(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_FunctionParameterAttribute(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"FunctionParameterAttribute", value)?];
@@ -1699,7 +1721,8 @@ fn print_enum_FunctionParameterAttribute(operands: &mut Operands) -> Result<Vec<
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_Decoration(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_Decoration(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"Decoration", value)?];
@@ -1746,7 +1769,7 @@ fn print_enum_Decoration(operands: &mut Operands) -> Result<Vec<String>> {
         // BuiltIn
         11 => {
             // BuiltIn
-            out.extend(print_enum_BuiltIn(operands)?);
+            out.extend(print_enum_BuiltIn(operands, id_names)?);
         }
         // NoPerspective
         13 => {
@@ -1793,7 +1816,7 @@ fn print_enum_Decoration(operands: &mut Operands) -> Result<Vec<String>> {
         // UniformId
         27 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // SaturatedConversion
         28 => {
@@ -1846,24 +1869,24 @@ fn print_enum_Decoration(operands: &mut Operands) -> Result<Vec<String>> {
         // FuncParamAttr
         38 => {
             // FunctionParameterAttribute
-            out.extend(print_enum_FunctionParameterAttribute(operands)?);
+            out.extend(print_enum_FunctionParameterAttribute(operands, id_names)?);
         }
         // FPRoundingMode
         39 => {
             // FPRoundingMode
-            out.extend(print_enum_FPRoundingMode(operands)?);
+            out.extend(print_enum_FPRoundingMode(operands, id_names)?);
         }
         // FPFastMathMode
         40 => {
             // FPFastMathMode
-            out.extend(print_enum_FPFastMathMode(operands)?);
+            out.extend(print_enum_FPFastMathMode(operands, id_names)?);
         }
         // LinkageAttributes
         41 => {
             // LiteralString
             out.push(print_str(operands)?);
             // LinkageType
-            out.extend(print_enum_LinkageType(operands)?);
+            out.extend(print_enum_LinkageType(operands, id_names)?);
         }
         // NoContraction
         42 => {
@@ -1886,12 +1909,12 @@ fn print_enum_Decoration(operands: &mut Operands) -> Result<Vec<String>> {
         // AlignmentId
         46 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // MaxByteOffsetId
         47 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // NoSignedWrap
         4469 => {
@@ -1911,12 +1934,12 @@ fn print_enum_Decoration(operands: &mut Operands) -> Result<Vec<String>> {
         // NodeSharesPayloadLimitsWithAMDX
         5019 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // NodeMaxPayloadsAMDX
         5020 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // TrackFinishWritingAMDX
         5078 => {
@@ -2014,7 +2037,7 @@ fn print_enum_Decoration(operands: &mut Operands) -> Result<Vec<String>> {
         // HlslCounterBufferGOOGLE
         5634 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // HlslSemanticGOOGLE
         5635 => {
@@ -2031,14 +2054,14 @@ fn print_enum_Decoration(operands: &mut Operands) -> Result<Vec<String>> {
             // LiteralInteger
             out.push(print_u32(operands)?);
             // FPRoundingMode
-            out.extend(print_enum_FPRoundingMode(operands)?);
+            out.extend(print_enum_FPRoundingMode(operands, id_names)?);
         }
         // FunctionDenormModeINTEL
         5823 => {
             // LiteralInteger
             out.push(print_u32(operands)?);
             // FPDenormMode
-            out.extend(print_enum_FPDenormMode(operands)?);
+            out.extend(print_enum_FPDenormMode(operands, id_names)?);
         }
         // RegisterINTEL
         5825 => {
@@ -2139,12 +2162,12 @@ fn print_enum_Decoration(operands: &mut Operands) -> Result<Vec<String>> {
         // AliasScopeINTEL
         5914 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // NoAliasINTEL
         5915 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // InitiationIntervalINTEL
         5917 => {
@@ -2176,7 +2199,7 @@ fn print_enum_Decoration(operands: &mut Operands) -> Result<Vec<String>> {
             // LiteralInteger
             out.push(print_u32(operands)?);
             // FPOperationMode
-            out.extend(print_enum_FPOperationMode(operands)?);
+            out.extend(print_enum_FPOperationMode(operands, id_names)?);
         }
         // SingleElementVectorINTEL
         6085 => {
@@ -2233,7 +2256,7 @@ fn print_enum_Decoration(operands: &mut Operands) -> Result<Vec<String>> {
         // MMHostInterfaceReadWriteModeINTEL
         6180 => {
             // AccessQualifier
-            out.extend(print_enum_AccessQualifier(operands)?);
+            out.extend(print_enum_AccessQualifier(operands, id_names)?);
         }
         // MMHostInterfaceMaxBurstINTEL
         6181 => {
@@ -2251,14 +2274,14 @@ fn print_enum_Decoration(operands: &mut Operands) -> Result<Vec<String>> {
         // HostAccessINTEL
         6188 => {
             // HostAccessQualifier
-            out.extend(print_enum_HostAccessQualifier(operands)?);
+            out.extend(print_enum_HostAccessQualifier(operands, id_names)?);
             // LiteralString
             out.push(print_str(operands)?);
         }
         // InitModeINTEL
         6190 => {
             // InitializationModeQualifier
-            out.extend(print_enum_InitializationModeQualifier(operands)?);
+            out.extend(print_enum_InitializationModeQualifier(operands, id_names)?);
         }
         // ImplementInRegisterMapINTEL
         6191 => {
@@ -2270,14 +2293,14 @@ fn print_enum_Decoration(operands: &mut Operands) -> Result<Vec<String>> {
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LoadCacheControl
-            out.extend(print_enum_LoadCacheControl(operands)?);
+            out.extend(print_enum_LoadCacheControl(operands, id_names)?);
         }
         // CacheControlStoreINTEL
         6443 => {
             // LiteralInteger
             out.push(print_u32(operands)?);
             // StoreCacheControl
-            out.extend(print_enum_StoreCacheControl(operands)?);
+            out.extend(print_enum_StoreCacheControl(operands, id_names)?);
         }
         _ => {},
     }
@@ -2286,7 +2309,8 @@ fn print_enum_Decoration(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_BuiltIn(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_BuiltIn(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"BuiltIn", value)?];
@@ -2646,7 +2670,8 @@ fn print_enum_BuiltIn(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_Scope(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_Scope(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"Scope", value)?];
@@ -2679,7 +2704,8 @@ fn print_enum_Scope(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_GroupOperation(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_GroupOperation(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"GroupOperation", value)?];
@@ -2712,7 +2738,8 @@ fn print_enum_GroupOperation(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_KernelEnqueueFlags(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_KernelEnqueueFlags(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"KernelEnqueueFlags", value)?];
@@ -2733,7 +2760,8 @@ fn print_enum_KernelEnqueueFlags(operands: &mut Operands) -> Result<Vec<String>>
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_Capability(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_Capability(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"Capability", value)?];
@@ -3426,7 +3454,8 @@ fn print_enum_Capability(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_RayQueryIntersection(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_RayQueryIntersection(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"RayQueryIntersection", value)?];
@@ -3444,7 +3473,8 @@ fn print_enum_RayQueryIntersection(operands: &mut Operands) -> Result<Vec<String
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_RayQueryCommittedIntersectionType(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_RayQueryCommittedIntersectionType(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"RayQueryCommittedIntersectionType", value)?];
@@ -3465,7 +3495,8 @@ fn print_enum_RayQueryCommittedIntersectionType(operands: &mut Operands) -> Resu
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_RayQueryCandidateIntersectionType(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_RayQueryCandidateIntersectionType(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"RayQueryCandidateIntersectionType", value)?];
@@ -3483,7 +3514,8 @@ fn print_enum_RayQueryCandidateIntersectionType(operands: &mut Operands) -> Resu
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_PackedVectorFormat(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_PackedVectorFormat(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"PackedVectorFormat", value)?];
@@ -3498,7 +3530,8 @@ fn print_enum_PackedVectorFormat(operands: &mut Operands) -> Result<Vec<String>>
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_CooperativeMatrixOperands(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_CooperativeMatrixOperands(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"CooperativeMatrixOperands", value)?];
@@ -3525,7 +3558,8 @@ fn print_enum_CooperativeMatrixOperands(operands: &mut Operands) -> Result<Vec<S
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_CooperativeMatrixLayout(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_CooperativeMatrixLayout(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"CooperativeMatrixLayout", value)?];
@@ -3543,7 +3577,8 @@ fn print_enum_CooperativeMatrixLayout(operands: &mut Operands) -> Result<Vec<Str
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_CooperativeMatrixUse(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_CooperativeMatrixUse(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"CooperativeMatrixUse", value)?];
@@ -3564,7 +3599,8 @@ fn print_enum_CooperativeMatrixUse(operands: &mut Operands) -> Result<Vec<String
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_InitializationModeQualifier(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_InitializationModeQualifier(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"InitializationModeQualifier", value)?];
@@ -3582,7 +3618,8 @@ fn print_enum_InitializationModeQualifier(operands: &mut Operands) -> Result<Vec
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_LoadCacheControl(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_LoadCacheControl(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"LoadCacheControl", value)?];
@@ -3609,7 +3646,8 @@ fn print_enum_LoadCacheControl(operands: &mut Operands) -> Result<Vec<String>> {
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
-fn print_enum_StoreCacheControl(operands: &mut Operands) -> Result<Vec<String>> {
+#[allow(unused_variables)]
+fn print_enum_StoreCacheControl(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"StoreCacheControl", value)?];
@@ -3631,7 +3669,7 @@ fn print_enum_StoreCacheControl(operands: &mut Operands) -> Result<Vec<String>> 
     Ok(out)
 }
 
-pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>> {
+pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
     let mut out: Vec<String> = Vec::new();
     match opcode {
         // OpNop
@@ -3648,12 +3686,12 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpSource
         3 => {
             // SourceLanguage
-            out.extend(print_enum_SourceLanguage(operands)?);
+            out.extend(print_enum_SourceLanguage(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
             // LiteralString ?
             if !operands.is_empty() {
@@ -3668,14 +3706,14 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpName
         5 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralString
             out.push(print_str(operands)?);
         }
         // OpMemberName
         6 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralString
@@ -3689,7 +3727,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpLine
         8 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -3708,45 +3746,45 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpExtInst
         12 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralExtInstInteger
             out.push(print_u32(operands)?);
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpMemoryModel
         14 => {
             // AddressingModel
-            out.extend(print_enum_AddressingModel(operands)?);
+            out.extend(print_enum_AddressingModel(operands, id_names)?);
             // MemoryModel
-            out.extend(print_enum_MemoryModel(operands)?);
+            out.extend(print_enum_MemoryModel(operands, id_names)?);
         }
         // OpEntryPoint
         15 => {
             // ExecutionModel
-            out.extend(print_enum_ExecutionModel(operands)?);
+            out.extend(print_enum_ExecutionModel(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralString
             out.push(print_str(operands)?);
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpExecutionMode
         16 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ExecutionMode
-            out.extend(print_enum_ExecutionMode(operands)?);
+            out.extend(print_enum_ExecutionMode(operands, id_names)?);
         }
         // OpCapability
         17 => {
             // Capability
-            out.extend(print_enum_Capability(operands)?);
+            out.extend(print_enum_Capability(operands, id_names)?);
         }
         // OpTypeVoid
         19 => {
@@ -3769,23 +3807,23 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpTypeVector
         23 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // OpTypeMatrix
         24 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // OpTypeImage
         25 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // Dim
-            out.extend(print_enum_Dim(operands)?);
+            out.extend(print_enum_Dim(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -3795,10 +3833,10 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // LiteralInteger
             out.push(print_u32(operands)?);
             // ImageFormat
-            out.extend(print_enum_ImageFormat(operands)?);
+            out.extend(print_enum_ImageFormat(operands, id_names)?);
             // AccessQualifier ?
             if !operands.is_empty() {
-                out.extend(print_enum_AccessQualifier(operands)?);
+                out.extend(print_enum_AccessQualifier(operands, id_names)?);
             }
         }
         // OpTypeSampler
@@ -3807,25 +3845,25 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpTypeSampledImage
         27 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTypeArray
         28 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTypeRuntimeArray
         29 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTypeStruct
         30 => {
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpTypeOpaque
@@ -3836,17 +3874,17 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpTypePointer
         32 => {
             // StorageClass
-            out.extend(print_enum_StorageClass(operands)?);
+            out.extend(print_enum_StorageClass(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTypeFunction
         33 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpTypeEvent
@@ -3864,14 +3902,14 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpTypePipe
         38 => {
             // AccessQualifier
-            out.extend(print_enum_AccessQualifier(operands)?);
+            out.extend(print_enum_AccessQualifier(operands, id_names)?);
         }
         // OpTypeForwardPointer
         39 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // StorageClass
-            out.extend(print_enum_StorageClass(operands)?);
+            out.extend(print_enum_StorageClass(operands, id_names)?);
         }
         // OpConstantTrue
         41 => {
@@ -3888,17 +3926,17 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         44 => {
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpConstantSampler
         45 => {
             // SamplerAddressingMode
-            out.extend(print_enum_SamplerAddressingMode(operands)?);
+            out.extend(print_enum_SamplerAddressingMode(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // SamplerFilterMode
-            out.extend(print_enum_SamplerFilterMode(operands)?);
+            out.extend(print_enum_SamplerFilterMode(operands, id_names)?);
         }
         // OpConstantNull
         46 => {
@@ -3918,7 +3956,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         51 => {
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpSpecConstantOp
@@ -3929,9 +3967,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpFunction
         54 => {
             // FunctionControl
-            out.extend(print_enum_FunctionControl(operands)?);
+            out.extend(print_enum_FunctionControl(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFunctionParameter
         55 => {
@@ -3942,149 +3980,149 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpFunctionCall
         57 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpVariable
         59 => {
             // StorageClass
-            out.extend(print_enum_StorageClass(operands)?);
+            out.extend(print_enum_StorageClass(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpImageTexelPointer
         60 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpLoad
         61 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.extend(print_enum_MemoryAccess(operands)?);
+                out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
         }
         // OpStore
         62 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.extend(print_enum_MemoryAccess(operands)?);
+                out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
         }
         // OpCopyMemory
         63 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.extend(print_enum_MemoryAccess(operands)?);
+                out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.extend(print_enum_MemoryAccess(operands)?);
+                out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
         }
         // OpCopyMemorySized
         64 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.extend(print_enum_MemoryAccess(operands)?);
+                out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.extend(print_enum_MemoryAccess(operands)?);
+                out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
         }
         // OpAccessChain
         65 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpInBoundsAccessChain
         66 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpPtrAccessChain
         67 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpArrayLength
         68 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // OpGenericPtrMemSemantics
         69 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpInBoundsPtrAccessChain
         70 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpDecorate
         71 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // Decoration
-            out.extend(print_enum_Decoration(operands)?);
+            out.extend(print_enum_Decoration(operands, id_names)?);
         }
         // OpMemberDecorate
         72 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // Decoration
-            out.extend(print_enum_Decoration(operands)?);
+            out.extend(print_enum_Decoration(operands, id_names)?);
         }
         // OpDecorationGroup
         73 => {
@@ -4092,43 +4130,43 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpGroupDecorate
         74 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupMemberDecorate
         75 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // PairIdRefLiteralInteger *
             while !operands.is_empty() {
-                out.extend(print_pair_id_u32_list(operands)?);
+                out.extend(print_pair_id_u32_list(operands, id_names)?);
             }
         }
         // OpVectorExtractDynamic
         77 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpVectorInsertDynamic
         78 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpVectorShuffle
         79 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger *
             while !operands.is_empty() {
                 out.push(print_u32(operands)?);
@@ -4138,13 +4176,13 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         80 => {
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpCompositeExtract
         81 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger *
             while !operands.is_empty() {
                 out.push(print_u32(operands)?);
@@ -4153,9 +4191,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpCompositeInsert
         82 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger *
             while !operands.is_empty() {
                 out.push(print_u32(operands)?);
@@ -4164,862 +4202,862 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpCopyObject
         83 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTranspose
         84 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSampledImage
         86 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpImageSampleImplicitLod
         87 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpImageSampleExplicitLod
         88 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands
-            out.extend(print_enum_ImageOperands(operands)?);
+            out.extend(print_enum_ImageOperands(operands, id_names)?);
         }
         // OpImageSampleDrefImplicitLod
         89 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpImageSampleDrefExplicitLod
         90 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands
-            out.extend(print_enum_ImageOperands(operands)?);
+            out.extend(print_enum_ImageOperands(operands, id_names)?);
         }
         // OpImageSampleProjImplicitLod
         91 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpImageSampleProjExplicitLod
         92 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands
-            out.extend(print_enum_ImageOperands(operands)?);
+            out.extend(print_enum_ImageOperands(operands, id_names)?);
         }
         // OpImageSampleProjDrefImplicitLod
         93 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpImageSampleProjDrefExplicitLod
         94 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands
-            out.extend(print_enum_ImageOperands(operands)?);
+            out.extend(print_enum_ImageOperands(operands, id_names)?);
         }
         // OpImageFetch
         95 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpImageGather
         96 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpImageDrefGather
         97 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpImageRead
         98 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpImageWrite
         99 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpImage
         100 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpImageQueryFormat
         101 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpImageQueryOrder
         102 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpImageQuerySizeLod
         103 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpImageQuerySize
         104 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpImageQueryLod
         105 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpImageQueryLevels
         106 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpImageQuerySamples
         107 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpConvertFToU
         109 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpConvertFToS
         110 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpConvertSToF
         111 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpConvertUToF
         112 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpUConvert
         113 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSConvert
         114 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFConvert
         115 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpQuantizeToF16
         116 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpConvertPtrToU
         117 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSatConvertSToU
         118 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSatConvertUToS
         119 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpConvertUToPtr
         120 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpPtrCastToGeneric
         121 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGenericCastToPtr
         122 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGenericCastToPtrExplicit
         123 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // StorageClass
-            out.extend(print_enum_StorageClass(operands)?);
+            out.extend(print_enum_StorageClass(operands, id_names)?);
         }
         // OpBitcast
         124 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSNegate
         126 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFNegate
         127 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpIAdd
         128 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFAdd
         129 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpISub
         130 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFSub
         131 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpIMul
         132 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFMul
         133 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpUDiv
         134 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSDiv
         135 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFDiv
         136 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpUMod
         137 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSRem
         138 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSMod
         139 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFRem
         140 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFMod
         141 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpVectorTimesScalar
         142 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpMatrixTimesScalar
         143 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpVectorTimesMatrix
         144 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpMatrixTimesVector
         145 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpMatrixTimesMatrix
         146 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpOuterProduct
         147 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpDot
         148 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpIAddCarry
         149 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpISubBorrow
         150 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpUMulExtended
         151 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSMulExtended
         152 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAny
         154 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAll
         155 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpIsNan
         156 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpIsInf
         157 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpIsFinite
         158 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpIsNormal
         159 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSignBitSet
         160 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpLessOrGreater
         161 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpOrdered
         162 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpUnordered
         163 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpLogicalEqual
         164 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpLogicalNotEqual
         165 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpLogicalOr
         166 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpLogicalAnd
         167 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpLogicalNot
         168 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSelect
         169 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpIEqual
         170 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpINotEqual
         171 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpUGreaterThan
         172 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSGreaterThan
         173 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpUGreaterThanEqual
         174 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSGreaterThanEqual
         175 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpULessThan
         176 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSLessThan
         177 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpULessThanEqual
         178 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSLessThanEqual
         179 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFOrdEqual
         180 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFUnordEqual
         181 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFOrdNotEqual
         182 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFUnordNotEqual
         183 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFOrdLessThan
         184 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFUnordLessThan
         185 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFOrdGreaterThan
         186 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFUnordGreaterThan
         187 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFOrdLessThanEqual
         188 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFUnordLessThanEqual
         189 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFOrdGreaterThanEqual
         190 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFUnordGreaterThanEqual
         191 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpShiftRightLogical
         194 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpShiftRightArithmetic
         195 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpShiftLeftLogical
         196 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpBitwiseOr
         197 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpBitwiseXor
         198 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpBitwiseAnd
         199 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpNot
         200 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpBitFieldInsert
         201 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpBitFieldSExtract
         202 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpBitFieldUExtract
         203 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpBitReverse
         204 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpBitCount
         205 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpDPdx
         207 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpDPdy
         208 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFwidth
         209 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpDPdxFine
         210 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpDPdyFine
         211 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFwidthFine
         212 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpDPdxCoarse
         213 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpDPdyCoarse
         214 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFwidthCoarse
         215 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpEmitVertex
         218 => {
@@ -5030,229 +5068,229 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpEmitStreamVertex
         220 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpEndStreamPrimitive
         221 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpControlBarrier
         224 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpMemoryBarrier
         225 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicLoad
         227 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicStore
         228 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicExchange
         229 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicCompareExchange
         230 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicCompareExchangeWeak
         231 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicIIncrement
         232 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicIDecrement
         233 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicIAdd
         234 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicISub
         235 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicSMin
         236 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicUMin
         237 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicSMax
         238 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicUMax
         239 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicAnd
         240 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicOr
         241 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicXor
         242 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpPhi
         245 => {
             // PairIdRefIdRef *
             while !operands.is_empty() {
-                out.extend(print_pair_id_id_list(operands)?);
+                out.extend(print_pair_id_id_list(operands, id_names)?);
             }
         }
         // OpLoopMerge
         246 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LoopControl
-            out.extend(print_enum_LoopControl(operands)?);
+            out.extend(print_enum_LoopControl(operands, id_names)?);
         }
         // OpSelectionMerge
         247 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // SelectionControl
-            out.extend(print_enum_SelectionControl(operands)?);
+            out.extend(print_enum_SelectionControl(operands, id_names)?);
         }
         // OpLabel
         248 => {
@@ -5260,16 +5298,16 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpBranch
         249 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpBranchConditional
         250 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger *
             while !operands.is_empty() {
                 out.push(print_u32(operands)?);
@@ -5278,12 +5316,12 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpSwitch
         251 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // PairLiteralIntegerIdRef *
             while !operands.is_empty() {
-                out.extend(print_pair_u32_id_list(operands)?);
+                out.extend(print_pair_u32_id_list(operands, id_names)?);
             }
         }
         // OpKill
@@ -5295,7 +5333,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpReturnValue
         254 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpUnreachable
         255 => {
@@ -5303,402 +5341,402 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpLifetimeStart
         256 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // OpLifetimeStop
         257 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // OpGroupAsyncCopy
         259 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupWaitEvents
         260 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupAll
         261 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupAny
         262 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupBroadcast
         263 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupIAdd
         264 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupFAdd
         265 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupFMin
         266 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupUMin
         267 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupSMin
         268 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupFMax
         269 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupUMax
         270 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupSMax
         271 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpReadPipe
         274 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpWritePipe
         275 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpReservedReadPipe
         276 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpReservedWritePipe
         277 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpReserveReadPipePackets
         278 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpReserveWritePipePackets
         279 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpCommitReadPipe
         280 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpCommitWritePipe
         281 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpIsValidReserveId
         282 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGetNumPipePackets
         283 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGetMaxPipePackets
         284 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupReserveReadPipePackets
         285 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupReserveWritePipePackets
         286 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupCommitReadPipe
         287 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupCommitWritePipe
         288 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpEnqueueMarker
         291 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpEnqueueKernel
         292 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGetKernelNDrangeSubGroupCount
         293 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGetKernelNDrangeMaxSubGroupSize
         294 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGetKernelWorkGroupSize
         295 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGetKernelPreferredWorkGroupSizeMultiple
         296 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRetainEvent
         297 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpReleaseEvent
         298 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpCreateUserEvent
         299 => {
@@ -5706,23 +5744,23 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpIsValidEvent
         300 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSetUserEventStatus
         301 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpCaptureEventProfilingInfo
         302 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGetDefaultQueue
         303 => {
@@ -5730,141 +5768,141 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpBuildNDRange
         304 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpImageSparseSampleImplicitLod
         305 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpImageSparseSampleExplicitLod
         306 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands
-            out.extend(print_enum_ImageOperands(operands)?);
+            out.extend(print_enum_ImageOperands(operands, id_names)?);
         }
         // OpImageSparseSampleDrefImplicitLod
         307 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpImageSparseSampleDrefExplicitLod
         308 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands
-            out.extend(print_enum_ImageOperands(operands)?);
+            out.extend(print_enum_ImageOperands(operands, id_names)?);
         }
         // OpImageSparseSampleProjImplicitLod
         309 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpImageSparseSampleProjExplicitLod
         310 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands
-            out.extend(print_enum_ImageOperands(operands)?);
+            out.extend(print_enum_ImageOperands(operands, id_names)?);
         }
         // OpImageSparseSampleProjDrefImplicitLod
         311 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpImageSparseSampleProjDrefExplicitLod
         312 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands
-            out.extend(print_enum_ImageOperands(operands)?);
+            out.extend(print_enum_ImageOperands(operands, id_names)?);
         }
         // OpImageSparseFetch
         313 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpImageSparseGather
         314 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpImageSparseDrefGather
         315 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpImageSparseTexelsResident
         316 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpNoLine
         317 => {
@@ -5872,36 +5910,36 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpAtomicFlagTestAndSet
         318 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicFlagClear
         319 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpImageSparseRead
         320 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpSizeOf
         321 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTypePipeStorage
         322 => {
@@ -5918,31 +5956,31 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpCreatePipeFromPipeStorage
         324 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGetKernelLocalSizeForSubgroupCount
         325 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGetKernelMaxNumSubgroups
         326 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTypeNamedBarrier
         327 => {
@@ -5950,16 +5988,16 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpNamedBarrierInitialize
         328 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpMemoryNamedBarrier
         329 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpModuleProcessed
         330 => {
@@ -5969,414 +6007,414 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpExecutionModeId
         331 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ExecutionMode
-            out.extend(print_enum_ExecutionMode(operands)?);
+            out.extend(print_enum_ExecutionMode(operands, id_names)?);
         }
         // OpDecorateId
         332 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // Decoration
-            out.extend(print_enum_Decoration(operands)?);
+            out.extend(print_enum_Decoration(operands, id_names)?);
         }
         // OpGroupNonUniformElect
         333 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformAll
         334 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformAny
         335 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformAllEqual
         336 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformBroadcast
         337 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformBroadcastFirst
         338 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformBallot
         339 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformInverseBallot
         340 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformBallotBitExtract
         341 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformBallotBitCount
         342 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformBallotFindLSB
         343 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformBallotFindMSB
         344 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformShuffle
         345 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformShuffleXor
         346 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformShuffleUp
         347 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformShuffleDown
         348 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformIAdd
         349 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupNonUniformFAdd
         350 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupNonUniformIMul
         351 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupNonUniformFMul
         352 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupNonUniformSMin
         353 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupNonUniformUMin
         354 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupNonUniformFMin
         355 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupNonUniformSMax
         356 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupNonUniformUMax
         357 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupNonUniformFMax
         358 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupNonUniformBitwiseAnd
         359 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupNonUniformBitwiseOr
         360 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupNonUniformBitwiseXor
         361 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupNonUniformLogicalAnd
         362 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupNonUniformLogicalOr
         363 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupNonUniformLogicalXor
         364 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpGroupNonUniformQuadBroadcast
         365 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformQuadSwap
         366 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpCopyLogical
         400 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpPtrEqual
         401 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpPtrNotEqual
         402 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpPtrDiff
         403 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpColorAttachmentReadEXT
         4160 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpDepthAttachmentReadEXT
         4161 => {
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpStencilAttachmentReadEXT
         4162 => {
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpTerminateInvocation
@@ -6385,84 +6423,84 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpSubgroupBallotKHR
         4421 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupFirstInvocationKHR
         4422 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAllKHR
         4428 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAnyKHR
         4429 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAllEqualKHR
         4430 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformRotateKHR
         4431 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpSubgroupReadInvocationKHR
         4432 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTraceRayKHR
         4445 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpExecuteCallableKHR
         4446 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpConvertUToAccelerationStructureKHR
         4447 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpIgnoreIntersectionKHR
         4448 => {
@@ -6473,137 +6511,137 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpSDotKHR
         4450 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // PackedVectorFormat ?
             if !operands.is_empty() {
-                out.extend(print_enum_PackedVectorFormat(operands)?);
+                out.extend(print_enum_PackedVectorFormat(operands, id_names)?);
             }
         }
         // OpUDotKHR
         4451 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // PackedVectorFormat ?
             if !operands.is_empty() {
-                out.extend(print_enum_PackedVectorFormat(operands)?);
+                out.extend(print_enum_PackedVectorFormat(operands, id_names)?);
             }
         }
         // OpSUDotKHR
         4452 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // PackedVectorFormat ?
             if !operands.is_empty() {
-                out.extend(print_enum_PackedVectorFormat(operands)?);
+                out.extend(print_enum_PackedVectorFormat(operands, id_names)?);
             }
         }
         // OpSDotAccSatKHR
         4453 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // PackedVectorFormat ?
             if !operands.is_empty() {
-                out.extend(print_enum_PackedVectorFormat(operands)?);
+                out.extend(print_enum_PackedVectorFormat(operands, id_names)?);
             }
         }
         // OpUDotAccSatKHR
         4454 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // PackedVectorFormat ?
             if !operands.is_empty() {
-                out.extend(print_enum_PackedVectorFormat(operands)?);
+                out.extend(print_enum_PackedVectorFormat(operands, id_names)?);
             }
         }
         // OpSUDotAccSatKHR
         4455 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // PackedVectorFormat ?
             if !operands.is_empty() {
-                out.extend(print_enum_PackedVectorFormat(operands)?);
+                out.extend(print_enum_PackedVectorFormat(operands, id_names)?);
             }
         }
         // OpTypeCooperativeMatrixKHR
         4456 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpCooperativeMatrixLoadKHR
         4457 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.extend(print_enum_MemoryAccess(operands)?);
+                out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
         }
         // OpCooperativeMatrixStoreKHR
         4458 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.extend(print_enum_MemoryAccess(operands)?);
+                out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
         }
         // OpCooperativeMatrixMulAddKHR
         4459 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // CooperativeMatrixOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_CooperativeMatrixOperands(operands)?);
+                out.extend(print_enum_CooperativeMatrixOperands(operands, id_names)?);
             }
         }
         // OpCooperativeMatrixLengthKHR
         4460 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTypeRayQueryKHR
         4472 => {
@@ -6611,546 +6649,546 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpRayQueryInitializeKHR
         4473 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryTerminateKHR
         4474 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGenerateIntersectionKHR
         4475 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryConfirmIntersectionKHR
         4476 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryProceedKHR
         4477 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetIntersectionTypeKHR
         4479 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpImageSampleWeightedQCOM
         4480 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpImageBoxFilterQCOM
         4481 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpImageBlockMatchSSDQCOM
         4482 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpImageBlockMatchSADQCOM
         4483 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupIAddNonUniformAMD
         5000 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupFAddNonUniformAMD
         5001 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupFMinNonUniformAMD
         5002 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupUMinNonUniformAMD
         5003 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupSMinNonUniformAMD
         5004 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupFMaxNonUniformAMD
         5005 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupUMaxNonUniformAMD
         5006 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupSMaxNonUniformAMD
         5007 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFragmentMaskFetchAMD
         5011 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFragmentFetchAMD
         5012 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpReadClockKHR
         5056 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFinalizeNodePayloadsAMDX
         5075 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFinishWritingNodePayloadAMDX
         5078 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpInitializeNodePayloadsAMDX
         5090 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectRecordHitMotionNV
         5249 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectRecordHitWithIndexMotionNV
         5250 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectRecordMissMotionNV
         5251 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetWorldToObjectNV
         5252 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetObjectToWorldNV
         5253 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetObjectRayDirectionNV
         5254 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetObjectRayOriginNV
         5255 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectTraceRayMotionNV
         5256 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetShaderRecordBufferHandleNV
         5257 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetShaderBindingTableRecordIndexNV
         5258 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectRecordEmptyNV
         5259 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectTraceRayNV
         5260 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectRecordHitNV
         5261 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectRecordHitWithIndexNV
         5262 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectRecordMissNV
         5263 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectExecuteShaderNV
         5264 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetCurrentTimeNV
         5265 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetAttributesNV
         5266 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetHitKindNV
         5267 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetPrimitiveIndexNV
         5268 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetGeometryIndexNV
         5269 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetInstanceIdNV
         5270 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetInstanceCustomIndexNV
         5271 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetWorldRayDirectionNV
         5272 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetWorldRayOriginNV
         5273 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetRayTMaxNV
         5274 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectGetRayTMinNV
         5275 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectIsEmptyNV
         5276 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectIsHitNV
         5277 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpHitObjectIsMissNV
         5278 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpReorderThreadWithHitObjectNV
         5279 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpReorderThreadWithHintNV
         5280 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTypeHitObjectNV
         5281 => {
@@ -7158,82 +7196,82 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpImageSampleFootprintNV
         5283 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.extend(print_enum_ImageOperands(operands)?);
+                out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
         // OpEmitMeshTasksEXT
         5294 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpSetMeshOutputsEXT
         5295 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupNonUniformPartitionNV
         5296 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpWritePackedPrimitiveIndices4x8NV
         5299 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFetchMicroTriangleVertexPositionNV
         5300 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFetchMicroTriangleVertexBarycentricNV
         5301 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpReportIntersectionKHR
         5334 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpIgnoreIntersectionNV
         5335 => {
@@ -7244,88 +7282,88 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpTraceNV
         5337 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTraceMotionNV
         5338 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTraceRayMotionNV
         5339 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetIntersectionTriangleVertexPositionsKHR
         5340 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTypeAccelerationStructureKHR
         5341 => {
@@ -7333,62 +7371,62 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpExecuteCallableNV
         5344 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTypeCooperativeMatrixNV
         5358 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpCooperativeMatrixLoadNV
         5359 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.extend(print_enum_MemoryAccess(operands)?);
+                out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
         }
         // OpCooperativeMatrixStoreNV
         5360 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.extend(print_enum_MemoryAccess(operands)?);
+                out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
         }
         // OpCooperativeMatrixMulAddNV
         5361 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpCooperativeMatrixLengthNV
         5362 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpBeginInvocationInterlockEXT
         5364 => {
@@ -7405,32 +7443,32 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpConvertUToImageNV
         5391 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpConvertUToSamplerNV
         5392 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpConvertImageToUNV
         5393 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpConvertSamplerToUNV
         5394 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpConvertUToSampledImageNV
         5395 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpConvertSampledImageToUNV
         5396 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSamplerImageAddressingModeNV
         5397 => {
@@ -7440,191 +7478,191 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpSubgroupShuffleINTEL
         5571 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupShuffleDownINTEL
         5572 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupShuffleUpINTEL
         5573 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupShuffleXorINTEL
         5574 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupBlockReadINTEL
         5575 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupBlockWriteINTEL
         5576 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupImageBlockReadINTEL
         5577 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupImageBlockWriteINTEL
         5578 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupImageMediaBlockReadINTEL
         5580 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupImageMediaBlockWriteINTEL
         5581 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpUCountLeadingZerosINTEL
         5585 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpUCountTrailingZerosINTEL
         5586 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAbsISubINTEL
         5587 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAbsUSubINTEL
         5588 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpIAddSatINTEL
         5589 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpUAddSatINTEL
         5590 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpIAverageINTEL
         5591 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpUAverageINTEL
         5592 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpIAverageRoundedINTEL
         5593 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpUAverageRoundedINTEL
         5594 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpISubSatINTEL
         5595 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpUSubSatINTEL
         5596 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpIMul32x16INTEL
         5597 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpUMul32x16INTEL
         5598 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpConstantFunctionPointerINTEL
         5600 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFunctionPointerCallINTEL
         5601 => {
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpAsmTargetINTEL
@@ -7635,9 +7673,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpAsmINTEL
         5610 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralString
             out.push(print_str(operands)?);
             // LiteralString
@@ -7646,73 +7684,73 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpAsmCallINTEL
         5611 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpAtomicFMinEXT
         5614 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicFMaxEXT
         5615 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAssumeTrueKHR
         5630 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpExpectKHR
         5631 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpDecorateStringGOOGLE
         5632 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // Decoration
-            out.extend(print_enum_Decoration(operands)?);
+            out.extend(print_enum_Decoration(operands, id_names)?);
         }
         // OpMemberDecorateStringGOOGLE
         5633 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // Decoration
-            out.extend(print_enum_Decoration(operands)?);
+            out.extend(print_enum_Decoration(operands, id_names)?);
         }
         // OpVmeImageINTEL
         5699 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTypeVmeImageINTEL
         5700 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTypeAvcImePayloadINTEL
         5701 => {
@@ -7753,58 +7791,58 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpSubgroupAvcMceGetDefaultInterBaseMultiReferencePenaltyINTEL
         5713 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceSetInterBaseMultiReferencePenaltyINTEL
         5714 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetDefaultInterShapePenaltyINTEL
         5715 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceSetInterShapePenaltyINTEL
         5716 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetDefaultInterDirectionPenaltyINTEL
         5717 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceSetInterDirectionPenaltyINTEL
         5718 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetDefaultIntraLumaShapePenaltyINTEL
         5719 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetDefaultInterMotionVectorCostTableINTEL
         5720 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetDefaultHighPenaltyCostTableINTEL
         5721 => {
@@ -7818,20 +7856,20 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpSubgroupAvcMceSetMotionVectorCostFunctionINTEL
         5724 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetDefaultIntraLumaModePenaltyINTEL
         5725 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetDefaultNonDcLumaIntraPenaltyINTEL
         5726 => {
@@ -7842,688 +7880,688 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpSubgroupAvcMceSetAcOnlyHaarINTEL
         5728 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceSetSourceInterlacedFieldPolarityINTEL
         5729 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceSetSingleReferenceInterlacedFieldPolarityINTEL
         5730 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceSetDualReferenceInterlacedFieldPolaritiesINTEL
         5731 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceConvertToImePayloadINTEL
         5732 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceConvertToImeResultINTEL
         5733 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceConvertToRefPayloadINTEL
         5734 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceConvertToRefResultINTEL
         5735 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceConvertToSicPayloadINTEL
         5736 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceConvertToSicResultINTEL
         5737 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetMotionVectorsINTEL
         5738 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetInterDistortionsINTEL
         5739 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetBestInterDistortionsINTEL
         5740 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetInterMajorShapeINTEL
         5741 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetInterMinorShapeINTEL
         5742 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetInterDirectionsINTEL
         5743 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetInterMotionVectorCountINTEL
         5744 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetInterReferenceIdsINTEL
         5745 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetInterReferenceInterlacedFieldPolaritiesINTEL
         5746 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeInitializeINTEL
         5747 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeSetSingleReferenceINTEL
         5748 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeSetDualReferenceINTEL
         5749 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeRefWindowSizeINTEL
         5750 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeAdjustRefOffsetINTEL
         5751 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeConvertToMcePayloadINTEL
         5752 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeSetMaxMotionVectorCountINTEL
         5753 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeSetUnidirectionalMixDisableINTEL
         5754 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeSetEarlySearchTerminationThresholdINTEL
         5755 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeSetWeightedSadINTEL
         5756 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeEvaluateWithSingleReferenceINTEL
         5757 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeEvaluateWithDualReferenceINTEL
         5758 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeEvaluateWithSingleReferenceStreaminINTEL
         5759 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeEvaluateWithDualReferenceStreaminINTEL
         5760 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeEvaluateWithSingleReferenceStreamoutINTEL
         5761 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeEvaluateWithDualReferenceStreamoutINTEL
         5762 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeEvaluateWithSingleReferenceStreaminoutINTEL
         5763 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeEvaluateWithDualReferenceStreaminoutINTEL
         5764 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeConvertToMceResultINTEL
         5765 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeGetSingleReferenceStreaminINTEL
         5766 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeGetDualReferenceStreaminINTEL
         5767 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeStripSingleReferenceStreamoutINTEL
         5768 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeStripDualReferenceStreamoutINTEL
         5769 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeGetStreamoutSingleReferenceMajorShapeMotionVectorsINTEL
         5770 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeGetStreamoutSingleReferenceMajorShapeDistortionsINTEL
         5771 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeGetStreamoutSingleReferenceMajorShapeReferenceIdsINTEL
         5772 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeGetStreamoutDualReferenceMajorShapeMotionVectorsINTEL
         5773 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeGetStreamoutDualReferenceMajorShapeDistortionsINTEL
         5774 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeGetStreamoutDualReferenceMajorShapeReferenceIdsINTEL
         5775 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeGetBorderReachedINTEL
         5776 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeGetTruncatedSearchIndicationINTEL
         5777 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeGetUnidirectionalEarlySearchTerminationINTEL
         5778 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeGetWeightingPatternMinimumMotionVectorINTEL
         5779 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcImeGetWeightingPatternMinimumDistortionINTEL
         5780 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcFmeInitializeINTEL
         5781 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcBmeInitializeINTEL
         5782 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcRefConvertToMcePayloadINTEL
         5783 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcRefSetBidirectionalMixDisableINTEL
         5784 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcRefSetBilinearFilterEnableINTEL
         5785 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcRefEvaluateWithSingleReferenceINTEL
         5786 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcRefEvaluateWithDualReferenceINTEL
         5787 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcRefEvaluateWithMultiReferenceINTEL
         5788 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcRefEvaluateWithMultiReferenceInterlacedINTEL
         5789 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcRefConvertToMceResultINTEL
         5790 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicInitializeINTEL
         5791 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicConfigureSkcINTEL
         5792 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicConfigureIpeLumaINTEL
         5793 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicConfigureIpeLumaChromaINTEL
         5794 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicGetMotionVectorMaskINTEL
         5795 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicConvertToMcePayloadINTEL
         5796 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicSetIntraLumaShapePenaltyINTEL
         5797 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicSetIntraLumaModeCostFunctionINTEL
         5798 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicSetIntraChromaModeCostFunctionINTEL
         5799 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicSetBilinearFilterEnableINTEL
         5800 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicSetSkcForwardTransformEnableINTEL
         5801 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicSetBlockBasedRawSkipSadINTEL
         5802 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicEvaluateIpeINTEL
         5803 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicEvaluateWithSingleReferenceINTEL
         5804 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicEvaluateWithDualReferenceINTEL
         5805 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicEvaluateWithMultiReferenceINTEL
         5806 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicEvaluateWithMultiReferenceInterlacedINTEL
         5807 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicConvertToMceResultINTEL
         5808 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicGetIpeLumaShapeINTEL
         5809 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicGetBestIpeLumaDistortionINTEL
         5810 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicGetBestIpeChromaDistortionINTEL
         5811 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicGetPackedIpeLumaModesINTEL
         5812 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicGetIpeChromaModeINTEL
         5813 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicGetPackedSkcLumaCountThresholdINTEL
         5814 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicGetPackedSkcLumaSumThresholdINTEL
         5815 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcSicGetInterRawSadsINTEL
         5816 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpVariableLengthArrayINTEL
         5818 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpSaveMemoryINTEL
         5819 => {
@@ -8531,12 +8569,12 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpRestoreMemoryINTEL
         5820 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpArbitraryFloatSinCosPiINTEL
         5840 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8553,7 +8591,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatCastINTEL
         5841 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8568,7 +8606,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatCastFromIntINTEL
         5842 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8583,7 +8621,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatCastToIntINTEL
         5843 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8596,11 +8634,11 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatAddINTEL
         5846 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8615,11 +8653,11 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatSubINTEL
         5847 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8634,11 +8672,11 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatMulINTEL
         5848 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8653,11 +8691,11 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatDivINTEL
         5849 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8672,62 +8710,62 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatGTINTEL
         5850 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // OpArbitraryFloatGEINTEL
         5851 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // OpArbitraryFloatLTINTEL
         5852 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // OpArbitraryFloatLEINTEL
         5853 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // OpArbitraryFloatEQINTEL
         5854 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // OpArbitraryFloatRecipINTEL
         5855 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8742,7 +8780,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatRSqrtINTEL
         5856 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8757,7 +8795,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatCbrtINTEL
         5857 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8772,11 +8810,11 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatHypotINTEL
         5858 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8791,7 +8829,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatSqrtINTEL
         5859 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8806,7 +8844,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatLogINTEL
         5860 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8821,7 +8859,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatLog2INTEL
         5861 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8836,7 +8874,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatLog10INTEL
         5862 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8851,7 +8889,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatLog1pINTEL
         5863 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8866,7 +8904,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatExpINTEL
         5864 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8881,7 +8919,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatExp2INTEL
         5865 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8896,7 +8934,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatExp10INTEL
         5866 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8911,7 +8949,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatExpm1INTEL
         5867 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8926,7 +8964,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatSinINTEL
         5868 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8941,7 +8979,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatCosINTEL
         5869 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8956,7 +8994,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatSinCosINTEL
         5870 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8971,7 +9009,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatSinPiINTEL
         5871 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -8986,7 +9024,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatCosPiINTEL
         5872 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9001,7 +9039,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatASinINTEL
         5873 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9016,7 +9054,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatASinPiINTEL
         5874 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9031,7 +9069,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatACosINTEL
         5875 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9046,7 +9084,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatACosPiINTEL
         5876 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9061,7 +9099,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatATanINTEL
         5877 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9076,7 +9114,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatATanPiINTEL
         5878 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9091,11 +9129,11 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatATan2INTEL
         5879 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9110,11 +9148,11 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatPowINTEL
         5880 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9129,11 +9167,11 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatPowRINTEL
         5881 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9148,11 +9186,11 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpArbitraryFloatPowNINTEL
         5882 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9173,31 +9211,31 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         5911 => {
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpAliasScopeDeclINTEL
         5912 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef ?
             if !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpAliasScopeListDeclINTEL
         5913 => {
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpFixedSqrtINTEL
         5923 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9212,9 +9250,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpFixedRecipINTEL
         5924 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9229,9 +9267,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpFixedRsqrtINTEL
         5925 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9246,9 +9284,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpFixedSinINTEL
         5926 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9263,9 +9301,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpFixedCosINTEL
         5927 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9280,9 +9318,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpFixedSinCosINTEL
         5928 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9297,9 +9335,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpFixedSinPiINTEL
         5929 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9314,9 +9352,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpFixedCosPiINTEL
         5930 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9331,9 +9369,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpFixedSinCosPiINTEL
         5931 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9348,9 +9386,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpFixedLogINTEL
         5932 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9365,9 +9403,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpFixedExpINTEL
         5933 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -9382,286 +9420,286 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpPtrCastToCrossWorkgroupINTEL
         5934 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpCrossWorkgroupCastToPtrINTEL
         5938 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpReadPipeBlockingINTEL
         5946 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpWritePipeBlockingINTEL
         5947 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpFPGARegINTEL
         5949 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetRayTMinKHR
         6016 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetRayFlagsKHR
         6017 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetIntersectionTKHR
         6018 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetIntersectionInstanceCustomIndexKHR
         6019 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetIntersectionInstanceIdKHR
         6020 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetIntersectionInstanceShaderBindingTableRecordOffsetKHR
         6021 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetIntersectionGeometryIndexKHR
         6022 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetIntersectionPrimitiveIndexKHR
         6023 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetIntersectionBarycentricsKHR
         6024 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetIntersectionFrontFaceKHR
         6025 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetIntersectionCandidateAABBOpaqueKHR
         6026 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetIntersectionObjectRayDirectionKHR
         6027 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetIntersectionObjectRayOriginKHR
         6028 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetWorldRayDirectionKHR
         6029 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetWorldRayOriginKHR
         6030 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetIntersectionObjectToWorldKHR
         6031 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpRayQueryGetIntersectionWorldToObjectKHR
         6032 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpAtomicFAddEXT
         6035 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpTypeBufferSurfaceINTEL
         6086 => {
             // AccessQualifier
-            out.extend(print_enum_AccessQualifier(operands)?);
+            out.extend(print_enum_AccessQualifier(operands, id_names)?);
         }
         // OpTypeStructContinuedINTEL
         6090 => {
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpConstantCompositeContinuedINTEL
         6091 => {
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpSpecConstantCompositeContinuedINTEL
         6092 => {
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpCompositeConstructContinuedINTEL
         6096 => {
             // IdRef *
             while !operands.is_empty() {
-                out.push(print_id(operands)?);
+                out.push(print_id(operands, id_names)?);
             }
         }
         // OpConvertFToBF16INTEL
         6116 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpConvertBF16ToFINTEL
         6117 => {
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpControlBarrierArriveINTEL
         6142 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpControlBarrierWaitINTEL
         6143 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // IdMemorySemantics
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupIMulKHR
         6401 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupFMulKHR
         6402 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupBitwiseAndKHR
         6403 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupBitwiseOrKHR
         6404 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupBitwiseXorKHR
         6405 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupLogicalAndKHR
         6406 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupLogicalOrKHR
         6407 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         // OpGroupLogicalXorKHR
         6408 => {
             // IdScope
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
             // GroupOperation
-            out.extend(print_enum_GroupOperation(operands)?);
+            out.extend(print_enum_GroupOperation(operands, id_names)?);
             // IdRef
-            out.push(print_id(operands)?);
+            out.push(print_id(operands, id_names)?);
         }
         _ => bail!("unsupported opcode {}", opcode),
     };
