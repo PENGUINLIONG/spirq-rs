@@ -1,22 +1,56 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use spirq_core::{parse::{Instr, SpirvBinary, Instrs, Operands}, spirv::Op};
+use spirq_core::parse::{Instr, SpirvBinary, Instrs, Operands};
 use crate::generated;
+use super::auto_name;
 
 pub struct Disassembler {
     print_header: bool,
+    name_ids: bool,
+    name_type_ids: bool,
+    name_const_ids: bool,
 }
 impl Disassembler {
     pub fn new() -> Self {
         Self {
             print_header: true,
+            name_ids: false,
+            name_type_ids: false,
+            name_const_ids: false,
         }
     }
 
     pub fn print_header(mut self, value: bool) -> Self {
         self.print_header = value;
         return self
+    }
+    /// Reference intermediate values by their names rather than numeric IDs if
+    /// it has been annotated by OpName.
+    ///
+    /// If enabled, the input SPIR-V MUST follow the standard physical layout as
+    /// described in Section 2.3 in SPIR-V specification.
+    pub fn name_ids(mut self, value: bool) -> Self {
+        self.name_ids = value;
+        self
+    }
+    /// Reference type definitions by their names rather than numeric IDs. A
+    /// human-friendly name will be generated if it's not annotated by OpName.
+    ///
+    /// If enabled, the input SPIR-V MUST follow the standard physical layout as
+    /// described in Section 2.3 in SPIR-V specification.
+    pub fn name_type_ids(mut self, value: bool) -> Self {
+        self.name_type_ids = value;
+        self
+    }
+    /// Reference constant value by names rather than numeric IDs. A human-
+    /// friendly name will be generated if it's not annotated by OpName.
+    ///
+    /// If enabled, the input SPIR-V MUST follow the standard physical layout as
+    /// described in Section 2.3 in SPIR-V specification.
+    pub fn name_const_ids(mut self, value: bool) -> Self {
+        self.name_const_ids = value;
+        self
     }
 
     fn print_id(&self, id: u32, id_names: &HashMap<u32, String>) -> Result<String> {
@@ -74,25 +108,6 @@ impl Disassembler {
         Ok(out)
     }
 
-    fn collect_names<'a>(&self, spv: &'a SpirvBinary) -> Result<HashMap<u32, String>> {
-        let mut out = HashMap::new();
-
-        let mut instrs = spv.instrs()?;
-        while let Some(instr) = instrs.next()? {
-            if instr.op() == Op::Name {
-                let mut operands = instr.operands();
-                let id = operands.read_id()?;
-                let name = operands.read_str()?;
-                // Sanitize name. Convert all punctuations to underscore.
-                let name = name.chars()
-                    .map(|c| if c.is_ascii_punctuation() { '_' } else { c })
-                    .collect::<String>();
-                out.insert(id, name);
-            }
-        }
-
-        Ok(out)
-    }
     fn print<'a>(&self, spv: &'a SpirvBinary, id_names: HashMap<u32, String>) -> Result<Vec<String>> {
         self.print_lines(&mut spv.instrs()?, id_names)
     }
@@ -100,18 +115,23 @@ impl Disassembler {
     pub fn disassemble(&self, spv: &SpirvBinary) -> Result<String> {
         let mut out = Vec::new();
 
-        if let Some(header) = spv.header() {
-            out.push(format!("; SPIR-V"));
-            let major_version = header.version >> 16;
-            let minor_version = header.version & 0xffff;
-            out.push(format!("; Version: {}.{}", major_version, minor_version));
-            out.push(format!("; Generator: {:x}", header.generator));
-            out.push(format!("; Bound: {:x}", header.bound));
-            out.push(format!("; Schema: {:x}", header.schema));
+        if self.print_header {
+            if let Some(header) = spv.header() {
+                out.push(format!("; SPIR-V"));
+                let major_version = header.version >> 16;
+                let minor_version = (header.version >> 8) & 0xff;
+                out.push(format!("; Version: {}.{}", major_version, minor_version));
+                out.push(format!("; Generator: {:x}", header.generator));
+                out.push(format!("; Bound: {:x}", header.bound));
+                out.push(format!("; Schema: {:x}", header.schema));
+            }
         }
 
-        let id_names = self.collect_names(spv)?;
-        dbg!(&id_names);
+        let id_names = if self.name_ids || self.name_type_ids || self.name_const_ids {
+            auto_name::collect_names(spv, self.name_ids, self.name_type_ids, self.name_const_ids)?
+        } else {
+            HashMap::new()
+        };
 
         let instrs = self.print(spv, id_names)?;
         out.extend(instrs);

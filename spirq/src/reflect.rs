@@ -13,7 +13,7 @@ use crate::{
     error::{anyhow, Error, Result},
     evaluator::Evaluator,
     func::{ExecutionMode, Function, FunctionRegistry},
-    inspect::{Inspector, self},
+    inspect::Inspector,
     instr::*,
     parse::Instr,
     reflect_cfg::ReflectConfig,
@@ -142,7 +142,6 @@ fn is_atomic_store_op(op: Op) -> bool {
 /// SPIR-V reflection intermediate.
 pub struct ReflectIntermediate<'a> {
     pub cfg: &'a ReflectConfig,
-    pub instrs: Instrs<'a>,
     pub name_reg: NameRegistry<'a>,
     pub deco_reg: DecorationRegistry<'a>,
     pub ty_reg: TypeRegistry,
@@ -155,7 +154,6 @@ impl<'a> ReflectIntermediate<'a> {
     pub fn new(cfg: &'a ReflectConfig) -> Result<Self> {
         let out = ReflectIntermediate {
             cfg,
-            instrs: cfg.spv.instrs()?,
             name_reg: Default::default(),
             deco_reg: Default::default(),
             ty_reg: Default::default(),
@@ -275,6 +273,7 @@ impl<'a> ReflectIntermediate<'a> {
                     let sampled_image_ty = SampledImageType {
                         scalar_ty: image_ty.scalar_ty.clone(),
                         dim: image_ty.dim,
+                        is_depth: image_ty.is_depth,
                         is_array: image_ty.is_array,
                         is_multisampled: image_ty.is_multisampled,
                     };
@@ -673,10 +672,11 @@ impl Inspector for FunctionInspector {
 
 pub fn reflect<'a, I: Inspector>(
     itm: &mut ReflectIntermediate<'a>,
+    instrs: &mut Instrs<'a>,
     mut inspector: I,
 ) -> Result<Vec<EntryPoint>> {
-    itm.parse_global_declrs()?;
-    itm.parse_functions(&mut inspector)?;
+    itm.parse_global_declrs(instrs)?;
+    itm.parse_functions(instrs, &mut inspector)?;
 
     itm.collect_entry_points()
 }
@@ -717,6 +717,7 @@ fn make_desc_var(
                 let sampled_image_ty = SampledImageType {
                     dim: image_ty.dim,
                     scalar_ty: image_ty.scalar_ty.clone(),
+                    is_depth: image_ty.is_depth,
                     is_array: image_ty.is_array,
                     is_multisampled: image_ty.is_multisampled,
                 };
@@ -841,6 +842,242 @@ fn make_var<'a>(
     }
 }
 impl<'a> ReflectIntermediate<'a> {
+    pub fn parse_global_declrs(
+        &mut self,
+        instrs: &mut Instrs<'a>,
+    ) -> Result<()> {
+        // Don't change the order. See _2.4 Logical Layout of a Module_ of the
+        // SPIR-V specification for more information.
+
+        // 1. All OpCapability instructions.
+        while let Some(instr) = instrs.peek() {
+            if instr.op() == Op::Capability {
+                instrs.next()?;
+            } else {
+                break;
+            }
+        }
+        // 2. Optional OpExtension instructions (extensions to SPIR-V).
+        while let Some(instr) = instrs.peek() {
+            if instr.op() == Op::Extension {
+                instrs.next()?;
+            } else {
+                break;
+            }
+        }
+        // 3. Optional OpExtInstImport instructions.
+        while let Some(instr) = instrs.peek() {
+            if instr.op() == Op::ExtInstImport {
+                let op = OpExtInstImport::try_from(instr)?;
+                self.interp
+                    .import_ext_instr_set(op.instr_set_id, op.name.to_owned())?;
+                instrs.next()?;
+            } else {
+                break;
+            }
+        }
+        // 4. The single required OpMemoryModel instruction.
+        if let Some(instr) = instrs.peek() {
+            if instr.op() == Op::MemoryModel {
+                let op = OpMemoryModel::try_from(instr)?;
+                match op.addr_model {
+                    spirv::AddressingModel::Logical => {}
+                    spirv::AddressingModel::PhysicalStorageBuffer64 => {}
+                    _ => return Err(anyhow!("unsupported addressing model")),
+                }
+                match op.mem_model {
+                    spirv::MemoryModel::GLSL450 => {}
+                    spirv::MemoryModel::Vulkan => {}
+                    _ => return Err(anyhow!("unsupported memory model")),
+                }
+                instrs.next()?;
+            } else {
+                return Err(anyhow!("expected OpMemoryModel, but got {:?}", instr.op()));
+            }
+        } else {
+            return Err(anyhow!("expected OpMemoryModel, but got nothing"));
+        }
+        // 5. All entry point declarations, using OpEntryPoint.
+        while let Some(instr) = instrs.peek() {
+            if instr.op() == Op::EntryPoint {
+                let op = OpEntryPoint::try_from(instr)?;
+                let entry_point_declr = EntryPointDeclaration {
+                    exec_model: op.exec_model,
+                    name: op.name,
+                    exec_modes: Default::default(),
+                };
+                use std::collections::hash_map::Entry;
+                match self.entry_point_declrs.entry(op.func_id) {
+                    Entry::Occupied(_) => return Err(anyhow!("duplicate entry point at a same id")),
+                    Entry::Vacant(e) => {
+                        e.insert(entry_point_declr);
+                    }
+                }
+                instrs.next()?;
+            } else {
+                break;
+            }
+        }
+        // 6. All execution-mode declarations, using OpExecutionMode or
+        //    OpExecutionModeId.
+        while let Some(instr) = instrs.peek() {
+            let op = instr.op();
+            match op {
+                Op::ExecutionMode | Op::ExecutionModeId => {
+                    let mut operands = instr.operands();
+                    let operand_ctor = match op {
+                        Op::ExecutionMode => |x: &u32| ExecutionModeOperand::Literal(*x),
+                        Op::ExecutionModeId => |x: &u32| ExecutionModeOperand::Id(*x),
+                        _ => unreachable!(),
+                    };
+
+                    let func_id = operands.read_u32()?;
+                    let exec_mode = operands.read_enum::<spirv::ExecutionMode>()?;
+                    let operands = operands
+                        .read_list()?
+                        .into_iter()
+                        .map(operand_ctor)
+                        .collect();
+                    let exec_mode_declr = ExecutionModeDeclaration {
+                        func_id,
+                        exec_mode,
+                        operands,
+                    };
+                    self.entry_point_declrs
+                        .get_mut(&func_id)
+                        .ok_or(anyhow!("execution mode for non-existing entry point"))?
+                        .exec_modes
+                        .push(exec_mode_declr);
+                    instrs.next()?;
+                }
+                _ => break,
+            }
+        }
+        // 7. These debug instructions, which must be grouped in the following
+        //    order:
+        //   a. All OpString, OpSourceExtension, OpSource, and
+        //      OpSourceContinued, without forward references.
+        //   b. All OpName and all OpMemberName.
+        //   c. All OpModuleProcessed instructions.
+        while let Some(instr) = instrs.peek() {
+            match instr.op() {
+                Op::String
+                | Op::SourceExtension
+                | Op::Source
+                | Op::SourceContinued
+                | Op::ModuleProcessed => {
+                    instrs.next()?;
+                }
+                Op::Name => {
+                    let op = OpName::try_from(instr)?;
+                    if !op.name.is_empty() {
+                        // Ignore empty names.
+                        self.name_reg.set(op.target_id, op.name);
+                    }
+                    instrs.next()?;
+                }
+                Op::MemberName => {
+                    let op = OpMemberName::try_from(instr)?;
+                    if !op.name.is_empty() {
+                        self.name_reg
+                            .set_member(op.target_id, op.member_idx, op.name);
+                    }
+                    instrs.next()?;
+                }
+                _ => break,
+            }
+        }
+        // 8. All annotation instructions:
+        //   a. All decoration instructions.
+        while let Some(instr) = instrs.peek() {
+            match instr.op() {
+                Op::Decorate => {
+                    let op = OpDecorate::try_from(instr)?;
+                    let deco = op.deco;
+                    self.deco_reg.set(op.target_id, deco, op.params)?;
+                    instrs.next()?;
+                }
+                Op::MemberDecorate => {
+                    let op = OpMemberDecorate::try_from(instr)?;
+                    let deco = op.deco;
+                    self.deco_reg
+                        .set_member(op.target_id, op.member_idx, deco, op.params)?;
+                    instrs.next()?;
+                }
+                Op::DecorationGroup
+                | Op::GroupDecorate
+                | Op::GroupMemberDecorate
+                | Op::DecorateId
+                | Op::DecorateString
+                | Op::MemberDecorateString => {
+                    instrs.next()?;
+                }
+                _ => break,
+            };
+        }
+        // 9. All type declarations (OpTypeXXX instructions), all constant
+        //    instructions, and all global variable declarations (all OpVariable
+        //    instructions whose Storage Class is not Function). This is the
+        //    preferred location for OpUndef instructions, though they can also
+        //    appear in function bodies. All operands in all these instructions
+        //    must be declared before being used. Otherwise, they can be in any
+        //    order. This section is the first section to allow use of:
+        //   a. OpLine and OpNoLine debug information.
+        //   b. Non-semantic instructions with OpExtInst.
+        while let Some(instr) = instrs.peek() {
+            let opcode = instr.op();
+            if let Op::Line | Op::NoLine = opcode {
+                instrs.next()?;
+                continue;
+            }
+            if is_ty_op(opcode) {
+                self.populate_one_ty(instr)?;
+            } else if opcode == Op::Variable {
+                self.populate_one_var(instr)?;
+            } else if is_const_op(opcode) {
+                self.populate_one_const(instr)?;
+            } else {
+                break;
+            }
+            instrs.next()?;
+        }
+
+        Ok(())
+    }
+
+    pub fn parse_functions(
+        &mut self,
+        instrs: &mut Instrs<'a>,
+        inspector: &mut impl Inspector
+    ) -> Result<()> {
+        // 10. All function declarations ("declarations" are functions without a
+        //     body; there is no forward declaration to a function with a body).
+        //     A function declaration is as follows.
+        //   a. Function declaration, using OpFunction.
+        //   b. Function parameter declarations, using OpFunctionParameter.
+        //   c. Function end, using OpFunctionEnd.
+        // 11. All function definitions (functions with a body). A function
+        //     definition is as follows.
+        //   a. Function definition, using OpFunction.
+        //   b. Function parameter declarations, using OpFunctionParameter.
+        //   c. Block.
+        //   d. Block.
+        //   e. ...
+        //   f. Function end, using OpFunctionEnd.
+
+        while let Some(instr) = instrs.peek() {
+            let opcode = instr.op();
+            if let Op::Line | Op::NoLine = opcode {
+                instrs.next()?;
+                continue;
+            }
+            inspector.inspect(self, instr)?;
+            instrs.next()?;
+        }
+
+        Ok(())
+    }
+
     fn collect_vars_impl(&self) -> BTreeMap<VariableId, Variable> {
         // `BTreeMap` to ensure a stable order.
         let mut vars = BTreeMap::new();
@@ -1013,6 +1250,7 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
                         let sampled_image_ty = SampledImageType {
                             scalar_ty: image_ty.scalar_ty.clone(),
                             dim: image_ty.dim,
+                            is_depth: image_ty.is_depth,
                             is_array: image_ty.is_array,
                             is_multisampled: image_ty.is_multisampled,
                         };
@@ -1038,238 +1276,6 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
 }
 
 impl<'a> ReflectIntermediate<'a> {
-    pub fn parse_global_declrs(&mut self) -> Result<()> {
-        // Don't change the order. See _2.4 Logical Layout of a Module_ of the
-        // SPIR-V specification for more information.
-    
-        // 1. All OpCapability instructions.
-        while let Some(instr) = self.instrs.peek() {
-            if instr.op() == Op::Capability {
-                self.instrs.next()?;
-            } else {
-                break;
-            }
-        }
-        // 2. Optional OpExtension instructions (extensions to SPIR-V).
-        while let Some(instr) = self.instrs.peek() {
-            if instr.op() == Op::Extension {
-                self.instrs.next()?;
-            } else {
-                break;
-            }
-        }
-        // 3. Optional OpExtInstImport instructions.
-        while let Some(instr) = self.instrs.peek() {
-            if instr.op() == Op::ExtInstImport {
-                let op = OpExtInstImport::try_from(instr)?;
-                self.interp
-                    .import_ext_instr_set(op.instr_set_id, op.name.to_owned())?;
-                self.instrs.next()?;
-            } else {
-                break;
-            }
-        }
-        // 4. The single required OpMemoryModel instruction.
-        if let Some(instr) = self.instrs.peek() {
-            if instr.op() == Op::MemoryModel {
-                let op = OpMemoryModel::try_from(instr)?;
-                match op.addr_model {
-                    spirv::AddressingModel::Logical => {}
-                    spirv::AddressingModel::PhysicalStorageBuffer64 => {}
-                    _ => return Err(anyhow!("unsupported addressing model")),
-                }
-                match op.mem_model {
-                    spirv::MemoryModel::GLSL450 => {}
-                    spirv::MemoryModel::Vulkan => {}
-                    _ => return Err(anyhow!("unsupported memory model")),
-                }
-                self.instrs.next()?;
-            } else {
-                return Err(anyhow!("expected OpMemoryModel, but got {:?}", instr.op()));
-            }
-        } else {
-            return Err(anyhow!("expected OpMemoryModel, but got nothing"));
-        }
-        // 5. All entry point declarations, using OpEntryPoint.
-        while let Some(instr) = self.instrs.peek() {
-            if instr.op() == Op::EntryPoint {
-                let op = OpEntryPoint::try_from(instr)?;
-                let entry_point_declr = EntryPointDeclaration {
-                    exec_model: op.exec_model,
-                    name: op.name,
-                    exec_modes: Default::default(),
-                };
-                use std::collections::hash_map::Entry;
-                match self.entry_point_declrs.entry(op.func_id) {
-                    Entry::Occupied(_) => return Err(anyhow!("duplicate entry point at a same id")),
-                    Entry::Vacant(e) => {
-                        e.insert(entry_point_declr);
-                    }
-                }
-                self.instrs.next()?;
-            } else {
-                break;
-            }
-        }
-        // 6. All execution-mode declarations, using OpExecutionMode or
-        //    OpExecutionModeId.
-        while let Some(instr) = self.instrs.peek() {
-            let op = instr.op();
-            match op {
-                Op::ExecutionMode | Op::ExecutionModeId => {
-                    let mut operands = instr.operands();
-                    let operand_ctor = match op {
-                        Op::ExecutionMode => |x: &u32| ExecutionModeOperand::Literal(*x),
-                        Op::ExecutionModeId => |x: &u32| ExecutionModeOperand::Id(*x),
-                        _ => unreachable!(),
-                    };
-    
-                    let func_id = operands.read_u32()?;
-                    let exec_mode = operands.read_enum::<spirv::ExecutionMode>()?;
-                    let operands = operands
-                        .read_list()?
-                        .into_iter()
-                        .map(operand_ctor)
-                        .collect();
-                    let exec_mode_declr = ExecutionModeDeclaration {
-                        func_id,
-                        exec_mode,
-                        operands,
-                    };
-                    self.entry_point_declrs
-                        .get_mut(&func_id)
-                        .ok_or(anyhow!("execution mode for non-existing entry point"))?
-                        .exec_modes
-                        .push(exec_mode_declr);
-                    self.instrs.next()?;
-                }
-                _ => break,
-            }
-        }
-        // 7. These debug instructions, which must be grouped in the following
-        //    order:
-        //   a. All OpString, OpSourceExtension, OpSource, and
-        //      OpSourceContinued, without forward references.
-        //   b. All OpName and all OpMemberName.
-        //   c. All OpModuleProcessed instructions.
-        while let Some(instr) = self.instrs.peek() {
-            match instr.op() {
-                Op::String
-                | Op::SourceExtension
-                | Op::Source
-                | Op::SourceContinued
-                | Op::ModuleProcessed => {
-                    self.instrs.next()?;
-                }
-                Op::Name => {
-                    let op = OpName::try_from(instr)?;
-                    if !op.name.is_empty() {
-                        // Ignore empty names.
-                        self.name_reg.set(op.target_id, op.name);
-                    }
-                    self.instrs.next()?;
-                }
-                Op::MemberName => {
-                    let op = OpMemberName::try_from(instr)?;
-                    if !op.name.is_empty() {
-                        self.name_reg
-                            .set_member(op.target_id, op.member_idx, op.name);
-                    }
-                    self.instrs.next()?;
-                }
-                _ => break,
-            }
-        }
-        // 8. All annotation instructions:
-        //   a. All decoration instructions.
-        while let Some(instr) = self.instrs.peek() {
-            match instr.op() {
-                Op::Decorate => {
-                    let op = OpDecorate::try_from(instr)?;
-                    let deco = op.deco;
-                    self.deco_reg.set(op.target_id, deco, op.params)?;
-                    self.instrs.next()?;
-                }
-                Op::MemberDecorate => {
-                    let op = OpMemberDecorate::try_from(instr)?;
-                    let deco = op.deco;
-                    self.deco_reg
-                        .set_member(op.target_id, op.member_idx, deco, op.params)?;
-                    self.instrs.next()?;
-                }
-                Op::DecorationGroup
-                | Op::GroupDecorate
-                | Op::GroupMemberDecorate
-                | Op::DecorateId
-                | Op::DecorateString
-                | Op::MemberDecorateString => {
-                    self.instrs.next()?;
-                }
-                _ => break,
-            };
-        }
-        // 9. All type declarations (OpTypeXXX instructions), all constant
-        //    instructions, and all global variable declarations (all OpVariable
-        //    instructions whose Storage Class is not Function). This is the
-        //    preferred location for OpUndef instructions, though they can also
-        //    appear in function bodies. All operands in all these instructions
-        //    must be declared before being used. Otherwise, they can be in any
-        //    order. This section is the first section to allow use of:
-        //   a. OpLine and OpNoLine debug information.
-        //   b. Non-semantic instructions with OpExtInst.
-        while let Some(instr) = self.instrs.peek() {
-            let opcode = instr.op();
-            if let Op::Line | Op::NoLine = opcode {
-                self.instrs.next()?;
-                continue;
-            }
-            if is_ty_op(opcode) {
-                self.populate_one_ty(instr)?;
-            } else if opcode == Op::Variable {
-                self.populate_one_var(instr)?;
-            } else if is_const_op(opcode) {
-                self.populate_one_const(instr)?;
-            } else {
-                break;
-            }
-            self.instrs.next()?;
-        }
-
-        Ok(())
-    }
-
-    pub fn parse_functions(
-        &mut self,
-        inspector: &mut impl Inspector
-    ) -> Result<()> {
-        // 10. All function declarations ("declarations" are functions without a
-        //     body; there is no forward declaration to a function with a body).
-        //     A function declaration is as follows.
-        //   a. Function declaration, using OpFunction.
-        //   b. Function parameter declarations, using OpFunctionParameter.
-        //   c. Function end, using OpFunctionEnd.
-        // 11. All function definitions (functions with a body). A function
-        //     definition is as follows.
-        //   a. Function definition, using OpFunction.
-        //   b. Function parameter declarations, using OpFunctionParameter.
-        //   c. Block.
-        //   d. Block.
-        //   e. ...
-        //   f. Function end, using OpFunctionEnd.
-
-        while let Some(instr) = self.instrs.peek() {
-            let opcode = instr.op();
-            if let Op::Line | Op::NoLine = opcode {
-                self.instrs.next()?;
-                continue;
-            }
-            inspector.inspect(self, instr)?;
-            self.instrs.next()?;
-        }
-
-        Ok(())
-    }
-
     pub fn collect_entry_points(
         &self,
     ) -> Result<Vec<EntryPoint>> {

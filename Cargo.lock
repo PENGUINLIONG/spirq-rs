@@ -400,6 +400,7 @@ dependencies = [
  "inline-spirv",
  "num-traits",
  "pretty_assertions",
+ "spirq",
  "spirq-core",
 ]
 

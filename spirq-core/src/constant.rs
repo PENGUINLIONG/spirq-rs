@@ -179,6 +179,16 @@ impl ConstantValue {
             _ => None,
         }
     }
+
+    pub fn to_typeless(&self) -> Option<Box<[u8]>> {
+        match self {
+            Self::Typeless(x) => Some(x.clone()),
+            Self::F32(x) => Some(Box::new(x.to_ne_bytes())),
+            Self::S32(x) => Some(Box::new(x.to_ne_bytes())),
+            Self::U32(x) => Some(Box::new(x.to_ne_bytes())),
+            Self::Bool(x) => Some(Box::new([*x as u8])),
+        }
+    }
 }
 
 /// Constant or specialization constant record.

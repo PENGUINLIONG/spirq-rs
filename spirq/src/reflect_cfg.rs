@@ -13,7 +13,7 @@ use crate::{
 /// Reflection configuration builder.
 #[derive(Default, Clone)]
 pub struct ReflectConfig {
-    pub(crate) spv: SpirvBinary,
+    pub(crate) spv: Option<SpirvBinary>,
     pub(crate) ref_all_rscs: bool,
     pub(crate) combine_img_samplers: bool,
     pub(crate) gen_unique_names: bool,
@@ -26,7 +26,7 @@ impl ReflectConfig {
 
     /// SPIR-V binary to be reflected.
     pub fn spv<Spv: Into<SpirvBinary>>(&mut self, x: Spv) -> &mut Self {
-        self.spv = x.into();
+        self.spv = Some(x.into());
         self
     }
     /// Reference all defined resources even the resource is not used by an
@@ -61,22 +61,24 @@ impl ReflectConfig {
     }
 
     /// Reflect the SPIR-V binary and extract all entry points.
-    pub fn reflect(&self) -> Result<Vec<EntryPoint>> {
+    pub fn reflect(&mut self) -> Result<Vec<EntryPoint>> {
+        let spv = self.spv.take().unwrap_or_default();
         let mut itm = ReflectIntermediate::new(self)?;
         let inspector = FunctionInspector::new();
-        reflect(&mut itm, inspector)
+        reflect(&mut itm, &mut spv.instrs()?, inspector)
     }
     /// Reflect the SPIR-V binary and extract all entry points with an inspector
     /// for customized reflection subroutines.
-    pub fn reflect_inspect<I: Inspector>(&self, inspector: &mut I) -> Result<Vec<EntryPoint>> {
+    pub fn reflect_inspect<I: Inspector>(&mut self, inspector: &mut I) -> Result<Vec<EntryPoint>> {
+        let spv = self.spv.take().unwrap_or_default();
         let mut itm = ReflectIntermediate::new(self)?;
         let mut func_inspector = FunctionInspector::new();
-        reflect(&mut itm, func_inspector.chain(inspector))
+        reflect(&mut itm, &mut spv.instrs()?, func_inspector.chain(inspector))
     }
     /// Reflect the SPIR-V binary and extract all entry points with an inspector
     /// function for customized reflection subroutines.
     pub fn reflect_inspect_by<F: FnMut(&mut ReflectIntermediate<'_>, &Instr)>(
-        &self,
+        &mut self,
         inspector: F,
     ) -> Result<Vec<EntryPoint>> {
         let mut inspector = FnInspector::<F>(inspector);

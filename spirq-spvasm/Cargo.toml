@@ -21,6 +21,7 @@ maintenance = { status = "actively-developed" }
 anyhow = "1.0"
 num-traits = "0.2"
 spirq-core = { version = "1.0.0", path = "../spirq-core" }
+spirq = { version = "1.0.0", path = "../spirq"}
 
 [dev-dependencies]
 inline-spirv = "0.1"

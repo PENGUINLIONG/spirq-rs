@@ -181,7 +181,7 @@ layout(set=12, binding=0) uniform Ubo {
 
 // Storage buffer block with dynamic size.
 layout(set=13, binding=0) buffer Ssbo {
-    Data ds[];
+    int ds[];
 } ssbo;
 
 layout(set=14, binding=0, input_attachment_index=0) uniform isubpassInput   iAttm;
