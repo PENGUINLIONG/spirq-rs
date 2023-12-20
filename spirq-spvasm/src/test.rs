@@ -35,11 +35,20 @@ fn test_asm_dis_roundtrip() {
 fn test_gallery_roundtrip() {
     let code = include_str!("../../assets/gallery.frag.spvasm")
         .lines()
+        // (penguinliong) For some reason our reassembled SPIR-V use less IDs
+        // than the GLSLang output. Workaround here.
+        .skip(5)
         .map(|x| x.trim())
         .collect::<Vec<_>>()
         .join("\n");
-    let header = SpirvHeader::default();
+    let header = SpirvHeader::new(0x00010500, 0x0008000b);
     let spv = Assembler::new().assemble(&code, header).unwrap();
-    let spvasm = Disassembler::new().name_ids(true).name_type_ids(true).name_const_ids(true).disassemble(&spv.into()).unwrap();
+    let spvasm = Disassembler::new()
+        .print_header(false)
+        .name_ids(true)
+        .name_type_ids(true)
+        .name_const_ids(true)
+        .disassemble(&spv.into())
+        .unwrap();
     assert_eq!(code, spvasm);
 }

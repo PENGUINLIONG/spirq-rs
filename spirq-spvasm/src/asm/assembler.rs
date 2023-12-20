@@ -242,6 +242,14 @@ impl Assembler {
 
         // Mark all used IDs.
         for instr in &instrs {
+            if let Some(result_id) = &instr.result_id {
+                match result_id {
+                    IdRef::Id(id) => {
+                        self.mark_id(*id);
+                    }
+                    IdRef::Name(_) => {}
+                }
+            }
             for operand in &instr.operands {
                 match operand {
                     Operand::IdRef(IdRef::Id(id)) => {

@@ -164,7 +164,7 @@ impl InstructionBuilder {
         // FIXME: (penguinliong) Avoid unsafe code.
         use std::ffi::CString;
         let cstr = CString::new(x).unwrap();
-        let bytes = cstr.as_bytes_with_nul();
+        let bytes = cstr.as_bytes();
         let words = bytes.len() / 4 + 1;
         let ptr = cstr.as_ptr() as *const u32;
         let slice = unsafe { std::slice::from_raw_parts(ptr, words) };
