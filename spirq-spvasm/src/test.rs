@@ -30,3 +30,16 @@ fn test_asm_dis_roundtrip() {
     let spvasm = Disassembler::new().name_type_ids(true).disassemble(&spv.into()).unwrap();
     assert_eq!(code, spvasm);
 }
+
+#[test]
+fn test_gallery_roundtrip() {
+    let code = include_str!("../../assets/gallery.frag.spvasm")
+        .lines()
+        .map(|x| x.trim())
+        .collect::<Vec<_>>()
+        .join("\n");
+    let header = SpirvHeader::default();
+    let spv = Assembler::new().assemble(&code, header).unwrap();
+    let spvasm = Disassembler::new().name_ids(true).name_type_ids(true).name_const_ids(true).disassemble(&spv.into()).unwrap();
+    assert_eq!(code, spvasm);
+}

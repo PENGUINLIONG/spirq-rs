@@ -210,6 +210,16 @@ impl<'a> Tokenizer<'a> {
             // Decimal.
             self.tokenize_numeric_literal_decimal()?
         };
+
+        // Weird special case of image `Dim`, in which there are `1D``, `2D``
+        // and `3D` as identifiers. This it rather annoying.
+        if let Lit::Int(i) = lit {
+            if self.chars.peek() == Some(&'D') {
+                self.chars.next(); // Consume the 'D'.
+                return Ok(Token::Ident(format!("{}D", i)));
+            }
+        }
+
         let lit = match lit {
             Lit::Int(i) => Lit::Int(i * mantissa_sign),
             Lit::Float(f, e) => Lit::Float(f * mantissa_sign as f64, e),

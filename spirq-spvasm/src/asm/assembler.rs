@@ -105,7 +105,7 @@ impl Assembler {
             Token::Ident(ident) => {
                 Ok(Operand::Ident(ident.clone()))
             }
-            _ => Err(anyhow!("expected operand, but {:?}", s.peek())),
+            _ => Err(anyhow!("expected operand, but {:?}", token)),
         }
     }
 
@@ -118,10 +118,15 @@ impl Assembler {
         let opcode = self.parse_opcode(s)?;
 
         let mut operands = Vec::new();
-        while let Some(token) = s.next()? {
+        while let Some(token) = s.peek() {
             match token {
-                Token::Comment(_) => {},
-                Token::NewLine => break,
+                Token::Comment(_) => {
+                    s.next()?;
+                },
+                Token::NewLine => {
+                    s.next()?;
+                    break;
+                },
                 _ => {
                     let operand = self.parse_operand(s)?;
                     operands.push(operand);
@@ -226,7 +231,6 @@ impl Assembler {
                 IdRef::Id(id)
             }
             IdRef::Id(id) => {
-                self.mark_id(*id);
                 IdRef::Id(*id)
             }
         };
@@ -235,6 +239,18 @@ impl Assembler {
 
     pub fn assemble(&mut self, input: &str, header: SpirvHeader) -> Result<SpirvBinary> {
         let mut instrs = self.parse(input)?;
+
+        // Mark all used IDs.
+        for instr in &instrs {
+            for operand in &instr.operands {
+                match operand {
+                    Operand::IdRef(IdRef::Id(id)) => {
+                        self.mark_id(*id);
+                    }
+                    _ => {}
+                }
+            }
+        }
 
         // Transform name refs to id refs.
         for instr in &mut instrs {

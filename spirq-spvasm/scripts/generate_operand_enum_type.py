@@ -13,11 +13,14 @@ for instr in j["instructions"]:
         i = 0
         for operand in operands:
             kind = operand["kind"]
+            if kind in ["IdResultType", "IdResult"]:
+                continue
             if (
                 kind.startswith("Id")
                 or kind.startswith("Literal")
                 or kind.startswith("Pair")
             ):
+                i += 1
                 continue
 
             op_operand_kinds[i] = operand["kind"]
@@ -28,6 +31,11 @@ out = []
 
 out += [
     "use anyhow::{bail, Result};",
+    "",
+    "",
+    "fn unknown_operand_index(i: usize) -> Result<&'static str> {",
+    '    bail!("Unknown operand index: {}", i)',
+    "}",
     "",
     "pub fn operand_enum_type(opcode: u32, i: usize) -> Result<&'static str> {",
     "    let out: &'static str = match opcode {",
@@ -45,7 +53,7 @@ for opcode, op_operand_kinds in operand_kinds.items():
             f'            {i} => "{kind}",',
         ]
     out += [
-        '            _ => bail!("Unknown operand index: {}", i),',
+        "            _ => return unknown_operand_index(i),",
         "        }",
     ]
 
