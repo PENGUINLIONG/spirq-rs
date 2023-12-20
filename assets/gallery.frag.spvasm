@@ -1,14 +1,16 @@
 ; SPIR-V
 ; Version: 1.5
 ; Generator: Khronos Glslang Reference Front End; 11
-; Bound: 389
+; Bound: 399
 ; Schema: 0
                OpCapability Shader
                OpCapability Float64
+               OpCapability Int16
                OpCapability StorageImageMultisample
                OpCapability ImageCubeArray
                OpCapability ImageRect
                OpCapability SampledRect
+               OpCapability Int8
                OpCapability InputAttachment
                OpCapability Sampled1D
                OpCapability Image1D
@@ -25,6 +27,13 @@
                OpSource GLSL 460
                OpSourceExtension "GL_EXT_ray_query"
                OpSourceExtension "GL_EXT_ray_tracing"
+               OpSourceExtension "GL_EXT_shader_explicit_arithmetic_types_float16"
+               OpSourceExtension "GL_EXT_shader_explicit_arithmetic_types_float32"
+               OpSourceExtension "GL_EXT_shader_explicit_arithmetic_types_float64"
+               OpSourceExtension "GL_EXT_shader_explicit_arithmetic_types_int16"
+               OpSourceExtension "GL_EXT_shader_explicit_arithmetic_types_int32"
+               OpSourceExtension "GL_EXT_shader_explicit_arithmetic_types_int64"
+               OpSourceExtension "GL_EXT_shader_explicit_arithmetic_types_int8"
                OpName %main "main"
                OpName %ray_query "ray_query"
                OpName %iImg1d "iImg1d"
@@ -892,6 +901,16 @@
         %386 = OpTypeAccelerationStructureKHR
 %_ptr_UniformConstant_386 = OpTypePointer UniformConstant %386
         %acc = OpVariable %_ptr_UniformConstant_386 UniformConstant
+       %char = OpTypeInt 8 1
+     %char_1 = OpConstant %char 1
+      %short = OpTypeInt 16 1
+    %short_1 = OpConstant %short 1
+      %int_1 = OpConstant %int 1
+      %uchar = OpTypeInt 8 0
+    %uchar_1 = OpConstant %uchar 1
+     %ushort = OpTypeInt 16 0
+   %ushort_1 = OpConstant %ushort 1
+    %float_1 = OpConstant %float 1
        %main = OpFunction %void None %3
           %5 = OpLabel
          %10 = OpRayQueryProceedKHR %bool %ray_query

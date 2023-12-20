@@ -177,6 +177,7 @@ impl InstructionBuilder {
     }
 }
 
+#[derive(Clone)]
 pub struct Operands<'a>(&'a [u32]);
 impl<'a> Operands<'a> {
     pub fn len(&self) -> usize {

@@ -22,6 +22,7 @@ anyhow = "1.0"
 num-traits = "0.2"
 spirq-core = { version = "1.0.0", path = "../spirq-core" }
 spirq = { version = "1.0.0", path = "../spirq"}
+half = { version =  "2.3", features = ["num-traits"] }
 
 [dev-dependencies]
 inline-spirv = "0.1"

@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
-use anyhow::Result;
-use spirq_core::parse::{Instr, SpirvBinary, Instrs, Operands};
+use anyhow::{Result, bail};
+use half::f16;
+use spirq::{reflect::ReflectIntermediate, ReflectConfig};
+use spirq_core::{parse::{Instr, SpirvBinary, Instrs, Operands}, spirv::Op, ty::{self, Type}};
 use crate::generated;
 use super::auto_name;
 
@@ -69,7 +71,88 @@ impl Disassembler {
         Ok(opname)
     }
 
-    fn print_line<'a>(&self, instr: &'a Instr, id_names: &HashMap<u32, String>) -> Result<String> {
+    // SPIR-V Tools emit numbers of any length as a single context dependent
+    // literal for OpConstant. But don't fail if we failed to make a guess
+    // of the type.
+    fn print_constant_op_operand<'a>(
+        &self,
+        result_type_id: Option<u32>,
+        operands: &mut Operands<'a>,
+        itm: &ReflectIntermediate,
+    ) -> Result<String> {
+        let mut operands2 = operands.clone();
+
+        let out = if let Some(result_type_id) = result_type_id {
+            let ty = itm.ty_reg.get(result_type_id)?;
+            match ty {
+                Type::Scalar(scalar_ty) => {
+                    match scalar_ty {
+                        ty::ScalarType::Integer { bits: 8, is_signed: true } => {
+                            let x = operands2.read_u32()?.to_le_bytes();
+                            format!(" {}", i8::from_le_bytes([x[0]]))
+                        },
+                        ty::ScalarType::Integer { bits: 16, is_signed: true } => {
+                            let x = operands2.read_u32()?.to_le_bytes();
+                            format!(" {}", i16::from_le_bytes([x[0], x[1]]))
+                        },
+                        ty::ScalarType::Integer { bits: 32, is_signed: true } => {
+                            let x = operands2.read_u32()?.to_le_bytes();
+                            format!(" {}", i32::from_le_bytes([x[0], x[1], x[2], x[3]]))
+                        },
+                        ty::ScalarType::Integer { bits: 64, is_signed: true } => {
+                            let x = operands2.read_u32()?.to_le_bytes();
+                            let y = operands2.read_u32()?.to_le_bytes();
+                            format!(" {}", i64::from_le_bytes([x[0], x[1], x[2], x[3], y[0], y[1], y[2], y[3]]))
+                        },
+                        ty::ScalarType::Integer { bits: 8, is_signed: false } => {
+                            let x = operands2.read_u32()?.to_le_bytes();
+                            format!(" {}", u8::from_le_bytes([x[0]]))
+                        },
+                        ty::ScalarType::Integer { bits: 16, is_signed: false } => {
+                            let x = operands2.read_u32()?.to_le_bytes();
+                            format!(" {}", u16::from_le_bytes([x[0], x[1]]))
+                        },
+                        ty::ScalarType::Integer { bits: 32, is_signed: false } => {
+                            let x = operands2.read_u32()?.to_le_bytes();
+                            format!(" {}", u32::from_le_bytes([x[0], x[1], x[2], x[3]]))
+                        },
+                        ty::ScalarType::Integer { bits: 64, is_signed: false } => {
+                            let x = operands2.read_u32()?.to_le_bytes();
+                            let y = operands2.read_u32()?.to_le_bytes();
+                            format!(" {}", u64::from_le_bytes([x[0], x[1], x[2], x[3], y[0], y[1], y[2], y[3]]))
+                        },
+                        ty::ScalarType::Float { bits: 16 } => {
+                            let x = operands2.read_u32()?.to_le_bytes();
+                            format!(" {}", f16::from_bits(u16::from_le_bytes([x[0], x[1]])))
+                        },
+                        ty::ScalarType::Float { bits: 32 } => {
+                            let x = operands2.read_u32()?.to_le_bytes();
+                            format!(" {}", f32::from_le_bytes([x[0], x[1], x[2], x[3]]))
+                        },
+                        ty::ScalarType::Float { bits: 64 } => {
+                            let x0 = operands2.read_u32()?.to_le_bytes();
+                            let x1 = operands2.read_u32()?.to_le_bytes();
+                            format!(" {}", f64::from_le_bytes([x0[0], x0[1], x0[2], x0[3], x1[0], x1[1], x1[2], x1[3]]))
+                        },
+                        _ => bail!("unsupported scalar type for opconstant"),
+                    }
+                }
+                _ => bail!("opconstant cannot have a non-scalar type"),
+            }
+        } else {
+            bail!("opconstant must have a result type")
+        };
+
+        *operands = operands2;
+        Ok(out)
+    }
+
+    fn print_line<'a>(
+        &self,
+        instr: &'a Instr,
+        itm: &ReflectIntermediate,
+        id_names: &HashMap<u32, String>,
+    ) -> Result<String> {
         let mut operands = instr.operands();
         let opcode = instr.opcode();
         let result_type_id = if generated::op_has_result_type_id(opcode)? {
@@ -92,6 +175,15 @@ impl Disassembler {
         if let Some(result_type_id) = result_type_id {
             out.push_str(&format!(" {}", &self.print_id(result_type_id, id_names)?));
         }
+
+        if opcode == (Op::Constant as u32) {
+            if let Ok(operand) = self.print_constant_op_operand(result_type_id, &mut operands, itm) {
+                out.push_str(&operand);
+            } else {
+                // Tolerate the error and print the operands as usual.
+            }
+        }
+
         let operands_ = self.print_operands(opcode, &mut operands, id_names)?;
         if !operands_.is_empty() {
             out.push(' ');
@@ -100,16 +192,26 @@ impl Disassembler {
 
         Ok(out)
     }
-    fn print_lines<'a>(&self, instrs: &'a mut Instrs, id_names: HashMap<u32, String>) -> Result<Vec<String>> {
+    fn print_lines<'a>(
+        &self,
+        instrs: &'a mut Instrs,
+        itm: &ReflectIntermediate,
+        id_names: HashMap<u32, String>,
+    ) -> Result<Vec<String>> {
         let mut out = Vec::new();
         while let Some(instr) = instrs.next()? {
-            out.push(self.print_line(instr, &id_names)?);
+            out.push(self.print_line(instr, itm, &id_names)?);
         }
         Ok(out)
     }
 
-    fn print<'a>(&self, spv: &'a SpirvBinary, id_names: HashMap<u32, String>) -> Result<Vec<String>> {
-        self.print_lines(&mut spv.instrs()?, id_names)
+    fn print<'a>(
+        &self,
+        spv: &'a SpirvBinary,
+        itm: &ReflectIntermediate,
+        id_names: HashMap<u32, String>,
+    ) -> Result<Vec<String>> {
+        self.print_lines(&mut spv.instrs()?, itm, id_names)
     }
 
     pub fn disassemble(&self, spv: &SpirvBinary) -> Result<String> {
@@ -135,13 +237,21 @@ impl Disassembler {
             }
         }
 
+        let cfg = ReflectConfig::default();
+        let itm = {
+            let mut itm = ReflectIntermediate::new(&cfg)?;
+            let mut instrs = spv.instrs()?;
+            itm.parse_global_declrs(&mut instrs)?;
+            itm
+        };
+
         let id_names = if self.name_ids || self.name_type_ids || self.name_const_ids {
-            auto_name::collect_names(spv, self.name_ids, self.name_type_ids, self.name_const_ids)?
+            auto_name::collect_names(&itm, self.name_ids, self.name_type_ids, self.name_const_ids)?
         } else {
             HashMap::new()
         };
 
-        let instrs = self.print(spv, id_names)?;
+        let instrs = self.print(spv, &itm, id_names)?;
         out.extend(instrs);
         Ok(out.join("\n"))
     }

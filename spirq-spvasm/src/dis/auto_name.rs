@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use anyhow::Result;
+use half::f16;
 
 use spirq::{ReflectConfig, reflect::ReflectIntermediate};
 use spirq_core::{parse::SpirvBinary, ty::{Type, ScalarType, VectorType, MatrixType, PointerType, ArrayType, StructType}, constant::ConstantValue};
-
 
 fn sanitize_name(name: &str) -> String {
     name.chars()
@@ -56,8 +56,15 @@ impl AutoNamer {
         let out = match scalar_ty {
             ScalarType::Void => "void".to_string(),
             ScalarType::Boolean => "bool".to_string(),
+            ScalarType::Integer { bits: 8, is_signed: true } => "char".to_string(),
+            ScalarType::Integer { bits: 16, is_signed: true } => "short".to_string(),
             ScalarType::Integer { bits: 32, is_signed: true } => "int".to_string(),
+            ScalarType::Integer { bits: 64, is_signed: true } => "long".to_string(),
+            ScalarType::Integer { bits: 8, is_signed: false } => "uchar".to_string(),
+            ScalarType::Integer { bits: 16, is_signed: false } => "ushort".to_string(),
             ScalarType::Integer { bits: 32, is_signed: false } => "uint".to_string(),
+            ScalarType::Integer { bits: 64, is_signed: false } => "ulong".to_string(),
+            ScalarType::Float { bits: 16 } => "half".to_string(),
             ScalarType::Float { bits: 32 } => "float".to_string(),
             ScalarType::Float { bits: 64 } => "double".to_string(),
             _ => return None,
@@ -140,12 +147,28 @@ impl AutoNamer {
         let mut out = match value {
             ConstantValue::Bool(true) => "true".to_owned(),
             ConstantValue::Bool(false) => "false".to_owned(),
+            ConstantValue::S8(x) => format!("char_{}", x),
+            ConstantValue::S16(x) => format!("short_{}", x),
             ConstantValue::S32(x) => format!("int_{}", x),
+            ConstantValue::S64(x) => format!("long_{}", x),
+            ConstantValue::U8(x) => format!("uchar_{}", x),
+            ConstantValue::U16(x) => format!("ushort_{}", x),
             ConstantValue::U32(x) => format!("uint_{}", x),
+            ConstantValue::U64(x) => format!("ulong_{}", x),
+            ConstantValue::F16(x) => if x.0 < f16::ZERO {
+                format!("half_n{}", -x)
+            } else {
+                format!("half_{}", x)
+            },
             ConstantValue::F32(x) => if x.0 < 0.0 {
                 format!("float_n{}", -x)
             } else {
                 format!("float_{}", x)
+            },
+            ConstantValue::F64(x) => if x.0 < 0.0 {
+                format!("double_n{}", -x)
+            } else {
+                format!("double_{}", x)
             },
             _ => return None,
         };
@@ -169,16 +192,11 @@ impl AutoNamer {
 }
 
 pub fn collect_names(
-    spv: &SpirvBinary,
+    itm: &ReflectIntermediate,
     name_ids: bool,
     name_type_ids: bool,
     name_const_ids: bool,
 ) -> Result<HashMap<u32, String>> {
-    let cfg = ReflectConfig::default();
-    let mut itm = ReflectIntermediate::new(&cfg)?;
-    let mut instrs = spv.instrs()?;
-    itm.parse_global_declrs(&mut instrs)?;
-
     let mut auto_namer = AutoNamer {
         names: HashMap::new(),
         cache: HashMap::new(),

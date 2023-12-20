@@ -1,6 +1,7 @@
 //! Constant and specialization constant representations.
 use std::convert::TryFrom;
 
+use half::f16;
 use ordered_float::OrderedFloat;
 
 use crate::{
@@ -23,13 +24,13 @@ pub enum ConstantValue {
     U16(u16),
     U32(u32),
     U64(u64),
-    F16(),
+    F16(OrderedFloat<f16>),
     F32(OrderedFloat<f32>),
     F64(OrderedFloat<f64>),
 }
 impl From<&[u32]> for ConstantValue {
     fn from(x: &[u32]) -> Self {
-        let bytes = x.iter().flat_map(|x| x.to_ne_bytes()).collect();
+        let bytes = x.iter().flat_map(|x| x.to_le_bytes()).collect();
         ConstantValue::Typeless(bytes)
     }
 }
@@ -83,65 +84,68 @@ impl ConstantValue {
                     bits: 8,
                     is_signed: true,
                 } if x.len() == 4 => {
-                    let x = i8::from_ne_bytes([x[0]]);
+                    let x = i8::from_le_bytes([x[0]]);
                     Ok(ConstantValue::S8(x))
                 }
                 ScalarType::Integer {
                     bits: 8,
                     is_signed: false,
                 } if x.len() == 4 => {
-                    let x = u8::from_ne_bytes([x[0]]);
+                    let x = u8::from_le_bytes([x[0]]);
                     Ok(ConstantValue::U8(x))
                 }
                 ScalarType::Integer {
                     bits: 16,
                     is_signed: true,
                 } if x.len() == 4 => {
-                    let x = i16::from_ne_bytes([x[0], x[1]]);
+                    let x = i16::from_le_bytes([x[0], x[1]]);
                     Ok(ConstantValue::S16(x))
                 }
                 ScalarType::Integer {
                     bits: 16,
                     is_signed: false,
                 } if x.len() == 4 => {
-                    let x = u16::from_ne_bytes([x[0], x[1]]);
+                    let x = u16::from_le_bytes([x[0], x[1]]);
                     Ok(ConstantValue::U16(x))
                 }
                 ScalarType::Integer {
                     bits: 32,
                     is_signed: true,
                 } if x.len() == 4 => {
-                    let x = i32::from_ne_bytes([x[0], x[1], x[2], x[3]]);
+                    let x = i32::from_le_bytes([x[0], x[1], x[2], x[3]]);
                     Ok(ConstantValue::S32(x))
                 }
                 ScalarType::Integer {
                     bits: 32,
                     is_signed: false,
                 } if x.len() == 4 => {
-                    let x = u32::from_ne_bytes([x[0], x[1], x[2], x[3]]);
+                    let x = u32::from_le_bytes([x[0], x[1], x[2], x[3]]);
                     Ok(ConstantValue::U32(x))
                 }
                 ScalarType::Integer {
                     bits: 64,
                     is_signed: true,
                 } if x.len() == 8 => {
-                    let x = i64::from_ne_bytes([x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7]]);
+                    let x = i64::from_le_bytes([x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7]]);
                     Ok(ConstantValue::S64(x))
                 }
                 ScalarType::Integer {
                     bits: 64,
                     is_signed: false,
                 } if x.len() == 8 => {
-                    let x = u64::from_ne_bytes([x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7]]);
+                    let x = u64::from_le_bytes([x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7]]);
                     Ok(ConstantValue::U64(x))
                 }
-                ScalarType::Float { bits: 16 } if x.len() == 4 => Ok(ConstantValue::F16()),
+                ScalarType::Float { bits: 16 } if x.len() == 4 => {
+                    let x = f16::from_le_bytes([x[0], x[1]]);
+                    Ok(ConstantValue::F16(OrderedFloat(x)))
+                },
                 ScalarType::Float { bits: 32 } if x.len() == 4 => {
-                    let x = f32::from_ne_bytes([x[0], x[1], x[2], x[3]]);
+                    let x = f32::from_le_bytes([x[0], x[1], x[2], x[3]]);
                     Ok(ConstantValue::F32(OrderedFloat(x)))
                 }
                 ScalarType::Float { bits: 64 } if x.len() == 8 => {
-                    let x = f64::from_ne_bytes([x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7]]);
+                    let x = f64::from_le_bytes([x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7]]);
                     Ok(ConstantValue::F64(OrderedFloat(x)))
                 }
                 _ => Err(anyhow!(
@@ -183,9 +187,17 @@ impl ConstantValue {
     pub fn to_typeless(&self) -> Option<Box<[u8]>> {
         match self {
             Self::Typeless(x) => Some(x.clone()),
-            Self::F32(x) => Some(Box::new(x.to_ne_bytes())),
-            Self::S32(x) => Some(Box::new(x.to_ne_bytes())),
-            Self::U32(x) => Some(Box::new(x.to_ne_bytes())),
+            Self::S8(x) => Some(Box::new(x.to_le_bytes())),
+            Self::S16(x) => Some(Box::new(x.to_le_bytes())),
+            Self::S32(x) => Some(Box::new(x.to_le_bytes())),
+            Self::S64(x) => Some(Box::new(x.to_le_bytes())),
+            Self::U8(x) => Some(Box::new(x.to_le_bytes())),
+            Self::U16(x) => Some(Box::new(x.to_le_bytes())),
+            Self::U32(x) => Some(Box::new(x.to_le_bytes())),
+            Self::U64(x) => Some(Box::new(x.to_le_bytes())),
+            Self::F16(x) => Some(Box::new(x.to_le_bytes())),
+            Self::F32(x) => Some(Box::new(x.to_le_bytes())),
+            Self::F64(x) => Some(Box::new(x.to_le_bytes())),
             Self::Bool(x) => Some(Box::new([*x as u8])),
         }
     }
