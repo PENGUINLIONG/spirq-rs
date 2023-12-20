@@ -56,6 +56,3581 @@ fn print_pair_u32_id_list(operands: &mut Operands) -> Result<Vec<String>> {
     Ok(out)
 }
 
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_ImageOperands(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"ImageOperands", value)?];
+    // None
+    if value & 0x0000 != 0 {
+    }
+    // Bias
+    if value & 0x0001 != 0 {
+        // IdRef
+        out.push(print_id(operands)?);
+    }
+    // Lod
+    if value & 0x0002 != 0 {
+        // IdRef
+        out.push(print_id(operands)?);
+    }
+    // Grad
+    if value & 0x0004 != 0 {
+        // IdRef
+        out.push(print_id(operands)?);
+        // IdRef
+        out.push(print_id(operands)?);
+    }
+    // ConstOffset
+    if value & 0x0008 != 0 {
+        // IdRef
+        out.push(print_id(operands)?);
+    }
+    // Offset
+    if value & 0x0010 != 0 {
+        // IdRef
+        out.push(print_id(operands)?);
+    }
+    // ConstOffsets
+    if value & 0x0020 != 0 {
+        // IdRef
+        out.push(print_id(operands)?);
+    }
+    // Sample
+    if value & 0x0040 != 0 {
+        // IdRef
+        out.push(print_id(operands)?);
+    }
+    // MinLod
+    if value & 0x0080 != 0 {
+        // IdRef
+        out.push(print_id(operands)?);
+    }
+    // MakeTexelAvailableKHR
+    if value & 0x0100 != 0 {
+        // IdScope
+        out.push(print_id(operands)?);
+    }
+    // MakeTexelVisibleKHR
+    if value & 0x0200 != 0 {
+        // IdScope
+        out.push(print_id(operands)?);
+    }
+    // NonPrivateTexelKHR
+    if value & 0x0400 != 0 {
+    }
+    // VolatileTexelKHR
+    if value & 0x0800 != 0 {
+    }
+    // SignExtend
+    if value & 0x1000 != 0 {
+    }
+    // ZeroExtend
+    if value & 0x2000 != 0 {
+    }
+    // Nontemporal
+    if value & 0x4000 != 0 {
+    }
+    // Offsets
+    if value & 0x10000 != 0 {
+        // IdRef
+        out.push(print_id(operands)?);
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_FPFastMathMode(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"FPFastMathMode", value)?];
+    // None
+    if value & 0x0000 != 0 {
+    }
+    // NotNaN
+    if value & 0x0001 != 0 {
+    }
+    // NotInf
+    if value & 0x0002 != 0 {
+    }
+    // NSZ
+    if value & 0x0004 != 0 {
+    }
+    // AllowRecip
+    if value & 0x0008 != 0 {
+    }
+    // Fast
+    if value & 0x0010 != 0 {
+    }
+    // AllowContractFastINTEL
+    if value & 0x10000 != 0 {
+    }
+    // AllowReassocINTEL
+    if value & 0x20000 != 0 {
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_SelectionControl(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"SelectionControl", value)?];
+    // None
+    if value & 0x0000 != 0 {
+    }
+    // Flatten
+    if value & 0x0001 != 0 {
+    }
+    // DontFlatten
+    if value & 0x0002 != 0 {
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_LoopControl(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"LoopControl", value)?];
+    // None
+    if value & 0x0000 != 0 {
+    }
+    // Unroll
+    if value & 0x0001 != 0 {
+    }
+    // DontUnroll
+    if value & 0x0002 != 0 {
+    }
+    // DependencyInfinite
+    if value & 0x0004 != 0 {
+    }
+    // DependencyLength
+    if value & 0x0008 != 0 {
+        // LiteralInteger
+        out.push(print_u32(operands)?);
+    }
+    // MinIterations
+    if value & 0x0010 != 0 {
+        // LiteralInteger
+        out.push(print_u32(operands)?);
+    }
+    // MaxIterations
+    if value & 0x0020 != 0 {
+        // LiteralInteger
+        out.push(print_u32(operands)?);
+    }
+    // IterationMultiple
+    if value & 0x0040 != 0 {
+        // LiteralInteger
+        out.push(print_u32(operands)?);
+    }
+    // PeelCount
+    if value & 0x0080 != 0 {
+        // LiteralInteger
+        out.push(print_u32(operands)?);
+    }
+    // PartialCount
+    if value & 0x0100 != 0 {
+        // LiteralInteger
+        out.push(print_u32(operands)?);
+    }
+    // InitiationIntervalINTEL
+    if value & 0x10000 != 0 {
+        // LiteralInteger
+        out.push(print_u32(operands)?);
+    }
+    // MaxConcurrencyINTEL
+    if value & 0x20000 != 0 {
+        // LiteralInteger
+        out.push(print_u32(operands)?);
+    }
+    // DependencyArrayINTEL
+    if value & 0x40000 != 0 {
+        // LiteralInteger
+        out.push(print_u32(operands)?);
+    }
+    // PipelineEnableINTEL
+    if value & 0x80000 != 0 {
+        // LiteralInteger
+        out.push(print_u32(operands)?);
+    }
+    // LoopCoalesceINTEL
+    if value & 0x100000 != 0 {
+        // LiteralInteger
+        out.push(print_u32(operands)?);
+    }
+    // MaxInterleavingINTEL
+    if value & 0x200000 != 0 {
+        // LiteralInteger
+        out.push(print_u32(operands)?);
+    }
+    // SpeculatedIterationsINTEL
+    if value & 0x400000 != 0 {
+        // LiteralInteger
+        out.push(print_u32(operands)?);
+    }
+    // NoFusionINTEL
+    if value & 0x800000 != 0 {
+    }
+    // LoopCountINTEL
+    if value & 0x1000000 != 0 {
+        // LiteralInteger
+        out.push(print_u32(operands)?);
+    }
+    // MaxReinvocationDelayINTEL
+    if value & 0x2000000 != 0 {
+        // LiteralInteger
+        out.push(print_u32(operands)?);
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_FunctionControl(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"FunctionControl", value)?];
+    // None
+    if value & 0x0000 != 0 {
+    }
+    // Inline
+    if value & 0x0001 != 0 {
+    }
+    // DontInline
+    if value & 0x0002 != 0 {
+    }
+    // Pure
+    if value & 0x0004 != 0 {
+    }
+    // Const
+    if value & 0x0008 != 0 {
+    }
+    // OptNoneINTEL
+    if value & 0x10000 != 0 {
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_MemorySemantics(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"MemorySemantics", value)?];
+    // None
+    if value & 0x0000 != 0 {
+    }
+    // Acquire
+    if value & 0x0002 != 0 {
+    }
+    // Release
+    if value & 0x0004 != 0 {
+    }
+    // AcquireRelease
+    if value & 0x0008 != 0 {
+    }
+    // SequentiallyConsistent
+    if value & 0x0010 != 0 {
+    }
+    // UniformMemory
+    if value & 0x0040 != 0 {
+    }
+    // SubgroupMemory
+    if value & 0x0080 != 0 {
+    }
+    // WorkgroupMemory
+    if value & 0x0100 != 0 {
+    }
+    // CrossWorkgroupMemory
+    if value & 0x0200 != 0 {
+    }
+    // AtomicCounterMemory
+    if value & 0x0400 != 0 {
+    }
+    // ImageMemory
+    if value & 0x0800 != 0 {
+    }
+    // OutputMemoryKHR
+    if value & 0x1000 != 0 {
+    }
+    // MakeAvailableKHR
+    if value & 0x2000 != 0 {
+    }
+    // MakeVisibleKHR
+    if value & 0x4000 != 0 {
+    }
+    // Volatile
+    if value & 0x8000 != 0 {
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_MemoryAccess(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"MemoryAccess", value)?];
+    // None
+    if value & 0x0000 != 0 {
+    }
+    // Volatile
+    if value & 0x0001 != 0 {
+    }
+    // Aligned
+    if value & 0x0002 != 0 {
+        // LiteralInteger
+        out.push(print_u32(operands)?);
+    }
+    // Nontemporal
+    if value & 0x0004 != 0 {
+    }
+    // MakePointerAvailableKHR
+    if value & 0x0008 != 0 {
+        // IdScope
+        out.push(print_id(operands)?);
+    }
+    // MakePointerVisibleKHR
+    if value & 0x0010 != 0 {
+        // IdScope
+        out.push(print_id(operands)?);
+    }
+    // NonPrivatePointerKHR
+    if value & 0x0020 != 0 {
+    }
+    // AliasScopeINTELMask
+    if value & 0x10000 != 0 {
+        // IdRef
+        out.push(print_id(operands)?);
+    }
+    // NoAliasINTELMask
+    if value & 0x20000 != 0 {
+        // IdRef
+        out.push(print_id(operands)?);
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_KernelProfilingInfo(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"KernelProfilingInfo", value)?];
+    // None
+    if value & 0x0000 != 0 {
+    }
+    // CmdExecTime
+    if value & 0x0001 != 0 {
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_RayFlags(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"RayFlags", value)?];
+    // NoneKHR
+    if value & 0x0000 != 0 {
+    }
+    // OpaqueKHR
+    if value & 0x0001 != 0 {
+    }
+    // NoOpaqueKHR
+    if value & 0x0002 != 0 {
+    }
+    // TerminateOnFirstHitKHR
+    if value & 0x0004 != 0 {
+    }
+    // SkipClosestHitShaderKHR
+    if value & 0x0008 != 0 {
+    }
+    // CullBackFacingTrianglesKHR
+    if value & 0x0010 != 0 {
+    }
+    // CullFrontFacingTrianglesKHR
+    if value & 0x0020 != 0 {
+    }
+    // CullOpaqueKHR
+    if value & 0x0040 != 0 {
+    }
+    // CullNoOpaqueKHR
+    if value & 0x0080 != 0 {
+    }
+    // SkipTrianglesKHR
+    if value & 0x0100 != 0 {
+    }
+    // SkipAABBsKHR
+    if value & 0x0200 != 0 {
+    }
+    // ForceOpacityMicromap2StateEXT
+    if value & 0x0400 != 0 {
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_FragmentShadingRate(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"FragmentShadingRate", value)?];
+    // Vertical2Pixels
+    if value & 0x0001 != 0 {
+    }
+    // Vertical4Pixels
+    if value & 0x0002 != 0 {
+    }
+    // Horizontal2Pixels
+    if value & 0x0004 != 0 {
+    }
+    // Horizontal4Pixels
+    if value & 0x0008 != 0 {
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_SourceLanguage(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"SourceLanguage", value)?];
+    match value {
+        // Unknown
+        0 => {
+        }
+        // ESSL
+        1 => {
+        }
+        // GLSL
+        2 => {
+        }
+        // OpenCL_C
+        3 => {
+        }
+        // OpenCL_CPP
+        4 => {
+        }
+        // HLSL
+        5 => {
+        }
+        // CPP_for_OpenCL
+        6 => {
+        }
+        // SYCL
+        7 => {
+        }
+        // HERO_C
+        8 => {
+        }
+        // NZSL
+        9 => {
+        }
+        // WGSL
+        10 => {
+        }
+        // Slang
+        11 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_ExecutionModel(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"ExecutionModel", value)?];
+    match value {
+        // Vertex
+        0 => {
+        }
+        // TessellationControl
+        1 => {
+        }
+        // TessellationEvaluation
+        2 => {
+        }
+        // Geometry
+        3 => {
+        }
+        // Fragment
+        4 => {
+        }
+        // GLCompute
+        5 => {
+        }
+        // Kernel
+        6 => {
+        }
+        // TaskNV
+        5267 => {
+        }
+        // MeshNV
+        5268 => {
+        }
+        // RayGenerationKHR
+        5313 => {
+        }
+        // IntersectionKHR
+        5314 => {
+        }
+        // AnyHitKHR
+        5315 => {
+        }
+        // ClosestHitKHR
+        5316 => {
+        }
+        // MissKHR
+        5317 => {
+        }
+        // CallableKHR
+        5318 => {
+        }
+        // TaskEXT
+        5364 => {
+        }
+        // MeshEXT
+        5365 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_AddressingModel(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"AddressingModel", value)?];
+    match value {
+        // Logical
+        0 => {
+        }
+        // Physical32
+        1 => {
+        }
+        // Physical64
+        2 => {
+        }
+        // PhysicalStorageBuffer64EXT
+        5348 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_MemoryModel(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"MemoryModel", value)?];
+    match value {
+        // Simple
+        0 => {
+        }
+        // GLSL450
+        1 => {
+        }
+        // OpenCL
+        2 => {
+        }
+        // VulkanKHR
+        3 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_ExecutionMode(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"ExecutionMode", value)?];
+    match value {
+        // Invocations
+        0 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // SpacingEqual
+        1 => {
+        }
+        // SpacingFractionalEven
+        2 => {
+        }
+        // SpacingFractionalOdd
+        3 => {
+        }
+        // VertexOrderCw
+        4 => {
+        }
+        // VertexOrderCcw
+        5 => {
+        }
+        // PixelCenterInteger
+        6 => {
+        }
+        // OriginUpperLeft
+        7 => {
+        }
+        // OriginLowerLeft
+        8 => {
+        }
+        // EarlyFragmentTests
+        9 => {
+        }
+        // PointMode
+        10 => {
+        }
+        // Xfb
+        11 => {
+        }
+        // DepthReplacing
+        12 => {
+        }
+        // DepthGreater
+        14 => {
+        }
+        // DepthLess
+        15 => {
+        }
+        // DepthUnchanged
+        16 => {
+        }
+        // LocalSize
+        17 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // LocalSizeHint
+        18 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // InputPoints
+        19 => {
+        }
+        // InputLines
+        20 => {
+        }
+        // InputLinesAdjacency
+        21 => {
+        }
+        // Triangles
+        22 => {
+        }
+        // InputTrianglesAdjacency
+        23 => {
+        }
+        // Quads
+        24 => {
+        }
+        // Isolines
+        25 => {
+        }
+        // OutputVertices
+        26 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // OutputPoints
+        27 => {
+        }
+        // OutputLineStrip
+        28 => {
+        }
+        // OutputTriangleStrip
+        29 => {
+        }
+        // VecTypeHint
+        30 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // ContractionOff
+        31 => {
+        }
+        // Initializer
+        33 => {
+        }
+        // Finalizer
+        34 => {
+        }
+        // SubgroupSize
+        35 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // SubgroupsPerWorkgroup
+        36 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // SubgroupsPerWorkgroupId
+        37 => {
+            // IdRef
+            out.push(print_id(operands)?);
+        }
+        // LocalSizeId
+        38 => {
+            // IdRef
+            out.push(print_id(operands)?);
+            // IdRef
+            out.push(print_id(operands)?);
+            // IdRef
+            out.push(print_id(operands)?);
+        }
+        // LocalSizeHintId
+        39 => {
+            // IdRef
+            out.push(print_id(operands)?);
+            // IdRef
+            out.push(print_id(operands)?);
+            // IdRef
+            out.push(print_id(operands)?);
+        }
+        // NonCoherentColorAttachmentReadEXT
+        4169 => {
+        }
+        // NonCoherentDepthAttachmentReadEXT
+        4170 => {
+        }
+        // NonCoherentStencilAttachmentReadEXT
+        4171 => {
+        }
+        // SubgroupUniformControlFlowKHR
+        4421 => {
+        }
+        // PostDepthCoverage
+        4446 => {
+        }
+        // DenormPreserve
+        4459 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // DenormFlushToZero
+        4460 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // SignedZeroInfNanPreserve
+        4461 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // RoundingModeRTE
+        4462 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // RoundingModeRTZ
+        4463 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // EarlyAndLateFragmentTestsAMD
+        5017 => {
+        }
+        // StencilRefReplacingEXT
+        5027 => {
+        }
+        // CoalescingAMDX
+        5069 => {
+        }
+        // MaxNodeRecursionAMDX
+        5071 => {
+            // IdRef
+            out.push(print_id(operands)?);
+        }
+        // StaticNumWorkgroupsAMDX
+        5072 => {
+            // IdRef
+            out.push(print_id(operands)?);
+            // IdRef
+            out.push(print_id(operands)?);
+            // IdRef
+            out.push(print_id(operands)?);
+        }
+        // ShaderIndexAMDX
+        5073 => {
+            // IdRef
+            out.push(print_id(operands)?);
+        }
+        // MaxNumWorkgroupsAMDX
+        5077 => {
+            // IdRef
+            out.push(print_id(operands)?);
+            // IdRef
+            out.push(print_id(operands)?);
+            // IdRef
+            out.push(print_id(operands)?);
+        }
+        // StencilRefUnchangedFrontAMD
+        5079 => {
+        }
+        // StencilRefGreaterFrontAMD
+        5080 => {
+        }
+        // StencilRefLessFrontAMD
+        5081 => {
+        }
+        // StencilRefUnchangedBackAMD
+        5082 => {
+        }
+        // StencilRefGreaterBackAMD
+        5083 => {
+        }
+        // StencilRefLessBackAMD
+        5084 => {
+        }
+        // OutputLinesEXT
+        5269 => {
+        }
+        // OutputPrimitivesEXT
+        5270 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // DerivativeGroupQuadsNV
+        5289 => {
+        }
+        // DerivativeGroupLinearNV
+        5290 => {
+        }
+        // OutputTrianglesEXT
+        5298 => {
+        }
+        // PixelInterlockOrderedEXT
+        5366 => {
+        }
+        // PixelInterlockUnorderedEXT
+        5367 => {
+        }
+        // SampleInterlockOrderedEXT
+        5368 => {
+        }
+        // SampleInterlockUnorderedEXT
+        5369 => {
+        }
+        // ShadingRateInterlockOrderedEXT
+        5370 => {
+        }
+        // ShadingRateInterlockUnorderedEXT
+        5371 => {
+        }
+        // SharedLocalMemorySizeINTEL
+        5618 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // RoundingModeRTPINTEL
+        5620 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // RoundingModeRTNINTEL
+        5621 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // FloatingPointModeALTINTEL
+        5622 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // FloatingPointModeIEEEINTEL
+        5623 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // MaxWorkgroupSizeINTEL
+        5893 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // MaxWorkDimINTEL
+        5894 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // NoGlobalOffsetINTEL
+        5895 => {
+        }
+        // NumSIMDWorkitemsINTEL
+        5896 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // SchedulerTargetFmaxMhzINTEL
+        5903 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // StreamingInterfaceINTEL
+        6154 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // RegisterMapInterfaceINTEL
+        6160 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // NamedBarrierCountINTEL
+        6417 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_StorageClass(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"StorageClass", value)?];
+    match value {
+        // UniformConstant
+        0 => {
+        }
+        // Input
+        1 => {
+        }
+        // Uniform
+        2 => {
+        }
+        // Output
+        3 => {
+        }
+        // Workgroup
+        4 => {
+        }
+        // CrossWorkgroup
+        5 => {
+        }
+        // Private
+        6 => {
+        }
+        // Function
+        7 => {
+        }
+        // Generic
+        8 => {
+        }
+        // PushConstant
+        9 => {
+        }
+        // AtomicCounter
+        10 => {
+        }
+        // Image
+        11 => {
+        }
+        // StorageBuffer
+        12 => {
+        }
+        // TileImageEXT
+        4172 => {
+        }
+        // NodePayloadAMDX
+        5068 => {
+        }
+        // NodeOutputPayloadAMDX
+        5076 => {
+        }
+        // CallableDataKHR
+        5328 => {
+        }
+        // IncomingCallableDataKHR
+        5329 => {
+        }
+        // RayPayloadKHR
+        5338 => {
+        }
+        // HitAttributeKHR
+        5339 => {
+        }
+        // IncomingRayPayloadKHR
+        5342 => {
+        }
+        // ShaderRecordBufferKHR
+        5343 => {
+        }
+        // PhysicalStorageBufferEXT
+        5349 => {
+        }
+        // HitObjectAttributeNV
+        5385 => {
+        }
+        // TaskPayloadWorkgroupEXT
+        5402 => {
+        }
+        // CodeSectionINTEL
+        5605 => {
+        }
+        // DeviceOnlyINTEL
+        5936 => {
+        }
+        // HostOnlyINTEL
+        5937 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_Dim(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"Dim", value)?];
+    match value {
+        // 1D
+        0 => {
+        }
+        // 2D
+        1 => {
+        }
+        // 3D
+        2 => {
+        }
+        // Cube
+        3 => {
+        }
+        // Rect
+        4 => {
+        }
+        // Buffer
+        5 => {
+        }
+        // SubpassData
+        6 => {
+        }
+        // TileImageDataEXT
+        4173 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_SamplerAddressingMode(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"SamplerAddressingMode", value)?];
+    match value {
+        // None
+        0 => {
+        }
+        // ClampToEdge
+        1 => {
+        }
+        // Clamp
+        2 => {
+        }
+        // Repeat
+        3 => {
+        }
+        // RepeatMirrored
+        4 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_SamplerFilterMode(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"SamplerFilterMode", value)?];
+    match value {
+        // Nearest
+        0 => {
+        }
+        // Linear
+        1 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_ImageFormat(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"ImageFormat", value)?];
+    match value {
+        // Unknown
+        0 => {
+        }
+        // Rgba32f
+        1 => {
+        }
+        // Rgba16f
+        2 => {
+        }
+        // R32f
+        3 => {
+        }
+        // Rgba8
+        4 => {
+        }
+        // Rgba8Snorm
+        5 => {
+        }
+        // Rg32f
+        6 => {
+        }
+        // Rg16f
+        7 => {
+        }
+        // R11fG11fB10f
+        8 => {
+        }
+        // R16f
+        9 => {
+        }
+        // Rgba16
+        10 => {
+        }
+        // Rgb10A2
+        11 => {
+        }
+        // Rg16
+        12 => {
+        }
+        // Rg8
+        13 => {
+        }
+        // R16
+        14 => {
+        }
+        // R8
+        15 => {
+        }
+        // Rgba16Snorm
+        16 => {
+        }
+        // Rg16Snorm
+        17 => {
+        }
+        // Rg8Snorm
+        18 => {
+        }
+        // R16Snorm
+        19 => {
+        }
+        // R8Snorm
+        20 => {
+        }
+        // Rgba32i
+        21 => {
+        }
+        // Rgba16i
+        22 => {
+        }
+        // Rgba8i
+        23 => {
+        }
+        // R32i
+        24 => {
+        }
+        // Rg32i
+        25 => {
+        }
+        // Rg16i
+        26 => {
+        }
+        // Rg8i
+        27 => {
+        }
+        // R16i
+        28 => {
+        }
+        // R8i
+        29 => {
+        }
+        // Rgba32ui
+        30 => {
+        }
+        // Rgba16ui
+        31 => {
+        }
+        // Rgba8ui
+        32 => {
+        }
+        // R32ui
+        33 => {
+        }
+        // Rgb10a2ui
+        34 => {
+        }
+        // Rg32ui
+        35 => {
+        }
+        // Rg16ui
+        36 => {
+        }
+        // Rg8ui
+        37 => {
+        }
+        // R16ui
+        38 => {
+        }
+        // R8ui
+        39 => {
+        }
+        // R64ui
+        40 => {
+        }
+        // R64i
+        41 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_ImageChannelOrder(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"ImageChannelOrder", value)?];
+    match value {
+        // R
+        0 => {
+        }
+        // A
+        1 => {
+        }
+        // RG
+        2 => {
+        }
+        // RA
+        3 => {
+        }
+        // RGB
+        4 => {
+        }
+        // RGBA
+        5 => {
+        }
+        // BGRA
+        6 => {
+        }
+        // ARGB
+        7 => {
+        }
+        // Intensity
+        8 => {
+        }
+        // Luminance
+        9 => {
+        }
+        // Rx
+        10 => {
+        }
+        // RGx
+        11 => {
+        }
+        // RGBx
+        12 => {
+        }
+        // Depth
+        13 => {
+        }
+        // DepthStencil
+        14 => {
+        }
+        // sRGB
+        15 => {
+        }
+        // sRGBx
+        16 => {
+        }
+        // sRGBA
+        17 => {
+        }
+        // sBGRA
+        18 => {
+        }
+        // ABGR
+        19 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_ImageChannelDataType(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"ImageChannelDataType", value)?];
+    match value {
+        // SnormInt8
+        0 => {
+        }
+        // SnormInt16
+        1 => {
+        }
+        // UnormInt8
+        2 => {
+        }
+        // UnormInt16
+        3 => {
+        }
+        // UnormShort565
+        4 => {
+        }
+        // UnormShort555
+        5 => {
+        }
+        // UnormInt101010
+        6 => {
+        }
+        // SignedInt8
+        7 => {
+        }
+        // SignedInt16
+        8 => {
+        }
+        // SignedInt32
+        9 => {
+        }
+        // UnsignedInt8
+        10 => {
+        }
+        // UnsignedInt16
+        11 => {
+        }
+        // UnsignedInt32
+        12 => {
+        }
+        // HalfFloat
+        13 => {
+        }
+        // Float
+        14 => {
+        }
+        // UnormInt24
+        15 => {
+        }
+        // UnormInt101010_2
+        16 => {
+        }
+        // UnsignedIntRaw10EXT
+        19 => {
+        }
+        // UnsignedIntRaw12EXT
+        20 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_FPRoundingMode(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"FPRoundingMode", value)?];
+    match value {
+        // RTE
+        0 => {
+        }
+        // RTZ
+        1 => {
+        }
+        // RTP
+        2 => {
+        }
+        // RTN
+        3 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_FPDenormMode(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"FPDenormMode", value)?];
+    match value {
+        // Preserve
+        0 => {
+        }
+        // FlushToZero
+        1 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_QuantizationModes(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"QuantizationModes", value)?];
+    match value {
+        // TRN
+        0 => {
+        }
+        // TRN_ZERO
+        1 => {
+        }
+        // RND
+        2 => {
+        }
+        // RND_ZERO
+        3 => {
+        }
+        // RND_INF
+        4 => {
+        }
+        // RND_MIN_INF
+        5 => {
+        }
+        // RND_CONV
+        6 => {
+        }
+        // RND_CONV_ODD
+        7 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_FPOperationMode(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"FPOperationMode", value)?];
+    match value {
+        // IEEE
+        0 => {
+        }
+        // ALT
+        1 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_OverflowModes(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"OverflowModes", value)?];
+    match value {
+        // WRAP
+        0 => {
+        }
+        // SAT
+        1 => {
+        }
+        // SAT_ZERO
+        2 => {
+        }
+        // SAT_SYM
+        3 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_LinkageType(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"LinkageType", value)?];
+    match value {
+        // Export
+        0 => {
+        }
+        // Import
+        1 => {
+        }
+        // LinkOnceODR
+        2 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_AccessQualifier(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"AccessQualifier", value)?];
+    match value {
+        // ReadOnly
+        0 => {
+        }
+        // WriteOnly
+        1 => {
+        }
+        // ReadWrite
+        2 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_HostAccessQualifier(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"HostAccessQualifier", value)?];
+    match value {
+        // NoneINTEL
+        0 => {
+        }
+        // ReadINTEL
+        1 => {
+        }
+        // WriteINTEL
+        2 => {
+        }
+        // ReadWriteINTEL
+        3 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_FunctionParameterAttribute(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"FunctionParameterAttribute", value)?];
+    match value {
+        // Zext
+        0 => {
+        }
+        // Sext
+        1 => {
+        }
+        // ByVal
+        2 => {
+        }
+        // Sret
+        3 => {
+        }
+        // NoAlias
+        4 => {
+        }
+        // NoCapture
+        5 => {
+        }
+        // NoWrite
+        6 => {
+        }
+        // NoReadWrite
+        7 => {
+        }
+        // RuntimeAlignedINTEL
+        5940 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_Decoration(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"Decoration", value)?];
+    match value {
+        // RelaxedPrecision
+        0 => {
+        }
+        // SpecId
+        1 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // Block
+        2 => {
+        }
+        // BufferBlock
+        3 => {
+        }
+        // RowMajor
+        4 => {
+        }
+        // ColMajor
+        5 => {
+        }
+        // ArrayStride
+        6 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // MatrixStride
+        7 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // GLSLShared
+        8 => {
+        }
+        // GLSLPacked
+        9 => {
+        }
+        // CPacked
+        10 => {
+        }
+        // BuiltIn
+        11 => {
+            // BuiltIn
+            out.extend(print_enum_BuiltIn(operands)?);
+        }
+        // NoPerspective
+        13 => {
+        }
+        // Flat
+        14 => {
+        }
+        // Patch
+        15 => {
+        }
+        // Centroid
+        16 => {
+        }
+        // Sample
+        17 => {
+        }
+        // Invariant
+        18 => {
+        }
+        // Restrict
+        19 => {
+        }
+        // Aliased
+        20 => {
+        }
+        // Volatile
+        21 => {
+        }
+        // Constant
+        22 => {
+        }
+        // Coherent
+        23 => {
+        }
+        // NonWritable
+        24 => {
+        }
+        // NonReadable
+        25 => {
+        }
+        // Uniform
+        26 => {
+        }
+        // UniformId
+        27 => {
+            // IdScope
+            out.push(print_id(operands)?);
+        }
+        // SaturatedConversion
+        28 => {
+        }
+        // Stream
+        29 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // Location
+        30 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // Component
+        31 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // Index
+        32 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // Binding
+        33 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // DescriptorSet
+        34 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // Offset
+        35 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // XfbBuffer
+        36 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // XfbStride
+        37 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // FuncParamAttr
+        38 => {
+            // FunctionParameterAttribute
+            out.extend(print_enum_FunctionParameterAttribute(operands)?);
+        }
+        // FPRoundingMode
+        39 => {
+            // FPRoundingMode
+            out.extend(print_enum_FPRoundingMode(operands)?);
+        }
+        // FPFastMathMode
+        40 => {
+            // FPFastMathMode
+            out.extend(print_enum_FPFastMathMode(operands)?);
+        }
+        // LinkageAttributes
+        41 => {
+            // LiteralString
+            out.push(print_str(operands)?);
+            // LinkageType
+            out.extend(print_enum_LinkageType(operands)?);
+        }
+        // NoContraction
+        42 => {
+        }
+        // InputAttachmentIndex
+        43 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // Alignment
+        44 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // MaxByteOffset
+        45 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // AlignmentId
+        46 => {
+            // IdRef
+            out.push(print_id(operands)?);
+        }
+        // MaxByteOffsetId
+        47 => {
+            // IdRef
+            out.push(print_id(operands)?);
+        }
+        // NoSignedWrap
+        4469 => {
+        }
+        // NoUnsignedWrap
+        4470 => {
+        }
+        // WeightTextureQCOM
+        4487 => {
+        }
+        // BlockMatchTextureQCOM
+        4488 => {
+        }
+        // ExplicitInterpAMD
+        4999 => {
+        }
+        // NodeSharesPayloadLimitsWithAMDX
+        5019 => {
+            // IdRef
+            out.push(print_id(operands)?);
+        }
+        // NodeMaxPayloadsAMDX
+        5020 => {
+            // IdRef
+            out.push(print_id(operands)?);
+        }
+        // TrackFinishWritingAMDX
+        5078 => {
+        }
+        // PayloadNodeNameAMDX
+        5091 => {
+            // LiteralString
+            out.push(print_str(operands)?);
+        }
+        // OverrideCoverageNV
+        5248 => {
+        }
+        // PassthroughNV
+        5250 => {
+        }
+        // ViewportRelativeNV
+        5252 => {
+        }
+        // SecondaryViewportRelativeNV
+        5256 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // PerPrimitiveEXT
+        5271 => {
+        }
+        // PerViewNV
+        5272 => {
+        }
+        // PerTaskNV
+        5273 => {
+        }
+        // PerVertexNV
+        5285 => {
+        }
+        // NonUniformEXT
+        5300 => {
+        }
+        // RestrictPointerEXT
+        5355 => {
+        }
+        // AliasedPointerEXT
+        5356 => {
+        }
+        // HitObjectShaderRecordBufferNV
+        5386 => {
+        }
+        // BindlessSamplerNV
+        5398 => {
+        }
+        // BindlessImageNV
+        5399 => {
+        }
+        // BoundSamplerNV
+        5400 => {
+        }
+        // BoundImageNV
+        5401 => {
+        }
+        // SIMTCallINTEL
+        5599 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // ReferencedIndirectlyINTEL
+        5602 => {
+        }
+        // ClobberINTEL
+        5607 => {
+            // LiteralString
+            out.push(print_str(operands)?);
+        }
+        // SideEffectsINTEL
+        5608 => {
+        }
+        // VectorComputeVariableINTEL
+        5624 => {
+        }
+        // FuncParamIOKindINTEL
+        5625 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // VectorComputeFunctionINTEL
+        5626 => {
+        }
+        // StackCallINTEL
+        5627 => {
+        }
+        // GlobalVariableOffsetINTEL
+        5628 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // HlslCounterBufferGOOGLE
+        5634 => {
+            // IdRef
+            out.push(print_id(operands)?);
+        }
+        // HlslSemanticGOOGLE
+        5635 => {
+            // LiteralString
+            out.push(print_str(operands)?);
+        }
+        // UserTypeGOOGLE
+        5636 => {
+            // LiteralString
+            out.push(print_str(operands)?);
+        }
+        // FunctionRoundingModeINTEL
+        5822 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+            // FPRoundingMode
+            out.extend(print_enum_FPRoundingMode(operands)?);
+        }
+        // FunctionDenormModeINTEL
+        5823 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+            // FPDenormMode
+            out.extend(print_enum_FPDenormMode(operands)?);
+        }
+        // RegisterINTEL
+        5825 => {
+        }
+        // MemoryINTEL
+        5826 => {
+            // LiteralString
+            out.push(print_str(operands)?);
+        }
+        // NumbanksINTEL
+        5827 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // BankwidthINTEL
+        5828 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // MaxPrivateCopiesINTEL
+        5829 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // SinglepumpINTEL
+        5830 => {
+        }
+        // DoublepumpINTEL
+        5831 => {
+        }
+        // MaxReplicatesINTEL
+        5832 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // SimpleDualPortINTEL
+        5833 => {
+        }
+        // MergeINTEL
+        5834 => {
+            // LiteralString
+            out.push(print_str(operands)?);
+            // LiteralString
+            out.push(print_str(operands)?);
+        }
+        // BankBitsINTEL
+        5835 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // ForcePow2DepthINTEL
+        5836 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // StridesizeINTEL
+        5883 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // WordsizeINTEL
+        5884 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // TrueDualPortINTEL
+        5885 => {
+        }
+        // BurstCoalesceINTEL
+        5899 => {
+        }
+        // CacheSizeINTEL
+        5900 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // DontStaticallyCoalesceINTEL
+        5901 => {
+        }
+        // PrefetchINTEL
+        5902 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // StallEnableINTEL
+        5905 => {
+        }
+        // FuseLoopsInFunctionINTEL
+        5907 => {
+        }
+        // MathOpDSPModeINTEL
+        5909 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // AliasScopeINTEL
+        5914 => {
+            // IdRef
+            out.push(print_id(operands)?);
+        }
+        // NoAliasINTEL
+        5915 => {
+            // IdRef
+            out.push(print_id(operands)?);
+        }
+        // InitiationIntervalINTEL
+        5917 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // MaxConcurrencyINTEL
+        5918 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // PipelineEnableINTEL
+        5919 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // BufferLocationINTEL
+        5921 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // IOPipeStorageINTEL
+        5944 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // FunctionFloatingPointModeINTEL
+        6080 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+            // FPOperationMode
+            out.extend(print_enum_FPOperationMode(operands)?);
+        }
+        // SingleElementVectorINTEL
+        6085 => {
+        }
+        // VectorComputeCallableFunctionINTEL
+        6087 => {
+        }
+        // MediaBlockIOINTEL
+        6140 => {
+        }
+        // StallFreeINTEL
+        6151 => {
+        }
+        // FPMaxErrorDecorationINTEL
+        6170 => {
+            // LiteralFloat
+            out.push(print_f32(operands)?);
+        }
+        // LatencyControlLabelINTEL
+        6172 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // LatencyControlConstraintINTEL
+        6173 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // ConduitKernelArgumentINTEL
+        6175 => {
+        }
+        // RegisterMapKernelArgumentINTEL
+        6176 => {
+        }
+        // MMHostInterfaceAddressWidthINTEL
+        6177 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // MMHostInterfaceDataWidthINTEL
+        6178 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // MMHostInterfaceLatencyINTEL
+        6179 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // MMHostInterfaceReadWriteModeINTEL
+        6180 => {
+            // AccessQualifier
+            out.extend(print_enum_AccessQualifier(operands)?);
+        }
+        // MMHostInterfaceMaxBurstINTEL
+        6181 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // MMHostInterfaceWaitRequestINTEL
+        6182 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // StableKernelArgumentINTEL
+        6183 => {
+        }
+        // HostAccessINTEL
+        6188 => {
+            // HostAccessQualifier
+            out.extend(print_enum_HostAccessQualifier(operands)?);
+            // LiteralString
+            out.push(print_str(operands)?);
+        }
+        // InitModeINTEL
+        6190 => {
+            // InitializationModeQualifier
+            out.extend(print_enum_InitializationModeQualifier(operands)?);
+        }
+        // ImplementInRegisterMapINTEL
+        6191 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+        }
+        // CacheControlLoadINTEL
+        6442 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+            // LoadCacheControl
+            out.extend(print_enum_LoadCacheControl(operands)?);
+        }
+        // CacheControlStoreINTEL
+        6443 => {
+            // LiteralInteger
+            out.push(print_u32(operands)?);
+            // StoreCacheControl
+            out.extend(print_enum_StoreCacheControl(operands)?);
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_BuiltIn(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"BuiltIn", value)?];
+    match value {
+        // Position
+        0 => {
+        }
+        // PointSize
+        1 => {
+        }
+        // ClipDistance
+        3 => {
+        }
+        // CullDistance
+        4 => {
+        }
+        // VertexId
+        5 => {
+        }
+        // InstanceId
+        6 => {
+        }
+        // PrimitiveId
+        7 => {
+        }
+        // InvocationId
+        8 => {
+        }
+        // Layer
+        9 => {
+        }
+        // ViewportIndex
+        10 => {
+        }
+        // TessLevelOuter
+        11 => {
+        }
+        // TessLevelInner
+        12 => {
+        }
+        // TessCoord
+        13 => {
+        }
+        // PatchVertices
+        14 => {
+        }
+        // FragCoord
+        15 => {
+        }
+        // PointCoord
+        16 => {
+        }
+        // FrontFacing
+        17 => {
+        }
+        // SampleId
+        18 => {
+        }
+        // SamplePosition
+        19 => {
+        }
+        // SampleMask
+        20 => {
+        }
+        // FragDepth
+        22 => {
+        }
+        // HelperInvocation
+        23 => {
+        }
+        // NumWorkgroups
+        24 => {
+        }
+        // WorkgroupSize
+        25 => {
+        }
+        // WorkgroupId
+        26 => {
+        }
+        // LocalInvocationId
+        27 => {
+        }
+        // GlobalInvocationId
+        28 => {
+        }
+        // LocalInvocationIndex
+        29 => {
+        }
+        // WorkDim
+        30 => {
+        }
+        // GlobalSize
+        31 => {
+        }
+        // EnqueuedWorkgroupSize
+        32 => {
+        }
+        // GlobalOffset
+        33 => {
+        }
+        // GlobalLinearId
+        34 => {
+        }
+        // SubgroupSize
+        36 => {
+        }
+        // SubgroupMaxSize
+        37 => {
+        }
+        // NumSubgroups
+        38 => {
+        }
+        // NumEnqueuedSubgroups
+        39 => {
+        }
+        // SubgroupId
+        40 => {
+        }
+        // SubgroupLocalInvocationId
+        41 => {
+        }
+        // VertexIndex
+        42 => {
+        }
+        // InstanceIndex
+        43 => {
+        }
+        // CoreIDARM
+        4160 => {
+        }
+        // CoreCountARM
+        4161 => {
+        }
+        // CoreMaxIDARM
+        4162 => {
+        }
+        // WarpIDARM
+        4163 => {
+        }
+        // WarpMaxIDARM
+        4164 => {
+        }
+        // SubgroupEqMaskKHR
+        4416 => {
+        }
+        // SubgroupGeMaskKHR
+        4417 => {
+        }
+        // SubgroupGtMaskKHR
+        4418 => {
+        }
+        // SubgroupLeMaskKHR
+        4419 => {
+        }
+        // SubgroupLtMaskKHR
+        4420 => {
+        }
+        // BaseVertex
+        4424 => {
+        }
+        // BaseInstance
+        4425 => {
+        }
+        // DrawIndex
+        4426 => {
+        }
+        // PrimitiveShadingRateKHR
+        4432 => {
+        }
+        // DeviceIndex
+        4438 => {
+        }
+        // ViewIndex
+        4440 => {
+        }
+        // ShadingRateKHR
+        4444 => {
+        }
+        // BaryCoordNoPerspAMD
+        4992 => {
+        }
+        // BaryCoordNoPerspCentroidAMD
+        4993 => {
+        }
+        // BaryCoordNoPerspSampleAMD
+        4994 => {
+        }
+        // BaryCoordSmoothAMD
+        4995 => {
+        }
+        // BaryCoordSmoothCentroidAMD
+        4996 => {
+        }
+        // BaryCoordSmoothSampleAMD
+        4997 => {
+        }
+        // BaryCoordPullModelAMD
+        4998 => {
+        }
+        // FragStencilRefEXT
+        5014 => {
+        }
+        // CoalescedInputCountAMDX
+        5021 => {
+        }
+        // ShaderIndexAMDX
+        5073 => {
+        }
+        // ViewportMaskNV
+        5253 => {
+        }
+        // SecondaryPositionNV
+        5257 => {
+        }
+        // SecondaryViewportMaskNV
+        5258 => {
+        }
+        // PositionPerViewNV
+        5261 => {
+        }
+        // ViewportMaskPerViewNV
+        5262 => {
+        }
+        // FullyCoveredEXT
+        5264 => {
+        }
+        // TaskCountNV
+        5274 => {
+        }
+        // PrimitiveCountNV
+        5275 => {
+        }
+        // PrimitiveIndicesNV
+        5276 => {
+        }
+        // ClipDistancePerViewNV
+        5277 => {
+        }
+        // CullDistancePerViewNV
+        5278 => {
+        }
+        // LayerPerViewNV
+        5279 => {
+        }
+        // MeshViewCountNV
+        5280 => {
+        }
+        // MeshViewIndicesNV
+        5281 => {
+        }
+        // BaryCoordNV
+        5286 => {
+        }
+        // BaryCoordNoPerspNV
+        5287 => {
+        }
+        // FragmentSizeNV
+        5292 => {
+        }
+        // InvocationsPerPixelNV
+        5293 => {
+        }
+        // PrimitivePointIndicesEXT
+        5294 => {
+        }
+        // PrimitiveLineIndicesEXT
+        5295 => {
+        }
+        // PrimitiveTriangleIndicesEXT
+        5296 => {
+        }
+        // CullPrimitiveEXT
+        5299 => {
+        }
+        // LaunchIdKHR
+        5319 => {
+        }
+        // LaunchSizeKHR
+        5320 => {
+        }
+        // WorldRayOriginKHR
+        5321 => {
+        }
+        // WorldRayDirectionKHR
+        5322 => {
+        }
+        // ObjectRayOriginKHR
+        5323 => {
+        }
+        // ObjectRayDirectionKHR
+        5324 => {
+        }
+        // RayTminKHR
+        5325 => {
+        }
+        // RayTmaxKHR
+        5326 => {
+        }
+        // InstanceCustomIndexKHR
+        5327 => {
+        }
+        // ObjectToWorldKHR
+        5330 => {
+        }
+        // WorldToObjectKHR
+        5331 => {
+        }
+        // HitTNV
+        5332 => {
+        }
+        // HitKindKHR
+        5333 => {
+        }
+        // CurrentRayTimeNV
+        5334 => {
+        }
+        // HitTriangleVertexPositionsKHR
+        5335 => {
+        }
+        // HitMicroTriangleVertexPositionsNV
+        5337 => {
+        }
+        // HitMicroTriangleVertexBarycentricsNV
+        5344 => {
+        }
+        // IncomingRayFlagsKHR
+        5351 => {
+        }
+        // RayGeometryIndexKHR
+        5352 => {
+        }
+        // WarpsPerSMNV
+        5374 => {
+        }
+        // SMCountNV
+        5375 => {
+        }
+        // WarpIDNV
+        5376 => {
+        }
+        // SMIDNV
+        5377 => {
+        }
+        // HitKindFrontFacingMicroTriangleNV
+        5405 => {
+        }
+        // HitKindBackFacingMicroTriangleNV
+        5406 => {
+        }
+        // CullMaskKHR
+        6021 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_Scope(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"Scope", value)?];
+    match value {
+        // CrossDevice
+        0 => {
+        }
+        // Device
+        1 => {
+        }
+        // Workgroup
+        2 => {
+        }
+        // Subgroup
+        3 => {
+        }
+        // Invocation
+        4 => {
+        }
+        // QueueFamilyKHR
+        5 => {
+        }
+        // ShaderCallKHR
+        6 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_GroupOperation(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"GroupOperation", value)?];
+    match value {
+        // Reduce
+        0 => {
+        }
+        // InclusiveScan
+        1 => {
+        }
+        // ExclusiveScan
+        2 => {
+        }
+        // ClusteredReduce
+        3 => {
+        }
+        // PartitionedReduceNV
+        6 => {
+        }
+        // PartitionedInclusiveScanNV
+        7 => {
+        }
+        // PartitionedExclusiveScanNV
+        8 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_KernelEnqueueFlags(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"KernelEnqueueFlags", value)?];
+    match value {
+        // NoWait
+        0 => {
+        }
+        // WaitKernel
+        1 => {
+        }
+        // WaitWorkGroup
+        2 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_Capability(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"Capability", value)?];
+    match value {
+        // Matrix
+        0 => {
+        }
+        // Shader
+        1 => {
+        }
+        // Geometry
+        2 => {
+        }
+        // Tessellation
+        3 => {
+        }
+        // Addresses
+        4 => {
+        }
+        // Linkage
+        5 => {
+        }
+        // Kernel
+        6 => {
+        }
+        // Vector16
+        7 => {
+        }
+        // Float16Buffer
+        8 => {
+        }
+        // Float16
+        9 => {
+        }
+        // Float64
+        10 => {
+        }
+        // Int64
+        11 => {
+        }
+        // Int64Atomics
+        12 => {
+        }
+        // ImageBasic
+        13 => {
+        }
+        // ImageReadWrite
+        14 => {
+        }
+        // ImageMipmap
+        15 => {
+        }
+        // Pipes
+        17 => {
+        }
+        // Groups
+        18 => {
+        }
+        // DeviceEnqueue
+        19 => {
+        }
+        // LiteralSampler
+        20 => {
+        }
+        // AtomicStorage
+        21 => {
+        }
+        // Int16
+        22 => {
+        }
+        // TessellationPointSize
+        23 => {
+        }
+        // GeometryPointSize
+        24 => {
+        }
+        // ImageGatherExtended
+        25 => {
+        }
+        // StorageImageMultisample
+        27 => {
+        }
+        // UniformBufferArrayDynamicIndexing
+        28 => {
+        }
+        // SampledImageArrayDynamicIndexing
+        29 => {
+        }
+        // StorageBufferArrayDynamicIndexing
+        30 => {
+        }
+        // StorageImageArrayDynamicIndexing
+        31 => {
+        }
+        // ClipDistance
+        32 => {
+        }
+        // CullDistance
+        33 => {
+        }
+        // ImageCubeArray
+        34 => {
+        }
+        // SampleRateShading
+        35 => {
+        }
+        // ImageRect
+        36 => {
+        }
+        // SampledRect
+        37 => {
+        }
+        // GenericPointer
+        38 => {
+        }
+        // Int8
+        39 => {
+        }
+        // InputAttachment
+        40 => {
+        }
+        // SparseResidency
+        41 => {
+        }
+        // MinLod
+        42 => {
+        }
+        // Sampled1D
+        43 => {
+        }
+        // Image1D
+        44 => {
+        }
+        // SampledCubeArray
+        45 => {
+        }
+        // SampledBuffer
+        46 => {
+        }
+        // ImageBuffer
+        47 => {
+        }
+        // ImageMSArray
+        48 => {
+        }
+        // StorageImageExtendedFormats
+        49 => {
+        }
+        // ImageQuery
+        50 => {
+        }
+        // DerivativeControl
+        51 => {
+        }
+        // InterpolationFunction
+        52 => {
+        }
+        // TransformFeedback
+        53 => {
+        }
+        // GeometryStreams
+        54 => {
+        }
+        // StorageImageReadWithoutFormat
+        55 => {
+        }
+        // StorageImageWriteWithoutFormat
+        56 => {
+        }
+        // MultiViewport
+        57 => {
+        }
+        // SubgroupDispatch
+        58 => {
+        }
+        // NamedBarrier
+        59 => {
+        }
+        // PipeStorage
+        60 => {
+        }
+        // GroupNonUniform
+        61 => {
+        }
+        // GroupNonUniformVote
+        62 => {
+        }
+        // GroupNonUniformArithmetic
+        63 => {
+        }
+        // GroupNonUniformBallot
+        64 => {
+        }
+        // GroupNonUniformShuffle
+        65 => {
+        }
+        // GroupNonUniformShuffleRelative
+        66 => {
+        }
+        // GroupNonUniformClustered
+        67 => {
+        }
+        // GroupNonUniformQuad
+        68 => {
+        }
+        // ShaderLayer
+        69 => {
+        }
+        // ShaderViewportIndex
+        70 => {
+        }
+        // UniformDecoration
+        71 => {
+        }
+        // CoreBuiltinsARM
+        4165 => {
+        }
+        // TileImageColorReadAccessEXT
+        4166 => {
+        }
+        // TileImageDepthReadAccessEXT
+        4167 => {
+        }
+        // TileImageStencilReadAccessEXT
+        4168 => {
+        }
+        // FragmentShadingRateKHR
+        4422 => {
+        }
+        // SubgroupBallotKHR
+        4423 => {
+        }
+        // DrawParameters
+        4427 => {
+        }
+        // WorkgroupMemoryExplicitLayoutKHR
+        4428 => {
+        }
+        // WorkgroupMemoryExplicitLayout8BitAccessKHR
+        4429 => {
+        }
+        // WorkgroupMemoryExplicitLayout16BitAccessKHR
+        4430 => {
+        }
+        // SubgroupVoteKHR
+        4431 => {
+        }
+        // StorageUniformBufferBlock16
+        4433 => {
+        }
+        // StorageUniform16
+        4434 => {
+        }
+        // StoragePushConstant16
+        4435 => {
+        }
+        // StorageInputOutput16
+        4436 => {
+        }
+        // DeviceGroup
+        4437 => {
+        }
+        // MultiView
+        4439 => {
+        }
+        // VariablePointersStorageBuffer
+        4441 => {
+        }
+        // VariablePointers
+        4442 => {
+        }
+        // AtomicStorageOps
+        4445 => {
+        }
+        // SampleMaskPostDepthCoverage
+        4447 => {
+        }
+        // StorageBuffer8BitAccess
+        4448 => {
+        }
+        // UniformAndStorageBuffer8BitAccess
+        4449 => {
+        }
+        // StoragePushConstant8
+        4450 => {
+        }
+        // DenormPreserve
+        4464 => {
+        }
+        // DenormFlushToZero
+        4465 => {
+        }
+        // SignedZeroInfNanPreserve
+        4466 => {
+        }
+        // RoundingModeRTE
+        4467 => {
+        }
+        // RoundingModeRTZ
+        4468 => {
+        }
+        // RayQueryProvisionalKHR
+        4471 => {
+        }
+        // RayQueryKHR
+        4472 => {
+        }
+        // RayTraversalPrimitiveCullingKHR
+        4478 => {
+        }
+        // RayTracingKHR
+        4479 => {
+        }
+        // TextureSampleWeightedQCOM
+        4484 => {
+        }
+        // TextureBoxFilterQCOM
+        4485 => {
+        }
+        // TextureBlockMatchQCOM
+        4486 => {
+        }
+        // Float16ImageAMD
+        5008 => {
+        }
+        // ImageGatherBiasLodAMD
+        5009 => {
+        }
+        // FragmentMaskAMD
+        5010 => {
+        }
+        // StencilExportEXT
+        5013 => {
+        }
+        // ImageReadWriteLodAMD
+        5015 => {
+        }
+        // Int64ImageEXT
+        5016 => {
+        }
+        // ShaderClockKHR
+        5055 => {
+        }
+        // ShaderEnqueueAMDX
+        5067 => {
+        }
+        // SampleMaskOverrideCoverageNV
+        5249 => {
+        }
+        // GeometryShaderPassthroughNV
+        5251 => {
+        }
+        // ShaderViewportIndexLayerNV
+        5254 => {
+        }
+        // ShaderViewportMaskNV
+        5255 => {
+        }
+        // ShaderStereoViewNV
+        5259 => {
+        }
+        // PerViewAttributesNV
+        5260 => {
+        }
+        // FragmentFullyCoveredEXT
+        5265 => {
+        }
+        // MeshShadingNV
+        5266 => {
+        }
+        // ImageFootprintNV
+        5282 => {
+        }
+        // MeshShadingEXT
+        5283 => {
+        }
+        // FragmentBarycentricNV
+        5284 => {
+        }
+        // ComputeDerivativeGroupQuadsNV
+        5288 => {
+        }
+        // ShadingRateNV
+        5291 => {
+        }
+        // GroupNonUniformPartitionedNV
+        5297 => {
+        }
+        // ShaderNonUniformEXT
+        5301 => {
+        }
+        // RuntimeDescriptorArrayEXT
+        5302 => {
+        }
+        // InputAttachmentArrayDynamicIndexingEXT
+        5303 => {
+        }
+        // UniformTexelBufferArrayDynamicIndexingEXT
+        5304 => {
+        }
+        // StorageTexelBufferArrayDynamicIndexingEXT
+        5305 => {
+        }
+        // UniformBufferArrayNonUniformIndexingEXT
+        5306 => {
+        }
+        // SampledImageArrayNonUniformIndexingEXT
+        5307 => {
+        }
+        // StorageBufferArrayNonUniformIndexingEXT
+        5308 => {
+        }
+        // StorageImageArrayNonUniformIndexingEXT
+        5309 => {
+        }
+        // InputAttachmentArrayNonUniformIndexingEXT
+        5310 => {
+        }
+        // UniformTexelBufferArrayNonUniformIndexingEXT
+        5311 => {
+        }
+        // StorageTexelBufferArrayNonUniformIndexingEXT
+        5312 => {
+        }
+        // RayTracingPositionFetchKHR
+        5336 => {
+        }
+        // RayTracingNV
+        5340 => {
+        }
+        // RayTracingMotionBlurNV
+        5341 => {
+        }
+        // VulkanMemoryModelKHR
+        5345 => {
+        }
+        // VulkanMemoryModelDeviceScopeKHR
+        5346 => {
+        }
+        // PhysicalStorageBufferAddressesEXT
+        5347 => {
+        }
+        // ComputeDerivativeGroupLinearNV
+        5350 => {
+        }
+        // RayTracingProvisionalKHR
+        5353 => {
+        }
+        // CooperativeMatrixNV
+        5357 => {
+        }
+        // FragmentShaderSampleInterlockEXT
+        5363 => {
+        }
+        // FragmentShaderShadingRateInterlockEXT
+        5372 => {
+        }
+        // ShaderSMBuiltinsNV
+        5373 => {
+        }
+        // FragmentShaderPixelInterlockEXT
+        5378 => {
+        }
+        // DemoteToHelperInvocationEXT
+        5379 => {
+        }
+        // DisplacementMicromapNV
+        5380 => {
+        }
+        // RayTracingOpacityMicromapEXT
+        5381 => {
+        }
+        // ShaderInvocationReorderNV
+        5383 => {
+        }
+        // BindlessTextureNV
+        5390 => {
+        }
+        // RayQueryPositionFetchKHR
+        5391 => {
+        }
+        // RayTracingDisplacementMicromapNV
+        5409 => {
+        }
+        // SubgroupShuffleINTEL
+        5568 => {
+        }
+        // SubgroupBufferBlockIOINTEL
+        5569 => {
+        }
+        // SubgroupImageBlockIOINTEL
+        5570 => {
+        }
+        // SubgroupImageMediaBlockIOINTEL
+        5579 => {
+        }
+        // RoundToInfinityINTEL
+        5582 => {
+        }
+        // FloatingPointModeINTEL
+        5583 => {
+        }
+        // IntegerFunctions2INTEL
+        5584 => {
+        }
+        // FunctionPointersINTEL
+        5603 => {
+        }
+        // IndirectReferencesINTEL
+        5604 => {
+        }
+        // AsmINTEL
+        5606 => {
+        }
+        // AtomicFloat32MinMaxEXT
+        5612 => {
+        }
+        // AtomicFloat64MinMaxEXT
+        5613 => {
+        }
+        // AtomicFloat16MinMaxEXT
+        5616 => {
+        }
+        // VectorComputeINTEL
+        5617 => {
+        }
+        // VectorAnyINTEL
+        5619 => {
+        }
+        // ExpectAssumeKHR
+        5629 => {
+        }
+        // SubgroupAvcMotionEstimationINTEL
+        5696 => {
+        }
+        // SubgroupAvcMotionEstimationIntraINTEL
+        5697 => {
+        }
+        // SubgroupAvcMotionEstimationChromaINTEL
+        5698 => {
+        }
+        // VariableLengthArrayINTEL
+        5817 => {
+        }
+        // FunctionFloatControlINTEL
+        5821 => {
+        }
+        // FPGAMemoryAttributesINTEL
+        5824 => {
+        }
+        // FPFastMathModeINTEL
+        5837 => {
+        }
+        // ArbitraryPrecisionIntegersINTEL
+        5844 => {
+        }
+        // ArbitraryPrecisionFloatingPointINTEL
+        5845 => {
+        }
+        // UnstructuredLoopControlsINTEL
+        5886 => {
+        }
+        // FPGALoopControlsINTEL
+        5888 => {
+        }
+        // KernelAttributesINTEL
+        5892 => {
+        }
+        // FPGAKernelAttributesINTEL
+        5897 => {
+        }
+        // FPGAMemoryAccessesINTEL
+        5898 => {
+        }
+        // FPGAClusterAttributesINTEL
+        5904 => {
+        }
+        // LoopFuseINTEL
+        5906 => {
+        }
+        // FPGADSPControlINTEL
+        5908 => {
+        }
+        // MemoryAccessAliasingINTEL
+        5910 => {
+        }
+        // FPGAInvocationPipeliningAttributesINTEL
+        5916 => {
+        }
+        // FPGABufferLocationINTEL
+        5920 => {
+        }
+        // ArbitraryPrecisionFixedPointINTEL
+        5922 => {
+        }
+        // USMStorageClassesINTEL
+        5935 => {
+        }
+        // RuntimeAlignedAttributeINTEL
+        5939 => {
+        }
+        // IOPipesINTEL
+        5943 => {
+        }
+        // BlockingPipesINTEL
+        5945 => {
+        }
+        // FPGARegINTEL
+        5948 => {
+        }
+        // DotProductInputAllKHR
+        6016 => {
+        }
+        // DotProductInput4x8BitKHR
+        6017 => {
+        }
+        // DotProductInput4x8BitPackedKHR
+        6018 => {
+        }
+        // DotProductKHR
+        6019 => {
+        }
+        // RayCullMaskKHR
+        6020 => {
+        }
+        // CooperativeMatrixKHR
+        6022 => {
+        }
+        // BitInstructions
+        6025 => {
+        }
+        // GroupNonUniformRotateKHR
+        6026 => {
+        }
+        // AtomicFloat32AddEXT
+        6033 => {
+        }
+        // AtomicFloat64AddEXT
+        6034 => {
+        }
+        // LongCompositesINTEL
+        6089 => {
+        }
+        // OptNoneINTEL
+        6094 => {
+        }
+        // AtomicFloat16AddEXT
+        6095 => {
+        }
+        // DebugInfoModuleINTEL
+        6114 => {
+        }
+        // BFloat16ConversionINTEL
+        6115 => {
+        }
+        // SplitBarrierINTEL
+        6141 => {
+        }
+        // FPGAClusterAttributesV2INTEL
+        6150 => {
+        }
+        // FPGAKernelAttributesv2INTEL
+        6161 => {
+        }
+        // FPMaxErrorINTEL
+        6169 => {
+        }
+        // FPGALatencyControlINTEL
+        6171 => {
+        }
+        // FPGAArgumentInterfacesINTEL
+        6174 => {
+        }
+        // GlobalVariableHostAccessINTEL
+        6187 => {
+        }
+        // GlobalVariableFPGADecorationsINTEL
+        6189 => {
+        }
+        // GroupUniformArithmeticKHR
+        6400 => {
+        }
+        // CacheControlsINTEL
+        6441 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_RayQueryIntersection(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"RayQueryIntersection", value)?];
+    match value {
+        // RayQueryCandidateIntersectionKHR
+        0 => {
+        }
+        // RayQueryCommittedIntersectionKHR
+        1 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_RayQueryCommittedIntersectionType(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"RayQueryCommittedIntersectionType", value)?];
+    match value {
+        // RayQueryCommittedIntersectionNoneKHR
+        0 => {
+        }
+        // RayQueryCommittedIntersectionTriangleKHR
+        1 => {
+        }
+        // RayQueryCommittedIntersectionGeneratedKHR
+        2 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_RayQueryCandidateIntersectionType(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"RayQueryCandidateIntersectionType", value)?];
+    match value {
+        // RayQueryCandidateIntersectionTriangleKHR
+        0 => {
+        }
+        // RayQueryCandidateIntersectionAABBKHR
+        1 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_PackedVectorFormat(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"PackedVectorFormat", value)?];
+    match value {
+        // PackedVectorFormat4x8BitKHR
+        0 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_CooperativeMatrixOperands(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"CooperativeMatrixOperands", value)?];
+    // NoneKHR
+    if value & 0x0000 != 0 {
+    }
+    // MatrixASignedComponentsKHR
+    if value & 0x0001 != 0 {
+    }
+    // MatrixBSignedComponentsKHR
+    if value & 0x0002 != 0 {
+    }
+    // MatrixCSignedComponentsKHR
+    if value & 0x0004 != 0 {
+    }
+    // MatrixResultSignedComponentsKHR
+    if value & 0x0008 != 0 {
+    }
+    // SaturatingAccumulationKHR
+    if value & 0x0010 != 0 {
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_CooperativeMatrixLayout(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"CooperativeMatrixLayout", value)?];
+    match value {
+        // RowMajorKHR
+        0 => {
+        }
+        // ColumnMajorKHR
+        1 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_CooperativeMatrixUse(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"CooperativeMatrixUse", value)?];
+    match value {
+        // MatrixAKHR
+        0 => {
+        }
+        // MatrixBKHR
+        1 => {
+        }
+        // MatrixAccumulatorKHR
+        2 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_InitializationModeQualifier(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"InitializationModeQualifier", value)?];
+    match value {
+        // InitOnDeviceReprogramINTEL
+        0 => {
+        }
+        // InitOnDeviceResetINTEL
+        1 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_LoadCacheControl(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"LoadCacheControl", value)?];
+    match value {
+        // UncachedINTEL
+        0 => {
+        }
+        // CachedINTEL
+        1 => {
+        }
+        // StreamingINTEL
+        2 => {
+        }
+        // InvalidateAfterReadINTEL
+        3 => {
+        }
+        // ConstCachedINTEL
+        4 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
+#[allow(non_snake_case)]
+#[allow(dead_code)]
+fn print_enum_StoreCacheControl(operands: &mut Operands) -> Result<Vec<String>> {
+    let value = operands.read_u32()?;
+    #[allow(unused_mut)]
+    let mut out = vec![enum_to_str(&"StoreCacheControl", value)?];
+    match value {
+        // UncachedINTEL
+        0 => {
+        }
+        // WriteThroughINTEL
+        1 => {
+        }
+        // WriteBackINTEL
+        2 => {
+        }
+        // StreamingINTEL
+        3 => {
+        }
+        _ => {},
+    }
+    Ok(out)
+}
+
 pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>> {
     let mut out: Vec<String> = Vec::new();
     match opcode {
@@ -73,7 +3648,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpSource
         3 => {
             // SourceLanguage
-            out.push(enum_to_str("SourceLanguage", operands.read_u32()?)?);
+            out.extend(print_enum_SourceLanguage(operands)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef ?
@@ -144,14 +3719,14 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpMemoryModel
         14 => {
             // AddressingModel
-            out.push(enum_to_str("AddressingModel", operands.read_u32()?)?);
+            out.extend(print_enum_AddressingModel(operands)?);
             // MemoryModel
-            out.push(enum_to_str("MemoryModel", operands.read_u32()?)?);
+            out.extend(print_enum_MemoryModel(operands)?);
         }
         // OpEntryPoint
         15 => {
             // ExecutionModel
-            out.push(enum_to_str("ExecutionModel", operands.read_u32()?)?);
+            out.extend(print_enum_ExecutionModel(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // LiteralString
@@ -166,12 +3741,12 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
             // ExecutionMode
-            out.push(enum_to_str("ExecutionMode", operands.read_u32()?)?);
+            out.extend(print_enum_ExecutionMode(operands)?);
         }
         // OpCapability
         17 => {
             // Capability
-            out.push(enum_to_str("Capability", operands.read_u32()?)?);
+            out.extend(print_enum_Capability(operands)?);
         }
         // OpTypeVoid
         19 => {
@@ -210,7 +3785,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
             // Dim
-            out.push(enum_to_str("Dim", operands.read_u32()?)?);
+            out.extend(print_enum_Dim(operands)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // LiteralInteger
@@ -220,10 +3795,10 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // LiteralInteger
             out.push(print_u32(operands)?);
             // ImageFormat
-            out.push(enum_to_str("ImageFormat", operands.read_u32()?)?);
+            out.extend(print_enum_ImageFormat(operands)?);
             // AccessQualifier ?
             if !operands.is_empty() {
-                out.push(enum_to_str("AccessQualifier", operands.read_u32()?)?);
+                out.extend(print_enum_AccessQualifier(operands)?);
             }
         }
         // OpTypeSampler
@@ -261,7 +3836,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpTypePointer
         32 => {
             // StorageClass
-            out.push(enum_to_str("StorageClass", operands.read_u32()?)?);
+            out.extend(print_enum_StorageClass(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -289,14 +3864,14 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpTypePipe
         38 => {
             // AccessQualifier
-            out.push(enum_to_str("AccessQualifier", operands.read_u32()?)?);
+            out.extend(print_enum_AccessQualifier(operands)?);
         }
         // OpTypeForwardPointer
         39 => {
             // IdRef
             out.push(print_id(operands)?);
             // StorageClass
-            out.push(enum_to_str("StorageClass", operands.read_u32()?)?);
+            out.extend(print_enum_StorageClass(operands)?);
         }
         // OpConstantTrue
         41 => {
@@ -319,11 +3894,11 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpConstantSampler
         45 => {
             // SamplerAddressingMode
-            out.push(enum_to_str("SamplerAddressingMode", operands.read_u32()?)?);
+            out.extend(print_enum_SamplerAddressingMode(operands)?);
             // LiteralInteger
             out.push(print_u32(operands)?);
             // SamplerFilterMode
-            out.push(enum_to_str("SamplerFilterMode", operands.read_u32()?)?);
+            out.extend(print_enum_SamplerFilterMode(operands)?);
         }
         // OpConstantNull
         46 => {
@@ -354,7 +3929,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpFunction
         54 => {
             // FunctionControl
-            out.push(enum_to_str("FunctionControl", operands.read_u32()?)?);
+            out.extend(print_enum_FunctionControl(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -376,7 +3951,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpVariable
         59 => {
             // StorageClass
-            out.push(enum_to_str("StorageClass", operands.read_u32()?)?);
+            out.extend(print_enum_StorageClass(operands)?);
             // IdRef ?
             if !operands.is_empty() {
                 out.push(print_id(operands)?);
@@ -397,7 +3972,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.push(enum_to_str("MemoryAccess", operands.read_u32()?)?);
+                out.extend(print_enum_MemoryAccess(operands)?);
             }
         }
         // OpStore
@@ -408,7 +3983,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.push(enum_to_str("MemoryAccess", operands.read_u32()?)?);
+                out.extend(print_enum_MemoryAccess(operands)?);
             }
         }
         // OpCopyMemory
@@ -419,11 +3994,11 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.push(enum_to_str("MemoryAccess", operands.read_u32()?)?);
+                out.extend(print_enum_MemoryAccess(operands)?);
             }
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.push(enum_to_str("MemoryAccess", operands.read_u32()?)?);
+                out.extend(print_enum_MemoryAccess(operands)?);
             }
         }
         // OpCopyMemorySized
@@ -436,11 +4011,11 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.push(enum_to_str("MemoryAccess", operands.read_u32()?)?);
+                out.extend(print_enum_MemoryAccess(operands)?);
             }
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.push(enum_to_str("MemoryAccess", operands.read_u32()?)?);
+                out.extend(print_enum_MemoryAccess(operands)?);
             }
         }
         // OpAccessChain
@@ -500,7 +4075,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
             // Decoration
-            out.push(enum_to_str("Decoration", operands.read_u32()?)?);
+            out.extend(print_enum_Decoration(operands)?);
         }
         // OpMemberDecorate
         72 => {
@@ -509,7 +4084,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // LiteralInteger
             out.push(print_u32(operands)?);
             // Decoration
-            out.push(enum_to_str("Decoration", operands.read_u32()?)?);
+            out.extend(print_enum_Decoration(operands)?);
         }
         // OpDecorationGroup
         73 => {
@@ -611,7 +4186,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpImageSampleExplicitLod
@@ -621,7 +4196,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
             // ImageOperands
-            out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+            out.extend(print_enum_ImageOperands(operands)?);
         }
         // OpImageSampleDrefImplicitLod
         89 => {
@@ -633,7 +4208,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpImageSampleDrefExplicitLod
@@ -645,7 +4220,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
             // ImageOperands
-            out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+            out.extend(print_enum_ImageOperands(operands)?);
         }
         // OpImageSampleProjImplicitLod
         91 => {
@@ -655,7 +4230,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpImageSampleProjExplicitLod
@@ -665,7 +4240,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
             // ImageOperands
-            out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+            out.extend(print_enum_ImageOperands(operands)?);
         }
         // OpImageSampleProjDrefImplicitLod
         93 => {
@@ -677,7 +4252,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpImageSampleProjDrefExplicitLod
@@ -689,7 +4264,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
             // ImageOperands
-            out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+            out.extend(print_enum_ImageOperands(operands)?);
         }
         // OpImageFetch
         95 => {
@@ -699,7 +4274,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpImageGather
@@ -712,7 +4287,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpImageDrefGather
@@ -725,7 +4300,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpImageRead
@@ -736,7 +4311,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpImageWrite
@@ -749,7 +4324,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpImage
@@ -871,7 +4446,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
             // StorageClass
-            out.push(enum_to_str("StorageClass", operands.read_u32()?)?);
+            out.extend(print_enum_StorageClass(operands)?);
         }
         // OpBitcast
         124 => {
@@ -1670,14 +5245,14 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
             // LoopControl
-            out.push(enum_to_str("LoopControl", operands.read_u32()?)?);
+            out.extend(print_enum_LoopControl(operands)?);
         }
         // OpSelectionMerge
         247 => {
             // IdRef
             out.push(print_id(operands)?);
             // SelectionControl
-            out.push(enum_to_str("SelectionControl", operands.read_u32()?)?);
+            out.extend(print_enum_SelectionControl(operands)?);
         }
         // OpLabel
         248 => {
@@ -1791,7 +5366,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -1800,7 +5375,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -1809,7 +5384,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -1818,7 +5393,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -1827,7 +5402,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -1836,7 +5411,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -1845,7 +5420,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -1854,7 +5429,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -2169,7 +5744,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpImageSparseSampleExplicitLod
@@ -2179,7 +5754,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
             // ImageOperands
-            out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+            out.extend(print_enum_ImageOperands(operands)?);
         }
         // OpImageSparseSampleDrefImplicitLod
         307 => {
@@ -2191,7 +5766,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpImageSparseSampleDrefExplicitLod
@@ -2203,7 +5778,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
             // ImageOperands
-            out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+            out.extend(print_enum_ImageOperands(operands)?);
         }
         // OpImageSparseSampleProjImplicitLod
         309 => {
@@ -2213,7 +5788,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpImageSparseSampleProjExplicitLod
@@ -2223,7 +5798,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
             // ImageOperands
-            out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+            out.extend(print_enum_ImageOperands(operands)?);
         }
         // OpImageSparseSampleProjDrefImplicitLod
         311 => {
@@ -2235,7 +5810,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpImageSparseSampleProjDrefExplicitLod
@@ -2247,7 +5822,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
             // ImageOperands
-            out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+            out.extend(print_enum_ImageOperands(operands)?);
         }
         // OpImageSparseFetch
         313 => {
@@ -2257,7 +5832,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpImageSparseGather
@@ -2270,7 +5845,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpImageSparseDrefGather
@@ -2283,7 +5858,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpImageSparseTexelsResident
@@ -2320,7 +5895,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpSizeOf
@@ -2396,14 +5971,14 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
             // ExecutionMode
-            out.push(enum_to_str("ExecutionMode", operands.read_u32()?)?);
+            out.extend(print_enum_ExecutionMode(operands)?);
         }
         // OpDecorateId
         332 => {
             // IdRef
             out.push(print_id(operands)?);
             // Decoration
-            out.push(enum_to_str("Decoration", operands.read_u32()?)?);
+            out.extend(print_enum_Decoration(operands)?);
         }
         // OpGroupNonUniformElect
         333 => {
@@ -2475,7 +6050,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -2534,7 +6109,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // IdRef ?
@@ -2547,7 +6122,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // IdRef ?
@@ -2560,7 +6135,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // IdRef ?
@@ -2573,7 +6148,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // IdRef ?
@@ -2586,7 +6161,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // IdRef ?
@@ -2599,7 +6174,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // IdRef ?
@@ -2612,7 +6187,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // IdRef ?
@@ -2625,7 +6200,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // IdRef ?
@@ -2638,7 +6213,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // IdRef ?
@@ -2651,7 +6226,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // IdRef ?
@@ -2664,7 +6239,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // IdRef ?
@@ -2677,7 +6252,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // IdRef ?
@@ -2690,7 +6265,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // IdRef ?
@@ -2703,7 +6278,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // IdRef ?
@@ -2716,7 +6291,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // IdRef ?
@@ -2729,7 +6304,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
             // IdRef ?
@@ -2903,7 +6478,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // PackedVectorFormat ?
             if !operands.is_empty() {
-                out.push(enum_to_str("PackedVectorFormat", operands.read_u32()?)?);
+                out.extend(print_enum_PackedVectorFormat(operands)?);
             }
         }
         // OpUDotKHR
@@ -2914,7 +6489,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // PackedVectorFormat ?
             if !operands.is_empty() {
-                out.push(enum_to_str("PackedVectorFormat", operands.read_u32()?)?);
+                out.extend(print_enum_PackedVectorFormat(operands)?);
             }
         }
         // OpSUDotKHR
@@ -2925,7 +6500,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // PackedVectorFormat ?
             if !operands.is_empty() {
-                out.push(enum_to_str("PackedVectorFormat", operands.read_u32()?)?);
+                out.extend(print_enum_PackedVectorFormat(operands)?);
             }
         }
         // OpSDotAccSatKHR
@@ -2938,7 +6513,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // PackedVectorFormat ?
             if !operands.is_empty() {
-                out.push(enum_to_str("PackedVectorFormat", operands.read_u32()?)?);
+                out.extend(print_enum_PackedVectorFormat(operands)?);
             }
         }
         // OpUDotAccSatKHR
@@ -2951,7 +6526,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // PackedVectorFormat ?
             if !operands.is_empty() {
-                out.push(enum_to_str("PackedVectorFormat", operands.read_u32()?)?);
+                out.extend(print_enum_PackedVectorFormat(operands)?);
             }
         }
         // OpSUDotAccSatKHR
@@ -2964,7 +6539,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // PackedVectorFormat ?
             if !operands.is_empty() {
-                out.push(enum_to_str("PackedVectorFormat", operands.read_u32()?)?);
+                out.extend(print_enum_PackedVectorFormat(operands)?);
             }
         }
         // OpTypeCooperativeMatrixKHR
@@ -2992,7 +6567,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             }
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.push(enum_to_str("MemoryAccess", operands.read_u32()?)?);
+                out.extend(print_enum_MemoryAccess(operands)?);
             }
         }
         // OpCooperativeMatrixStoreKHR
@@ -3009,7 +6584,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             }
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.push(enum_to_str("MemoryAccess", operands.read_u32()?)?);
+                out.extend(print_enum_MemoryAccess(operands)?);
             }
         }
         // OpCooperativeMatrixMulAddKHR
@@ -3022,7 +6597,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // CooperativeMatrixOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("CooperativeMatrixOperands", operands.read_u32()?)?);
+                out.extend(print_enum_CooperativeMatrixOperands(operands)?);
             }
         }
         // OpCooperativeMatrixLengthKHR
@@ -3130,7 +6705,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -3139,7 +6714,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -3148,7 +6723,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -3157,7 +6732,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -3166,7 +6741,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -3175,7 +6750,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -3184,7 +6759,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -3193,7 +6768,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -3592,7 +7167,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // ImageOperands ?
             if !operands.is_empty() {
-                out.push(enum_to_str("ImageOperands", operands.read_u32()?)?);
+                out.extend(print_enum_ImageOperands(operands)?);
             }
         }
         // OpEmitMeshTasksEXT
@@ -3783,7 +7358,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.push(enum_to_str("MemoryAccess", operands.read_u32()?)?);
+                out.extend(print_enum_MemoryAccess(operands)?);
             }
         }
         // OpCooperativeMatrixStoreNV
@@ -3798,7 +7373,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             out.push(print_id(operands)?);
             // MemoryAccess ?
             if !operands.is_empty() {
-                out.push(enum_to_str("MemoryAccess", operands.read_u32()?)?);
+                out.extend(print_enum_MemoryAccess(operands)?);
             }
         }
         // OpCooperativeMatrixMulAddNV
@@ -4116,7 +7691,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdRef
             out.push(print_id(operands)?);
             // Decoration
-            out.push(enum_to_str("Decoration", operands.read_u32()?)?);
+            out.extend(print_enum_Decoration(operands)?);
         }
         // OpMemberDecorateStringGOOGLE
         5633 => {
@@ -4125,7 +7700,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // LiteralInteger
             out.push(print_u32(operands)?);
             // Decoration
-            out.push(enum_to_str("Decoration", operands.read_u32()?)?);
+            out.extend(print_enum_Decoration(operands)?);
         }
         // OpVmeImageINTEL
         5699 => {
@@ -5958,7 +9533,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
         // OpTypeBufferSurfaceINTEL
         6086 => {
             // AccessQualifier
-            out.push(enum_to_str("AccessQualifier", operands.read_u32()?)?);
+            out.extend(print_enum_AccessQualifier(operands)?);
         }
         // OpTypeStructContinuedINTEL
         6090 => {
@@ -6021,7 +9596,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -6030,7 +9605,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -6039,7 +9614,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -6048,7 +9623,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -6057,7 +9632,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -6066,7 +9641,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -6075,7 +9650,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }
@@ -6084,7 +9659,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands) -> Result<Vec<String>
             // IdScope
             out.push(print_id(operands)?);
             // GroupOperation
-            out.push(enum_to_str("GroupOperation", operands.read_u32()?)?);
+            out.extend(print_enum_GroupOperation(operands)?);
             // IdRef
             out.push(print_id(operands)?);
         }

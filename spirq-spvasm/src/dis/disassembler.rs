@@ -1,5 +1,5 @@
 use anyhow::Result;
-use spirq_core::parse::{Instr, SpirvBinary, Instrs};
+use spirq_core::{parse::{Instr, SpirvBinary, Instrs, Operands}, spirv::Op};
 use crate::generated;
 
 pub struct Disassembler {
@@ -17,8 +17,8 @@ impl Disassembler {
         return self
     }
 
-    fn print_operands(&self, instr: &Instr) -> Result<String> {
-        let operands = generated::print_operand(instr.opcode(), &mut instr.operands())?;
+    fn print_operands(&self, opcode: u32, operands: &mut Operands<'_>) -> Result<String> {
+        let operands = generated::print_operand(opcode, operands)?;
         let out = operands.join(" ");
         Ok(out)
     }
@@ -45,12 +45,17 @@ impl Disassembler {
         if let Some(result_id) = result_id {
             out = format!("%{} = ", result_id);
         }
-        out.push_str(&self.print_opcode(opcode).unwrap());
+        out.push_str(&self.print_opcode(opcode)?);
         if let Some(result_type_id) = result_type_id {
             out.push_str(&format!(" %{}", result_type_id));
         }
-        out.push_str(&self.print_operands(instr)?);
+        let operands_ = self.print_operands(opcode, &mut operands)?;
+        if !operands_.is_empty() {
+            out.push(' ');
+            out.push_str(&operands_);
+        }
 
+        dbg!(&out);
         Ok(out)
     }
     fn print_lines(&self, instrs: &mut Instrs) -> Result<Vec<String>> {
