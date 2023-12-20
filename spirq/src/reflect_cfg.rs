@@ -62,14 +62,14 @@ impl ReflectConfig {
 
     /// Reflect the SPIR-V binary and extract all entry points.
     pub fn reflect(&self) -> Result<Vec<EntryPoint>> {
-        let mut itm = ReflectIntermediate::new(self);
+        let mut itm = ReflectIntermediate::new(self)?;
         let inspector = FunctionInspector::new();
         reflect(&mut itm, inspector)
     }
     /// Reflect the SPIR-V binary and extract all entry points with an inspector
     /// for customized reflection subroutines.
     pub fn reflect_inspect<I: Inspector>(&self, inspector: &mut I) -> Result<Vec<EntryPoint>> {
-        let mut itm = ReflectIntermediate::new(self);
+        let mut itm = ReflectIntermediate::new(self)?;
         let mut func_inspector = FunctionInspector::new();
         reflect(&mut itm, func_inspector.chain(inspector))
     }

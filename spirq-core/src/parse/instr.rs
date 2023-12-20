@@ -53,6 +53,14 @@ impl<'a> Instrs<'a> {
         self.load_next()?;
         return Ok(last_cache);
     }
+    pub fn next_non_nop(&mut self) -> Result<Option<&'a Instr>> {
+        while let Some(instr) = self.next()? {
+            if instr.opcode() != Op::Nop as u32 {
+                return Ok(Some(instr));
+            }
+        }
+        Ok(None)
+    }
 }
 
 pub struct Instr {
