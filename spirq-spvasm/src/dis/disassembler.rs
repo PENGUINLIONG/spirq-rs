@@ -121,8 +121,16 @@ impl Disassembler {
                 let major_version = header.version >> 16;
                 let minor_version = (header.version >> 8) & 0xff;
                 out.push(format!("; Version: {}.{}", major_version, minor_version));
-                out.push(format!("; Generator: {:x}", header.generator));
-                out.push(format!("; Bound: {:x}", header.bound));
+                // FIXME: (penguinliong) This is a hack to match the spirv-dis
+                // output.
+                let generator = header.generator >> 16;
+                let generator_version = header.generator & 0xffff;
+                if generator == 8 {
+                    out.push(format!("; Generator: Khronos Glslang Reference Front End; {}", generator_version));
+                } else {
+                    out.push(format!("; Generator: {}; {}", generator, generator_version));
+                }
+                out.push(format!("; Bound: {}", header.bound));
                 out.push(format!("; Schema: {:x}", header.schema));
             }
         }

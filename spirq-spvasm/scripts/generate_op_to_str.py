@@ -8,8 +8,16 @@ for instr in j["instructions"]:
     opname = instr["opname"]
     opcode = instr["opcode"]
 
-    assert opname not in name2op
-    name2op[opname] = opcode
+    # Third party extension names should be suppressed so that they don't show
+    # up when disassembling.
+    is_khr_op = ("extensions" not in instr) or (
+        opname.endswith("KHR") or opname.endswith("EXT")
+    )
+    is_official_ext = ("extensions" not in instr) or any(
+        x.startswith("SPV_KHR") or x.startswith("SPV_EXT") for x in instr["extensions"]
+    )
+    if is_khr_op and is_official_ext:
+        name2op[opname] = opcode
 
 out = []
 
