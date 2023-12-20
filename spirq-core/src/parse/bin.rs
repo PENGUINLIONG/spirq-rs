@@ -1,14 +1,45 @@
 use anyhow::Result;
+use spirv::{MAJOR_VERSION, MINOR_VERSION};
 use std::{convert::TryInto, iter::FromIterator};
 
-use super::Instrs;
+use super::{Instrs, Instruction};
 
+#[derive(Debug, Clone)]
 pub struct SpirvHeader {
     pub magic: u32,
     pub version: u32,
     pub generator: u32,
     pub bound: u32,
     pub schema: u32,
+}
+impl Default for SpirvHeader {
+    fn default() -> Self {
+        SpirvHeader {
+            magic: 0x07230203,
+            version: ((MAJOR_VERSION as u32) << 16) | ((MINOR_VERSION as u32) << 8),
+            generator: 0,
+            bound: 0,
+            schema: 0,
+        }
+    }
+}
+impl SpirvHeader {
+    pub fn new(version: u32, generator: u32) -> Self {
+        SpirvHeader {
+            version,
+            generator,
+            ..Default::default()
+        }
+    }
+    pub fn words(&self) -> [u32; 5] {
+        [
+            self.magic,
+            self.version,
+            self.generator,
+            self.bound,
+            self.schema,
+        ]
+    }
 }
 
 /// SPIR-V program binary.

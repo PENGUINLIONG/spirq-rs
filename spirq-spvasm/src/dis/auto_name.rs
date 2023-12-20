@@ -119,7 +119,9 @@ impl AutoNamer {
         &mut self,
         itm: &ReflectIntermediate,
     ) -> Result<()> {
-        for (id, ty) in itm.ty_reg.iter() {
+        let mut tys = itm.ty_reg.iter().collect::<Vec<_>>();
+        tys.sort_by_key(|(id, _)| *id);
+        for (id, ty) in tys {
             if let Some(name) = self.make_ty_name(ty) {
                 self.assign_name(*id, name);
                 self.cache.entry(ty.clone()).or_insert(*id);

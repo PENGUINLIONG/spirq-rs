@@ -1,22 +1,25 @@
 use std::collections::{HashMap, HashSet};
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Result, Ok};
 use num_traits::FromPrimitive;
-use spirq_core::{spirv::Op, parse::InstructionBuilder};
+use spirq_core::{spirv::Op, parse::{InstructionBuilder, bin::SpirvHeader, SpirvBinary}};
 use super::tokenizer::{Token, Tokenizer, Lit};
 use crate::generated;
 
 
+#[derive(Debug, Clone)]
 enum IdRef {
     Name(String),
     Id(u32),
 }
+#[derive(Debug, Clone)]
 enum Operand {
     IdRef(IdRef),
     Literal(Lit),
     Ident(String),
 }
 
+#[derive(Debug, Clone)]
 struct Instruction {
     result_id: Option<IdRef>,
     opcode: u32,
@@ -28,12 +31,27 @@ struct TokenStream<'a> {
     cache: Option<Token>,
 }
 impl<'a> TokenStream<'a> {
+    fn new(tokenizer: Tokenizer<'a>) -> Result<Self> {
+        let mut out = Self {
+            tokenizer,
+            cache: None,
+        };
+        out.load_next()?;
+        Ok(out)
+    }
+
+    fn load_next(&mut self) -> Result<()> {
+        self.cache = self.tokenizer.next().transpose()?;
+        Ok(())
+    }
+
     fn peek(&mut self) -> Option<&Token> {
         self.cache.as_ref()
     }
     fn next(&mut self) -> Result<Option<Token>> {
-        self.cache = self.tokenizer.next().transpose()?;
-        self.tokenizer.next().transpose()
+        let last_cache = self.cache.take();
+        self.load_next()?;
+        Ok(last_cache)
     }
 }
 
@@ -122,10 +140,15 @@ impl Assembler {
         let opcode = self.parse_opcode(s)?;
         let mut operands = Vec::new();
 
-        while let Some(token) = s.next()? {
+        while let Some(token) = s.peek() {
             match token {
-                Token::Comment(_) => {},
-                Token::NewLine => break,
+                Token::Comment(_) => {
+                    s.next()?;
+                },
+                Token::NewLine => {
+                    s.next()?;
+                    break;
+                },
                 _ => {
                     let operand = self.parse_operand(s)?;
                     operands.push(operand);
@@ -144,8 +167,12 @@ impl Assembler {
     fn parse_instr(&self, s: &mut TokenStream) -> Result<Option<Instruction>> {
         while let Some(token) = s.peek() {
             match token {
-                Token::Comment(_) => {}
-                Token::NewLine => {},
+                Token::Comment(_) => {
+                    s.next()?;
+                }
+                Token::NewLine => {
+                    s.next()?;
+                },
                 Token::Ident(_) => {
                     let instr = self.parse_instr_without_result_id(s)?;
                     return Ok(Some(instr));
@@ -172,10 +199,7 @@ impl Assembler {
 
     fn parse(&self, input: &str) -> Result<Vec<Instruction>> {
         let tokenizer = Tokenizer::new(input);
-        let mut s = TokenStream {
-            tokenizer,
-            cache: None,
-        };
+        let mut s = TokenStream::new(tokenizer)?;
         self.parse_instrs(&mut s)
     }
 
@@ -209,7 +233,7 @@ impl Assembler {
         Ok(out)
     }
 
-    pub fn assemble(&mut self, input: &str) -> Result<Vec<spirq_core::parse::Instruction>> {
+    pub fn assemble(&mut self, input: &str, header: SpirvHeader) -> Result<SpirvBinary> {
         let mut instrs = self.parse(input)?;
 
         // Transform name refs to id refs.
@@ -229,7 +253,8 @@ impl Assembler {
             }
         }
 
-        let mut out = Vec::new();
+        let mut buf = Vec::new();
+        let mut bound = 0;
         for instr in instrs {
             let opcode = Op::from_u32(instr.opcode)
                 .ok_or_else(|| anyhow!("unknown opcode {}", instr.opcode))?;
@@ -266,6 +291,7 @@ impl Assembler {
                     Operand::IdRef(IdRef::Name(_)) => unreachable!(),
                     Operand::IdRef(IdRef::Id(id)) => {
                         builder = builder.push(*id);
+                        bound = bound.max(*id + 1);
                     }
                     Operand::Literal(lit) => {
                         match lit {
@@ -292,8 +318,7 @@ impl Assembler {
                                 builder = builder.push(u);
                             },
                             Lit::String(s) => {
-                                let id = self.acquire_id(&s);
-                                builder = builder.push(id);
+                                builder = builder.push_str(&s);
                             },
                         }
                     }
@@ -305,8 +330,20 @@ impl Assembler {
                 }
             }
 
-            out.push(builder.build());
+            let instr = builder.build();
+            buf.extend_from_slice(instr.as_ref());
         }
+
+        let mut spv = vec![
+            0x07230203, // Magic number
+            header.version, // Version
+            header.generator, // Generator
+            bound, // Bound
+            0, // Reserved word
+        ];
+        spv.extend(buf);
+
+        let out = SpirvBinary::from(spv);
         Ok(out)
     }
 }

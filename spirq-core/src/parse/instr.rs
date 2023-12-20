@@ -126,6 +126,11 @@ impl From<&[u32]> for Instruction {
         Instruction::from(x.to_owned())
     }
 }
+impl AsRef<[u32]> for Instruction {
+    fn as_ref(&self) -> &[u32] {
+        &self.inner
+    }
+}
 impl Borrow<Instr> for Instruction {
     fn borrow(&self) -> &Instr {
         Instr::new(self.inner.as_ref()).unwrap()

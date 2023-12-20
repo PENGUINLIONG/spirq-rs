@@ -154,21 +154,21 @@ mod test {
     #[test]
     fn test_simple() {
         let spv = [
-            0x07230203, 0x00010000, 0x00000008, 0x0000001, 0x00000000
+            0x07230203, 0x00010000, 0x00000000, 0x0000001, 0x00000000
         ].iter().map(|x| *x as u32).collect::<Vec<_>>();
         let spv = SpirvBinary::from(spv);
         let out = Disassembler::new().disassemble(&spv).unwrap();
-        assert_eq!(out, "; SPIR-V\n; Version: 1.0\n; Generator: 8\n; Bound: 1\n; Schema: 0");
+        assert_eq!(out, "; SPIR-V\n; Version: 1.0\n; Generator: 0; 0\n; Bound: 1\n; Schema: 0");
     }
 
     #[test]
     fn test_nop() {
         let spv = [
-            0x07230203, 0x00010000, 0x00000008, 0x0000001, 0x00000000,
+            0x07230203, 0x00010000, 0x00000000, 0x0000001, 0x00000000,
             0x00010000
         ].iter().map(|x| *x as u32).collect::<Vec<_>>();
         let spv = SpirvBinary::from(spv);
         let out = Disassembler::new().disassemble(&spv).unwrap();
-        assert_eq!(out, "; SPIR-V\n; Version: 1.0\n; Generator: 8\n; Bound: 1\n; Schema: 0\nOpNop");
+        assert_eq!(out, "; SPIR-V\n; Version: 1.0\n; Generator: 0; 0\n; Bound: 1\n; Schema: 0\nOpNop");
     }
 }
