@@ -306,7 +306,6 @@ impl Disassembler {
         };
 
         let mut instrs = self.print(spv, &itm, id_names)?;
-        instrs.push(String::new()); // Trailing newline.
 
         if self.indent {
             let max_eq_pos = instrs
