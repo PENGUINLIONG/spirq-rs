@@ -1,10 +1,12 @@
 ; SPIR-V
 ; Version: 1.5
 ; Generator: Khronos Glslang Reference Front End; 11
-; Bound: 399
+; Bound: 406
 ; Schema: 0
                OpCapability Shader
+               OpCapability Float16
                OpCapability Float64
+               OpCapability Int64
                OpCapability Int16
                OpCapability StorageImageMultisample
                OpCapability ImageCubeArray
@@ -906,11 +908,18 @@
       %short = OpTypeInt 16 1
     %short_1 = OpConstant %short 1
       %int_1 = OpConstant %int 1
+       %long = OpTypeInt 64 1
+     %long_1 = OpConstant %long 1
       %uchar = OpTypeInt 8 0
     %uchar_1 = OpConstant %uchar 1
      %ushort = OpTypeInt 16 0
    %ushort_1 = OpConstant %ushort 1
+      %ulong = OpTypeInt 64 0
+    %ulong_1 = OpConstant %ulong 1
+       %half = OpTypeFloat 16
+%half_0x0p_0 = OpConstant %half 0x0p+0
     %float_1 = OpConstant %float 1
+   %double_1 = OpConstant %double 1
        %main = OpFunction %void None %3
           %5 = OpLabel
          %10 = OpRayQueryProceedKHR %bool %ray_query

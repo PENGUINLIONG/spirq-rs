@@ -142,6 +142,14 @@ impl Deref for Instruction {
         self.borrow()
     }
 }
+impl Instruction {
+    pub fn builder(op: Op) -> InstructionBuilder {
+        InstructionBuilder::new(op)
+    }
+    pub fn into_words(self) -> Vec<u32> {
+        self.inner
+    }
+}
 
 pub struct InstructionBuilder {
     inner: Vec<u32>,

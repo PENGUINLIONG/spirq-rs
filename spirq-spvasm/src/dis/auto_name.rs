@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use anyhow::Result;
 use half::f16;
 
-use spirq::{ReflectConfig, reflect::ReflectIntermediate};
-use spirq_core::{parse::SpirvBinary, ty::{Type, ScalarType, VectorType, MatrixType, PointerType, ArrayType, StructType}, constant::ConstantValue};
+use spirq::reflect::ReflectIntermediate;
+use spirq_core::{ty::{Type, ScalarType, VectorType, MatrixType, PointerType, ArrayType, StructType}, constant::ConstantValue};
 
 fn sanitize_name(name: &str) -> String {
     name.chars()
