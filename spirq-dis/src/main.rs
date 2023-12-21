@@ -21,6 +21,9 @@ struct Args {
     )]
     out_path: Option<String>,
 
+    #[arg(long, help = "Don't indent instructions.")]
+    no_indent: bool,
+
     #[arg(long, help = "Don't output the header as leading comments.")]
     no_header: bool,
 
@@ -46,6 +49,7 @@ fn main() {
 
     let dis = Disassembler::new()
         .print_header(!args.no_header)
+        .indent(!args.no_indent)
         .name_ids(!args.raw_id)
         .name_type_ids(!args.raw_id)
         .name_const_ids(!args.raw_id);
