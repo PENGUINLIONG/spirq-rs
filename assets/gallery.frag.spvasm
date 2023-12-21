@@ -917,7 +917,7 @@
       %ulong = OpTypeInt 64 0
     %ulong_1 = OpConstant %ulong 1
        %half = OpTypeFloat 16
-%half_0x0p_0 = OpConstant %half 0x0p+0
+%half_0x1pn2 = OpConstant %half 0x1p-2
     %float_1 = OpConstant %float 1
    %double_1 = OpConstant %double 1
        %main = OpFunction %void None %3

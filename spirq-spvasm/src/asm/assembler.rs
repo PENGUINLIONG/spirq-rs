@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet, hash_map::Entry};
 
-use anyhow::{anyhow, bail, Result, Ok};
+use anyhow::{anyhow, bail, Result};
 use half::f16;
 use num_traits::FromPrimitive;
 use spirq_core::{spirv::Op, parse::{InstructionBuilder, bin::SpirvHeader, SpirvBinary}, ty::ScalarType};
@@ -327,15 +327,14 @@ impl Assembler {
             _ => bail!("OpConstant expected result id"),
         };
 
-        dbg!(result_type_id, &self.scalar_tys);
         let scalar_ty = self.scalar_tys.get(&result_type_id)
             .ok_or_else(|| anyhow!("OpConstant result type id not found"))?;
 
         fn lit2int(lit: &Lit) -> Result<i64> {
             match lit {
                 Lit::Int(i) => Ok(*i),
-                Lit::Float(f, exponent_bias) => {
-                    let f = (*f as f32) * 2.0f32.powi(*exponent_bias);
+                Lit::Float(f) => {
+                    let f = *f as f32;
                     Ok(f as i64)
                 },
                 Lit::String(_) => bail!("OpConstant expected a int or float literal"),
@@ -344,8 +343,8 @@ impl Assembler {
         fn lit2float(lit: &Lit) -> Result<f64> {
             match lit {
                 Lit::Int(i) => Ok(*i as f64),
-                Lit::Float(f, exponent_bias) => {
-                    let f = (*f as f32) * 2.0f32.powi(*exponent_bias);
+                Lit::Float(f) => {
+                    let f = *f as f32;
                     Ok(f as f64)
                 },
                 Lit::String(_) => bail!("OpConstant expected a int or float literal"),
@@ -532,9 +531,9 @@ impl Assembler {
                                 }
                             }
                         },
-                        Lit::Float(f, exponent_bias) => {
+                        Lit::Float(f) => {
                             // First cast to f32.
-                            let f = (*f as f32) * 2.0f32.powi(*exponent_bias);
+                            let f = *f as f32;
                             // Then bit cast to u32.
                             let u = f.to_bits();
                             builder = builder.push(u);

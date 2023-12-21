@@ -9,7 +9,7 @@ pub enum Lit {
     Int(i64),
     // Base numeric and the exponent bias. The effect of the bias depends on the
     // actual floating-point type it casts to.
-    Float(f64, i32),
+    Float(f64),
     String(String),
 }
 
@@ -101,7 +101,7 @@ impl<'a> Tokenizer<'a> {
                         }
                     }
                 }
-                Lit::Float(f64::from_str(buf.as_str())?, 0)
+                Lit::Float(f64::from_str(buf.as_str())?)
             },
             _ => {
                 // Integer.
@@ -112,66 +112,79 @@ impl<'a> Tokenizer<'a> {
     }
 
     pub fn tokenize_numeric_literal_hexadecimal(&mut self) -> Result<Lit> {
-        let mut buf = String::new();
+        let mut int_buf = String::new();
         while let Some(c) = self.chars.peek() {
             if c.is_ascii_hexdigit() {
-                buf.push(*c);
+                int_buf.push(*c);
                 self.chars.next();
             } else {
                 break;
             }
         }
-        // In form of `0x1p0`.
-        let lit = if Some(&'.') == self.chars.peek() && buf == "1" {
-            // Float.
-            buf.push('.');
+
+        // Fraction without the dot.
+        let mut fraction_buf = String::new();
+        if (int_buf == "0" || int_buf == "1") && (self.chars.peek() == Some(&'.')) {
             self.chars.next(); // Consume the '.'.
 
-            // In form of `0x1.2p0`.
             while let Some(c) = self.chars.peek() {
-                if c.is_ascii_digit() {
-                    buf.push(*c);
+                if c.is_ascii_hexdigit() {
+                    fraction_buf.push(*c);
                     self.chars.next();
                 } else {
                     break;
                 }
             }
+        }
 
-            let mantissa = f64::from_str(buf.as_str())?;
-            let mut exponent = 0;
+        let mut exponent_buf = String::new();
+        println!("peek: {:?}", self.chars.peek());
+        if let Some('p') = self.chars.peek().map(|x| x.to_ascii_lowercase()) {
+            self.chars.next(); // Consume the 'p' or 'P'.
 
-            if let Some(c) = self.chars.peek() {
-                if c == &'p' || c == &'P' {
-                    self.chars.next(); // Consume the 'p' or 'P'.
-
-                    // Float with exponent.
-                    let mut exponent_buf = String::new();
-                    match self.chars.peek() {
-                        Some('+') => {
-                            self.chars.next();
-                        },
-                        Some('-') => {
-                            exponent_buf.push('-');
-                            self.chars.next();
-                        },
-                        _ => {},
-                    }
-                    while let Some(c) = self.chars.peek() {
-                        if c.is_ascii_digit() {
-                            exponent_buf.push(*c);
-                            self.chars.next();
-                        } else {
-                            break;
-                        }
-                    }
-                    exponent = i32::from_str(&exponent_buf)?;
+            // Float with exponent.
+            match self.chars.peek() {
+                Some('+') => {
+                    self.chars.next();
+                },
+                Some('-') => {
+                    exponent_buf.push('-');
+                    self.chars.next();
+                },
+                _ => {},
+            }
+            while let Some(c) = self.chars.peek() {
+                if c.is_ascii_digit() {
+                    exponent_buf.push(*c);
+                    self.chars.next();
+                } else {
+                    break;
                 }
             }
+        }
 
-            Lit::Float(mantissa, exponent)
+        let is_hexadecimal_float = fraction_buf.len() > 0 || exponent_buf.len() > 0;
+        if !fraction_buf.is_empty() {
+            if exponent_buf.is_empty() {
+                bail!("hexadecimal value with fraction part but the exponent bias is missing");
+            }
+        }
+
+        let lit = if is_hexadecimal_float {
+            // Assemble hexadecimal floating point numbers.
+            let int = i64::from_str_radix(&int_buf, 16)?;
+            let fraction = match fraction_buf.is_empty() {
+                true => 0,
+                false => i64::from_str_radix(&fraction_buf, 16)?,
+            };
+            let exponent = i32::from_str(&exponent_buf)?;
+
+            fraction_buf = fraction_buf.trim_start_matches('0').to_string();
+            let f = ((int as f64) + (fraction as f64) / 16f64.powi(fraction_buf.len() as i32)) * 2f64.powi(exponent);
+            Lit::Float(f)
         } else {
-            // Integer.
-            Lit::Int(i64::from_str_radix(buf.as_str(), 16)?)
+            let i = i64::from_str_radix(&int_buf, 16)?;
+            Lit::Int(i)
         };
 
         Ok(lit)
@@ -222,7 +235,7 @@ impl<'a> Tokenizer<'a> {
 
         let lit = match lit {
             Lit::Int(i) => Lit::Int(i * mantissa_sign),
-            Lit::Float(f, e) => Lit::Float(f * mantissa_sign as f64, e),
+            Lit::Float(f) => Lit::Float(f * mantissa_sign as f64),
             Lit::String(_) => unreachable!(),
         };
 
@@ -378,7 +391,7 @@ mod test {
         assert_eq!(tokens.len(), 8);
         for (i, token) in tokens.iter().enumerate() {
             match token {
-                Token::Literal(Lit::Float(n, _)) => assert_eq!(*n, i as f64),
+                Token::Literal(Lit::Float(n)) => assert_eq!(*n, i as f64),
                 _ => panic!("unexpected token: {:?}", token),
             }
         }
@@ -391,7 +404,7 @@ mod test {
         assert_eq!(tokens.len(), 8);
         for (i, token) in tokens.iter().enumerate() {
             match token {
-                Token::Literal(Lit::Float(n, _)) => assert_eq!(*n, (i as f64) * 10.0f64.powi(i as i32)),
+                Token::Literal(Lit::Float(n)) => assert_eq!(*n, (i as f64) * 10.0f64.powi(i as i32)),
                 _ => panic!("unexpected token: {:?}", token),
             }
         }
@@ -404,7 +417,7 @@ mod test {
         assert_eq!(tokens.len(), 8);
         for (i, token) in tokens.iter().enumerate() {
             match token {
-                Token::Literal(Lit::Float(n, _)) => assert_eq!(*n, (i as f64) * 10.0f64.powi((i as i32) * (if i % 2 == 0 { 1 } else { -1 }))),
+                Token::Literal(Lit::Float(n)) => assert_eq!(*n, (i as f64) * 10.0f64.powi((i as i32) * (if i % 2 == 0 { 1 } else { -1 }))),
                 _ => panic!("unexpected token: {:?}", token),
             }
         }
@@ -425,15 +438,12 @@ mod test {
 
     #[test]
     fn test_tokenize_hexadecimal_floats() {
-        let code = "0x1.0p0 0x1.1p+1 0x1.2p-2 -0x1.3p3 -0x1.4p+4 -0x1.5p-5";
+        let code = "0x1.0p0 -0x1.8p-1";
         let tokens = tokenize(code).unwrap();
-        assert_eq!(tokens.len(), 6);
-        for ((mantissa, exponent), token) in [(1.0, 0), (1.1, 1), (1.2, -2), (-1.3, 3), (-1.4, 4), (-1.5, -5)].iter().zip(tokens.iter()) {
+        assert_eq!(tokens.len(), 2);
+        for (mantissa, token) in [1.0, -0.75].iter().zip(tokens.iter()) {
             match token {
-                Token::Literal(Lit::Float(n, e)) => {
-                    assert_eq!(*n, *mantissa);
-                    assert_eq!(*e, *exponent);
-                },
+                Token::Literal(Lit::Float(n)) => assert_eq!(*n, *mantissa),
                 _ => panic!("unexpected token: {:?}", token),
             }
         }

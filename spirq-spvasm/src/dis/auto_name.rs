@@ -1,12 +1,14 @@
 use std::collections::HashMap;
 use anyhow::Result;
-use half::f16;
 
 use spirq::reflect::ReflectIntermediate;
 use spirq_core::{ty::{Type, ScalarType, VectorType, MatrixType, PointerType, ArrayType, StructType}, constant::ConstantValue};
 
+use super::utils::to_hexadecimal_float;
+
 fn sanitize_name(name: &str) -> String {
     name.chars()
+        .map(|c| if c == '-' { 'n' } else { c })
         .map(|c| if c.is_ascii_punctuation() { '_' } else { c })
         .collect::<String>()
 }
@@ -155,21 +157,9 @@ impl AutoNamer {
             ConstantValue::U16(x) => format!("ushort_{}", x),
             ConstantValue::U32(x) => format!("uint_{}", x),
             ConstantValue::U64(x) => format!("ulong_{}", x),
-            ConstantValue::F16(x) => if x.0 < f16::ZERO {
-                format!("half_n{}", -x)
-            } else {
-                format!("half_{}", x)
-            },
-            ConstantValue::F32(x) => if x.0 < 0.0 {
-                format!("float_n{}", -x)
-            } else {
-                format!("float_{}", x)
-            },
-            ConstantValue::F64(x) => if x.0 < 0.0 {
-                format!("double_n{}", -x)
-            } else {
-                format!("double_{}", x)
-            },
+            ConstantValue::F16(x) => format!("half_{}", to_hexadecimal_float(*x)),
+            ConstantValue::F32(x) => format!("float_{}", x),
+            ConstantValue::F64(x) => format!("double_{}", x),
             _ => return None,
         };
         out = sanitize_name(&out);

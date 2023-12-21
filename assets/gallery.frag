@@ -214,7 +214,7 @@ const uint64_t UINT64 = uint64_t(1);
 // (penguinliong) Don't know why but SPIR-V Tools disassemble fp16 values to
 // mantissa and exponent bias which is pretty much a special case I don't wanna
 // work with atm.
-const float16_t FLOAT16 = float16_t(0.0);
+const float16_t FLOAT16 = float16_t(0.25);
 const float32_t FLOAT32 = float32_t(1.0);
 const float64_t FLOAT64 = float64_t(1.0);
 

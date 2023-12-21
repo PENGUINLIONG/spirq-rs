@@ -4,7 +4,7 @@ use anyhow::{Result, bail};
 use half::f16;
 use spirq::{reflect::ReflectIntermediate, ReflectConfig};
 use spirq_core::{parse::{Instr, SpirvBinary, Instrs, Operands}, spirv::Op, ty::{self, Type}};
-use crate::generated;
+use crate::{generated, dis::utils::to_hexadecimal_float};
 use super::auto_name;
 
 pub struct Disassembler {
@@ -123,7 +123,8 @@ impl Disassembler {
                         },
                         ty::ScalarType::Float { bits: 16 } => {
                             let x = operands2.read_u32()?.to_le_bytes();
-                            format!(" {}", f16::from_bits(u16::from_le_bytes([x[0], x[1]])))
+                            let f = f16::from_bits(u16::from_le_bytes([x[0], x[1]]));
+                            format!(" {}", to_hexadecimal_float(f))
                         },
                         ty::ScalarType::Float { bits: 32 } => {
                             let x = operands2.read_u32()?.to_le_bytes();
