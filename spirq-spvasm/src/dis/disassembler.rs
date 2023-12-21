@@ -12,6 +12,7 @@ pub struct Disassembler {
     name_ids: bool,
     name_type_ids: bool,
     name_const_ids: bool,
+    indent: bool,
 }
 impl Disassembler {
     pub fn new() -> Self {
@@ -20,6 +21,7 @@ impl Disassembler {
             name_ids: false,
             name_type_ids: false,
             name_const_ids: false,
+            indent: true,
         }
     }
 
@@ -52,6 +54,11 @@ impl Disassembler {
     /// described in Section 2.3 in SPIR-V specification.
     pub fn name_const_ids(mut self, value: bool) -> Self {
         self.name_const_ids = value;
+        self
+    }
+    /// Indent the output.
+    pub fn indent(mut self, value: bool) -> Self {
+        self.indent = value;
         self
     }
 
@@ -252,8 +259,29 @@ impl Disassembler {
             HashMap::new()
         };
 
-        let instrs = self.print(spv, &itm, id_names)?;
+        let mut instrs = self.print(spv, &itm, id_names)?;
+        instrs.push(String::new()); // Trailing newline.
+
+        if self.indent {
+            let max_eq_pos = instrs.iter()
+                .filter_map(|instr| instr.find('=')) // Skip lines without an assignment.
+                .max()
+                .unwrap_or(0)
+                .min(15);
+            let mut instrs2 = Vec::new();
+            for instr in instrs {
+                let indent = if let Some(eq_pos) = instr.find('=') {
+                    max_eq_pos - eq_pos.min(max_eq_pos)
+                } else {
+                    max_eq_pos + 2
+                };
+                instrs2.push(format!("{}{}", " ".repeat(indent), instr));
+            }
+            instrs = instrs2;
+        }
+
         out.extend(instrs);
+        
         Ok(out.join("\n"))
     }
 }

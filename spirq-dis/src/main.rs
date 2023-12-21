@@ -1,7 +1,6 @@
 use clap::Parser;
 use spirq_spvasm::{SpirvBinary, Disassembler};
 use std::{
-    borrow::Borrow,
     fs::File,
     io::{stderr, Write, Read},
     path::Path,
