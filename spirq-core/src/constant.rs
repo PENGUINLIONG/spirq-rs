@@ -139,7 +139,7 @@ impl ConstantValue {
                 ScalarType::Float { bits: 16 } if x.len() == 4 => {
                     let x = f16::from_le_bytes([x[0], x[1]]);
                     Ok(ConstantValue::F16(OrderedFloat(x)))
-                },
+                }
                 ScalarType::Float { bits: 32 } if x.len() == 4 => {
                     let x = f32::from_le_bytes([x[0], x[1], x[2], x[3]]);
                     Ok(ConstantValue::F32(OrderedFloat(x)))

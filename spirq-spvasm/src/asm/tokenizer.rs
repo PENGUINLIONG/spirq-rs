@@ -102,11 +102,11 @@ impl<'a> Tokenizer<'a> {
                     }
                 }
                 Lit::Float(f64::from_str(buf.as_str())?)
-            },
+            }
             _ => {
                 // Integer.
                 Lit::Int(i64::from_str(buf.as_str())?)
-            },
+            }
         };
         Ok(lit)
     }
@@ -145,12 +145,12 @@ impl<'a> Tokenizer<'a> {
             match self.chars.peek() {
                 Some('+') => {
                     self.chars.next();
-                },
+                }
                 Some('-') => {
                     exponent_buf.push('-');
                     self.chars.next();
-                },
-                _ => {},
+                }
+                _ => {}
             }
             while let Some(c) = self.chars.peek() {
                 if c.is_ascii_digit() {
@@ -179,7 +179,8 @@ impl<'a> Tokenizer<'a> {
             let exponent = i32::from_str(&exponent_buf)?;
 
             fraction_buf = fraction_buf.trim_start_matches('0').to_string();
-            let f = ((int as f64) + (fraction as f64) / 16f64.powi(fraction_buf.len() as i32)) * 2f64.powi(exponent);
+            let f = ((int as f64) + (fraction as f64) / 16f64.powi(fraction_buf.len() as i32))
+                * 2f64.powi(exponent);
             Lit::Float(f)
         } else {
             let i = i64::from_str_radix(&int_buf, 16)?;
@@ -192,16 +193,20 @@ impl<'a> Tokenizer<'a> {
     /// Tokenize a SPIR-V assembly numeric literal that can be decimal, hexadecimal,
     /// decimal and hexadecimal numbers.
     pub fn tokenize_numeric_literal(&mut self) -> Result<Token> {
-        let mut c = *self.chars.peek()
+        let mut c = *self
+            .chars
+            .peek()
             .ok_or_else(|| anyhow!("unexpected end of input"))?;
 
         let mantissa_sign = match c {
             '-' => {
                 self.chars.next();
-                c = *self.chars.peek()
+                c = *self
+                    .chars
+                    .peek()
                     .ok_or_else(|| anyhow!("unexpected end of input"))?;
                 -1
-            },
+            }
             _ => 1,
         };
 
@@ -212,11 +217,11 @@ impl<'a> Tokenizer<'a> {
                     // Hexadecimal.
                     self.chars.next(); // Consume the 'x' or 'X'.
                     self.tokenize_numeric_literal_hexadecimal()?
-                },
+                }
                 _ => {
                     // Decimal.
                     self.tokenize_numeric_literal_decimal()?
-                },
+                }
             }
         } else {
             // Decimal.
@@ -258,7 +263,7 @@ impl<'a> Tokenizer<'a> {
                     '\\' => {
                         escape = true;
                         continue;
-                    },
+                    }
                     '"' => break,
                     _ => string.push(c),
                 }
@@ -338,7 +343,6 @@ impl<'a> Tokenizer<'a> {
             }
 
             bail!("unexpected character: {}", c);
-
         } else {
             return Ok(None);
         }
@@ -351,7 +355,6 @@ impl<'a> Iterator for Tokenizer<'a> {
         self.tokenize().transpose()
     }
 }
-
 
 #[cfg(test)]
 mod test {
@@ -403,7 +406,9 @@ mod test {
         assert_eq!(tokens.len(), 8);
         for (i, token) in tokens.iter().enumerate() {
             match token {
-                Token::Literal(Lit::Float(n)) => assert_eq!(*n, (i as f64) * 10.0f64.powi(i as i32)),
+                Token::Literal(Lit::Float(n)) => {
+                    assert_eq!(*n, (i as f64) * 10.0f64.powi(i as i32))
+                }
                 _ => panic!("unexpected token: {:?}", token),
             }
         }
@@ -416,7 +421,10 @@ mod test {
         assert_eq!(tokens.len(), 8);
         for (i, token) in tokens.iter().enumerate() {
             match token {
-                Token::Literal(Lit::Float(n)) => assert_eq!(*n, (i as f64) * 10.0f64.powi((i as i32) * (if i % 2 == 0 { 1 } else { -1 }))),
+                Token::Literal(Lit::Float(n)) => assert_eq!(
+                    *n,
+                    (i as f64) * 10.0f64.powi((i as i32) * (if i % 2 == 0 { 1 } else { -1 }))
+                ),
                 _ => panic!("unexpected token: {:?}", token),
             }
         }
@@ -501,7 +509,9 @@ mod test {
 ; abcd123"#;
         let tokens = tokenize(code).unwrap();
         assert_eq!(tokens.len(), 13);
-        let expected = [" a", " ab", " abc", " abcd", " abcd1", " abcd12", " abcd123"];
+        let expected = [
+            " a", " ab", " abc", " abcd", " abcd1", " abcd12", " abcd123",
+        ];
         for (i, token) in tokens.iter().enumerate() {
             if i % 2 == 0 {
                 match token {
@@ -510,7 +520,7 @@ mod test {
                 }
             } else {
                 match token {
-                    Token::NewLine => {},
+                    Token::NewLine => {}
                     _ => panic!("unexpected token: {:?}", token),
                 }
             }
@@ -537,7 +547,7 @@ mod test {
         let tokens = tokenize(code).unwrap();
         assert_eq!(tokens.len(), 1);
         match tokens[0] {
-            Token::Eq => {},
+            Token::Eq => {}
             _ => panic!("unexpected token: {:?}", tokens[0]),
         }
     }

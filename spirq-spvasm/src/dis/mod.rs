@@ -1,5 +1,5 @@
-mod disassembler;
 mod auto_name;
+mod disassembler;
 #[cfg(test)]
 mod test;
 mod utils;

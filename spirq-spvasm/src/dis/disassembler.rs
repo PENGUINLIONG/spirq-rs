@@ -1,11 +1,15 @@
 use std::collections::HashMap;
 
-use anyhow::{Result, bail};
+use super::auto_name;
+use crate::{dis::utils::to_hexadecimal_float, generated};
+use anyhow::{bail, Result};
 use half::f16;
 use spirq::{reflect::ReflectIntermediate, ReflectConfig};
-use spirq_core::{parse::{Instr, SpirvBinary, Instrs, Operands}, spirv::Op, ty::{self, Type}};
-use crate::{generated, dis::utils::to_hexadecimal_float};
-use super::auto_name;
+use spirq_core::{
+    parse::{Instr, Instrs, Operands, SpirvBinary},
+    spirv::Op,
+    ty::{self, Type},
+};
 
 pub struct Disassembler {
     print_header: bool,
@@ -27,7 +31,7 @@ impl Disassembler {
 
     pub fn print_header(mut self, value: bool) -> Self {
         self.print_header = value;
-        return self
+        return self;
     }
     /// Reference intermediate values by their names rather than numeric IDs if
     /// it has been annotated by OpName.
@@ -68,7 +72,12 @@ impl Disassembler {
         }
         Ok(format!("%{}", id))
     }
-    fn print_operands(&self, opcode: u32, operands: &mut Operands<'_>, id_names: &HashMap<u32, String>) -> Result<String> {
+    fn print_operands(
+        &self,
+        opcode: u32,
+        operands: &mut Operands<'_>,
+        id_names: &HashMap<u32, String>,
+    ) -> Result<String> {
         let operands = generated::print_operand(opcode, operands, id_names)?;
         let out = operands.join(" ");
         Ok(out)
@@ -92,59 +101,92 @@ impl Disassembler {
         let out = if let Some(result_type_id) = result_type_id {
             let ty = itm.ty_reg.get(result_type_id)?;
             match ty {
-                Type::Scalar(scalar_ty) => {
-                    match scalar_ty {
-                        ty::ScalarType::Integer { bits: 8, is_signed: true } => {
-                            let x = operands2.read_u32()?.to_le_bytes();
-                            format!(" {}", i8::from_le_bytes([x[0]]))
-                        },
-                        ty::ScalarType::Integer { bits: 16, is_signed: true } => {
-                            let x = operands2.read_u32()?.to_le_bytes();
-                            format!(" {}", i16::from_le_bytes([x[0], x[1]]))
-                        },
-                        ty::ScalarType::Integer { bits: 32, is_signed: true } => {
-                            let x = operands2.read_u32()?.to_le_bytes();
-                            format!(" {}", i32::from_le_bytes([x[0], x[1], x[2], x[3]]))
-                        },
-                        ty::ScalarType::Integer { bits: 64, is_signed: true } => {
-                            let x = operands2.read_u32()?.to_le_bytes();
-                            let y = operands2.read_u32()?.to_le_bytes();
-                            format!(" {}", i64::from_le_bytes([x[0], x[1], x[2], x[3], y[0], y[1], y[2], y[3]]))
-                        },
-                        ty::ScalarType::Integer { bits: 8, is_signed: false } => {
-                            let x = operands2.read_u32()?.to_le_bytes();
-                            format!(" {}", u8::from_le_bytes([x[0]]))
-                        },
-                        ty::ScalarType::Integer { bits: 16, is_signed: false } => {
-                            let x = operands2.read_u32()?.to_le_bytes();
-                            format!(" {}", u16::from_le_bytes([x[0], x[1]]))
-                        },
-                        ty::ScalarType::Integer { bits: 32, is_signed: false } => {
-                            let x = operands2.read_u32()?.to_le_bytes();
-                            format!(" {}", u32::from_le_bytes([x[0], x[1], x[2], x[3]]))
-                        },
-                        ty::ScalarType::Integer { bits: 64, is_signed: false } => {
-                            let x = operands2.read_u32()?.to_le_bytes();
-                            let y = operands2.read_u32()?.to_le_bytes();
-                            format!(" {}", u64::from_le_bytes([x[0], x[1], x[2], x[3], y[0], y[1], y[2], y[3]]))
-                        },
-                        ty::ScalarType::Float { bits: 16 } => {
-                            let x = operands2.read_u32()?.to_le_bytes();
-                            let f = f16::from_bits(u16::from_le_bytes([x[0], x[1]]));
-                            format!(" {}", to_hexadecimal_float(f))
-                        },
-                        ty::ScalarType::Float { bits: 32 } => {
-                            let x = operands2.read_u32()?.to_le_bytes();
-                            format!(" {}", f32::from_le_bytes([x[0], x[1], x[2], x[3]]))
-                        },
-                        ty::ScalarType::Float { bits: 64 } => {
-                            let x0 = operands2.read_u32()?.to_le_bytes();
-                            let x1 = operands2.read_u32()?.to_le_bytes();
-                            format!(" {}", f64::from_le_bytes([x0[0], x0[1], x0[2], x0[3], x1[0], x1[1], x1[2], x1[3]]))
-                        },
-                        _ => bail!("unsupported scalar type for opconstant"),
+                Type::Scalar(scalar_ty) => match scalar_ty {
+                    ty::ScalarType::Integer {
+                        bits: 8,
+                        is_signed: true,
+                    } => {
+                        let x = operands2.read_u32()?.to_le_bytes();
+                        format!(" {}", i8::from_le_bytes([x[0]]))
                     }
-                }
+                    ty::ScalarType::Integer {
+                        bits: 16,
+                        is_signed: true,
+                    } => {
+                        let x = operands2.read_u32()?.to_le_bytes();
+                        format!(" {}", i16::from_le_bytes([x[0], x[1]]))
+                    }
+                    ty::ScalarType::Integer {
+                        bits: 32,
+                        is_signed: true,
+                    } => {
+                        let x = operands2.read_u32()?.to_le_bytes();
+                        format!(" {}", i32::from_le_bytes([x[0], x[1], x[2], x[3]]))
+                    }
+                    ty::ScalarType::Integer {
+                        bits: 64,
+                        is_signed: true,
+                    } => {
+                        let x = operands2.read_u32()?.to_le_bytes();
+                        let y = operands2.read_u32()?.to_le_bytes();
+                        format!(
+                            " {}",
+                            i64::from_le_bytes([x[0], x[1], x[2], x[3], y[0], y[1], y[2], y[3]])
+                        )
+                    }
+                    ty::ScalarType::Integer {
+                        bits: 8,
+                        is_signed: false,
+                    } => {
+                        let x = operands2.read_u32()?.to_le_bytes();
+                        format!(" {}", u8::from_le_bytes([x[0]]))
+                    }
+                    ty::ScalarType::Integer {
+                        bits: 16,
+                        is_signed: false,
+                    } => {
+                        let x = operands2.read_u32()?.to_le_bytes();
+                        format!(" {}", u16::from_le_bytes([x[0], x[1]]))
+                    }
+                    ty::ScalarType::Integer {
+                        bits: 32,
+                        is_signed: false,
+                    } => {
+                        let x = operands2.read_u32()?.to_le_bytes();
+                        format!(" {}", u32::from_le_bytes([x[0], x[1], x[2], x[3]]))
+                    }
+                    ty::ScalarType::Integer {
+                        bits: 64,
+                        is_signed: false,
+                    } => {
+                        let x = operands2.read_u32()?.to_le_bytes();
+                        let y = operands2.read_u32()?.to_le_bytes();
+                        format!(
+                            " {}",
+                            u64::from_le_bytes([x[0], x[1], x[2], x[3], y[0], y[1], y[2], y[3]])
+                        )
+                    }
+                    ty::ScalarType::Float { bits: 16 } => {
+                        let x = operands2.read_u32()?.to_le_bytes();
+                        let f = f16::from_bits(u16::from_le_bytes([x[0], x[1]]));
+                        format!(" {}", to_hexadecimal_float(f))
+                    }
+                    ty::ScalarType::Float { bits: 32 } => {
+                        let x = operands2.read_u32()?.to_le_bytes();
+                        format!(" {}", f32::from_le_bytes([x[0], x[1], x[2], x[3]]))
+                    }
+                    ty::ScalarType::Float { bits: 64 } => {
+                        let x0 = operands2.read_u32()?.to_le_bytes();
+                        let x1 = operands2.read_u32()?.to_le_bytes();
+                        format!(
+                            " {}",
+                            f64::from_le_bytes([
+                                x0[0], x0[1], x0[2], x0[3], x1[0], x1[1], x1[2], x1[3]
+                            ])
+                        )
+                    }
+                    _ => bail!("unsupported scalar type for opconstant"),
+                },
                 _ => bail!("opconstant cannot have a non-scalar type"),
             }
         } else {
@@ -185,7 +227,8 @@ impl Disassembler {
         }
 
         if opcode == (Op::Constant as u32) {
-            if let Ok(operand) = self.print_constant_op_operand(result_type_id, &mut operands, itm) {
+            if let Ok(operand) = self.print_constant_op_operand(result_type_id, &mut operands, itm)
+            {
                 out.push_str(&operand);
             } else {
                 // Tolerate the error and print the operands as usual.
@@ -236,7 +279,10 @@ impl Disassembler {
                 let generator = header.generator >> 16;
                 let generator_version = header.generator & 0xffff;
                 if generator == 8 {
-                    out.push(format!("; Generator: Khronos Glslang Reference Front End; {}", generator_version));
+                    out.push(format!(
+                        "; Generator: Khronos Glslang Reference Front End; {}",
+                        generator_version
+                    ));
                 } else {
                     out.push(format!("; Generator: {}; {}", generator, generator_version));
                 }
@@ -263,7 +309,8 @@ impl Disassembler {
         instrs.push(String::new()); // Trailing newline.
 
         if self.indent {
-            let max_eq_pos = instrs.iter()
+            let max_eq_pos = instrs
+                .iter()
                 .filter_map(|instr| instr.find('=')) // Skip lines without an assignment.
                 .max()
                 .unwrap_or(0)
@@ -281,7 +328,7 @@ impl Disassembler {
         }
 
         out.extend(instrs);
-        
+
         Ok(out.join("\n"))
     }
 }
@@ -292,22 +339,31 @@ mod test {
 
     #[test]
     fn test_simple() {
-        let spv = [
-            0x07230203, 0x00010000, 0x00000000, 0x0000001, 0x00000000
-        ].iter().map(|x| *x as u32).collect::<Vec<_>>();
+        let spv = [0x07230203, 0x00010000, 0x00000000, 0x0000001, 0x00000000]
+            .iter()
+            .map(|x| *x as u32)
+            .collect::<Vec<_>>();
         let spv = SpirvBinary::from(spv);
         let out = Disassembler::new().disassemble(&spv).unwrap();
-        assert_eq!(out, "; SPIR-V\n; Version: 1.0\n; Generator: 0; 0\n; Bound: 1\n; Schema: 0");
+        assert_eq!(
+            out,
+            "; SPIR-V\n; Version: 1.0\n; Generator: 0; 0\n; Bound: 1\n; Schema: 0"
+        );
     }
 
     #[test]
     fn test_nop() {
         let spv = [
-            0x07230203, 0x00010000, 0x00000000, 0x0000001, 0x00000000,
-            0x00010000
-        ].iter().map(|x| *x as u32).collect::<Vec<_>>();
+            0x07230203, 0x00010000, 0x00000000, 0x0000001, 0x00000000, 0x00010000,
+        ]
+        .iter()
+        .map(|x| *x as u32)
+        .collect::<Vec<_>>();
         let spv = SpirvBinary::from(spv);
         let out = Disassembler::new().disassemble(&spv).unwrap();
-        assert_eq!(out, "; SPIR-V\n; Version: 1.0\n; Generator: 0; 0\n; Bound: 1\n; Schema: 0\nOpNop");
+        assert_eq!(
+            out,
+            "; SPIR-V\n; Version: 1.0\n; Generator: 0; 0\n; Bound: 1\n; Schema: 0\nOpNop"
+        );
     }
 }

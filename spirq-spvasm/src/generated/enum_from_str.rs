@@ -15,8 +15,8 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "NZSL" => 9,
             "WGSL" => 10,
             "Slang" => 11,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "ExecutionModel" => match name {
             "Vertex" => 0,
             "TessellationControl" => 1,
@@ -41,24 +41,24 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "CallableKHR" => 5318,
             "TaskEXT" => 5364,
             "MeshEXT" => 5365,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "AddressingModel" => match name {
             "Logical" => 0,
             "Physical32" => 1,
             "Physical64" => 2,
             "PhysicalStorageBuffer64" => 5348,
             "PhysicalStorageBuffer64EXT" => 5348,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "MemoryModel" => match name {
             "Simple" => 0,
             "GLSL450" => 1,
             "OpenCL" => 2,
             "Vulkan" => 3,
             "VulkanKHR" => 3,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "ExecutionMode" => match name {
             "Invocations" => 0,
             "SpacingEqual" => 1,
@@ -148,8 +148,8 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "StreamingInterfaceINTEL" => 6154,
             "RegisterMapInterfaceINTEL" => 6160,
             "NamedBarrierCountINTEL" => 6417,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "StorageClass" => match name {
             "UniformConstant" => 0,
             "Input" => 1,
@@ -186,8 +186,8 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "CodeSectionINTEL" => 5605,
             "DeviceOnlyINTEL" => 5936,
             "HostOnlyINTEL" => 5937,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "Dim" => match name {
             "1D" => 0,
             "2D" => 1,
@@ -197,21 +197,21 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "Buffer" => 5,
             "SubpassData" => 6,
             "TileImageDataEXT" => 4173,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "SamplerAddressingMode" => match name {
             "None" => 0,
             "ClampToEdge" => 1,
             "Clamp" => 2,
             "Repeat" => 3,
             "RepeatMirrored" => 4,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "SamplerFilterMode" => match name {
             "Nearest" => 0,
             "Linear" => 1,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "ImageFormat" => match name {
             "Unknown" => 0,
             "Rgba32f" => 1,
@@ -255,8 +255,8 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "R8ui" => 39,
             "R64ui" => 40,
             "R64i" => 41,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "ImageChannelOrder" => match name {
             "R" => 0,
             "A" => 1,
@@ -278,8 +278,8 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "sRGBA" => 17,
             "sBGRA" => 18,
             "ABGR" => 19,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "ImageChannelDataType" => match name {
             "SnormInt8" => 0,
             "SnormInt16" => 1,
@@ -300,20 +300,20 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "UnormInt101010_2" => 16,
             "UnsignedIntRaw10EXT" => 19,
             "UnsignedIntRaw12EXT" => 20,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "FPRoundingMode" => match name {
             "RTE" => 0,
             "RTZ" => 1,
             "RTP" => 2,
             "RTN" => 3,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "FPDenormMode" => match name {
             "Preserve" => 0,
             "FlushToZero" => 1,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "QuantizationModes" => match name {
             "TRN" => 0,
             "TRN_ZERO" => 1,
@@ -323,39 +323,39 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "RND_MIN_INF" => 5,
             "RND_CONV" => 6,
             "RND_CONV_ODD" => 7,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "FPOperationMode" => match name {
             "IEEE" => 0,
             "ALT" => 1,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "OverflowModes" => match name {
             "WRAP" => 0,
             "SAT" => 1,
             "SAT_ZERO" => 2,
             "SAT_SYM" => 3,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "LinkageType" => match name {
             "Export" => 0,
             "Import" => 1,
             "LinkOnceODR" => 2,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "AccessQualifier" => match name {
             "ReadOnly" => 0,
             "WriteOnly" => 1,
             "ReadWrite" => 2,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "HostAccessQualifier" => match name {
             "NoneINTEL" => 0,
             "ReadINTEL" => 1,
             "WriteINTEL" => 2,
             "ReadWriteINTEL" => 3,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "FunctionParameterAttribute" => match name {
             "Zext" => 0,
             "Sext" => 1,
@@ -366,8 +366,8 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "NoWrite" => 6,
             "NoReadWrite" => 7,
             "RuntimeAlignedINTEL" => 5940,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "Decoration" => match name {
             "RelaxedPrecision" => 0,
             "SpecId" => 1,
@@ -513,8 +513,8 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "ImplementInRegisterMapINTEL" => 6191,
             "CacheControlLoadINTEL" => 6442,
             "CacheControlStoreINTEL" => 6443,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "BuiltIn" => match name {
             "Position" => 0,
             "PointSize" => 1,
@@ -654,8 +654,8 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "HitKindFrontFacingMicroTriangleNV" => 5405,
             "HitKindBackFacingMicroTriangleNV" => 5406,
             "CullMaskKHR" => 6021,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "Scope" => match name {
             "CrossDevice" => 0,
             "Device" => 1,
@@ -665,8 +665,8 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "QueueFamily" => 5,
             "QueueFamilyKHR" => 5,
             "ShaderCallKHR" => 6,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "GroupOperation" => match name {
             "Reduce" => 0,
             "InclusiveScan" => 1,
@@ -675,14 +675,14 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "PartitionedReduceNV" => 6,
             "PartitionedInclusiveScanNV" => 7,
             "PartitionedExclusiveScanNV" => 8,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "KernelEnqueueFlags" => match name {
             "NoWait" => 0,
             "WaitKernel" => 1,
             "WaitWorkGroup" => 2,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "Capability" => match name {
             "Matrix" => 0,
             "Shader" => 1,
@@ -936,60 +936,60 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "GlobalVariableFPGADecorationsINTEL" => 6189,
             "GroupUniformArithmeticKHR" => 6400,
             "CacheControlsINTEL" => 6441,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "RayQueryIntersection" => match name {
             "RayQueryCandidateIntersectionKHR" => 0,
             "RayQueryCommittedIntersectionKHR" => 1,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "RayQueryCommittedIntersectionType" => match name {
             "RayQueryCommittedIntersectionNoneKHR" => 0,
             "RayQueryCommittedIntersectionTriangleKHR" => 1,
             "RayQueryCommittedIntersectionGeneratedKHR" => 2,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "RayQueryCandidateIntersectionType" => match name {
             "RayQueryCandidateIntersectionTriangleKHR" => 0,
             "RayQueryCandidateIntersectionAABBKHR" => 1,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "PackedVectorFormat" => match name {
             "PackedVectorFormat4x8Bit" => 0,
             "PackedVectorFormat4x8BitKHR" => 0,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "CooperativeMatrixLayout" => match name {
             "RowMajorKHR" => 0,
             "ColumnMajorKHR" => 1,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "CooperativeMatrixUse" => match name {
             "MatrixAKHR" => 0,
             "MatrixBKHR" => 1,
             "MatrixAccumulatorKHR" => 2,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "InitializationModeQualifier" => match name {
             "InitOnDeviceReprogramINTEL" => 0,
             "InitOnDeviceResetINTEL" => 1,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "LoadCacheControl" => match name {
             "UncachedINTEL" => 0,
             "CachedINTEL" => 1,
             "StreamingINTEL" => 2,
             "InvalidateAfterReadINTEL" => 3,
             "ConstCachedINTEL" => 4,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "StoreCacheControl" => match name {
             "UncachedINTEL" => 0,
             "WriteThroughINTEL" => 1,
             "WriteBackINTEL" => 2,
             "StreamingINTEL" => 3,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "ImageOperands" => match name {
             "None" => 0x0000,
             "Bias" => 0x0001,
@@ -1012,8 +1012,8 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "ZeroExtend" => 0x2000,
             "Nontemporal" => 0x4000,
             "Offsets" => 0x10000,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "FPFastMathMode" => match name {
             "None" => 0x0000,
             "NotNaN" => 0x0001,
@@ -1023,14 +1023,14 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "Fast" => 0x0010,
             "AllowContractFastINTEL" => 0x10000,
             "AllowReassocINTEL" => 0x20000,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "SelectionControl" => match name {
             "None" => 0x0000,
             "Flatten" => 0x0001,
             "DontFlatten" => 0x0002,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "LoopControl" => match name {
             "None" => 0x0000,
             "Unroll" => 0x0001,
@@ -1052,8 +1052,8 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "NoFusionINTEL" => 0x800000,
             "LoopCountINTEL" => 0x1000000,
             "MaxReinvocationDelayINTEL" => 0x2000000,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "FunctionControl" => match name {
             "None" => 0x0000,
             "Inline" => 0x0001,
@@ -1061,8 +1061,8 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "Pure" => 0x0004,
             "Const" => 0x0008,
             "OptNoneINTEL" => 0x10000,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "MemorySemantics" => match name {
             "Relaxed" => 0x0000,
             "None" => 0x0000,
@@ -1083,8 +1083,8 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "MakeVisible" => 0x4000,
             "MakeVisibleKHR" => 0x4000,
             "Volatile" => 0x8000,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "MemoryAccess" => match name {
             "None" => 0x0000,
             "Volatile" => 0x0001,
@@ -1098,13 +1098,13 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "NonPrivatePointerKHR" => 0x0020,
             "AliasScopeINTELMask" => 0x10000,
             "NoAliasINTELMask" => 0x20000,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "KernelProfilingInfo" => match name {
             "None" => 0x0000,
             "CmdExecTime" => 0x0001,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "RayFlags" => match name {
             "NoneKHR" => 0x0000,
             "OpaqueKHR" => 0x0001,
@@ -1118,15 +1118,15 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "SkipTrianglesKHR" => 0x0100,
             "SkipAABBsKHR" => 0x0200,
             "ForceOpacityMicromap2StateEXT" => 0x0400,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "FragmentShadingRate" => match name {
             "Vertical2Pixels" => 0x0001,
             "Vertical4Pixels" => 0x0002,
             "Horizontal2Pixels" => 0x0004,
             "Horizontal4Pixels" => 0x0008,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         "CooperativeMatrixOperands" => match name {
             "NoneKHR" => 0x0000,
             "MatrixASignedComponentsKHR" => 0x0001,
@@ -1134,8 +1134,8 @@ pub fn enum_from_str(ety: &str, name: &str) -> Result<u32> {
             "MatrixCSignedComponentsKHR" => 0x0004,
             "MatrixResultSignedComponentsKHR" => 0x0008,
             "SaturatingAccumulationKHR" => 0x0010,
-            _ => bail!("unknown enum: {}::{}", ety, name)
-        }
+            _ => bail!("unknown enum: {}::{}", ety, name),
+        },
         _ => bail!("unknown enum: {}::{}", ety, name),
     };
     Ok(out)

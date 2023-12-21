@@ -233,7 +233,7 @@ impl<'a> NameRegistry<'a> {
             .copied()
     }
 
-    pub fn iter(&self) -> impl Iterator<Item=(&NameKey, &&'a str)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&NameKey, &&'a str)> {
         self.name_map.iter()
     }
 }

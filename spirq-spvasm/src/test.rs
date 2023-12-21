@@ -24,10 +24,14 @@ fn test_asm_dis_roundtrip() {
 %void_8 = OpTypeVoid
 %void_9 = OpTypeVoid
 %void_10 = OpTypeVoid
-"#.trim();
+"#
+    .trim();
     let header = SpirvHeader::default();
     let spv = Assembler::new().assemble(code, header).unwrap();
-    let spvasm = Disassembler::new().name_type_ids(true).disassemble(&spv.into()).unwrap();
+    let spvasm = Disassembler::new()
+        .name_type_ids(true)
+        .disassemble(&spv.into())
+        .unwrap();
     assert_eq!(code, spvasm);
 }
 

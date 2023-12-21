@@ -44,7 +44,7 @@ impl TypeRegistry {
             .ok_or(anyhow!("missing type id {}", id))
     }
 
-    pub fn iter(&self) -> impl Iterator<Item=(&TypeId, &Type)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&TypeId, &Type)> {
         self.ty_map.iter()
     }
 }

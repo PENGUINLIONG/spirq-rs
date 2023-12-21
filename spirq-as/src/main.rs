@@ -3,7 +3,7 @@ use spirq_spvasm::{Assembler, SpirvHeader};
 use std::{
     borrow::Borrow,
     fs::File,
-    io::{stderr, Write, Read},
+    io::{stderr, Read, Write},
     path::Path,
     process::exit,
 };
@@ -58,11 +58,10 @@ fn main() {
     });
 
     let mut code = String::new();
-    in_file.read_to_string(&mut code)
-        .unwrap_or_else(|e| {
-            writeln!(stderr(), "error: failed to read input file: {}", e).unwrap();
-            exit(1);
-        });
+    in_file.read_to_string(&mut code).unwrap_or_else(|e| {
+        writeln!(stderr(), "error: failed to read input file: {}", e).unwrap();
+        exit(1);
+    });
 
     let header = match args.target_env.as_ref().map(Borrow::borrow) {
         Some("vulken1.1spv1.4") => SpirvHeader::new(SPIRV_VERSION_1_4, GENERATOR),
@@ -79,25 +78,30 @@ fn main() {
         Some("spv1.6") => SpirvHeader::new(SPIRV_VERSION_1_6, GENERATOR),
         None => SpirvHeader::new(SPIRV_VERSION_1_4, GENERATOR),
         _ => {
-            writeln!(stderr(), "error: unknown target environment: {}", args.target_env.unwrap()).unwrap();
+            writeln!(
+                stderr(),
+                "error: unknown target environment: {}",
+                args.target_env.unwrap()
+            )
+            .unwrap();
             exit(1);
         }
     };
 
-    let spv = Assembler::new().assemble(&code, header).unwrap_or_else(|e| {
-        writeln!(stderr(), "error: failed to read input file: {}", e).unwrap();
+    let spv = Assembler::new()
+        .assemble(&code, header)
+        .unwrap_or_else(|e| {
+            writeln!(stderr(), "error: failed to read input file: {}", e).unwrap();
+            exit(1);
+        });
+
+    let mut out_file = File::create(out_path).unwrap_or_else(|e| {
+        writeln!(stderr(), "error: failed to open output file: {}", e).unwrap();
         exit(1);
     });
 
-    let mut out_file = File::create(out_path)
-        .unwrap_or_else(|e| {
-            writeln!(stderr(), "error: failed to open output file: {}", e).unwrap();
-            exit(1);
-        });
-
-    out_file.write_all(&spv.into_bytes())
-        .unwrap_or_else(|e| {
-            writeln!(stderr(), "error: failed to write output file: {}", e).unwrap();
-            exit(1);
-        });
+    out_file.write_all(&spv.into_bytes()).unwrap_or_else(|e| {
+        writeln!(stderr(), "error: failed to write output file: {}", e).unwrap();
+        exit(1);
+    });
 }

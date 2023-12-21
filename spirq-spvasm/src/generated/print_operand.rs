@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use super::enum_to_str::enum_to_str;
 use anyhow::{bail, Result};
 use spirq_core::parse::Operands;
-use super::enum_to_str::enum_to_str;
+use std::collections::HashMap;
 
 fn print_id(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<String> {
     let id = operands.read_u32()?;
@@ -22,25 +22,35 @@ fn print_str(operands: &mut Operands) -> Result<String> {
     Ok(format!(r#""{}""#, operands.read_str()?))
 }
 fn print_list(operands: &mut Operands) -> Result<Vec<String>> {
-    let out = operands.read_list()?
+    let out = operands
+        .read_list()?
         .iter()
         .map(|x| x.to_string())
         .collect::<Vec<_>>();
     Ok(out)
 }
-fn print_pair_id_id_list(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_pair_id_id_list(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let mut out = Vec::new();
     out.push(print_id(operands, id_names)?);
     out.push(print_id(operands, id_names)?);
     Ok(out)
 }
-fn print_pair_id_u32_list(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_pair_id_u32_list(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let mut out = Vec::new();
     out.push(print_id(operands, id_names)?);
     out.push(print_u32(operands)?);
     Ok(out)
 }
-fn print_pair_u32_id_list(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_pair_u32_id_list(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let mut out = Vec::new();
     out.push(print_u32(operands)?);
     out.push(print_id(operands, id_names)?);
@@ -50,13 +60,15 @@ fn print_pair_u32_id_list(operands: &mut Operands, id_names: &HashMap<u32, Strin
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_ImageOperands(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_ImageOperands(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"ImageOperands", value)?];
     // None
-    if value & 0x0000 != 0 {
-    }
+    if value & 0x0000 != 0 {}
     // Bias
     if value & 0x0001 != 0 {
         // IdRef
@@ -110,20 +122,15 @@ fn print_enum_ImageOperands(operands: &mut Operands, id_names: &HashMap<u32, Str
         out.push(print_id(operands, id_names)?);
     }
     // NonPrivateTexelKHR
-    if value & 0x0400 != 0 {
-    }
+    if value & 0x0400 != 0 {}
     // VolatileTexelKHR
-    if value & 0x0800 != 0 {
-    }
+    if value & 0x0800 != 0 {}
     // SignExtend
-    if value & 0x1000 != 0 {
-    }
+    if value & 0x1000 != 0 {}
     // ZeroExtend
-    if value & 0x2000 != 0 {
-    }
+    if value & 0x2000 != 0 {}
     // Nontemporal
-    if value & 0x4000 != 0 {
-    }
+    if value & 0x4000 != 0 {}
     // Offsets
     if value & 0x10000 != 0 {
         // IdRef
@@ -135,75 +142,69 @@ fn print_enum_ImageOperands(operands: &mut Operands, id_names: &HashMap<u32, Str
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_FPFastMathMode(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_FPFastMathMode(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"FPFastMathMode", value)?];
     // None
-    if value & 0x0000 != 0 {
-    }
+    if value & 0x0000 != 0 {}
     // NotNaN
-    if value & 0x0001 != 0 {
-    }
+    if value & 0x0001 != 0 {}
     // NotInf
-    if value & 0x0002 != 0 {
-    }
+    if value & 0x0002 != 0 {}
     // NSZ
-    if value & 0x0004 != 0 {
-    }
+    if value & 0x0004 != 0 {}
     // AllowRecip
-    if value & 0x0008 != 0 {
-    }
+    if value & 0x0008 != 0 {}
     // Fast
-    if value & 0x0010 != 0 {
-    }
+    if value & 0x0010 != 0 {}
     // AllowContractFastINTEL
-    if value & 0x10000 != 0 {
-    }
+    if value & 0x10000 != 0 {}
     // AllowReassocINTEL
-    if value & 0x20000 != 0 {
-    }
+    if value & 0x20000 != 0 {}
     Ok(out)
 }
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_SelectionControl(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_SelectionControl(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"SelectionControl", value)?];
     // None
-    if value & 0x0000 != 0 {
-    }
+    if value & 0x0000 != 0 {}
     // Flatten
-    if value & 0x0001 != 0 {
-    }
+    if value & 0x0001 != 0 {}
     // DontFlatten
-    if value & 0x0002 != 0 {
-    }
+    if value & 0x0002 != 0 {}
     Ok(out)
 }
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_LoopControl(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_LoopControl(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"LoopControl", value)?];
     // None
-    if value & 0x0000 != 0 {
-    }
+    if value & 0x0000 != 0 {}
     // Unroll
-    if value & 0x0001 != 0 {
-    }
+    if value & 0x0001 != 0 {}
     // DontUnroll
-    if value & 0x0002 != 0 {
-    }
+    if value & 0x0002 != 0 {}
     // DependencyInfinite
-    if value & 0x0004 != 0 {
-    }
+    if value & 0x0004 != 0 {}
     // DependencyLength
     if value & 0x0008 != 0 {
         // LiteralInteger
@@ -270,8 +271,7 @@ fn print_enum_LoopControl(operands: &mut Operands, id_names: &HashMap<u32, Strin
         out.push(print_u32(operands)?);
     }
     // NoFusionINTEL
-    if value & 0x800000 != 0 {
-    }
+    if value & 0x800000 != 0 {}
     // LoopCountINTEL
     if value & 0x1000000 != 0 {
         // LiteralInteger
@@ -288,107 +288,92 @@ fn print_enum_LoopControl(operands: &mut Operands, id_names: &HashMap<u32, Strin
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_FunctionControl(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_FunctionControl(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"FunctionControl", value)?];
     // None
-    if value & 0x0000 != 0 {
-    }
+    if value & 0x0000 != 0 {}
     // Inline
-    if value & 0x0001 != 0 {
-    }
+    if value & 0x0001 != 0 {}
     // DontInline
-    if value & 0x0002 != 0 {
-    }
+    if value & 0x0002 != 0 {}
     // Pure
-    if value & 0x0004 != 0 {
-    }
+    if value & 0x0004 != 0 {}
     // Const
-    if value & 0x0008 != 0 {
-    }
+    if value & 0x0008 != 0 {}
     // OptNoneINTEL
-    if value & 0x10000 != 0 {
-    }
+    if value & 0x10000 != 0 {}
     Ok(out)
 }
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_MemorySemantics(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_MemorySemantics(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"MemorySemantics", value)?];
     // None
-    if value & 0x0000 != 0 {
-    }
+    if value & 0x0000 != 0 {}
     // Acquire
-    if value & 0x0002 != 0 {
-    }
+    if value & 0x0002 != 0 {}
     // Release
-    if value & 0x0004 != 0 {
-    }
+    if value & 0x0004 != 0 {}
     // AcquireRelease
-    if value & 0x0008 != 0 {
-    }
+    if value & 0x0008 != 0 {}
     // SequentiallyConsistent
-    if value & 0x0010 != 0 {
-    }
+    if value & 0x0010 != 0 {}
     // UniformMemory
-    if value & 0x0040 != 0 {
-    }
+    if value & 0x0040 != 0 {}
     // SubgroupMemory
-    if value & 0x0080 != 0 {
-    }
+    if value & 0x0080 != 0 {}
     // WorkgroupMemory
-    if value & 0x0100 != 0 {
-    }
+    if value & 0x0100 != 0 {}
     // CrossWorkgroupMemory
-    if value & 0x0200 != 0 {
-    }
+    if value & 0x0200 != 0 {}
     // AtomicCounterMemory
-    if value & 0x0400 != 0 {
-    }
+    if value & 0x0400 != 0 {}
     // ImageMemory
-    if value & 0x0800 != 0 {
-    }
+    if value & 0x0800 != 0 {}
     // OutputMemoryKHR
-    if value & 0x1000 != 0 {
-    }
+    if value & 0x1000 != 0 {}
     // MakeAvailableKHR
-    if value & 0x2000 != 0 {
-    }
+    if value & 0x2000 != 0 {}
     // MakeVisibleKHR
-    if value & 0x4000 != 0 {
-    }
+    if value & 0x4000 != 0 {}
     // Volatile
-    if value & 0x8000 != 0 {
-    }
+    if value & 0x8000 != 0 {}
     Ok(out)
 }
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_MemoryAccess(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_MemoryAccess(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"MemoryAccess", value)?];
     // None
-    if value & 0x0000 != 0 {
-    }
+    if value & 0x0000 != 0 {}
     // Volatile
-    if value & 0x0001 != 0 {
-    }
+    if value & 0x0001 != 0 {}
     // Aligned
     if value & 0x0002 != 0 {
         // LiteralInteger
         out.push(print_u32(operands)?);
     }
     // Nontemporal
-    if value & 0x0004 != 0 {
-    }
+    if value & 0x0004 != 0 {}
     // MakePointerAvailableKHR
     if value & 0x0008 != 0 {
         // IdScope
@@ -400,8 +385,7 @@ fn print_enum_MemoryAccess(operands: &mut Operands, id_names: &HashMap<u32, Stri
         out.push(print_id(operands, id_names)?);
     }
     // NonPrivatePointerKHR
-    if value & 0x0020 != 0 {
-    }
+    if value & 0x0020 != 0 {}
     // AliasScopeINTELMask
     if value & 0x10000 != 0 {
         // IdRef
@@ -418,132 +402,114 @@ fn print_enum_MemoryAccess(operands: &mut Operands, id_names: &HashMap<u32, Stri
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_KernelProfilingInfo(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_KernelProfilingInfo(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"KernelProfilingInfo", value)?];
     // None
-    if value & 0x0000 != 0 {
-    }
+    if value & 0x0000 != 0 {}
     // CmdExecTime
-    if value & 0x0001 != 0 {
-    }
+    if value & 0x0001 != 0 {}
     Ok(out)
 }
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_RayFlags(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_RayFlags(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"RayFlags", value)?];
     // NoneKHR
-    if value & 0x0000 != 0 {
-    }
+    if value & 0x0000 != 0 {}
     // OpaqueKHR
-    if value & 0x0001 != 0 {
-    }
+    if value & 0x0001 != 0 {}
     // NoOpaqueKHR
-    if value & 0x0002 != 0 {
-    }
+    if value & 0x0002 != 0 {}
     // TerminateOnFirstHitKHR
-    if value & 0x0004 != 0 {
-    }
+    if value & 0x0004 != 0 {}
     // SkipClosestHitShaderKHR
-    if value & 0x0008 != 0 {
-    }
+    if value & 0x0008 != 0 {}
     // CullBackFacingTrianglesKHR
-    if value & 0x0010 != 0 {
-    }
+    if value & 0x0010 != 0 {}
     // CullFrontFacingTrianglesKHR
-    if value & 0x0020 != 0 {
-    }
+    if value & 0x0020 != 0 {}
     // CullOpaqueKHR
-    if value & 0x0040 != 0 {
-    }
+    if value & 0x0040 != 0 {}
     // CullNoOpaqueKHR
-    if value & 0x0080 != 0 {
-    }
+    if value & 0x0080 != 0 {}
     // SkipTrianglesKHR
-    if value & 0x0100 != 0 {
-    }
+    if value & 0x0100 != 0 {}
     // SkipAABBsKHR
-    if value & 0x0200 != 0 {
-    }
+    if value & 0x0200 != 0 {}
     // ForceOpacityMicromap2StateEXT
-    if value & 0x0400 != 0 {
-    }
+    if value & 0x0400 != 0 {}
     Ok(out)
 }
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_FragmentShadingRate(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_FragmentShadingRate(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"FragmentShadingRate", value)?];
     // Vertical2Pixels
-    if value & 0x0001 != 0 {
-    }
+    if value & 0x0001 != 0 {}
     // Vertical4Pixels
-    if value & 0x0002 != 0 {
-    }
+    if value & 0x0002 != 0 {}
     // Horizontal2Pixels
-    if value & 0x0004 != 0 {
-    }
+    if value & 0x0004 != 0 {}
     // Horizontal4Pixels
-    if value & 0x0008 != 0 {
-    }
+    if value & 0x0008 != 0 {}
     Ok(out)
 }
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_SourceLanguage(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_SourceLanguage(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"SourceLanguage", value)?];
     match value {
         // Unknown
-        0 => {
-        }
+        0 => {}
         // ESSL
-        1 => {
-        }
+        1 => {}
         // GLSL
-        2 => {
-        }
+        2 => {}
         // OpenCL_C
-        3 => {
-        }
+        3 => {}
         // OpenCL_CPP
-        4 => {
-        }
+        4 => {}
         // HLSL
-        5 => {
-        }
+        5 => {}
         // CPP_for_OpenCL
-        6 => {
-        }
+        6 => {}
         // SYCL
-        7 => {
-        }
+        7 => {}
         // HERO_C
-        8 => {
-        }
+        8 => {}
         // NZSL
-        9 => {
-        }
+        9 => {}
         // WGSL
-        10 => {
-        }
+        10 => {}
         // Slang
-        11 => {
-        }
-        _ => {},
+        11 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -551,63 +517,49 @@ fn print_enum_SourceLanguage(operands: &mut Operands, id_names: &HashMap<u32, St
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_ExecutionModel(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_ExecutionModel(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"ExecutionModel", value)?];
     match value {
         // Vertex
-        0 => {
-        }
+        0 => {}
         // TessellationControl
-        1 => {
-        }
+        1 => {}
         // TessellationEvaluation
-        2 => {
-        }
+        2 => {}
         // Geometry
-        3 => {
-        }
+        3 => {}
         // Fragment
-        4 => {
-        }
+        4 => {}
         // GLCompute
-        5 => {
-        }
+        5 => {}
         // Kernel
-        6 => {
-        }
+        6 => {}
         // TaskNV
-        5267 => {
-        }
+        5267 => {}
         // MeshNV
-        5268 => {
-        }
+        5268 => {}
         // RayGenerationKHR
-        5313 => {
-        }
+        5313 => {}
         // IntersectionKHR
-        5314 => {
-        }
+        5314 => {}
         // AnyHitKHR
-        5315 => {
-        }
+        5315 => {}
         // ClosestHitKHR
-        5316 => {
-        }
+        5316 => {}
         // MissKHR
-        5317 => {
-        }
+        5317 => {}
         // CallableKHR
-        5318 => {
-        }
+        5318 => {}
         // TaskEXT
-        5364 => {
-        }
+        5364 => {}
         // MeshEXT
-        5365 => {
-        }
-        _ => {},
+        5365 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -615,24 +567,23 @@ fn print_enum_ExecutionModel(operands: &mut Operands, id_names: &HashMap<u32, St
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_AddressingModel(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_AddressingModel(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"AddressingModel", value)?];
     match value {
         // Logical
-        0 => {
-        }
+        0 => {}
         // Physical32
-        1 => {
-        }
+        1 => {}
         // Physical64
-        2 => {
-        }
+        2 => {}
         // PhysicalStorageBuffer64EXT
-        5348 => {
-        }
-        _ => {},
+        5348 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -640,24 +591,23 @@ fn print_enum_AddressingModel(operands: &mut Operands, id_names: &HashMap<u32, S
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_MemoryModel(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_MemoryModel(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"MemoryModel", value)?];
     match value {
         // Simple
-        0 => {
-        }
+        0 => {}
         // GLSL450
-        1 => {
-        }
+        1 => {}
         // OpenCL
-        2 => {
-        }
+        2 => {}
         // VulkanKHR
-        3 => {
-        }
-        _ => {},
+        3 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -665,7 +615,10 @@ fn print_enum_MemoryModel(operands: &mut Operands, id_names: &HashMap<u32, Strin
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_ExecutionMode(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_ExecutionMode(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"ExecutionMode", value)?];
@@ -676,50 +629,35 @@ fn print_enum_ExecutionMode(operands: &mut Operands, id_names: &HashMap<u32, Str
             out.push(print_u32(operands)?);
         }
         // SpacingEqual
-        1 => {
-        }
+        1 => {}
         // SpacingFractionalEven
-        2 => {
-        }
+        2 => {}
         // SpacingFractionalOdd
-        3 => {
-        }
+        3 => {}
         // VertexOrderCw
-        4 => {
-        }
+        4 => {}
         // VertexOrderCcw
-        5 => {
-        }
+        5 => {}
         // PixelCenterInteger
-        6 => {
-        }
+        6 => {}
         // OriginUpperLeft
-        7 => {
-        }
+        7 => {}
         // OriginLowerLeft
-        8 => {
-        }
+        8 => {}
         // EarlyFragmentTests
-        9 => {
-        }
+        9 => {}
         // PointMode
-        10 => {
-        }
+        10 => {}
         // Xfb
-        11 => {
-        }
+        11 => {}
         // DepthReplacing
-        12 => {
-        }
+        12 => {}
         // DepthGreater
-        14 => {
-        }
+        14 => {}
         // DepthLess
-        15 => {
-        }
+        15 => {}
         // DepthUnchanged
-        16 => {
-        }
+        16 => {}
         // LocalSize
         17 => {
             // LiteralInteger
@@ -739,54 +677,41 @@ fn print_enum_ExecutionMode(operands: &mut Operands, id_names: &HashMap<u32, Str
             out.push(print_u32(operands)?);
         }
         // InputPoints
-        19 => {
-        }
+        19 => {}
         // InputLines
-        20 => {
-        }
+        20 => {}
         // InputLinesAdjacency
-        21 => {
-        }
+        21 => {}
         // Triangles
-        22 => {
-        }
+        22 => {}
         // InputTrianglesAdjacency
-        23 => {
-        }
+        23 => {}
         // Quads
-        24 => {
-        }
+        24 => {}
         // Isolines
-        25 => {
-        }
+        25 => {}
         // OutputVertices
         26 => {
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // OutputPoints
-        27 => {
-        }
+        27 => {}
         // OutputLineStrip
-        28 => {
-        }
+        28 => {}
         // OutputTriangleStrip
-        29 => {
-        }
+        29 => {}
         // VecTypeHint
         30 => {
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // ContractionOff
-        31 => {
-        }
+        31 => {}
         // Initializer
-        33 => {
-        }
+        33 => {}
         // Finalizer
-        34 => {
-        }
+        34 => {}
         // SubgroupSize
         35 => {
             // LiteralInteger
@@ -821,20 +746,15 @@ fn print_enum_ExecutionMode(operands: &mut Operands, id_names: &HashMap<u32, Str
             out.push(print_id(operands, id_names)?);
         }
         // NonCoherentColorAttachmentReadEXT
-        4169 => {
-        }
+        4169 => {}
         // NonCoherentDepthAttachmentReadEXT
-        4170 => {
-        }
+        4170 => {}
         // NonCoherentStencilAttachmentReadEXT
-        4171 => {
-        }
+        4171 => {}
         // SubgroupUniformControlFlowKHR
-        4421 => {
-        }
+        4421 => {}
         // PostDepthCoverage
-        4446 => {
-        }
+        4446 => {}
         // DenormPreserve
         4459 => {
             // LiteralInteger
@@ -861,14 +781,11 @@ fn print_enum_ExecutionMode(operands: &mut Operands, id_names: &HashMap<u32, Str
             out.push(print_u32(operands)?);
         }
         // EarlyAndLateFragmentTestsAMD
-        5017 => {
-        }
+        5017 => {}
         // StencilRefReplacingEXT
-        5027 => {
-        }
+        5027 => {}
         // CoalescingAMDX
-        5069 => {
-        }
+        5069 => {}
         // MaxNodeRecursionAMDX
         5071 => {
             // IdRef
@@ -898,58 +815,42 @@ fn print_enum_ExecutionMode(operands: &mut Operands, id_names: &HashMap<u32, Str
             out.push(print_id(operands, id_names)?);
         }
         // StencilRefUnchangedFrontAMD
-        5079 => {
-        }
+        5079 => {}
         // StencilRefGreaterFrontAMD
-        5080 => {
-        }
+        5080 => {}
         // StencilRefLessFrontAMD
-        5081 => {
-        }
+        5081 => {}
         // StencilRefUnchangedBackAMD
-        5082 => {
-        }
+        5082 => {}
         // StencilRefGreaterBackAMD
-        5083 => {
-        }
+        5083 => {}
         // StencilRefLessBackAMD
-        5084 => {
-        }
+        5084 => {}
         // OutputLinesEXT
-        5269 => {
-        }
+        5269 => {}
         // OutputPrimitivesEXT
         5270 => {
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // DerivativeGroupQuadsNV
-        5289 => {
-        }
+        5289 => {}
         // DerivativeGroupLinearNV
-        5290 => {
-        }
+        5290 => {}
         // OutputTrianglesEXT
-        5298 => {
-        }
+        5298 => {}
         // PixelInterlockOrderedEXT
-        5366 => {
-        }
+        5366 => {}
         // PixelInterlockUnorderedEXT
-        5367 => {
-        }
+        5367 => {}
         // SampleInterlockOrderedEXT
-        5368 => {
-        }
+        5368 => {}
         // SampleInterlockUnorderedEXT
-        5369 => {
-        }
+        5369 => {}
         // ShadingRateInterlockOrderedEXT
-        5370 => {
-        }
+        5370 => {}
         // ShadingRateInterlockUnorderedEXT
-        5371 => {
-        }
+        5371 => {}
         // SharedLocalMemorySizeINTEL
         5618 => {
             // LiteralInteger
@@ -990,8 +891,7 @@ fn print_enum_ExecutionMode(operands: &mut Operands, id_names: &HashMap<u32, Str
             out.push(print_u32(operands)?);
         }
         // NoGlobalOffsetINTEL
-        5895 => {
-        }
+        5895 => {}
         // NumSIMDWorkitemsINTEL
         5896 => {
             // LiteralInteger
@@ -1017,7 +917,7 @@ fn print_enum_ExecutionMode(operands: &mut Operands, id_names: &HashMap<u32, Str
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
-        _ => {},
+        _ => {}
     }
     Ok(out)
 }
@@ -1025,96 +925,71 @@ fn print_enum_ExecutionMode(operands: &mut Operands, id_names: &HashMap<u32, Str
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_StorageClass(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_StorageClass(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"StorageClass", value)?];
     match value {
         // UniformConstant
-        0 => {
-        }
+        0 => {}
         // Input
-        1 => {
-        }
+        1 => {}
         // Uniform
-        2 => {
-        }
+        2 => {}
         // Output
-        3 => {
-        }
+        3 => {}
         // Workgroup
-        4 => {
-        }
+        4 => {}
         // CrossWorkgroup
-        5 => {
-        }
+        5 => {}
         // Private
-        6 => {
-        }
+        6 => {}
         // Function
-        7 => {
-        }
+        7 => {}
         // Generic
-        8 => {
-        }
+        8 => {}
         // PushConstant
-        9 => {
-        }
+        9 => {}
         // AtomicCounter
-        10 => {
-        }
+        10 => {}
         // Image
-        11 => {
-        }
+        11 => {}
         // StorageBuffer
-        12 => {
-        }
+        12 => {}
         // TileImageEXT
-        4172 => {
-        }
+        4172 => {}
         // NodePayloadAMDX
-        5068 => {
-        }
+        5068 => {}
         // NodeOutputPayloadAMDX
-        5076 => {
-        }
+        5076 => {}
         // CallableDataKHR
-        5328 => {
-        }
+        5328 => {}
         // IncomingCallableDataKHR
-        5329 => {
-        }
+        5329 => {}
         // RayPayloadKHR
-        5338 => {
-        }
+        5338 => {}
         // HitAttributeKHR
-        5339 => {
-        }
+        5339 => {}
         // IncomingRayPayloadKHR
-        5342 => {
-        }
+        5342 => {}
         // ShaderRecordBufferKHR
-        5343 => {
-        }
+        5343 => {}
         // PhysicalStorageBufferEXT
-        5349 => {
-        }
+        5349 => {}
         // HitObjectAttributeNV
-        5385 => {
-        }
+        5385 => {}
         // TaskPayloadWorkgroupEXT
-        5402 => {
-        }
+        5402 => {}
         // CodeSectionINTEL
-        5605 => {
-        }
+        5605 => {}
         // DeviceOnlyINTEL
-        5936 => {
-        }
+        5936 => {}
         // HostOnlyINTEL
-        5937 => {
-        }
-        _ => {},
+        5937 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -1128,30 +1003,22 @@ fn print_enum_Dim(operands: &mut Operands, id_names: &HashMap<u32, String>) -> R
     let mut out = vec![enum_to_str(&"Dim", value)?];
     match value {
         // 1D
-        0 => {
-        }
+        0 => {}
         // 2D
-        1 => {
-        }
+        1 => {}
         // 3D
-        2 => {
-        }
+        2 => {}
         // Cube
-        3 => {
-        }
+        3 => {}
         // Rect
-        4 => {
-        }
+        4 => {}
         // Buffer
-        5 => {
-        }
+        5 => {}
         // SubpassData
-        6 => {
-        }
+        6 => {}
         // TileImageDataEXT
-        4173 => {
-        }
-        _ => {},
+        4173 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -1159,27 +1026,25 @@ fn print_enum_Dim(operands: &mut Operands, id_names: &HashMap<u32, String>) -> R
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_SamplerAddressingMode(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_SamplerAddressingMode(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"SamplerAddressingMode", value)?];
     match value {
         // None
-        0 => {
-        }
+        0 => {}
         // ClampToEdge
-        1 => {
-        }
+        1 => {}
         // Clamp
-        2 => {
-        }
+        2 => {}
         // Repeat
-        3 => {
-        }
+        3 => {}
         // RepeatMirrored
-        4 => {
-        }
-        _ => {},
+        4 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -1187,18 +1052,19 @@ fn print_enum_SamplerAddressingMode(operands: &mut Operands, id_names: &HashMap<
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_SamplerFilterMode(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_SamplerFilterMode(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"SamplerFilterMode", value)?];
     match value {
         // Nearest
-        0 => {
-        }
+        0 => {}
         // Linear
-        1 => {
-        }
-        _ => {},
+        1 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -1206,138 +1072,99 @@ fn print_enum_SamplerFilterMode(operands: &mut Operands, id_names: &HashMap<u32,
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_ImageFormat(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_ImageFormat(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"ImageFormat", value)?];
     match value {
         // Unknown
-        0 => {
-        }
+        0 => {}
         // Rgba32f
-        1 => {
-        }
+        1 => {}
         // Rgba16f
-        2 => {
-        }
+        2 => {}
         // R32f
-        3 => {
-        }
+        3 => {}
         // Rgba8
-        4 => {
-        }
+        4 => {}
         // Rgba8Snorm
-        5 => {
-        }
+        5 => {}
         // Rg32f
-        6 => {
-        }
+        6 => {}
         // Rg16f
-        7 => {
-        }
+        7 => {}
         // R11fG11fB10f
-        8 => {
-        }
+        8 => {}
         // R16f
-        9 => {
-        }
+        9 => {}
         // Rgba16
-        10 => {
-        }
+        10 => {}
         // Rgb10A2
-        11 => {
-        }
+        11 => {}
         // Rg16
-        12 => {
-        }
+        12 => {}
         // Rg8
-        13 => {
-        }
+        13 => {}
         // R16
-        14 => {
-        }
+        14 => {}
         // R8
-        15 => {
-        }
+        15 => {}
         // Rgba16Snorm
-        16 => {
-        }
+        16 => {}
         // Rg16Snorm
-        17 => {
-        }
+        17 => {}
         // Rg8Snorm
-        18 => {
-        }
+        18 => {}
         // R16Snorm
-        19 => {
-        }
+        19 => {}
         // R8Snorm
-        20 => {
-        }
+        20 => {}
         // Rgba32i
-        21 => {
-        }
+        21 => {}
         // Rgba16i
-        22 => {
-        }
+        22 => {}
         // Rgba8i
-        23 => {
-        }
+        23 => {}
         // R32i
-        24 => {
-        }
+        24 => {}
         // Rg32i
-        25 => {
-        }
+        25 => {}
         // Rg16i
-        26 => {
-        }
+        26 => {}
         // Rg8i
-        27 => {
-        }
+        27 => {}
         // R16i
-        28 => {
-        }
+        28 => {}
         // R8i
-        29 => {
-        }
+        29 => {}
         // Rgba32ui
-        30 => {
-        }
+        30 => {}
         // Rgba16ui
-        31 => {
-        }
+        31 => {}
         // Rgba8ui
-        32 => {
-        }
+        32 => {}
         // R32ui
-        33 => {
-        }
+        33 => {}
         // Rgb10a2ui
-        34 => {
-        }
+        34 => {}
         // Rg32ui
-        35 => {
-        }
+        35 => {}
         // Rg16ui
-        36 => {
-        }
+        36 => {}
         // Rg8ui
-        37 => {
-        }
+        37 => {}
         // R16ui
-        38 => {
-        }
+        38 => {}
         // R8ui
-        39 => {
-        }
+        39 => {}
         // R64ui
-        40 => {
-        }
+        40 => {}
         // R64i
-        41 => {
-        }
-        _ => {},
+        41 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -1345,72 +1172,55 @@ fn print_enum_ImageFormat(operands: &mut Operands, id_names: &HashMap<u32, Strin
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_ImageChannelOrder(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_ImageChannelOrder(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"ImageChannelOrder", value)?];
     match value {
         // R
-        0 => {
-        }
+        0 => {}
         // A
-        1 => {
-        }
+        1 => {}
         // RG
-        2 => {
-        }
+        2 => {}
         // RA
-        3 => {
-        }
+        3 => {}
         // RGB
-        4 => {
-        }
+        4 => {}
         // RGBA
-        5 => {
-        }
+        5 => {}
         // BGRA
-        6 => {
-        }
+        6 => {}
         // ARGB
-        7 => {
-        }
+        7 => {}
         // Intensity
-        8 => {
-        }
+        8 => {}
         // Luminance
-        9 => {
-        }
+        9 => {}
         // Rx
-        10 => {
-        }
+        10 => {}
         // RGx
-        11 => {
-        }
+        11 => {}
         // RGBx
-        12 => {
-        }
+        12 => {}
         // Depth
-        13 => {
-        }
+        13 => {}
         // DepthStencil
-        14 => {
-        }
+        14 => {}
         // sRGB
-        15 => {
-        }
+        15 => {}
         // sRGBx
-        16 => {
-        }
+        16 => {}
         // sRGBA
-        17 => {
-        }
+        17 => {}
         // sBGRA
-        18 => {
-        }
+        18 => {}
         // ABGR
-        19 => {
-        }
-        _ => {},
+        19 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -1418,69 +1228,53 @@ fn print_enum_ImageChannelOrder(operands: &mut Operands, id_names: &HashMap<u32,
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_ImageChannelDataType(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_ImageChannelDataType(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"ImageChannelDataType", value)?];
     match value {
         // SnormInt8
-        0 => {
-        }
+        0 => {}
         // SnormInt16
-        1 => {
-        }
+        1 => {}
         // UnormInt8
-        2 => {
-        }
+        2 => {}
         // UnormInt16
-        3 => {
-        }
+        3 => {}
         // UnormShort565
-        4 => {
-        }
+        4 => {}
         // UnormShort555
-        5 => {
-        }
+        5 => {}
         // UnormInt101010
-        6 => {
-        }
+        6 => {}
         // SignedInt8
-        7 => {
-        }
+        7 => {}
         // SignedInt16
-        8 => {
-        }
+        8 => {}
         // SignedInt32
-        9 => {
-        }
+        9 => {}
         // UnsignedInt8
-        10 => {
-        }
+        10 => {}
         // UnsignedInt16
-        11 => {
-        }
+        11 => {}
         // UnsignedInt32
-        12 => {
-        }
+        12 => {}
         // HalfFloat
-        13 => {
-        }
+        13 => {}
         // Float
-        14 => {
-        }
+        14 => {}
         // UnormInt24
-        15 => {
-        }
+        15 => {}
         // UnormInt101010_2
-        16 => {
-        }
+        16 => {}
         // UnsignedIntRaw10EXT
-        19 => {
-        }
+        19 => {}
         // UnsignedIntRaw12EXT
-        20 => {
-        }
-        _ => {},
+        20 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -1488,24 +1282,23 @@ fn print_enum_ImageChannelDataType(operands: &mut Operands, id_names: &HashMap<u
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_FPRoundingMode(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_FPRoundingMode(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"FPRoundingMode", value)?];
     match value {
         // RTE
-        0 => {
-        }
+        0 => {}
         // RTZ
-        1 => {
-        }
+        1 => {}
         // RTP
-        2 => {
-        }
+        2 => {}
         // RTN
-        3 => {
-        }
-        _ => {},
+        3 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -1513,18 +1306,19 @@ fn print_enum_FPRoundingMode(operands: &mut Operands, id_names: &HashMap<u32, St
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_FPDenormMode(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_FPDenormMode(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"FPDenormMode", value)?];
     match value {
         // Preserve
-        0 => {
-        }
+        0 => {}
         // FlushToZero
-        1 => {
-        }
-        _ => {},
+        1 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -1532,36 +1326,31 @@ fn print_enum_FPDenormMode(operands: &mut Operands, id_names: &HashMap<u32, Stri
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_QuantizationModes(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_QuantizationModes(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"QuantizationModes", value)?];
     match value {
         // TRN
-        0 => {
-        }
+        0 => {}
         // TRN_ZERO
-        1 => {
-        }
+        1 => {}
         // RND
-        2 => {
-        }
+        2 => {}
         // RND_ZERO
-        3 => {
-        }
+        3 => {}
         // RND_INF
-        4 => {
-        }
+        4 => {}
         // RND_MIN_INF
-        5 => {
-        }
+        5 => {}
         // RND_CONV
-        6 => {
-        }
+        6 => {}
         // RND_CONV_ODD
-        7 => {
-        }
-        _ => {},
+        7 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -1569,18 +1358,19 @@ fn print_enum_QuantizationModes(operands: &mut Operands, id_names: &HashMap<u32,
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_FPOperationMode(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_FPOperationMode(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"FPOperationMode", value)?];
     match value {
         // IEEE
-        0 => {
-        }
+        0 => {}
         // ALT
-        1 => {
-        }
-        _ => {},
+        1 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -1588,24 +1378,23 @@ fn print_enum_FPOperationMode(operands: &mut Operands, id_names: &HashMap<u32, S
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_OverflowModes(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_OverflowModes(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"OverflowModes", value)?];
     match value {
         // WRAP
-        0 => {
-        }
+        0 => {}
         // SAT
-        1 => {
-        }
+        1 => {}
         // SAT_ZERO
-        2 => {
-        }
+        2 => {}
         // SAT_SYM
-        3 => {
-        }
-        _ => {},
+        3 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -1613,21 +1402,21 @@ fn print_enum_OverflowModes(operands: &mut Operands, id_names: &HashMap<u32, Str
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_LinkageType(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_LinkageType(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"LinkageType", value)?];
     match value {
         // Export
-        0 => {
-        }
+        0 => {}
         // Import
-        1 => {
-        }
+        1 => {}
         // LinkOnceODR
-        2 => {
-        }
-        _ => {},
+        2 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -1635,21 +1424,21 @@ fn print_enum_LinkageType(operands: &mut Operands, id_names: &HashMap<u32, Strin
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_AccessQualifier(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_AccessQualifier(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"AccessQualifier", value)?];
     match value {
         // ReadOnly
-        0 => {
-        }
+        0 => {}
         // WriteOnly
-        1 => {
-        }
+        1 => {}
         // ReadWrite
-        2 => {
-        }
-        _ => {},
+        2 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -1657,24 +1446,23 @@ fn print_enum_AccessQualifier(operands: &mut Operands, id_names: &HashMap<u32, S
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_HostAccessQualifier(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_HostAccessQualifier(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"HostAccessQualifier", value)?];
     match value {
         // NoneINTEL
-        0 => {
-        }
+        0 => {}
         // ReadINTEL
-        1 => {
-        }
+        1 => {}
         // WriteINTEL
-        2 => {
-        }
+        2 => {}
         // ReadWriteINTEL
-        3 => {
-        }
-        _ => {},
+        3 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -1682,39 +1470,33 @@ fn print_enum_HostAccessQualifier(operands: &mut Operands, id_names: &HashMap<u3
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_FunctionParameterAttribute(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_FunctionParameterAttribute(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"FunctionParameterAttribute", value)?];
     match value {
         // Zext
-        0 => {
-        }
+        0 => {}
         // Sext
-        1 => {
-        }
+        1 => {}
         // ByVal
-        2 => {
-        }
+        2 => {}
         // Sret
-        3 => {
-        }
+        3 => {}
         // NoAlias
-        4 => {
-        }
+        4 => {}
         // NoCapture
-        5 => {
-        }
+        5 => {}
         // NoWrite
-        6 => {
-        }
+        6 => {}
         // NoReadWrite
-        7 => {
-        }
+        7 => {}
         // RuntimeAlignedINTEL
-        5940 => {
-        }
-        _ => {},
+        5940 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -1722,31 +1504,29 @@ fn print_enum_FunctionParameterAttribute(operands: &mut Operands, id_names: &Has
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_Decoration(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_Decoration(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"Decoration", value)?];
     match value {
         // RelaxedPrecision
-        0 => {
-        }
+        0 => {}
         // SpecId
         1 => {
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // Block
-        2 => {
-        }
+        2 => {}
         // BufferBlock
-        3 => {
-        }
+        3 => {}
         // RowMajor
-        4 => {
-        }
+        4 => {}
         // ColMajor
-        5 => {
-        }
+        5 => {}
         // ArrayStride
         6 => {
             // LiteralInteger
@@ -1758,69 +1538,51 @@ fn print_enum_Decoration(operands: &mut Operands, id_names: &HashMap<u32, String
             out.push(print_u32(operands)?);
         }
         // GLSLShared
-        8 => {
-        }
+        8 => {}
         // GLSLPacked
-        9 => {
-        }
+        9 => {}
         // CPacked
-        10 => {
-        }
+        10 => {}
         // BuiltIn
         11 => {
             // BuiltIn
             out.extend(print_enum_BuiltIn(operands, id_names)?);
         }
         // NoPerspective
-        13 => {
-        }
+        13 => {}
         // Flat
-        14 => {
-        }
+        14 => {}
         // Patch
-        15 => {
-        }
+        15 => {}
         // Centroid
-        16 => {
-        }
+        16 => {}
         // Sample
-        17 => {
-        }
+        17 => {}
         // Invariant
-        18 => {
-        }
+        18 => {}
         // Restrict
-        19 => {
-        }
+        19 => {}
         // Aliased
-        20 => {
-        }
+        20 => {}
         // Volatile
-        21 => {
-        }
+        21 => {}
         // Constant
-        22 => {
-        }
+        22 => {}
         // Coherent
-        23 => {
-        }
+        23 => {}
         // NonWritable
-        24 => {
-        }
+        24 => {}
         // NonReadable
-        25 => {
-        }
+        25 => {}
         // Uniform
-        26 => {
-        }
+        26 => {}
         // UniformId
         27 => {
             // IdScope
             out.push(print_id(operands, id_names)?);
         }
         // SaturatedConversion
-        28 => {
-        }
+        28 => {}
         // Stream
         29 => {
             // LiteralInteger
@@ -1889,8 +1651,7 @@ fn print_enum_Decoration(operands: &mut Operands, id_names: &HashMap<u32, String
             out.extend(print_enum_LinkageType(operands, id_names)?);
         }
         // NoContraction
-        42 => {
-        }
+        42 => {}
         // InputAttachmentIndex
         43 => {
             // LiteralInteger
@@ -1917,20 +1678,15 @@ fn print_enum_Decoration(operands: &mut Operands, id_names: &HashMap<u32, String
             out.push(print_id(operands, id_names)?);
         }
         // NoSignedWrap
-        4469 => {
-        }
+        4469 => {}
         // NoUnsignedWrap
-        4470 => {
-        }
+        4470 => {}
         // WeightTextureQCOM
-        4487 => {
-        }
+        4487 => {}
         // BlockMatchTextureQCOM
-        4488 => {
-        }
+        4488 => {}
         // ExplicitInterpAMD
-        4999 => {
-        }
+        4999 => {}
         // NodeSharesPayloadLimitsWithAMDX
         5019 => {
             // IdRef
@@ -1942,93 +1698,72 @@ fn print_enum_Decoration(operands: &mut Operands, id_names: &HashMap<u32, String
             out.push(print_id(operands, id_names)?);
         }
         // TrackFinishWritingAMDX
-        5078 => {
-        }
+        5078 => {}
         // PayloadNodeNameAMDX
         5091 => {
             // LiteralString
             out.push(print_str(operands)?);
         }
         // OverrideCoverageNV
-        5248 => {
-        }
+        5248 => {}
         // PassthroughNV
-        5250 => {
-        }
+        5250 => {}
         // ViewportRelativeNV
-        5252 => {
-        }
+        5252 => {}
         // SecondaryViewportRelativeNV
         5256 => {
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // PerPrimitiveEXT
-        5271 => {
-        }
+        5271 => {}
         // PerViewNV
-        5272 => {
-        }
+        5272 => {}
         // PerTaskNV
-        5273 => {
-        }
+        5273 => {}
         // PerVertexNV
-        5285 => {
-        }
+        5285 => {}
         // NonUniformEXT
-        5300 => {
-        }
+        5300 => {}
         // RestrictPointerEXT
-        5355 => {
-        }
+        5355 => {}
         // AliasedPointerEXT
-        5356 => {
-        }
+        5356 => {}
         // HitObjectShaderRecordBufferNV
-        5386 => {
-        }
+        5386 => {}
         // BindlessSamplerNV
-        5398 => {
-        }
+        5398 => {}
         // BindlessImageNV
-        5399 => {
-        }
+        5399 => {}
         // BoundSamplerNV
-        5400 => {
-        }
+        5400 => {}
         // BoundImageNV
-        5401 => {
-        }
+        5401 => {}
         // SIMTCallINTEL
         5599 => {
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // ReferencedIndirectlyINTEL
-        5602 => {
-        }
+        5602 => {}
         // ClobberINTEL
         5607 => {
             // LiteralString
             out.push(print_str(operands)?);
         }
         // SideEffectsINTEL
-        5608 => {
-        }
+        5608 => {}
         // VectorComputeVariableINTEL
-        5624 => {
-        }
+        5624 => {}
         // FuncParamIOKindINTEL
         5625 => {
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // VectorComputeFunctionINTEL
-        5626 => {
-        }
+        5626 => {}
         // StackCallINTEL
-        5627 => {
-        }
+        5627 => {}
         // GlobalVariableOffsetINTEL
         5628 => {
             // LiteralInteger
@@ -2064,8 +1799,7 @@ fn print_enum_Decoration(operands: &mut Operands, id_names: &HashMap<u32, String
             out.extend(print_enum_FPDenormMode(operands, id_names)?);
         }
         // RegisterINTEL
-        5825 => {
-        }
+        5825 => {}
         // MemoryINTEL
         5826 => {
             // LiteralString
@@ -2087,19 +1821,16 @@ fn print_enum_Decoration(operands: &mut Operands, id_names: &HashMap<u32, String
             out.push(print_u32(operands)?);
         }
         // SinglepumpINTEL
-        5830 => {
-        }
+        5830 => {}
         // DoublepumpINTEL
-        5831 => {
-        }
+        5831 => {}
         // MaxReplicatesINTEL
         5832 => {
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // SimpleDualPortINTEL
-        5833 => {
-        }
+        5833 => {}
         // MergeINTEL
         5834 => {
             // LiteralString
@@ -2128,30 +1859,25 @@ fn print_enum_Decoration(operands: &mut Operands, id_names: &HashMap<u32, String
             out.push(print_u32(operands)?);
         }
         // TrueDualPortINTEL
-        5885 => {
-        }
+        5885 => {}
         // BurstCoalesceINTEL
-        5899 => {
-        }
+        5899 => {}
         // CacheSizeINTEL
         5900 => {
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // DontStaticallyCoalesceINTEL
-        5901 => {
-        }
+        5901 => {}
         // PrefetchINTEL
         5902 => {
             // LiteralInteger
             out.push(print_u32(operands)?);
         }
         // StallEnableINTEL
-        5905 => {
-        }
+        5905 => {}
         // FuseLoopsInFunctionINTEL
-        5907 => {
-        }
+        5907 => {}
         // MathOpDSPModeINTEL
         5909 => {
             // LiteralInteger
@@ -2202,17 +1928,13 @@ fn print_enum_Decoration(operands: &mut Operands, id_names: &HashMap<u32, String
             out.extend(print_enum_FPOperationMode(operands, id_names)?);
         }
         // SingleElementVectorINTEL
-        6085 => {
-        }
+        6085 => {}
         // VectorComputeCallableFunctionINTEL
-        6087 => {
-        }
+        6087 => {}
         // MediaBlockIOINTEL
-        6140 => {
-        }
+        6140 => {}
         // StallFreeINTEL
-        6151 => {
-        }
+        6151 => {}
         // FPMaxErrorDecorationINTEL
         6170 => {
             // LiteralFloat
@@ -2233,11 +1955,9 @@ fn print_enum_Decoration(operands: &mut Operands, id_names: &HashMap<u32, String
             out.push(print_u32(operands)?);
         }
         // ConduitKernelArgumentINTEL
-        6175 => {
-        }
+        6175 => {}
         // RegisterMapKernelArgumentINTEL
-        6176 => {
-        }
+        6176 => {}
         // MMHostInterfaceAddressWidthINTEL
         6177 => {
             // LiteralInteger
@@ -2269,8 +1989,7 @@ fn print_enum_Decoration(operands: &mut Operands, id_names: &HashMap<u32, String
             out.push(print_u32(operands)?);
         }
         // StableKernelArgumentINTEL
-        6183 => {
-        }
+        6183 => {}
         // HostAccessINTEL
         6188 => {
             // HostAccessQualifier
@@ -2302,7 +2021,7 @@ fn print_enum_Decoration(operands: &mut Operands, id_names: &HashMap<u32, String
             // StoreCacheControl
             out.extend(print_enum_StoreCacheControl(operands, id_names)?);
         }
-        _ => {},
+        _ => {}
     }
     Ok(out)
 }
@@ -2310,360 +2029,247 @@ fn print_enum_Decoration(operands: &mut Operands, id_names: &HashMap<u32, String
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_BuiltIn(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_BuiltIn(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"BuiltIn", value)?];
     match value {
         // Position
-        0 => {
-        }
+        0 => {}
         // PointSize
-        1 => {
-        }
+        1 => {}
         // ClipDistance
-        3 => {
-        }
+        3 => {}
         // CullDistance
-        4 => {
-        }
+        4 => {}
         // VertexId
-        5 => {
-        }
+        5 => {}
         // InstanceId
-        6 => {
-        }
+        6 => {}
         // PrimitiveId
-        7 => {
-        }
+        7 => {}
         // InvocationId
-        8 => {
-        }
+        8 => {}
         // Layer
-        9 => {
-        }
+        9 => {}
         // ViewportIndex
-        10 => {
-        }
+        10 => {}
         // TessLevelOuter
-        11 => {
-        }
+        11 => {}
         // TessLevelInner
-        12 => {
-        }
+        12 => {}
         // TessCoord
-        13 => {
-        }
+        13 => {}
         // PatchVertices
-        14 => {
-        }
+        14 => {}
         // FragCoord
-        15 => {
-        }
+        15 => {}
         // PointCoord
-        16 => {
-        }
+        16 => {}
         // FrontFacing
-        17 => {
-        }
+        17 => {}
         // SampleId
-        18 => {
-        }
+        18 => {}
         // SamplePosition
-        19 => {
-        }
+        19 => {}
         // SampleMask
-        20 => {
-        }
+        20 => {}
         // FragDepth
-        22 => {
-        }
+        22 => {}
         // HelperInvocation
-        23 => {
-        }
+        23 => {}
         // NumWorkgroups
-        24 => {
-        }
+        24 => {}
         // WorkgroupSize
-        25 => {
-        }
+        25 => {}
         // WorkgroupId
-        26 => {
-        }
+        26 => {}
         // LocalInvocationId
-        27 => {
-        }
+        27 => {}
         // GlobalInvocationId
-        28 => {
-        }
+        28 => {}
         // LocalInvocationIndex
-        29 => {
-        }
+        29 => {}
         // WorkDim
-        30 => {
-        }
+        30 => {}
         // GlobalSize
-        31 => {
-        }
+        31 => {}
         // EnqueuedWorkgroupSize
-        32 => {
-        }
+        32 => {}
         // GlobalOffset
-        33 => {
-        }
+        33 => {}
         // GlobalLinearId
-        34 => {
-        }
+        34 => {}
         // SubgroupSize
-        36 => {
-        }
+        36 => {}
         // SubgroupMaxSize
-        37 => {
-        }
+        37 => {}
         // NumSubgroups
-        38 => {
-        }
+        38 => {}
         // NumEnqueuedSubgroups
-        39 => {
-        }
+        39 => {}
         // SubgroupId
-        40 => {
-        }
+        40 => {}
         // SubgroupLocalInvocationId
-        41 => {
-        }
+        41 => {}
         // VertexIndex
-        42 => {
-        }
+        42 => {}
         // InstanceIndex
-        43 => {
-        }
+        43 => {}
         // CoreIDARM
-        4160 => {
-        }
+        4160 => {}
         // CoreCountARM
-        4161 => {
-        }
+        4161 => {}
         // CoreMaxIDARM
-        4162 => {
-        }
+        4162 => {}
         // WarpIDARM
-        4163 => {
-        }
+        4163 => {}
         // WarpMaxIDARM
-        4164 => {
-        }
+        4164 => {}
         // SubgroupEqMaskKHR
-        4416 => {
-        }
+        4416 => {}
         // SubgroupGeMaskKHR
-        4417 => {
-        }
+        4417 => {}
         // SubgroupGtMaskKHR
-        4418 => {
-        }
+        4418 => {}
         // SubgroupLeMaskKHR
-        4419 => {
-        }
+        4419 => {}
         // SubgroupLtMaskKHR
-        4420 => {
-        }
+        4420 => {}
         // BaseVertex
-        4424 => {
-        }
+        4424 => {}
         // BaseInstance
-        4425 => {
-        }
+        4425 => {}
         // DrawIndex
-        4426 => {
-        }
+        4426 => {}
         // PrimitiveShadingRateKHR
-        4432 => {
-        }
+        4432 => {}
         // DeviceIndex
-        4438 => {
-        }
+        4438 => {}
         // ViewIndex
-        4440 => {
-        }
+        4440 => {}
         // ShadingRateKHR
-        4444 => {
-        }
+        4444 => {}
         // BaryCoordNoPerspAMD
-        4992 => {
-        }
+        4992 => {}
         // BaryCoordNoPerspCentroidAMD
-        4993 => {
-        }
+        4993 => {}
         // BaryCoordNoPerspSampleAMD
-        4994 => {
-        }
+        4994 => {}
         // BaryCoordSmoothAMD
-        4995 => {
-        }
+        4995 => {}
         // BaryCoordSmoothCentroidAMD
-        4996 => {
-        }
+        4996 => {}
         // BaryCoordSmoothSampleAMD
-        4997 => {
-        }
+        4997 => {}
         // BaryCoordPullModelAMD
-        4998 => {
-        }
+        4998 => {}
         // FragStencilRefEXT
-        5014 => {
-        }
+        5014 => {}
         // CoalescedInputCountAMDX
-        5021 => {
-        }
+        5021 => {}
         // ShaderIndexAMDX
-        5073 => {
-        }
+        5073 => {}
         // ViewportMaskNV
-        5253 => {
-        }
+        5253 => {}
         // SecondaryPositionNV
-        5257 => {
-        }
+        5257 => {}
         // SecondaryViewportMaskNV
-        5258 => {
-        }
+        5258 => {}
         // PositionPerViewNV
-        5261 => {
-        }
+        5261 => {}
         // ViewportMaskPerViewNV
-        5262 => {
-        }
+        5262 => {}
         // FullyCoveredEXT
-        5264 => {
-        }
+        5264 => {}
         // TaskCountNV
-        5274 => {
-        }
+        5274 => {}
         // PrimitiveCountNV
-        5275 => {
-        }
+        5275 => {}
         // PrimitiveIndicesNV
-        5276 => {
-        }
+        5276 => {}
         // ClipDistancePerViewNV
-        5277 => {
-        }
+        5277 => {}
         // CullDistancePerViewNV
-        5278 => {
-        }
+        5278 => {}
         // LayerPerViewNV
-        5279 => {
-        }
+        5279 => {}
         // MeshViewCountNV
-        5280 => {
-        }
+        5280 => {}
         // MeshViewIndicesNV
-        5281 => {
-        }
+        5281 => {}
         // BaryCoordNV
-        5286 => {
-        }
+        5286 => {}
         // BaryCoordNoPerspNV
-        5287 => {
-        }
+        5287 => {}
         // FragmentSizeNV
-        5292 => {
-        }
+        5292 => {}
         // InvocationsPerPixelNV
-        5293 => {
-        }
+        5293 => {}
         // PrimitivePointIndicesEXT
-        5294 => {
-        }
+        5294 => {}
         // PrimitiveLineIndicesEXT
-        5295 => {
-        }
+        5295 => {}
         // PrimitiveTriangleIndicesEXT
-        5296 => {
-        }
+        5296 => {}
         // CullPrimitiveEXT
-        5299 => {
-        }
+        5299 => {}
         // LaunchIdKHR
-        5319 => {
-        }
+        5319 => {}
         // LaunchSizeKHR
-        5320 => {
-        }
+        5320 => {}
         // WorldRayOriginKHR
-        5321 => {
-        }
+        5321 => {}
         // WorldRayDirectionKHR
-        5322 => {
-        }
+        5322 => {}
         // ObjectRayOriginKHR
-        5323 => {
-        }
+        5323 => {}
         // ObjectRayDirectionKHR
-        5324 => {
-        }
+        5324 => {}
         // RayTminKHR
-        5325 => {
-        }
+        5325 => {}
         // RayTmaxKHR
-        5326 => {
-        }
+        5326 => {}
         // InstanceCustomIndexKHR
-        5327 => {
-        }
+        5327 => {}
         // ObjectToWorldKHR
-        5330 => {
-        }
+        5330 => {}
         // WorldToObjectKHR
-        5331 => {
-        }
+        5331 => {}
         // HitTNV
-        5332 => {
-        }
+        5332 => {}
         // HitKindKHR
-        5333 => {
-        }
+        5333 => {}
         // CurrentRayTimeNV
-        5334 => {
-        }
+        5334 => {}
         // HitTriangleVertexPositionsKHR
-        5335 => {
-        }
+        5335 => {}
         // HitMicroTriangleVertexPositionsNV
-        5337 => {
-        }
+        5337 => {}
         // HitMicroTriangleVertexBarycentricsNV
-        5344 => {
-        }
+        5344 => {}
         // IncomingRayFlagsKHR
-        5351 => {
-        }
+        5351 => {}
         // RayGeometryIndexKHR
-        5352 => {
-        }
+        5352 => {}
         // WarpsPerSMNV
-        5374 => {
-        }
+        5374 => {}
         // SMCountNV
-        5375 => {
-        }
+        5375 => {}
         // WarpIDNV
-        5376 => {
-        }
+        5376 => {}
         // SMIDNV
-        5377 => {
-        }
+        5377 => {}
         // HitKindFrontFacingMicroTriangleNV
-        5405 => {
-        }
+        5405 => {}
         // HitKindBackFacingMicroTriangleNV
-        5406 => {
-        }
+        5406 => {}
         // CullMaskKHR
-        6021 => {
-        }
-        _ => {},
+        6021 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -2671,33 +2277,29 @@ fn print_enum_BuiltIn(operands: &mut Operands, id_names: &HashMap<u32, String>) 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_Scope(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_Scope(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"Scope", value)?];
     match value {
         // CrossDevice
-        0 => {
-        }
+        0 => {}
         // Device
-        1 => {
-        }
+        1 => {}
         // Workgroup
-        2 => {
-        }
+        2 => {}
         // Subgroup
-        3 => {
-        }
+        3 => {}
         // Invocation
-        4 => {
-        }
+        4 => {}
         // QueueFamilyKHR
-        5 => {
-        }
+        5 => {}
         // ShaderCallKHR
-        6 => {
-        }
-        _ => {},
+        6 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -2705,33 +2307,29 @@ fn print_enum_Scope(operands: &mut Operands, id_names: &HashMap<u32, String>) ->
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_GroupOperation(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_GroupOperation(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"GroupOperation", value)?];
     match value {
         // Reduce
-        0 => {
-        }
+        0 => {}
         // InclusiveScan
-        1 => {
-        }
+        1 => {}
         // ExclusiveScan
-        2 => {
-        }
+        2 => {}
         // ClusteredReduce
-        3 => {
-        }
+        3 => {}
         // PartitionedReduceNV
-        6 => {
-        }
+        6 => {}
         // PartitionedInclusiveScanNV
-        7 => {
-        }
+        7 => {}
         // PartitionedExclusiveScanNV
-        8 => {
-        }
-        _ => {},
+        8 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -2739,21 +2337,21 @@ fn print_enum_GroupOperation(operands: &mut Operands, id_names: &HashMap<u32, St
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_KernelEnqueueFlags(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_KernelEnqueueFlags(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"KernelEnqueueFlags", value)?];
     match value {
         // NoWait
-        0 => {
-        }
+        0 => {}
         // WaitKernel
-        1 => {
-        }
+        1 => {}
         // WaitWorkGroup
-        2 => {
-        }
-        _ => {},
+        2 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -2761,693 +2359,469 @@ fn print_enum_KernelEnqueueFlags(operands: &mut Operands, id_names: &HashMap<u32
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_Capability(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_Capability(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"Capability", value)?];
     match value {
         // Matrix
-        0 => {
-        }
+        0 => {}
         // Shader
-        1 => {
-        }
+        1 => {}
         // Geometry
-        2 => {
-        }
+        2 => {}
         // Tessellation
-        3 => {
-        }
+        3 => {}
         // Addresses
-        4 => {
-        }
+        4 => {}
         // Linkage
-        5 => {
-        }
+        5 => {}
         // Kernel
-        6 => {
-        }
+        6 => {}
         // Vector16
-        7 => {
-        }
+        7 => {}
         // Float16Buffer
-        8 => {
-        }
+        8 => {}
         // Float16
-        9 => {
-        }
+        9 => {}
         // Float64
-        10 => {
-        }
+        10 => {}
         // Int64
-        11 => {
-        }
+        11 => {}
         // Int64Atomics
-        12 => {
-        }
+        12 => {}
         // ImageBasic
-        13 => {
-        }
+        13 => {}
         // ImageReadWrite
-        14 => {
-        }
+        14 => {}
         // ImageMipmap
-        15 => {
-        }
+        15 => {}
         // Pipes
-        17 => {
-        }
+        17 => {}
         // Groups
-        18 => {
-        }
+        18 => {}
         // DeviceEnqueue
-        19 => {
-        }
+        19 => {}
         // LiteralSampler
-        20 => {
-        }
+        20 => {}
         // AtomicStorage
-        21 => {
-        }
+        21 => {}
         // Int16
-        22 => {
-        }
+        22 => {}
         // TessellationPointSize
-        23 => {
-        }
+        23 => {}
         // GeometryPointSize
-        24 => {
-        }
+        24 => {}
         // ImageGatherExtended
-        25 => {
-        }
+        25 => {}
         // StorageImageMultisample
-        27 => {
-        }
+        27 => {}
         // UniformBufferArrayDynamicIndexing
-        28 => {
-        }
+        28 => {}
         // SampledImageArrayDynamicIndexing
-        29 => {
-        }
+        29 => {}
         // StorageBufferArrayDynamicIndexing
-        30 => {
-        }
+        30 => {}
         // StorageImageArrayDynamicIndexing
-        31 => {
-        }
+        31 => {}
         // ClipDistance
-        32 => {
-        }
+        32 => {}
         // CullDistance
-        33 => {
-        }
+        33 => {}
         // ImageCubeArray
-        34 => {
-        }
+        34 => {}
         // SampleRateShading
-        35 => {
-        }
+        35 => {}
         // ImageRect
-        36 => {
-        }
+        36 => {}
         // SampledRect
-        37 => {
-        }
+        37 => {}
         // GenericPointer
-        38 => {
-        }
+        38 => {}
         // Int8
-        39 => {
-        }
+        39 => {}
         // InputAttachment
-        40 => {
-        }
+        40 => {}
         // SparseResidency
-        41 => {
-        }
+        41 => {}
         // MinLod
-        42 => {
-        }
+        42 => {}
         // Sampled1D
-        43 => {
-        }
+        43 => {}
         // Image1D
-        44 => {
-        }
+        44 => {}
         // SampledCubeArray
-        45 => {
-        }
+        45 => {}
         // SampledBuffer
-        46 => {
-        }
+        46 => {}
         // ImageBuffer
-        47 => {
-        }
+        47 => {}
         // ImageMSArray
-        48 => {
-        }
+        48 => {}
         // StorageImageExtendedFormats
-        49 => {
-        }
+        49 => {}
         // ImageQuery
-        50 => {
-        }
+        50 => {}
         // DerivativeControl
-        51 => {
-        }
+        51 => {}
         // InterpolationFunction
-        52 => {
-        }
+        52 => {}
         // TransformFeedback
-        53 => {
-        }
+        53 => {}
         // GeometryStreams
-        54 => {
-        }
+        54 => {}
         // StorageImageReadWithoutFormat
-        55 => {
-        }
+        55 => {}
         // StorageImageWriteWithoutFormat
-        56 => {
-        }
+        56 => {}
         // MultiViewport
-        57 => {
-        }
+        57 => {}
         // SubgroupDispatch
-        58 => {
-        }
+        58 => {}
         // NamedBarrier
-        59 => {
-        }
+        59 => {}
         // PipeStorage
-        60 => {
-        }
+        60 => {}
         // GroupNonUniform
-        61 => {
-        }
+        61 => {}
         // GroupNonUniformVote
-        62 => {
-        }
+        62 => {}
         // GroupNonUniformArithmetic
-        63 => {
-        }
+        63 => {}
         // GroupNonUniformBallot
-        64 => {
-        }
+        64 => {}
         // GroupNonUniformShuffle
-        65 => {
-        }
+        65 => {}
         // GroupNonUniformShuffleRelative
-        66 => {
-        }
+        66 => {}
         // GroupNonUniformClustered
-        67 => {
-        }
+        67 => {}
         // GroupNonUniformQuad
-        68 => {
-        }
+        68 => {}
         // ShaderLayer
-        69 => {
-        }
+        69 => {}
         // ShaderViewportIndex
-        70 => {
-        }
+        70 => {}
         // UniformDecoration
-        71 => {
-        }
+        71 => {}
         // CoreBuiltinsARM
-        4165 => {
-        }
+        4165 => {}
         // TileImageColorReadAccessEXT
-        4166 => {
-        }
+        4166 => {}
         // TileImageDepthReadAccessEXT
-        4167 => {
-        }
+        4167 => {}
         // TileImageStencilReadAccessEXT
-        4168 => {
-        }
+        4168 => {}
         // FragmentShadingRateKHR
-        4422 => {
-        }
+        4422 => {}
         // SubgroupBallotKHR
-        4423 => {
-        }
+        4423 => {}
         // DrawParameters
-        4427 => {
-        }
+        4427 => {}
         // WorkgroupMemoryExplicitLayoutKHR
-        4428 => {
-        }
+        4428 => {}
         // WorkgroupMemoryExplicitLayout8BitAccessKHR
-        4429 => {
-        }
+        4429 => {}
         // WorkgroupMemoryExplicitLayout16BitAccessKHR
-        4430 => {
-        }
+        4430 => {}
         // SubgroupVoteKHR
-        4431 => {
-        }
+        4431 => {}
         // StorageUniformBufferBlock16
-        4433 => {
-        }
+        4433 => {}
         // StorageUniform16
-        4434 => {
-        }
+        4434 => {}
         // StoragePushConstant16
-        4435 => {
-        }
+        4435 => {}
         // StorageInputOutput16
-        4436 => {
-        }
+        4436 => {}
         // DeviceGroup
-        4437 => {
-        }
+        4437 => {}
         // MultiView
-        4439 => {
-        }
+        4439 => {}
         // VariablePointersStorageBuffer
-        4441 => {
-        }
+        4441 => {}
         // VariablePointers
-        4442 => {
-        }
+        4442 => {}
         // AtomicStorageOps
-        4445 => {
-        }
+        4445 => {}
         // SampleMaskPostDepthCoverage
-        4447 => {
-        }
+        4447 => {}
         // StorageBuffer8BitAccess
-        4448 => {
-        }
+        4448 => {}
         // UniformAndStorageBuffer8BitAccess
-        4449 => {
-        }
+        4449 => {}
         // StoragePushConstant8
-        4450 => {
-        }
+        4450 => {}
         // DenormPreserve
-        4464 => {
-        }
+        4464 => {}
         // DenormFlushToZero
-        4465 => {
-        }
+        4465 => {}
         // SignedZeroInfNanPreserve
-        4466 => {
-        }
+        4466 => {}
         // RoundingModeRTE
-        4467 => {
-        }
+        4467 => {}
         // RoundingModeRTZ
-        4468 => {
-        }
+        4468 => {}
         // RayQueryProvisionalKHR
-        4471 => {
-        }
+        4471 => {}
         // RayQueryKHR
-        4472 => {
-        }
+        4472 => {}
         // RayTraversalPrimitiveCullingKHR
-        4478 => {
-        }
+        4478 => {}
         // RayTracingKHR
-        4479 => {
-        }
+        4479 => {}
         // TextureSampleWeightedQCOM
-        4484 => {
-        }
+        4484 => {}
         // TextureBoxFilterQCOM
-        4485 => {
-        }
+        4485 => {}
         // TextureBlockMatchQCOM
-        4486 => {
-        }
+        4486 => {}
         // Float16ImageAMD
-        5008 => {
-        }
+        5008 => {}
         // ImageGatherBiasLodAMD
-        5009 => {
-        }
+        5009 => {}
         // FragmentMaskAMD
-        5010 => {
-        }
+        5010 => {}
         // StencilExportEXT
-        5013 => {
-        }
+        5013 => {}
         // ImageReadWriteLodAMD
-        5015 => {
-        }
+        5015 => {}
         // Int64ImageEXT
-        5016 => {
-        }
+        5016 => {}
         // ShaderClockKHR
-        5055 => {
-        }
+        5055 => {}
         // ShaderEnqueueAMDX
-        5067 => {
-        }
+        5067 => {}
         // SampleMaskOverrideCoverageNV
-        5249 => {
-        }
+        5249 => {}
         // GeometryShaderPassthroughNV
-        5251 => {
-        }
+        5251 => {}
         // ShaderViewportIndexLayerNV
-        5254 => {
-        }
+        5254 => {}
         // ShaderViewportMaskNV
-        5255 => {
-        }
+        5255 => {}
         // ShaderStereoViewNV
-        5259 => {
-        }
+        5259 => {}
         // PerViewAttributesNV
-        5260 => {
-        }
+        5260 => {}
         // FragmentFullyCoveredEXT
-        5265 => {
-        }
+        5265 => {}
         // MeshShadingNV
-        5266 => {
-        }
+        5266 => {}
         // ImageFootprintNV
-        5282 => {
-        }
+        5282 => {}
         // MeshShadingEXT
-        5283 => {
-        }
+        5283 => {}
         // FragmentBarycentricNV
-        5284 => {
-        }
+        5284 => {}
         // ComputeDerivativeGroupQuadsNV
-        5288 => {
-        }
+        5288 => {}
         // ShadingRateNV
-        5291 => {
-        }
+        5291 => {}
         // GroupNonUniformPartitionedNV
-        5297 => {
-        }
+        5297 => {}
         // ShaderNonUniformEXT
-        5301 => {
-        }
+        5301 => {}
         // RuntimeDescriptorArrayEXT
-        5302 => {
-        }
+        5302 => {}
         // InputAttachmentArrayDynamicIndexingEXT
-        5303 => {
-        }
+        5303 => {}
         // UniformTexelBufferArrayDynamicIndexingEXT
-        5304 => {
-        }
+        5304 => {}
         // StorageTexelBufferArrayDynamicIndexingEXT
-        5305 => {
-        }
+        5305 => {}
         // UniformBufferArrayNonUniformIndexingEXT
-        5306 => {
-        }
+        5306 => {}
         // SampledImageArrayNonUniformIndexingEXT
-        5307 => {
-        }
+        5307 => {}
         // StorageBufferArrayNonUniformIndexingEXT
-        5308 => {
-        }
+        5308 => {}
         // StorageImageArrayNonUniformIndexingEXT
-        5309 => {
-        }
+        5309 => {}
         // InputAttachmentArrayNonUniformIndexingEXT
-        5310 => {
-        }
+        5310 => {}
         // UniformTexelBufferArrayNonUniformIndexingEXT
-        5311 => {
-        }
+        5311 => {}
         // StorageTexelBufferArrayNonUniformIndexingEXT
-        5312 => {
-        }
+        5312 => {}
         // RayTracingPositionFetchKHR
-        5336 => {
-        }
+        5336 => {}
         // RayTracingNV
-        5340 => {
-        }
+        5340 => {}
         // RayTracingMotionBlurNV
-        5341 => {
-        }
+        5341 => {}
         // VulkanMemoryModelKHR
-        5345 => {
-        }
+        5345 => {}
         // VulkanMemoryModelDeviceScopeKHR
-        5346 => {
-        }
+        5346 => {}
         // PhysicalStorageBufferAddressesEXT
-        5347 => {
-        }
+        5347 => {}
         // ComputeDerivativeGroupLinearNV
-        5350 => {
-        }
+        5350 => {}
         // RayTracingProvisionalKHR
-        5353 => {
-        }
+        5353 => {}
         // CooperativeMatrixNV
-        5357 => {
-        }
+        5357 => {}
         // FragmentShaderSampleInterlockEXT
-        5363 => {
-        }
+        5363 => {}
         // FragmentShaderShadingRateInterlockEXT
-        5372 => {
-        }
+        5372 => {}
         // ShaderSMBuiltinsNV
-        5373 => {
-        }
+        5373 => {}
         // FragmentShaderPixelInterlockEXT
-        5378 => {
-        }
+        5378 => {}
         // DemoteToHelperInvocationEXT
-        5379 => {
-        }
+        5379 => {}
         // DisplacementMicromapNV
-        5380 => {
-        }
+        5380 => {}
         // RayTracingOpacityMicromapEXT
-        5381 => {
-        }
+        5381 => {}
         // ShaderInvocationReorderNV
-        5383 => {
-        }
+        5383 => {}
         // BindlessTextureNV
-        5390 => {
-        }
+        5390 => {}
         // RayQueryPositionFetchKHR
-        5391 => {
-        }
+        5391 => {}
         // RayTracingDisplacementMicromapNV
-        5409 => {
-        }
+        5409 => {}
         // SubgroupShuffleINTEL
-        5568 => {
-        }
+        5568 => {}
         // SubgroupBufferBlockIOINTEL
-        5569 => {
-        }
+        5569 => {}
         // SubgroupImageBlockIOINTEL
-        5570 => {
-        }
+        5570 => {}
         // SubgroupImageMediaBlockIOINTEL
-        5579 => {
-        }
+        5579 => {}
         // RoundToInfinityINTEL
-        5582 => {
-        }
+        5582 => {}
         // FloatingPointModeINTEL
-        5583 => {
-        }
+        5583 => {}
         // IntegerFunctions2INTEL
-        5584 => {
-        }
+        5584 => {}
         // FunctionPointersINTEL
-        5603 => {
-        }
+        5603 => {}
         // IndirectReferencesINTEL
-        5604 => {
-        }
+        5604 => {}
         // AsmINTEL
-        5606 => {
-        }
+        5606 => {}
         // AtomicFloat32MinMaxEXT
-        5612 => {
-        }
+        5612 => {}
         // AtomicFloat64MinMaxEXT
-        5613 => {
-        }
+        5613 => {}
         // AtomicFloat16MinMaxEXT
-        5616 => {
-        }
+        5616 => {}
         // VectorComputeINTEL
-        5617 => {
-        }
+        5617 => {}
         // VectorAnyINTEL
-        5619 => {
-        }
+        5619 => {}
         // ExpectAssumeKHR
-        5629 => {
-        }
+        5629 => {}
         // SubgroupAvcMotionEstimationINTEL
-        5696 => {
-        }
+        5696 => {}
         // SubgroupAvcMotionEstimationIntraINTEL
-        5697 => {
-        }
+        5697 => {}
         // SubgroupAvcMotionEstimationChromaINTEL
-        5698 => {
-        }
+        5698 => {}
         // VariableLengthArrayINTEL
-        5817 => {
-        }
+        5817 => {}
         // FunctionFloatControlINTEL
-        5821 => {
-        }
+        5821 => {}
         // FPGAMemoryAttributesINTEL
-        5824 => {
-        }
+        5824 => {}
         // FPFastMathModeINTEL
-        5837 => {
-        }
+        5837 => {}
         // ArbitraryPrecisionIntegersINTEL
-        5844 => {
-        }
+        5844 => {}
         // ArbitraryPrecisionFloatingPointINTEL
-        5845 => {
-        }
+        5845 => {}
         // UnstructuredLoopControlsINTEL
-        5886 => {
-        }
+        5886 => {}
         // FPGALoopControlsINTEL
-        5888 => {
-        }
+        5888 => {}
         // KernelAttributesINTEL
-        5892 => {
-        }
+        5892 => {}
         // FPGAKernelAttributesINTEL
-        5897 => {
-        }
+        5897 => {}
         // FPGAMemoryAccessesINTEL
-        5898 => {
-        }
+        5898 => {}
         // FPGAClusterAttributesINTEL
-        5904 => {
-        }
+        5904 => {}
         // LoopFuseINTEL
-        5906 => {
-        }
+        5906 => {}
         // FPGADSPControlINTEL
-        5908 => {
-        }
+        5908 => {}
         // MemoryAccessAliasingINTEL
-        5910 => {
-        }
+        5910 => {}
         // FPGAInvocationPipeliningAttributesINTEL
-        5916 => {
-        }
+        5916 => {}
         // FPGABufferLocationINTEL
-        5920 => {
-        }
+        5920 => {}
         // ArbitraryPrecisionFixedPointINTEL
-        5922 => {
-        }
+        5922 => {}
         // USMStorageClassesINTEL
-        5935 => {
-        }
+        5935 => {}
         // RuntimeAlignedAttributeINTEL
-        5939 => {
-        }
+        5939 => {}
         // IOPipesINTEL
-        5943 => {
-        }
+        5943 => {}
         // BlockingPipesINTEL
-        5945 => {
-        }
+        5945 => {}
         // FPGARegINTEL
-        5948 => {
-        }
+        5948 => {}
         // DotProductInputAllKHR
-        6016 => {
-        }
+        6016 => {}
         // DotProductInput4x8BitKHR
-        6017 => {
-        }
+        6017 => {}
         // DotProductInput4x8BitPackedKHR
-        6018 => {
-        }
+        6018 => {}
         // DotProductKHR
-        6019 => {
-        }
+        6019 => {}
         // RayCullMaskKHR
-        6020 => {
-        }
+        6020 => {}
         // CooperativeMatrixKHR
-        6022 => {
-        }
+        6022 => {}
         // BitInstructions
-        6025 => {
-        }
+        6025 => {}
         // GroupNonUniformRotateKHR
-        6026 => {
-        }
+        6026 => {}
         // AtomicFloat32AddEXT
-        6033 => {
-        }
+        6033 => {}
         // AtomicFloat64AddEXT
-        6034 => {
-        }
+        6034 => {}
         // LongCompositesINTEL
-        6089 => {
-        }
+        6089 => {}
         // OptNoneINTEL
-        6094 => {
-        }
+        6094 => {}
         // AtomicFloat16AddEXT
-        6095 => {
-        }
+        6095 => {}
         // DebugInfoModuleINTEL
-        6114 => {
-        }
+        6114 => {}
         // BFloat16ConversionINTEL
-        6115 => {
-        }
+        6115 => {}
         // SplitBarrierINTEL
-        6141 => {
-        }
+        6141 => {}
         // FPGAClusterAttributesV2INTEL
-        6150 => {
-        }
+        6150 => {}
         // FPGAKernelAttributesv2INTEL
-        6161 => {
-        }
+        6161 => {}
         // FPMaxErrorINTEL
-        6169 => {
-        }
+        6169 => {}
         // FPGALatencyControlINTEL
-        6171 => {
-        }
+        6171 => {}
         // FPGAArgumentInterfacesINTEL
-        6174 => {
-        }
+        6174 => {}
         // GlobalVariableHostAccessINTEL
-        6187 => {
-        }
+        6187 => {}
         // GlobalVariableFPGADecorationsINTEL
-        6189 => {
-        }
+        6189 => {}
         // GroupUniformArithmeticKHR
-        6400 => {
-        }
+        6400 => {}
         // CacheControlsINTEL
-        6441 => {
-        }
-        _ => {},
+        6441 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -3455,18 +2829,19 @@ fn print_enum_Capability(operands: &mut Operands, id_names: &HashMap<u32, String
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_RayQueryIntersection(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_RayQueryIntersection(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"RayQueryIntersection", value)?];
     match value {
         // RayQueryCandidateIntersectionKHR
-        0 => {
-        }
+        0 => {}
         // RayQueryCommittedIntersectionKHR
-        1 => {
-        }
-        _ => {},
+        1 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -3474,21 +2849,21 @@ fn print_enum_RayQueryIntersection(operands: &mut Operands, id_names: &HashMap<u
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_RayQueryCommittedIntersectionType(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_RayQueryCommittedIntersectionType(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"RayQueryCommittedIntersectionType", value)?];
     match value {
         // RayQueryCommittedIntersectionNoneKHR
-        0 => {
-        }
+        0 => {}
         // RayQueryCommittedIntersectionTriangleKHR
-        1 => {
-        }
+        1 => {}
         // RayQueryCommittedIntersectionGeneratedKHR
-        2 => {
-        }
-        _ => {},
+        2 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -3496,18 +2871,19 @@ fn print_enum_RayQueryCommittedIntersectionType(operands: &mut Operands, id_name
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_RayQueryCandidateIntersectionType(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_RayQueryCandidateIntersectionType(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"RayQueryCandidateIntersectionType", value)?];
     match value {
         // RayQueryCandidateIntersectionTriangleKHR
-        0 => {
-        }
+        0 => {}
         // RayQueryCandidateIntersectionAABBKHR
-        1 => {
-        }
-        _ => {},
+        1 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -3515,15 +2891,17 @@ fn print_enum_RayQueryCandidateIntersectionType(operands: &mut Operands, id_name
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_PackedVectorFormat(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_PackedVectorFormat(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"PackedVectorFormat", value)?];
     match value {
         // PackedVectorFormat4x8BitKHR
-        0 => {
-        }
-        _ => {},
+        0 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -3531,46 +2909,44 @@ fn print_enum_PackedVectorFormat(operands: &mut Operands, id_names: &HashMap<u32
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_CooperativeMatrixOperands(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_CooperativeMatrixOperands(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"CooperativeMatrixOperands", value)?];
     // NoneKHR
-    if value & 0x0000 != 0 {
-    }
+    if value & 0x0000 != 0 {}
     // MatrixASignedComponentsKHR
-    if value & 0x0001 != 0 {
-    }
+    if value & 0x0001 != 0 {}
     // MatrixBSignedComponentsKHR
-    if value & 0x0002 != 0 {
-    }
+    if value & 0x0002 != 0 {}
     // MatrixCSignedComponentsKHR
-    if value & 0x0004 != 0 {
-    }
+    if value & 0x0004 != 0 {}
     // MatrixResultSignedComponentsKHR
-    if value & 0x0008 != 0 {
-    }
+    if value & 0x0008 != 0 {}
     // SaturatingAccumulationKHR
-    if value & 0x0010 != 0 {
-    }
+    if value & 0x0010 != 0 {}
     Ok(out)
 }
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_CooperativeMatrixLayout(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_CooperativeMatrixLayout(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"CooperativeMatrixLayout", value)?];
     match value {
         // RowMajorKHR
-        0 => {
-        }
+        0 => {}
         // ColumnMajorKHR
-        1 => {
-        }
-        _ => {},
+        1 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -3578,21 +2954,21 @@ fn print_enum_CooperativeMatrixLayout(operands: &mut Operands, id_names: &HashMa
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_CooperativeMatrixUse(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_CooperativeMatrixUse(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"CooperativeMatrixUse", value)?];
     match value {
         // MatrixAKHR
-        0 => {
-        }
+        0 => {}
         // MatrixBKHR
-        1 => {
-        }
+        1 => {}
         // MatrixAccumulatorKHR
-        2 => {
-        }
-        _ => {},
+        2 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -3600,18 +2976,19 @@ fn print_enum_CooperativeMatrixUse(operands: &mut Operands, id_names: &HashMap<u
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_InitializationModeQualifier(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_InitializationModeQualifier(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"InitializationModeQualifier", value)?];
     match value {
         // InitOnDeviceReprogramINTEL
-        0 => {
-        }
+        0 => {}
         // InitOnDeviceResetINTEL
-        1 => {
-        }
-        _ => {},
+        1 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -3619,27 +2996,25 @@ fn print_enum_InitializationModeQualifier(operands: &mut Operands, id_names: &Ha
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_LoadCacheControl(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_LoadCacheControl(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"LoadCacheControl", value)?];
     match value {
         // UncachedINTEL
-        0 => {
-        }
+        0 => {}
         // CachedINTEL
-        1 => {
-        }
+        1 => {}
         // StreamingINTEL
-        2 => {
-        }
+        2 => {}
         // InvalidateAfterReadINTEL
-        3 => {
-        }
+        3 => {}
         // ConstCachedINTEL
-        4 => {
-        }
-        _ => {},
+        4 => {}
+        _ => {}
     }
     Ok(out)
 }
@@ -3647,37 +3022,38 @@ fn print_enum_LoadCacheControl(operands: &mut Operands, id_names: &HashMap<u32, 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
 #[allow(unused_variables)]
-fn print_enum_StoreCacheControl(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+fn print_enum_StoreCacheControl(
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let value = operands.read_u32()?;
     #[allow(unused_mut)]
     let mut out = vec![enum_to_str(&"StoreCacheControl", value)?];
     match value {
         // UncachedINTEL
-        0 => {
-        }
+        0 => {}
         // WriteThroughINTEL
-        1 => {
-        }
+        1 => {}
         // WriteBackINTEL
-        2 => {
-        }
+        2 => {}
         // StreamingINTEL
-        3 => {
-        }
-        _ => {},
+        3 => {}
+        _ => {}
     }
     Ok(out)
 }
 
-pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<Vec<String>> {
+pub fn print_operand(
+    opcode: u32,
+    operands: &mut Operands,
+    id_names: &HashMap<u32, String>,
+) -> Result<Vec<String>> {
     let mut out: Vec<String> = Vec::new();
     match opcode {
         // OpNop
-        0 => {
-        }
+        0 => {}
         // OpUndef
-        1 => {
-        }
+        1 => {}
         // OpSourceContinued
         2 => {
             // LiteralString
@@ -3787,11 +3163,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.extend(print_enum_Capability(operands, id_names)?);
         }
         // OpTypeVoid
-        19 => {
-        }
+        19 => {}
         // OpTypeBool
-        20 => {
-        }
+        20 => {}
         // OpTypeInt
         21 => {
             // LiteralInteger
@@ -3840,8 +3214,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             }
         }
         // OpTypeSampler
-        26 => {
-        }
+        26 => {}
         // OpTypeSampledImage
         27 => {
             // IdRef
@@ -3888,17 +3261,13 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             }
         }
         // OpTypeEvent
-        34 => {
-        }
+        34 => {}
         // OpTypeDeviceEvent
-        35 => {
-        }
+        35 => {}
         // OpTypeReserveId
-        36 => {
-        }
+        36 => {}
         // OpTypeQueue
-        37 => {
-        }
+        37 => {}
         // OpTypePipe
         38 => {
             // AccessQualifier
@@ -3912,11 +3281,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.extend(print_enum_StorageClass(operands, id_names)?);
         }
         // OpConstantTrue
-        41 => {
-        }
+        41 => {}
         // OpConstantFalse
-        42 => {
-        }
+        42 => {}
         // OpConstant
         43 => {
             // LiteralContextDependentNumber
@@ -3939,14 +3306,11 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.extend(print_enum_SamplerFilterMode(operands, id_names)?);
         }
         // OpConstantNull
-        46 => {
-        }
+        46 => {}
         // OpSpecConstantTrue
-        48 => {
-        }
+        48 => {}
         // OpSpecConstantFalse
-        49 => {
-        }
+        49 => {}
         // OpSpecConstant
         50 => {
             // LiteralContextDependentNumber
@@ -3972,11 +3336,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpFunctionParameter
-        55 => {
-        }
+        55 => {}
         // OpFunctionEnd
-        56 => {
-        }
+        56 => {}
         // OpFunctionCall
         57 => {
             // IdRef
@@ -4125,8 +3487,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.extend(print_enum_Decoration(operands, id_names)?);
         }
         // OpDecorationGroup
-        73 => {
-        }
+        73 => {}
         // OpGroupDecorate
         74 => {
             // IdRef
@@ -5060,11 +4421,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpEmitVertex
-        218 => {
-        }
+        218 => {}
         // OpEndPrimitive
-        219 => {
-        }
+        219 => {}
         // OpEmitStreamVertex
         220 => {
             // IdRef
@@ -5293,8 +4652,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.extend(print_enum_SelectionControl(operands, id_names)?);
         }
         // OpLabel
-        248 => {
-        }
+        248 => {}
         // OpBranch
         249 => {
             // IdRef
@@ -5325,19 +4683,16 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             }
         }
         // OpKill
-        252 => {
-        }
+        252 => {}
         // OpReturn
-        253 => {
-        }
+        253 => {}
         // OpReturnValue
         254 => {
             // IdRef
             out.push(print_id(operands, id_names)?);
         }
         // OpUnreachable
-        255 => {
-        }
+        255 => {}
         // OpLifetimeStart
         256 => {
             // IdRef
@@ -5739,8 +5094,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpCreateUserEvent
-        299 => {
-        }
+        299 => {}
         // OpIsValidEvent
         300 => {
             // IdRef
@@ -5763,8 +5117,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpGetDefaultQueue
-        303 => {
-        }
+        303 => {}
         // OpBuildNDRange
         304 => {
             // IdRef
@@ -5905,8 +5258,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpNoLine
-        317 => {
-        }
+        317 => {}
         // OpAtomicFlagTestAndSet
         318 => {
             // IdRef
@@ -5942,8 +5294,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpTypePipeStorage
-        322 => {
-        }
+        322 => {}
         // OpConstantPipeStorage
         323 => {
             // LiteralInteger
@@ -5983,8 +5334,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpTypeNamedBarrier
-        327 => {
-        }
+        327 => {}
         // OpNamedBarrierInitialize
         328 => {
             // IdRef
@@ -6418,8 +5768,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             }
         }
         // OpTerminateInvocation
-        4416 => {
-        }
+        4416 => {}
         // OpSubgroupBallotKHR
         4421 => {
             // IdRef
@@ -6503,11 +5852,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpIgnoreIntersectionKHR
-        4448 => {
-        }
+        4448 => {}
         // OpTerminateRayKHR
-        4449 => {
-        }
+        4449 => {}
         // OpSDotKHR
         4450 => {
             // IdRef
@@ -6644,8 +5991,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpTypeRayQueryKHR
-        4472 => {
-        }
+        4472 => {}
         // OpRayQueryInitializeKHR
         4473 => {
             // IdRef
@@ -7191,8 +6537,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpTypeHitObjectNV
-        5281 => {
-        }
+        5281 => {}
         // OpImageSampleFootprintNV
         5283 => {
             // IdRef
@@ -7274,11 +6619,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpIgnoreIntersectionNV
-        5335 => {
-        }
+        5335 => {}
         // OpTerminateRayNV
-        5336 => {
-        }
+        5336 => {}
         // OpTraceNV
         5337 => {
             // IdRef
@@ -7366,8 +6709,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpTypeAccelerationStructureKHR
-        5341 => {
-        }
+        5341 => {}
         // OpExecuteCallableNV
         5344 => {
             // IdRef
@@ -7429,17 +6771,13 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpBeginInvocationInterlockEXT
-        5364 => {
-        }
+        5364 => {}
         // OpEndInvocationInterlockEXT
-        5365 => {
-        }
+        5365 => {}
         // OpDemoteToHelperInvocationEXT
-        5380 => {
-        }
+        5380 => {}
         // OpIsHelperInvocationEXT
-        5381 => {
-        }
+        5381 => {}
         // OpConvertUToImageNV
         5391 => {
             // IdRef
@@ -7753,41 +7091,29 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpTypeAvcImePayloadINTEL
-        5701 => {
-        }
+        5701 => {}
         // OpTypeAvcRefPayloadINTEL
-        5702 => {
-        }
+        5702 => {}
         // OpTypeAvcSicPayloadINTEL
-        5703 => {
-        }
+        5703 => {}
         // OpTypeAvcMcePayloadINTEL
-        5704 => {
-        }
+        5704 => {}
         // OpTypeAvcMceResultINTEL
-        5705 => {
-        }
+        5705 => {}
         // OpTypeAvcImeResultINTEL
-        5706 => {
-        }
+        5706 => {}
         // OpTypeAvcImeResultSingleReferenceStreamoutINTEL
-        5707 => {
-        }
+        5707 => {}
         // OpTypeAvcImeResultDualReferenceStreamoutINTEL
-        5708 => {
-        }
+        5708 => {}
         // OpTypeAvcImeSingleReferenceStreaminINTEL
-        5709 => {
-        }
+        5709 => {}
         // OpTypeAvcImeDualReferenceStreaminINTEL
-        5710 => {
-        }
+        5710 => {}
         // OpTypeAvcRefResultINTEL
-        5711 => {
-        }
+        5711 => {}
         // OpTypeAvcSicResultINTEL
-        5712 => {
-        }
+        5712 => {}
         // OpSubgroupAvcMceGetDefaultInterBaseMultiReferencePenaltyINTEL
         5713 => {
             // IdRef
@@ -7845,14 +7171,11 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetDefaultHighPenaltyCostTableINTEL
-        5721 => {
-        }
+        5721 => {}
         // OpSubgroupAvcMceGetDefaultMediumPenaltyCostTableINTEL
-        5722 => {
-        }
+        5722 => {}
         // OpSubgroupAvcMceGetDefaultLowPenaltyCostTableINTEL
-        5723 => {
-        }
+        5723 => {}
         // OpSubgroupAvcMceSetMotionVectorCostFunctionINTEL
         5724 => {
             // IdRef
@@ -7872,11 +7195,9 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpSubgroupAvcMceGetDefaultNonDcLumaIntraPenaltyINTEL
-        5726 => {
-        }
+        5726 => {}
         // OpSubgroupAvcMceGetDefaultIntraChromaModeBasePenaltyINTEL
-        5727 => {
-        }
+        5727 => {}
         // OpSubgroupAvcMceSetAcOnlyHaarINTEL
         5728 => {
             // IdRef
@@ -8564,8 +7885,7 @@ pub fn print_operand(opcode: u32, operands: &mut Operands, id_names: &HashMap<u3
             out.push(print_id(operands, id_names)?);
         }
         // OpSaveMemoryINTEL
-        5819 => {
-        }
+        5819 => {}
         // OpRestoreMemoryINTEL
         5820 => {
             // IdRef

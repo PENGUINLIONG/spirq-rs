@@ -842,10 +842,7 @@ fn make_var<'a>(
     }
 }
 impl<'a> ReflectIntermediate<'a> {
-    pub fn parse_global_declrs(
-        &mut self,
-        instrs: &mut Instrs<'a>,
-    ) -> Result<()> {
+    pub fn parse_global_declrs(&mut self, instrs: &mut Instrs<'a>) -> Result<()> {
         // Don't change the order. See _2.4 Logical Layout of a Module_ of the
         // SPIR-V specification for more information.
 
@@ -906,7 +903,9 @@ impl<'a> ReflectIntermediate<'a> {
                 };
                 use std::collections::hash_map::Entry;
                 match self.entry_point_declrs.entry(op.func_id) {
-                    Entry::Occupied(_) => return Err(anyhow!("duplicate entry point at a same id")),
+                    Entry::Occupied(_) => {
+                        return Err(anyhow!("duplicate entry point at a same id"))
+                    }
                     Entry::Vacant(e) => {
                         e.insert(entry_point_declr);
                     }
@@ -1046,7 +1045,7 @@ impl<'a> ReflectIntermediate<'a> {
     pub fn parse_functions(
         &mut self,
         instrs: &mut Instrs<'a>,
-        inspector: &mut impl Inspector
+        inspector: &mut impl Inspector,
     ) -> Result<()> {
         // 10. All function declarations ("declarations" are functions without a
         //     body; there is no forward declaration to a function with a body).
@@ -1274,9 +1273,7 @@ fn combine_img_samplers(vars: Vec<Variable>) -> Vec<Variable> {
 }
 
 impl<'a> ReflectIntermediate<'a> {
-    pub fn collect_entry_points(
-        &self,
-    ) -> Result<Vec<EntryPoint>> {
+    pub fn collect_entry_points(&self) -> Result<Vec<EntryPoint>> {
         let mut entry_points = Vec::with_capacity(self.entry_point_declrs.len());
         for (id, entry_point_declr) in self.entry_point_declrs.iter() {
             let mut vars = if self.cfg.ref_all_rscs {

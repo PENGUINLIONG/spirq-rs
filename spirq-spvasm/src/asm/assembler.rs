@@ -1,12 +1,15 @@
-use std::collections::{HashMap, HashSet, hash_map::Entry};
+use std::collections::{hash_map::Entry, HashMap, HashSet};
 
+use super::tokenizer::{Lit, Token, Tokenizer};
+use crate::generated;
 use anyhow::{anyhow, bail, Result};
 use half::f16;
 use num_traits::FromPrimitive;
-use spirq_core::{spirv::Op, parse::{InstructionBuilder, bin::SpirvHeader, SpirvBinary}, ty::ScalarType};
-use super::tokenizer::{Token, Tokenizer, Lit};
-use crate::generated;
-
+use spirq_core::{
+    parse::{bin::SpirvHeader, InstructionBuilder, SpirvBinary},
+    spirv::Op,
+    ty::ScalarType,
+};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 enum IdRef {
@@ -74,9 +77,7 @@ impl Assembler {
     fn parse_opcode(&self, s: &mut TokenStream) -> Result<u32> {
         let token = s.next()?.ok_or_else(|| anyhow!("expected opcode"))?;
         match token {
-            Token::Ident(ident) => {
-                generated::op_from_str(&ident)
-            }
+            Token::Ident(ident) => generated::op_from_str(&ident),
             _ => Err(anyhow!("expected opcode")),
         }
     }
@@ -104,12 +105,8 @@ impl Assembler {
                 let idref = self.str2idref(id);
                 Ok(Operand::IdRef(idref))
             }
-            Token::Literal(lit) => {
-                Ok(Operand::Literal(lit.clone()))
-            }
-            Token::Ident(ident) => {
-                Ok(Operand::Ident(ident.clone()))
-            }
+            Token::Literal(lit) => Ok(Operand::Literal(lit.clone())),
+            Token::Ident(ident) => Ok(Operand::Ident(ident.clone())),
             _ => Err(anyhow!("expected operand, but {:?}", token)),
         }
     }
@@ -127,15 +124,15 @@ impl Assembler {
             match token {
                 Token::Comment(_) => {
                     s.next()?;
-                },
+                }
                 Token::NewLine => {
                     s.next()?;
                     break;
-                },
+                }
                 _ => {
                     let operand = self.parse_operand(s)?;
                     operands.push(operand);
-                },
+                }
             };
         }
 
@@ -154,15 +151,15 @@ impl Assembler {
             match token {
                 Token::Comment(_) => {
                     s.next()?;
-                },
+                }
                 Token::NewLine => {
                     s.next()?;
                     break;
-                },
+                }
                 _ => {
                     let operand = self.parse_operand(s)?;
                     operands.push(operand);
-                },
+                }
             };
         }
 
@@ -182,7 +179,7 @@ impl Assembler {
                 }
                 Token::NewLine => {
                     s.next()?;
-                },
+                }
                 Token::Ident(_) => {
                     let instr = self.parse_instr_without_result_id(s)?;
                     return Ok(Some(instr));
@@ -235,9 +232,7 @@ impl Assembler {
                 let id = self.acquire_id(name);
                 IdRef::Id(id)
             }
-            IdRef::Id(id) => {
-                IdRef::Id(*id)
-            }
+            IdRef::Id(id) => IdRef::Id(*id),
         };
         Ok(out)
     }
@@ -256,7 +251,9 @@ impl Assembler {
             _ => bail!("OpTypeInt signedness expected literal integer"),
         };
 
-        let result_id = instr.result_id.as_ref()
+        let result_id = instr
+            .result_id
+            .as_ref()
             .and_then(|idref| match idref {
                 IdRef::Id(id) => Some(*id),
                 _ => None,
@@ -271,7 +268,7 @@ impl Assembler {
                 };
                 entry.insert(scalar_ty);
             }
-            Entry::Occupied(_) => bail!("OpTypeInt result id already exists")
+            Entry::Occupied(_) => bail!("OpTypeInt result id already exists"),
         }
 
         let instr = InstructionBuilder::new(Op::TypeInt)
@@ -291,7 +288,9 @@ impl Assembler {
             _ => bail!("OpTypeFloat width expected literal integer"),
         };
 
-        let result_id = instr.result_id.as_ref()
+        let result_id = instr
+            .result_id
+            .as_ref()
             .and_then(|idref| match idref {
                 IdRef::Id(id) => Some(*id),
                 _ => None,
@@ -300,12 +299,10 @@ impl Assembler {
 
         match self.scalar_tys.entry(result_id) {
             Entry::Vacant(entry) => {
-                let scalar_ty = ScalarType::Float {
-                    bits: width,
-                };
+                let scalar_ty = ScalarType::Float { bits: width };
                 entry.insert(scalar_ty);
             }
-            Entry::Occupied(_) => bail!("OpTypeFloat result id already exists")
+            Entry::Occupied(_) => bail!("OpTypeFloat result id already exists"),
         }
 
         let instr = InstructionBuilder::new(Op::TypeFloat)
@@ -327,7 +324,9 @@ impl Assembler {
             _ => bail!("OpConstant expected result id"),
         };
 
-        let scalar_ty = self.scalar_tys.get(&result_type_id)
+        let scalar_ty = self
+            .scalar_tys
+            .get(&result_type_id)
             .ok_or_else(|| anyhow!("OpConstant result type id not found"))?;
 
         fn lit2int(lit: &Lit) -> Result<i64> {
@@ -336,7 +335,7 @@ impl Assembler {
                 Lit::Float(f) => {
                     let f = *f as f32;
                     Ok(f as i64)
-                },
+                }
                 Lit::String(_) => bail!("OpConstant expected a int or float literal"),
             }
         }
@@ -346,7 +345,7 @@ impl Assembler {
                 Lit::Float(f) => {
                     let f = *f as f32;
                     Ok(f as f64)
-                },
+                }
                 Lit::String(_) => bail!("OpConstant expected a int or float literal"),
             }
         }
@@ -358,7 +357,10 @@ impl Assembler {
 
         let mut value_buf = [0u32; 2];
         let value: &[u32] = match scalar_ty {
-            ScalarType::Integer { bits: 8, is_signed: true } => {
+            ScalarType::Integer {
+                bits: 8,
+                is_signed: true,
+            } => {
                 let value = lit2int(value)?;
                 if let Some(value) = i8::from_i64(value) {
                     value_buf[0] = value as u32;
@@ -367,7 +369,10 @@ impl Assembler {
                     bail!("expected a i8 literal in range [-128, 127]");
                 }
             }
-            ScalarType::Integer { bits: 16, is_signed: true } => {
+            ScalarType::Integer {
+                bits: 16,
+                is_signed: true,
+            } => {
                 let value = lit2int(value)?;
                 if let Some(value) = i16::from_i64(value) {
                     value_buf[0] = value as u32;
@@ -376,7 +381,10 @@ impl Assembler {
                     bail!("expected a i16 literal in range [-32768, 32767]");
                 }
             }
-            ScalarType::Integer { bits: 32, is_signed: true } => {
+            ScalarType::Integer {
+                bits: 32,
+                is_signed: true,
+            } => {
                 let value = lit2int(value)?;
                 if let Some(value) = i32::from_i64(value) {
                     value_buf[0] = value as u32;
@@ -385,14 +393,20 @@ impl Assembler {
                     bail!("expected a i32 literal in range [-2147483648, 2147483647]");
                 }
             }
-            ScalarType::Integer { bits: 64, is_signed: true } => {
+            ScalarType::Integer {
+                bits: 64,
+                is_signed: true,
+            } => {
                 let value = lit2int(value)?;
                 let x = value.to_le_bytes();
                 value_buf[0] = u32::from_le_bytes([x[0], x[1], x[2], x[3]]);
                 value_buf[1] = u32::from_le_bytes([x[4], x[5], x[6], x[7]]);
                 &value_buf[..2]
             }
-            ScalarType::Integer { bits: 8, is_signed: false } => {
+            ScalarType::Integer {
+                bits: 8,
+                is_signed: false,
+            } => {
                 let value = lit2int(value)?;
                 if let Some(value) = u8::from_i64(value) {
                     value_buf[0] = value as u32;
@@ -401,7 +415,10 @@ impl Assembler {
                     bail!("expected a u8 literal in range [0, 255]");
                 }
             }
-            ScalarType::Integer { bits: 16, is_signed: false } => {
+            ScalarType::Integer {
+                bits: 16,
+                is_signed: false,
+            } => {
                 let value = lit2int(value)?;
                 if let Some(value) = u16::from_i64(value) {
                     value_buf[0] = value as u32;
@@ -410,7 +427,10 @@ impl Assembler {
                     bail!("expected a u16 literal in range [0, 65535]");
                 }
             }
-            ScalarType::Integer { bits: 32, is_signed: false } => {
+            ScalarType::Integer {
+                bits: 32,
+                is_signed: false,
+            } => {
                 let value = lit2int(value)?;
                 if let Some(value) = u32::from_i64(value) {
                     value_buf[0] = value as u32;
@@ -419,7 +439,10 @@ impl Assembler {
                     bail!("expected a u32 literal in range [0, 4294967295]");
                 }
             }
-            ScalarType::Integer { bits: 64, is_signed: false } => {
+            ScalarType::Integer {
+                bits: 64,
+                is_signed: false,
+            } => {
                 let value = lit2int(value)?;
                 let x = value.to_le_bytes();
                 value_buf[0] = u32::from_le_bytes([x[0], x[1], x[2], x[3]]);
@@ -463,22 +486,16 @@ impl Assembler {
         const OP_CONSTANT: u32 = Op::Constant as u32;
 
         let out = match instr.opcode {
-            OP_TYPE_INT => {
-                Some(self.assemble_op_type_int(instr)?)
-            }
-            OP_TYPE_FLOAT => {
-                Some(self.assemble_op_type_float(instr)?)
-            }
-            OP_CONSTANT => {
-                Some(self.assemble_op_constant(instr)?)
-            }
+            OP_TYPE_INT => Some(self.assemble_op_type_int(instr)?),
+            OP_TYPE_FLOAT => Some(self.assemble_op_type_float(instr)?),
+            OP_CONSTANT => Some(self.assemble_op_constant(instr)?),
             _ => None,
         };
         Ok(out)
     }
     fn assemble_general_instr(&mut self, instr: &Instruction) -> Result<Vec<u32>> {
-        let opcode = Op::from_u32(instr.opcode)
-            .ok_or_else(|| anyhow!("unknown opcode {}", instr.opcode))?;
+        let opcode =
+            Op::from_u32(instr.opcode).ok_or_else(|| anyhow!("unknown opcode {}", instr.opcode))?;
         let mut builder = InstructionBuilder::new(opcode);
 
         let mut operands = instr.operands.iter();
@@ -530,17 +547,17 @@ impl Assembler {
                                     bail!("literal integer out of range");
                                 }
                             }
-                        },
+                        }
                         Lit::Float(f) => {
                             // First cast to f32.
                             let f = *f as f32;
                             // Then bit cast to u32.
                             let u = f.to_bits();
                             builder = builder.push(u);
-                        },
+                        }
                         Lit::String(s) => {
                             builder = builder.push_str(&s);
-                        },
+                        }
                     }
                 }
                 Operand::Ident(ident) => {
@@ -611,11 +628,11 @@ impl Assembler {
         }
 
         let mut spv = vec![
-            0x07230203, // Magic number
-            header.version, // Version
+            0x07230203,       // Magic number
+            header.version,   // Version
             header.generator, // Generator
-            self.bound, // Bound
-            0, // Reserved word
+            self.bound,       // Bound
+            0,                // Reserved word
         ];
         spv.extend(buf);
 

@@ -73,7 +73,11 @@ impl ReflectConfig {
         let spv = self.spv.take().unwrap_or_default();
         let mut itm = ReflectIntermediate::new(self)?;
         let mut func_inspector = FunctionInspector::new();
-        reflect(&mut itm, &mut spv.instrs()?, func_inspector.chain(inspector))
+        reflect(
+            &mut itm,
+            &mut spv.instrs()?,
+            func_inspector.chain(inspector),
+        )
     }
     /// Reflect the SPIR-V binary and extract all entry points with an inspector
     /// function for customized reflection subroutines.

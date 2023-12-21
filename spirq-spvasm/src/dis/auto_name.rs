@@ -1,8 +1,11 @@
-use std::collections::HashMap;
 use anyhow::Result;
+use std::collections::HashMap;
 
 use spirq::reflect::ReflectIntermediate;
-use spirq_core::{ty::{Type, ScalarType, VectorType, MatrixType, PointerType, ArrayType, StructType}, constant::ConstantValue};
+use spirq_core::{
+    constant::ConstantValue,
+    ty::{ArrayType, MatrixType, PointerType, ScalarType, StructType, Type, VectorType},
+};
 
 use super::utils::to_hexadecimal_float;
 
@@ -28,7 +31,7 @@ impl AutoNamer {
             std::collections::hash_map::Entry::Vacant(e) => {
                 e.insert(0);
                 self.names.entry(id).or_insert(name.clone());
-            },
+            }
             std::collections::hash_map::Entry::Occupied(e) => {
                 let counter = e.into_mut();
                 let name = format!("{}_{}", name, counter);
@@ -38,10 +41,7 @@ impl AutoNamer {
         }
     }
 
-    fn collect_annotated_names(
-        &mut self,
-        itm: &ReflectIntermediate,
-    ) -> Result<()> {
+    fn collect_annotated_names(&mut self, itm: &ReflectIntermediate) -> Result<()> {
         for (name_key, name) in itm.name_reg.iter() {
             if name_key.member_idx.is_none() {
                 // Sanitize name. Convert all punctuations to underscore.
@@ -58,14 +58,38 @@ impl AutoNamer {
         let out = match scalar_ty {
             ScalarType::Void => "void".to_string(),
             ScalarType::Boolean => "bool".to_string(),
-            ScalarType::Integer { bits: 8, is_signed: true } => "char".to_string(),
-            ScalarType::Integer { bits: 16, is_signed: true } => "short".to_string(),
-            ScalarType::Integer { bits: 32, is_signed: true } => "int".to_string(),
-            ScalarType::Integer { bits: 64, is_signed: true } => "long".to_string(),
-            ScalarType::Integer { bits: 8, is_signed: false } => "uchar".to_string(),
-            ScalarType::Integer { bits: 16, is_signed: false } => "ushort".to_string(),
-            ScalarType::Integer { bits: 32, is_signed: false } => "uint".to_string(),
-            ScalarType::Integer { bits: 64, is_signed: false } => "ulong".to_string(),
+            ScalarType::Integer {
+                bits: 8,
+                is_signed: true,
+            } => "char".to_string(),
+            ScalarType::Integer {
+                bits: 16,
+                is_signed: true,
+            } => "short".to_string(),
+            ScalarType::Integer {
+                bits: 32,
+                is_signed: true,
+            } => "int".to_string(),
+            ScalarType::Integer {
+                bits: 64,
+                is_signed: true,
+            } => "long".to_string(),
+            ScalarType::Integer {
+                bits: 8,
+                is_signed: false,
+            } => "uchar".to_string(),
+            ScalarType::Integer {
+                bits: 16,
+                is_signed: false,
+            } => "ushort".to_string(),
+            ScalarType::Integer {
+                bits: 32,
+                is_signed: false,
+            } => "uint".to_string(),
+            ScalarType::Integer {
+                bits: 64,
+                is_signed: false,
+            } => "ulong".to_string(),
             ScalarType::Float { bits: 16 } => "half".to_string(),
             ScalarType::Float { bits: 32 } => "float".to_string(),
             ScalarType::Float { bits: 64 } => "double".to_string(),
@@ -74,17 +98,29 @@ impl AutoNamer {
         Some(out)
     }
     fn make_vector_ty_name(&mut self, vector_ty: &VectorType) -> Option<String> {
-        let out = format!("v{}{}", vector_ty.nscalar, self.make_scalar_ty_name(&vector_ty.scalar_ty)?);
+        let out = format!(
+            "v{}{}",
+            vector_ty.nscalar,
+            self.make_scalar_ty_name(&vector_ty.scalar_ty)?
+        );
         Some(out)
     }
     fn make_matrix_ty_name(&mut self, matrix_ty: &MatrixType) -> Option<String> {
-        let out = format!("mat{}{}", matrix_ty.nvector, self.make_vector_ty_name(&matrix_ty.vector_ty)?);
+        let out = format!(
+            "mat{}{}",
+            matrix_ty.nvector,
+            self.make_vector_ty_name(&matrix_ty.vector_ty)?
+        );
         Some(out)
     }
 
     fn make_arr_ty_name(&mut self, arr_ty: &ArrayType) -> Option<String> {
         let out = if let Some(nelement) = arr_ty.nelement {
-            format!("_arr_{}_uint_{}", self.make_ty_name(&arr_ty.element_ty)?, nelement)
+            format!(
+                "_arr_{}_uint_{}",
+                self.make_ty_name(&arr_ty.element_ty)?,
+                nelement
+            )
         } else {
             format!("_runtimearr_{}", self.make_ty_name(&arr_ty.element_ty)?)
         };
@@ -124,10 +160,7 @@ impl AutoNamer {
         out
     }
 
-    fn collect_ty_names(
-        &mut self,
-        itm: &ReflectIntermediate,
-    ) -> Result<()> {
+    fn collect_ty_names(&mut self, itm: &ReflectIntermediate) -> Result<()> {
         let mut tys = itm.ty_reg.iter().collect::<Vec<_>>();
         tys.sort_by_key(|(id, _)| *id);
         for (id, ty) in tys {
@@ -142,10 +175,7 @@ impl AutoNamer {
         Ok(())
     }
 
-    fn make_const_name(
-        &mut self,
-        value: &ConstantValue,
-    ) -> Option<String> {
+    fn make_const_name(&mut self, value: &ConstantValue) -> Option<String> {
         let mut out = match value {
             ConstantValue::Bool(true) => "true".to_owned(),
             ConstantValue::Bool(false) => "false".to_owned(),
@@ -166,10 +196,7 @@ impl AutoNamer {
         Some(out)
     }
 
-    fn collect_const_names(
-        &mut self,
-        itm: &ReflectIntermediate,
-    ) -> Result<()> {
+    fn collect_const_names(&mut self, itm: &ReflectIntermediate) -> Result<()> {
         for (id, constant) in itm.interp.iter() {
             if let Some(name) = constant.name.as_ref() {
                 self.assign_name(*id, name.clone());

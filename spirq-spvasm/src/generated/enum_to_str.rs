@@ -17,7 +17,7 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             10 => "WGSL".to_owned(),
             11 => "Slang".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "ExecutionModel" => match value {
             0 => "Vertex".to_owned(),
             1 => "TessellationControl".to_owned(),
@@ -43,7 +43,7 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             5364 => "TaskEXT".to_owned(),
             5365 => "MeshEXT".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "AddressingModel" => match value {
             0 => "Logical".to_owned(),
             1 => "Physical32".to_owned(),
@@ -51,7 +51,7 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             5348 => "PhysicalStorageBuffer64".to_owned(),
             5348 => "PhysicalStorageBuffer64EXT".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "MemoryModel" => match value {
             0 => "Simple".to_owned(),
             1 => "GLSL450".to_owned(),
@@ -59,7 +59,7 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             3 => "Vulkan".to_owned(),
             3 => "VulkanKHR".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "ExecutionMode" => match value {
             0 => "Invocations".to_owned(),
             1 => "SpacingEqual".to_owned(),
@@ -150,7 +150,7 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             6160 => "RegisterMapInterfaceINTEL".to_owned(),
             6417 => "NamedBarrierCountINTEL".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "StorageClass" => match value {
             0 => "UniformConstant".to_owned(),
             1 => "Input".to_owned(),
@@ -188,7 +188,7 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             5936 => "DeviceOnlyINTEL".to_owned(),
             5937 => "HostOnlyINTEL".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "Dim" => match value {
             0 => "1D".to_owned(),
             1 => "2D".to_owned(),
@@ -199,7 +199,7 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             6 => "SubpassData".to_owned(),
             4173 => "TileImageDataEXT".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "SamplerAddressingMode" => match value {
             0 => "None".to_owned(),
             1 => "ClampToEdge".to_owned(),
@@ -207,12 +207,12 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             3 => "Repeat".to_owned(),
             4 => "RepeatMirrored".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "SamplerFilterMode" => match value {
             0 => "Nearest".to_owned(),
             1 => "Linear".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "ImageFormat" => match value {
             0 => "Unknown".to_owned(),
             1 => "Rgba32f".to_owned(),
@@ -257,7 +257,7 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             40 => "R64ui".to_owned(),
             41 => "R64i".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "ImageChannelOrder" => match value {
             0 => "R".to_owned(),
             1 => "A".to_owned(),
@@ -280,7 +280,7 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             18 => "sBGRA".to_owned(),
             19 => "ABGR".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "ImageChannelDataType" => match value {
             0 => "SnormInt8".to_owned(),
             1 => "SnormInt16".to_owned(),
@@ -302,19 +302,19 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             19 => "UnsignedIntRaw10EXT".to_owned(),
             20 => "UnsignedIntRaw12EXT".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "FPRoundingMode" => match value {
             0 => "RTE".to_owned(),
             1 => "RTZ".to_owned(),
             2 => "RTP".to_owned(),
             3 => "RTN".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "FPDenormMode" => match value {
             0 => "Preserve".to_owned(),
             1 => "FlushToZero".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "QuantizationModes" => match value {
             0 => "TRN".to_owned(),
             1 => "TRN_ZERO".to_owned(),
@@ -325,38 +325,38 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             6 => "RND_CONV".to_owned(),
             7 => "RND_CONV_ODD".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "FPOperationMode" => match value {
             0 => "IEEE".to_owned(),
             1 => "ALT".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "OverflowModes" => match value {
             0 => "WRAP".to_owned(),
             1 => "SAT".to_owned(),
             2 => "SAT_ZERO".to_owned(),
             3 => "SAT_SYM".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "LinkageType" => match value {
             0 => "Export".to_owned(),
             1 => "Import".to_owned(),
             2 => "LinkOnceODR".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "AccessQualifier" => match value {
             0 => "ReadOnly".to_owned(),
             1 => "WriteOnly".to_owned(),
             2 => "ReadWrite".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "HostAccessQualifier" => match value {
             0 => "NoneINTEL".to_owned(),
             1 => "ReadINTEL".to_owned(),
             2 => "WriteINTEL".to_owned(),
             3 => "ReadWriteINTEL".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "FunctionParameterAttribute" => match value {
             0 => "Zext".to_owned(),
             1 => "Sext".to_owned(),
@@ -368,7 +368,7 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             7 => "NoReadWrite".to_owned(),
             5940 => "RuntimeAlignedINTEL".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "Decoration" => match value {
             0 => "RelaxedPrecision".to_owned(),
             1 => "SpecId".to_owned(),
@@ -515,7 +515,7 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             6442 => "CacheControlLoadINTEL".to_owned(),
             6443 => "CacheControlStoreINTEL".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "BuiltIn" => match value {
             0 => "Position".to_owned(),
             1 => "PointSize".to_owned(),
@@ -656,7 +656,7 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             5406 => "HitKindBackFacingMicroTriangleNV".to_owned(),
             6021 => "CullMaskKHR".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "Scope" => match value {
             0 => "CrossDevice".to_owned(),
             1 => "Device".to_owned(),
@@ -667,7 +667,7 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             5 => "QueueFamilyKHR".to_owned(),
             6 => "ShaderCallKHR".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "GroupOperation" => match value {
             0 => "Reduce".to_owned(),
             1 => "InclusiveScan".to_owned(),
@@ -677,13 +677,13 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             7 => "PartitionedInclusiveScanNV".to_owned(),
             8 => "PartitionedExclusiveScanNV".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "KernelEnqueueFlags" => match value {
             0 => "NoWait".to_owned(),
             1 => "WaitKernel".to_owned(),
             2 => "WaitWorkGroup".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "Capability" => match value {
             0 => "Matrix".to_owned(),
             1 => "Shader".to_owned(),
@@ -938,44 +938,44 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             6400 => "GroupUniformArithmeticKHR".to_owned(),
             6441 => "CacheControlsINTEL".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "RayQueryIntersection" => match value {
             0 => "RayQueryCandidateIntersectionKHR".to_owned(),
             1 => "RayQueryCommittedIntersectionKHR".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "RayQueryCommittedIntersectionType" => match value {
             0 => "RayQueryCommittedIntersectionNoneKHR".to_owned(),
             1 => "RayQueryCommittedIntersectionTriangleKHR".to_owned(),
             2 => "RayQueryCommittedIntersectionGeneratedKHR".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "RayQueryCandidateIntersectionType" => match value {
             0 => "RayQueryCandidateIntersectionTriangleKHR".to_owned(),
             1 => "RayQueryCandidateIntersectionAABBKHR".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "PackedVectorFormat" => match value {
             0 => "PackedVectorFormat4x8Bit".to_owned(),
             0 => "PackedVectorFormat4x8BitKHR".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "CooperativeMatrixLayout" => match value {
             0 => "RowMajorKHR".to_owned(),
             1 => "ColumnMajorKHR".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "CooperativeMatrixUse" => match value {
             0 => "MatrixAKHR".to_owned(),
             1 => "MatrixBKHR".to_owned(),
             2 => "MatrixAccumulatorKHR".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "InitializationModeQualifier" => match value {
             0 => "InitOnDeviceReprogramINTEL".to_owned(),
             1 => "InitOnDeviceResetINTEL".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "LoadCacheControl" => match value {
             0 => "UncachedINTEL".to_owned(),
             1 => "CachedINTEL".to_owned(),
@@ -983,58 +983,58 @@ pub fn enum_to_str(ety: &str, value: u32) -> Result<String> {
             3 => "InvalidateAfterReadINTEL".to_owned(),
             4 => "ConstCachedINTEL".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "StoreCacheControl" => match value {
             0 => "UncachedINTEL".to_owned(),
             1 => "WriteThroughINTEL".to_owned(),
             2 => "WriteBackINTEL".to_owned(),
             3 => "StreamingINTEL".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "ImageOperands" => match value {
             0 => "None".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "FPFastMathMode" => match value {
             0 => "None".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "SelectionControl" => match value {
             0 => "None".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "LoopControl" => match value {
             0 => "None".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "FunctionControl" => match value {
             0 => "None".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "MemorySemantics" => match value {
             0 => "None".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "MemoryAccess" => match value {
             0 => "None".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "KernelProfilingInfo" => match value {
             0 => "None".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "RayFlags" => match value {
             0 => "None".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "FragmentShadingRate" => match value {
             0 => "None".to_owned(),
             _ => value.to_string(),
-        }
+        },
         "CooperativeMatrixOperands" => match value {
             0 => "None".to_owned(),
             _ => value.to_string(),
-        }
+        },
         _ => bail!("unknown enum: {}", ety),
     };
     Ok(out)
