@@ -207,7 +207,7 @@ impl<'a> Operands<'a> {
         }
     }
     pub fn read_f32(&mut self) -> Result<f32> {
-        self.read_u32().map(|x| f32::from_ne_bytes(x.to_ne_bytes()))
+        self.read_u32().map(|x| f32::from_bits(x))
     }
     pub fn read_id(&mut self) -> Result<u32> {
         self.read_u32()
