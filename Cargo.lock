@@ -396,11 +396,11 @@ dependencies = [
 
 [[package]]
 name = "spirq-as"
-version = "0.2.3"
+version = "0.1.0"
 dependencies = [
  "anyhow",
- "num-traits",
- "spirq-core",
+ "clap",
+ "spirq-spvasm",
 ]
 
 [[package]]
@@ -417,10 +417,11 @@ dependencies = [
 
 [[package]]
 name = "spirq-dis"
-version = "0.2.3"
+version = "0.1.0"
 dependencies = [
  "anyhow",
- "spirq-core",
+ "clap",
+ "spirq-spvasm",
 ]
 
 [[package]]

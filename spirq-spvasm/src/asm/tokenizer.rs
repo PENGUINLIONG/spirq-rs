@@ -138,7 +138,6 @@ impl<'a> Tokenizer<'a> {
         }
 
         let mut exponent_buf = String::new();
-        println!("peek: {:?}", self.chars.peek());
         if let Some('p') = self.chars.peek().map(|x| x.to_ascii_lowercase()) {
             self.chars.next(); // Consume the 'p' or 'P'.
 

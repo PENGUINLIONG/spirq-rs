@@ -1,4 +1,4 @@
-use num_traits::{Float, PrimInt};
+use num_traits::Float;
 
 pub fn to_hexadecimal_float<F: Float>(f: F) -> String {
     let (mut mantissa, exponent, sign) = f.integer_decode();

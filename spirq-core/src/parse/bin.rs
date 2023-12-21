@@ -88,6 +88,12 @@ impl SpirvBinary {
     pub fn into_words(self) -> Vec<u32> {
         self.0
     }
+    pub fn into_bytes(self) -> Vec<u8> {
+        self.0
+            .iter()
+            .flat_map(|x| x.to_le_bytes().to_vec())
+            .collect::<Vec<u8>>()
+    }
 
     pub fn instrs(&self) -> Result<Instrs> {
         const HEADER_LEN: usize = 5;
