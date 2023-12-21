@@ -25,7 +25,7 @@ impl Disassembler {
             name_ids: false,
             name_type_ids: false,
             name_const_ids: false,
-            indent: true,
+            indent: false,
         }
     }
 
