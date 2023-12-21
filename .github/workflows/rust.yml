@@ -38,4 +38,8 @@ jobs:
         shader-reflect assets/spirv-spec.frag.spv -o assets/spirv-spec.frag.spv.json
         diff assets/spirv-spec.frag.json assets/spirv-spec.frag.spv.json
         shader-reflect assets/moon.spv -o assets/moon.spv.json --reference-all-resources
+        cargo install --path spirq-as
+        cargo install --path spirq-dis
+        spirq-as assets/gallery.frag.spvasm -o assets/gallery.frag.spv
+        spirq-dis assets/gallery.frag.spv -o assets/gallery.frag.spvasm
         git diff --exit-code
