@@ -56,11 +56,10 @@ fn main() {
         .name_ids(!args.raw_id)
         .name_type_ids(!args.raw_id)
         .name_const_ids(!args.raw_id);
-    let mut spvasm = dis.disassemble(&SpirvBinary::from(spv)).unwrap_or_else(|e| {
+    let spvasm = dis.disassemble(&SpirvBinary::from(spv)).unwrap_or_else(|e| {
         writeln!(stderr(), "error: failed to read input file: {}", e).unwrap();
         exit(1);
     });
-    spvasm.push('\n');
 
     if let Some(out_path) = args.out_path {
         let out_path = Path::new(&out_path).to_owned();
