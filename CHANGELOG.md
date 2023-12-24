@@ -1,5 +1,9 @@
 # Change Log
 
+## v1.0.2
+
+- Supported explicitly typed constant. (#118)
+
 ## v1.0.1
 
 - Fixed resource reference analysis in function calls. (#115)
