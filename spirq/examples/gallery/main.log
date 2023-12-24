@@ -503,6 +503,9 @@
                                 is_signed: true,
                             },
                             dim: Dim1D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -524,6 +527,9 @@
                                 is_signed: true,
                             },
                             dim: Dim2D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -545,6 +551,9 @@
                                 is_signed: true,
                             },
                             dim: Dim3D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -566,6 +575,9 @@
                                 is_signed: true,
                             },
                             dim: DimCube,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -587,6 +599,9 @@
                                 is_signed: true,
                             },
                             dim: DimRect,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -608,6 +623,9 @@
                                 is_signed: true,
                             },
                             dim: Dim1D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: true,
                             is_multisampled: false,
                         },
@@ -629,6 +647,9 @@
                                 is_signed: true,
                             },
                             dim: Dim2D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: true,
                             is_multisampled: false,
                         },
@@ -650,6 +671,9 @@
                                 is_signed: true,
                             },
                             dim: DimCube,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: true,
                             is_multisampled: false,
                         },
@@ -671,6 +695,9 @@
                                 is_signed: true,
                             },
                             dim: DimBuffer,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -692,6 +719,9 @@
                                 is_signed: true,
                             },
                             dim: Dim2D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: true,
                         },
@@ -713,6 +743,9 @@
                                 is_signed: true,
                             },
                             dim: Dim2D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: true,
                             is_multisampled: true,
                         },
@@ -734,6 +767,9 @@
                                 is_signed: false,
                             },
                             dim: Dim1D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -755,6 +791,9 @@
                                 is_signed: false,
                             },
                             dim: Dim2D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -776,6 +815,9 @@
                                 is_signed: false,
                             },
                             dim: Dim3D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -797,6 +839,9 @@
                                 is_signed: false,
                             },
                             dim: DimCube,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -818,6 +863,9 @@
                                 is_signed: false,
                             },
                             dim: DimRect,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -839,6 +887,9 @@
                                 is_signed: false,
                             },
                             dim: Dim1D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: true,
                             is_multisampled: false,
                         },
@@ -860,6 +911,9 @@
                                 is_signed: false,
                             },
                             dim: Dim2D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: true,
                             is_multisampled: false,
                         },
@@ -881,6 +935,9 @@
                                 is_signed: false,
                             },
                             dim: DimCube,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: true,
                             is_multisampled: false,
                         },
@@ -902,6 +959,9 @@
                                 is_signed: false,
                             },
                             dim: DimBuffer,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -923,6 +983,9 @@
                                 is_signed: false,
                             },
                             dim: Dim2D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: true,
                         },
@@ -944,6 +1007,9 @@
                                 is_signed: false,
                             },
                             dim: Dim2D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: true,
                             is_multisampled: true,
                         },
@@ -964,6 +1030,9 @@
                                 bits: 32,
                             },
                             dim: Dim1D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -984,6 +1053,9 @@
                                 bits: 32,
                             },
                             dim: Dim2D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -1004,6 +1076,9 @@
                                 bits: 32,
                             },
                             dim: Dim3D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -1024,6 +1099,9 @@
                                 bits: 32,
                             },
                             dim: DimCube,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -1044,6 +1122,9 @@
                                 bits: 32,
                             },
                             dim: DimRect,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -1064,6 +1145,9 @@
                                 bits: 32,
                             },
                             dim: Dim1D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: true,
                             is_multisampled: false,
                         },
@@ -1084,6 +1168,9 @@
                                 bits: 32,
                             },
                             dim: Dim2D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: true,
                             is_multisampled: false,
                         },
@@ -1104,6 +1191,9 @@
                                 bits: 32,
                             },
                             dim: DimCube,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: true,
                             is_multisampled: false,
                         },
@@ -1124,6 +1214,9 @@
                                 bits: 32,
                             },
                             dim: DimBuffer,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -1144,6 +1237,9 @@
                                 bits: 32,
                             },
                             dim: Dim2D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: false,
                             is_multisampled: true,
                         },
@@ -1164,6 +1260,9 @@
                                 bits: 32,
                             },
                             dim: Dim2D,
+                            is_depth: Some(
+                                false,
+                            ),
                             is_array: true,
                             is_multisampled: true,
                         },
@@ -1184,6 +1283,9 @@
                                 bits: 32,
                             },
                             dim: Dim1D,
+                            is_depth: Some(
+                                true,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -1204,6 +1306,9 @@
                                 bits: 32,
                             },
                             dim: Dim2D,
+                            is_depth: Some(
+                                true,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -1224,6 +1329,9 @@
                                 bits: 32,
                             },
                             dim: DimCube,
+                            is_depth: Some(
+                                true,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -1244,6 +1352,9 @@
                                 bits: 32,
                             },
                             dim: DimRect,
+                            is_depth: Some(
+                                true,
+                            ),
                             is_array: false,
                             is_multisampled: false,
                         },
@@ -1264,6 +1375,9 @@
                                 bits: 32,
                             },
                             dim: Dim1D,
+                            is_depth: Some(
+                                true,
+                            ),
                             is_array: true,
                             is_multisampled: false,
                         },
@@ -1284,6 +1398,9 @@
                                 bits: 32,
                             },
                             dim: Dim2D,
+                            is_depth: Some(
+                                true,
+                            ),
                             is_array: true,
                             is_multisampled: false,
                         },
@@ -1304,6 +1421,9 @@
                                 bits: 32,
                             },
                             dim: DimCube,
+                            is_depth: Some(
+                                true,
+                            ),
                             is_array: true,
                             is_multisampled: false,
                         },
@@ -1346,6 +1466,9 @@
                             is_signed: true,
                         },
                         dim: Dim1D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1365,6 +1488,9 @@
                             is_signed: true,
                         },
                         dim: Dim2D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1384,6 +1510,9 @@
                             is_signed: true,
                         },
                         dim: Dim3D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1403,6 +1532,9 @@
                             is_signed: true,
                         },
                         dim: DimCube,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1422,6 +1554,9 @@
                             is_signed: true,
                         },
                         dim: DimRect,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1441,6 +1576,9 @@
                             is_signed: true,
                         },
                         dim: Dim1D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: true,
                         is_multisampled: false,
                     },
@@ -1460,6 +1598,9 @@
                             is_signed: true,
                         },
                         dim: Dim2D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: true,
                         is_multisampled: false,
                     },
@@ -1479,6 +1620,9 @@
                             is_signed: true,
                         },
                         dim: DimCube,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: true,
                         is_multisampled: false,
                     },
@@ -1498,6 +1642,9 @@
                             is_signed: true,
                         },
                         dim: DimBuffer,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1517,6 +1664,9 @@
                             is_signed: true,
                         },
                         dim: Dim2D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: true,
                     },
@@ -1536,6 +1686,9 @@
                             is_signed: true,
                         },
                         dim: Dim2D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: true,
                         is_multisampled: true,
                     },
@@ -1555,6 +1708,9 @@
                             is_signed: false,
                         },
                         dim: Dim1D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1574,6 +1730,9 @@
                             is_signed: false,
                         },
                         dim: Dim2D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1593,6 +1752,9 @@
                             is_signed: false,
                         },
                         dim: Dim3D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1612,6 +1774,9 @@
                             is_signed: false,
                         },
                         dim: DimCube,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1631,6 +1796,9 @@
                             is_signed: false,
                         },
                         dim: DimRect,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1650,6 +1818,9 @@
                             is_signed: false,
                         },
                         dim: Dim1D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: true,
                         is_multisampled: false,
                     },
@@ -1669,6 +1840,9 @@
                             is_signed: false,
                         },
                         dim: Dim2D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: true,
                         is_multisampled: false,
                     },
@@ -1688,6 +1862,9 @@
                             is_signed: false,
                         },
                         dim: DimCube,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: true,
                         is_multisampled: false,
                     },
@@ -1707,6 +1884,9 @@
                             is_signed: false,
                         },
                         dim: DimBuffer,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1726,6 +1906,9 @@
                             is_signed: false,
                         },
                         dim: Dim2D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: true,
                     },
@@ -1745,6 +1928,9 @@
                             is_signed: false,
                         },
                         dim: Dim2D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: true,
                         is_multisampled: true,
                     },
@@ -1763,6 +1949,9 @@
                             bits: 32,
                         },
                         dim: Dim1D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1781,6 +1970,9 @@
                             bits: 32,
                         },
                         dim: Dim2D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1799,6 +1991,9 @@
                             bits: 32,
                         },
                         dim: Dim3D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1817,6 +2012,9 @@
                             bits: 32,
                         },
                         dim: DimCube,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1835,6 +2033,9 @@
                             bits: 32,
                         },
                         dim: DimRect,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1853,6 +2054,9 @@
                             bits: 32,
                         },
                         dim: Dim1D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: true,
                         is_multisampled: false,
                     },
@@ -1871,6 +2075,9 @@
                             bits: 32,
                         },
                         dim: Dim2D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: true,
                         is_multisampled: false,
                     },
@@ -1889,6 +2096,9 @@
                             bits: 32,
                         },
                         dim: DimCube,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: true,
                         is_multisampled: false,
                     },
@@ -1907,6 +2117,9 @@
                             bits: 32,
                         },
                         dim: DimBuffer,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: false,
                     },
@@ -1925,6 +2138,9 @@
                             bits: 32,
                         },
                         dim: Dim2D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: false,
                         is_multisampled: true,
                     },
@@ -1943,6 +2159,9 @@
                             bits: 32,
                         },
                         dim: Dim2D,
+                        is_depth: Some(
+                            false,
+                        ),
                         is_array: true,
                         is_multisampled: true,
                     },
@@ -2753,754 +2972,15 @@
                                 ),
                                 ty: Array(
                                     ArrayType {
-                                        element_ty: Struct(
-                                            StructType {
-                                                name: Some(
-                                                    "Data",
-                                                ),
-                                                members: [
-                                                    StructMember {
-                                                        name: Some(
-                                                            "i0",
-                                                        ),
-                                                        offset: Some(
-                                                            0,
-                                                        ),
-                                                        ty: Scalar(
-                                                            Integer {
-                                                                bits: 32,
-                                                                is_signed: true,
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "i1",
-                                                        ),
-                                                        offset: Some(
-                                                            8,
-                                                        ),
-                                                        ty: Vector(
-                                                            VectorType {
-                                                                scalar_ty: Integer {
-                                                                    bits: 32,
-                                                                    is_signed: true,
-                                                                },
-                                                                nscalar: 2,
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "i2",
-                                                        ),
-                                                        offset: Some(
-                                                            16,
-                                                        ),
-                                                        ty: Vector(
-                                                            VectorType {
-                                                                scalar_ty: Integer {
-                                                                    bits: 32,
-                                                                    is_signed: true,
-                                                                },
-                                                                nscalar: 3,
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "i3",
-                                                        ),
-                                                        offset: Some(
-                                                            32,
-                                                        ),
-                                                        ty: Vector(
-                                                            VectorType {
-                                                                scalar_ty: Integer {
-                                                                    bits: 32,
-                                                                    is_signed: true,
-                                                                },
-                                                                nscalar: 4,
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "u0",
-                                                        ),
-                                                        offset: Some(
-                                                            48,
-                                                        ),
-                                                        ty: Scalar(
-                                                            Integer {
-                                                                bits: 32,
-                                                                is_signed: false,
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "u1",
-                                                        ),
-                                                        offset: Some(
-                                                            56,
-                                                        ),
-                                                        ty: Vector(
-                                                            VectorType {
-                                                                scalar_ty: Integer {
-                                                                    bits: 32,
-                                                                    is_signed: false,
-                                                                },
-                                                                nscalar: 2,
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "u2",
-                                                        ),
-                                                        offset: Some(
-                                                            64,
-                                                        ),
-                                                        ty: Vector(
-                                                            VectorType {
-                                                                scalar_ty: Integer {
-                                                                    bits: 32,
-                                                                    is_signed: false,
-                                                                },
-                                                                nscalar: 3,
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "u3",
-                                                        ),
-                                                        offset: Some(
-                                                            80,
-                                                        ),
-                                                        ty: Vector(
-                                                            VectorType {
-                                                                scalar_ty: Integer {
-                                                                    bits: 32,
-                                                                    is_signed: false,
-                                                                },
-                                                                nscalar: 4,
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "f0",
-                                                        ),
-                                                        offset: Some(
-                                                            96,
-                                                        ),
-                                                        ty: Scalar(
-                                                            Float {
-                                                                bits: 32,
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "f1",
-                                                        ),
-                                                        offset: Some(
-                                                            104,
-                                                        ),
-                                                        ty: Vector(
-                                                            VectorType {
-                                                                scalar_ty: Float {
-                                                                    bits: 32,
-                                                                },
-                                                                nscalar: 2,
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "f2",
-                                                        ),
-                                                        offset: Some(
-                                                            112,
-                                                        ),
-                                                        ty: Vector(
-                                                            VectorType {
-                                                                scalar_ty: Float {
-                                                                    bits: 32,
-                                                                },
-                                                                nscalar: 3,
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "f3",
-                                                        ),
-                                                        offset: Some(
-                                                            128,
-                                                        ),
-                                                        ty: Vector(
-                                                            VectorType {
-                                                                scalar_ty: Float {
-                                                                    bits: 32,
-                                                                },
-                                                                nscalar: 4,
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "fMat0",
-                                                        ),
-                                                        offset: Some(
-                                                            144,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 32,
-                                                                    },
-                                                                    nscalar: 2,
-                                                                },
-                                                                nvector: 2,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    8,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "fMat1",
-                                                        ),
-                                                        offset: Some(
-                                                            160,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 32,
-                                                                    },
-                                                                    nscalar: 3,
-                                                                },
-                                                                nvector: 2,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    16,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "fMat2",
-                                                        ),
-                                                        offset: Some(
-                                                            192,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 32,
-                                                                    },
-                                                                    nscalar: 4,
-                                                                },
-                                                                nvector: 2,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    16,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "fMat3",
-                                                        ),
-                                                        offset: Some(
-                                                            224,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 32,
-                                                                    },
-                                                                    nscalar: 2,
-                                                                },
-                                                                nvector: 3,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    8,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "fMat4",
-                                                        ),
-                                                        offset: Some(
-                                                            256,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 32,
-                                                                    },
-                                                                    nscalar: 3,
-                                                                },
-                                                                nvector: 3,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    16,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "fMat5",
-                                                        ),
-                                                        offset: Some(
-                                                            304,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 32,
-                                                                    },
-                                                                    nscalar: 4,
-                                                                },
-                                                                nvector: 3,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    16,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "fMat6",
-                                                        ),
-                                                        offset: Some(
-                                                            352,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 32,
-                                                                    },
-                                                                    nscalar: 2,
-                                                                },
-                                                                nvector: 4,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    8,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "fMat7",
-                                                        ),
-                                                        offset: Some(
-                                                            384,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 32,
-                                                                    },
-                                                                    nscalar: 3,
-                                                                },
-                                                                nvector: 4,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    16,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "fMat8",
-                                                        ),
-                                                        offset: Some(
-                                                            448,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 32,
-                                                                    },
-                                                                    nscalar: 4,
-                                                                },
-                                                                nvector: 4,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    16,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "d0",
-                                                        ),
-                                                        offset: Some(
-                                                            512,
-                                                        ),
-                                                        ty: Scalar(
-                                                            Float {
-                                                                bits: 64,
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "d1",
-                                                        ),
-                                                        offset: Some(
-                                                            528,
-                                                        ),
-                                                        ty: Vector(
-                                                            VectorType {
-                                                                scalar_ty: Float {
-                                                                    bits: 64,
-                                                                },
-                                                                nscalar: 2,
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "d2",
-                                                        ),
-                                                        offset: Some(
-                                                            544,
-                                                        ),
-                                                        ty: Vector(
-                                                            VectorType {
-                                                                scalar_ty: Float {
-                                                                    bits: 64,
-                                                                },
-                                                                nscalar: 3,
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "d3",
-                                                        ),
-                                                        offset: Some(
-                                                            576,
-                                                        ),
-                                                        ty: Vector(
-                                                            VectorType {
-                                                                scalar_ty: Float {
-                                                                    bits: 64,
-                                                                },
-                                                                nscalar: 4,
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "dMat0",
-                                                        ),
-                                                        offset: Some(
-                                                            608,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 64,
-                                                                    },
-                                                                    nscalar: 2,
-                                                                },
-                                                                nvector: 2,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    16,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "dMat1",
-                                                        ),
-                                                        offset: Some(
-                                                            640,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 64,
-                                                                    },
-                                                                    nscalar: 3,
-                                                                },
-                                                                nvector: 2,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    32,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "dMat2",
-                                                        ),
-                                                        offset: Some(
-                                                            704,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 64,
-                                                                    },
-                                                                    nscalar: 4,
-                                                                },
-                                                                nvector: 2,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    32,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "dMat3",
-                                                        ),
-                                                        offset: Some(
-                                                            768,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 64,
-                                                                    },
-                                                                    nscalar: 2,
-                                                                },
-                                                                nvector: 3,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    16,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "dMat4",
-                                                        ),
-                                                        offset: Some(
-                                                            832,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 64,
-                                                                    },
-                                                                    nscalar: 3,
-                                                                },
-                                                                nvector: 3,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    32,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "dMat5",
-                                                        ),
-                                                        offset: Some(
-                                                            928,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 64,
-                                                                    },
-                                                                    nscalar: 4,
-                                                                },
-                                                                nvector: 3,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    32,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "dMat6",
-                                                        ),
-                                                        offset: Some(
-                                                            1024,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 64,
-                                                                    },
-                                                                    nscalar: 2,
-                                                                },
-                                                                nvector: 4,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    16,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "dMat7",
-                                                        ),
-                                                        offset: Some(
-                                                            1088,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 64,
-                                                                    },
-                                                                    nscalar: 3,
-                                                                },
-                                                                nvector: 4,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    32,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                    StructMember {
-                                                        name: Some(
-                                                            "dMat8",
-                                                        ),
-                                                        offset: Some(
-                                                            1216,
-                                                        ),
-                                                        ty: Matrix(
-                                                            MatrixType {
-                                                                vector_ty: VectorType {
-                                                                    scalar_ty: Float {
-                                                                        bits: 64,
-                                                                    },
-                                                                    nscalar: 4,
-                                                                },
-                                                                nvector: 4,
-                                                                axis_order: Some(
-                                                                    ColumnMajor,
-                                                                ),
-                                                                stride: Some(
-                                                                    32,
-                                                                ),
-                                                            },
-                                                        ),
-                                                        access_ty: ReadWrite,
-                                                    },
-                                                ],
+                                        element_ty: Scalar(
+                                            Integer {
+                                                bits: 32,
+                                                is_signed: true,
                                             },
                                         ),
                                         nelement: None,
                                         stride: Some(
-                                            1344,
+                                            4,
                                         ),
                                     },
                                 ),
