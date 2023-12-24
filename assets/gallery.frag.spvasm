@@ -1,7 +1,7 @@
 ; SPIR-V
-; Version: 1.5
-; Generator: Khronos Glslang Reference Front End; 11
-; Bound: 406
+; Version: 1.4
+; Generator: 0; 0
+; Bound: 388
 ; Schema: 0
 OpCapability Shader
 OpCapability Float16
