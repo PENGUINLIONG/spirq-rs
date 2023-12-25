@@ -1,5 +1,6 @@
 //!  SPIR-V instruction parser.
 use anyhow::bail;
+use bytemuck::Pod;
 use num_traits::FromPrimitive;
 use spirv::Op;
 use std::{borrow::Borrow, fmt, ops::Deref};
@@ -169,7 +170,6 @@ impl InstructionBuilder {
         self
     }
     pub fn push_str(mut self, x: &str) -> Self {
-        // FIXME: (penguinliong) Avoid unsafe code.
         use std::ffi::CString;
         let cstr = CString::new(x).unwrap();
         let bytes = cstr.as_bytes();
@@ -180,8 +180,7 @@ impl InstructionBuilder {
             out.resize(words * 4, 0);
             out
         };
-        let ptr = bytes.as_ptr() as *const u32;
-        let slice = unsafe { std::slice::from_raw_parts(ptr, words) };
+        let slice: &[u32] = bytemuck::cast_slice(&bytes);
         self.inner.extend_from_slice(slice);
         self
     }
@@ -219,19 +218,17 @@ impl<'a> Operands<'a> {
         self.read_u32()
     }
     pub fn read_str(&mut self) -> Result<&'a str> {
-        // FIXME: (penguinliong) Avoid unsafe code.
         use std::ffi::CStr;
-        use std::os::raw::c_char;
-        let ptr = self.0.as_ptr() as *const c_char;
-        let char_slice = unsafe { std::slice::from_raw_parts(ptr, self.0.len() * 4) };
-        if let Some(nul_pos) = char_slice.into_iter().position(|x| *x == 0) {
-            let nword = nul_pos / 4 + 1;
-            self.0 = &self.0[nword..];
-            if let Ok(string) = unsafe { CStr::from_ptr(ptr) }.to_str() {
-                return Ok(string);
-            }
-        }
-        Err(anyhow!("string is not null-terminated"))
+        // Find the word with a trailing zero.
+        let ieos = self.0.iter()
+            .position(|x| (x >> 24) == 0)
+            .ok_or(anyhow!("string is not null-terminated"))?;
+
+        let slice: &[u32] = &self.0[..ieos + 1];
+        self.0 = &self.0[ieos + 1..];
+        let bytes: &[u8] = bytemuck::cast_slice(slice);
+        let cstr = CStr::from_bytes_until_nul(bytes)?;
+        Ok(cstr.to_str()?)
     }
     pub fn read_enum<E: FromPrimitive>(&mut self) -> Result<E> {
         self.read_u32()

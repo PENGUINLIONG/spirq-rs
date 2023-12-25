@@ -24,3 +24,4 @@ anyhow = "1.0"
 ordered-float = "3.4"
 num-traits = "0.2"
 half = { version = "2.3", features = ["num-traits"] }
+bytemuck = "1.14"

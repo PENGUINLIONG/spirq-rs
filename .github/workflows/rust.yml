@@ -27,39 +27,29 @@ jobs:
           spirq-core
           spirq-dis
           spirq-spvasm
+
     - name: Cargo Format
       id: cargo_format
       run: |
         cargo fmt -- --check
+
     - name: Cargo build
       id: cargo_build
       run: |
         cargo build --verbose
-    - name: Assemble-disassemble Roundtrip
-      id: cargo_build_and_test
-      run: |
-        cargo run -p spirq-as assets/gallery.frag.spvasm -o assets/gallery.frag.spv
-        cargo run -p spirq-dis assets/gallery.frag.spv -o assets/gallery.frag.spvasm --no-indent --raw-id
-        echo git diff --exit-code --binary
-
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v4.0.0
-      with:
-        # Artifact name
-        name: gallery.frag.spv
-        # A file, directory or wildcard pattern that describes what to upload
-        path: assets/gallery.frag.spv
 
     - name: Cargo test
       id: cargo_test
       run: |
         cargo test --verbose
+
     - name: Run SPIR-Q examples
       id: spirq_examples
       run: |
         cargo run --example gallery > spirq/examples/gallery/main.log
         cargo run --example inspect > spirq/examples/inspect/main.log
         cargo run --example walk > spirq/examples/walk/main.log
+
     - name: Run shader-reflect
       id: shader_reflect
       run: |
@@ -70,3 +60,10 @@ jobs:
         cargo run -p shader-reflect assets/spirv-spec.frag.spv -o assets/spirv-spec.frag.spv.json
         diff assets/spirv-spec.frag.json assets/spirv-spec.frag.spv.json
         cargo run -p shader-reflect assets/moon.spv -o assets/moon.spv.json --reference-all-resources
+
+    - name: Assemble-disassemble Roundtrip
+      id: cargo_build_and_test
+      run: |
+        cargo run -p spirq-as assets/gallery.frag.spvasm -o assets/gallery.frag.spv
+        cargo run -p spirq-dis assets/gallery.frag.spv -o assets/gallery.frag.spvasm --no-indent
+        echo git diff --exit-code --binary
