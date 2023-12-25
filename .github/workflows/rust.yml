@@ -31,18 +31,18 @@ jobs:
       id: cargo_build_and_test
       run: |
         cargo fmt -- --check
-        cargo build --release --verbose
-        cargo test --release --verbose
-        cargo run --release --example gallery > spirq/examples/gallery/main.log
-        cargo run --release --example inspect > spirq/examples/inspect/main.log
-        cargo run --release --example walk > spirq/examples/walk/main.log
-        cargo run --release -p shader-reflect assets/gallery.frag -o assets/gallery.frag.json --reference-all-resources
-        cargo run --release -p shader-reflect assets/gallery.frag.spv -o assets/gallery.frag.spv.json --reference-all-resources
+        cargo build --verbose
+        cargo test --verbose
+        cargo run --example gallery > spirq/examples/gallery/main.log
+        cargo run --example inspect > spirq/examples/inspect/main.log
+        cargo run --example walk > spirq/examples/walk/main.log
+        cargo run -p shader-reflect assets/gallery.frag -o assets/gallery.frag.json --reference-all-resources
+        cargo run -p shader-reflect assets/gallery.frag.spv -o assets/gallery.frag.spv.json --reference-all-resources
         diff assets/gallery.frag.json assets/gallery.frag.spv.json
-        cargo run --release -p shader-reflect assets/spirv-spec.frag -o assets/spirv-spec.frag.json
-        cargo run --release -p shader-reflect assets/spirv-spec.frag.spv -o assets/spirv-spec.frag.spv.json
+        cargo run -p shader-reflect assets/spirv-spec.frag -o assets/spirv-spec.frag.json
+        cargo run -p shader-reflect assets/spirv-spec.frag.spv -o assets/spirv-spec.frag.spv.json
         diff assets/spirv-spec.frag.json assets/spirv-spec.frag.spv.json
-        cargo run --release -p shader-reflect assets/moon.spv -o assets/moon.spv.json --reference-all-resources
-        cargo run --release -p spirq-as assets/gallery.frag.spvasm -o assets/gallery.frag.spv
-        cargo run --release -p spirq-dis assets/gallery.frag.spv -o assets/gallery.frag.spvasm --no-indent
+        cargo run -p shader-reflect assets/moon.spv -o assets/moon.spv.json --reference-all-resources
+        cargo run -p spirq-as assets/gallery.frag.spvasm -o assets/gallery.frag.spv
+        cargo run -p spirq-dis assets/gallery.frag.spv -o assets/gallery.frag.spvasm --no-indent
         git diff --exit-code --binary
