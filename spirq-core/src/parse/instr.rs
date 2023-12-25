@@ -220,7 +220,9 @@ impl<'a> Operands<'a> {
     pub fn read_str(&mut self) -> Result<&'a str> {
         use std::ffi::CStr;
         // Find the word with a trailing zero.
-        let ieos = self.0.iter()
+        let ieos = self
+            .0
+            .iter()
             .position(|x| (x >> 24) == 0)
             .ok_or(anyhow!("string is not null-terminated"))?;
 

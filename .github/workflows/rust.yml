@@ -33,17 +33,17 @@ jobs:
       run: |
         cargo fmt -- --check
 
-    - name: Cargo build
+    - name: Cargo Build
       id: cargo_build
       run: |
         cargo build --verbose
 
-    - name: Cargo test
+    - name: Cargo Test
       id: cargo_test
       run: |
         cargo test --verbose
 
-    - name: Run SPIR-Q examples
+    - name: Run SPIR-Q Examples
       id: spirq_examples
       run: |
         cargo run --example gallery > spirq/examples/gallery/main.log
@@ -61,7 +61,7 @@ jobs:
         diff assets/spirv-spec.frag.json assets/spirv-spec.frag.spv.json
         cargo run -p shader-reflect assets/moon.spv -o assets/moon.spv.json --reference-all-resources
 
-    - name: Assemble-disassemble Roundtrip
+    - name: Assemble Disassemble Roundtrip
       id: cargo_build_and_test
       run: |
         cargo run -p spirq-as assets/gallery.frag.spvasm -o assets/gallery.frag.spv
