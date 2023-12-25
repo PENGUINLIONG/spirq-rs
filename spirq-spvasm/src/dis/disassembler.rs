@@ -20,7 +20,7 @@ pub struct Disassembler {
     indent: bool,
 }
 impl Disassembler {
-    /// Create a new SPIR-V disassembler. 
+    /// Create a new SPIR-V disassembler.
     pub fn new() -> Self {
         Self {
             print_header: true,
