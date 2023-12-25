@@ -636,6 +636,8 @@ impl Assembler {
         ];
         spv.extend(buf);
 
+        dbg!(&self.name2id, &self.used_ids);
+
         let out = SpirvBinary::from(spv);
         Ok(out)
     }
