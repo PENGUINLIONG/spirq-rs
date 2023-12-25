@@ -21,6 +21,12 @@ jobs:
     - uses: Swatinem/rust-cache@v2
       with:
         cache-on-failure: true
+        workspaces: |
+          shader-reflect
+          spirq-as
+          spirq-core
+          spirq-dis
+          spirq-spvasm
     - name: Cargo build and test
       id: cargo_build_and_test
       run: |
