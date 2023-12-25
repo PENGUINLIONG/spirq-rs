@@ -11,6 +11,7 @@ use spirq_core::{
     ty::{self, Type},
 };
 
+/// SPIR-V disassembler.
 pub struct Disassembler {
     print_header: bool,
     name_ids: bool,
@@ -19,7 +20,7 @@ pub struct Disassembler {
     indent: bool,
 }
 impl Disassembler {
-    /// Create a new disassembler. 
+    /// Create a new SPIR-V disassembler. 
     pub fn new() -> Self {
         Self {
             print_header: true,

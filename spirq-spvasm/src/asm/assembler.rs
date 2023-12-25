@@ -59,6 +59,7 @@ impl<'a> TokenStream<'a> {
     }
 }
 
+/// SPIR-V assembler.
 #[derive(Default)]
 pub struct Assembler {
     name2id: HashMap<String, u32>,
@@ -70,6 +71,7 @@ pub struct Assembler {
     scalar_tys: HashMap<u32, ScalarType>,
 }
 impl Assembler {
+    /// Create a new SPIR-V assembler.
     pub fn new() -> Self {
         Self {
             next_id: 1,
@@ -584,6 +586,7 @@ impl Assembler {
         Ok(buf)
     }
 
+    /// Assemble a SPIR-V binary from the given SPIR-V assembly and header.
     pub fn assemble(&mut self, input: &str, header: SpirvHeader) -> Result<SpirvBinary> {
         let mut instrs = self.parse(input)?;
 
