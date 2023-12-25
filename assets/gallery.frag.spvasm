@@ -24,8 +24,8 @@ OpCapability RayQueryKHR
 OpExtension "SPV_KHR_ray_query"
 %1 = OpExtInstImport "GLSL.std.450"
 OpMemoryModel Logical GLSL450
-OpEntryPoint Fragment %main "main" %ray_query %iImg1d %iImg2d %iImg3d %iImg1dArr %iImg2dArr %iImgCube %iImgCubeArr %iImgBuf %uImg1d %uImg2d %uImg3d %uImg1dArr %uImg2dArr %uImgCube %uImgCubeArr %uImgBuf %fImg1D %fImg2D %fImg3D %fImgCube %fImg2DRect %fImg1DArray %fImg2DArray %fImgCubeArray %fImgBuffer %fImg2DMS %fImg2DMSArray %iSamp1D %iSamp2D %iSamp3D %iSampCube %iSamp2DRect %iSamp1DArray %iSamp2DArray %iSampCubeArray %iSampBuffer %iSamp2DMS %iSamp2DMSArray %uSamp1D %uSamp2D %uSamp3D %uSampCube %uSamp2DRect %uSamp1DArray %uSamp2DArray %uSampCubeArray %uSampBuffer %uSamp2DMS %uSamp2DMSArray %fSamp1D %fSamp2D %fSamp3D %fSampCube %fSamp2DRect %fSamp1DArray %fSamp2DArray %fSampCubeArray %fSampBuffer %fSamp2DMS %fSamp2DMSArray %dsSamp1D %dsSamp2D %dsSampCube %dsSamp2DRect %dsSamp1DArray %dsSamp2DArray %dsSampCubeArray %samp %sampShadow %iTex1D %iTex2D %iTex3D %iTexCube %iTex2DRect %iTex1DArray %iTex2DArray %iTexCubeArray %iTexBuffer %iTex2DMS %iTex2DMSArray %uTex1D %uTex2D %uTex3D %uTexCube %uTex2DRect %uTex1DArray %uTex2DArray %uTexCubeArray %uTexBuffer %uTex2DMS %uTex2DMSArray %fTex1D %fTex2D %fTex3D %fTexCube %fTex2DRect %fTex1DArray %fTex2DArray %fTexCubeArray %fTexBuffer %fTex2DMS %fTex2DMSArray %ubo %ssbo %iAttm %iAttmMS %uAttm %uAttmMS %fAttm %fAttmMS %acc
-OpExecutionMode %main OriginUpperLeft
+OpEntryPoint Fragment %0 "main" %2 %4 %7 %8 %9 %11 %13 %14 %16 %17 %19 %20 %22 %23 %25 %26 %28 %29 %31 %32 %34 %35 %36 %38 %39 %41 %42 %44 %45 %47 %48 %50 %51 %53 %54 %56 %57 %59 %60 %61 %63 %64 %66 %67 %69 %70 %72 %73 %75 %76 %78 %79 %81 %82 %84 %85 %87 %88 %90 %91 %93 %94 %97 %98 %101 %102 %105 %106 %109 %110 %113 %114 %117 %118 %121 %122 %125 %126 %129 %130 %133 %134 %137 %138 %141 %142 %145 %146 %149 %150 %153 %154 %157 %158 %161 %162 %165 %166 %169 %170 %173 %174 %177 %178 %181 %182 %185 %186 %189 %190 %193 %194
+OpExecutionMode %0 OriginUpperLeft
 OpSource GLSL 460
 OpSourceExtension "GL_EXT_ray_query"
 OpSourceExtension "GL_EXT_ray_tracing"
@@ -36,892 +36,892 @@ OpSourceExtension "GL_EXT_shader_explicit_arithmetic_types_int16"
 OpSourceExtension "GL_EXT_shader_explicit_arithmetic_types_int32"
 OpSourceExtension "GL_EXT_shader_explicit_arithmetic_types_int64"
 OpSourceExtension "GL_EXT_shader_explicit_arithmetic_types_int8"
-OpName %main "main"
-OpName %ray_query "ray_query"
-OpName %iImg1d "iImg1d"
-OpName %iImg2d "iImg2d"
-OpName %iImg3d "iImg3d"
-OpName %iImg1dArr "iImg1dArr"
-OpName %iImg2dArr "iImg2dArr"
-OpName %iImgCube "iImgCube"
-OpName %iImgCubeArr "iImgCubeArr"
-OpName %iImgBuf "iImgBuf"
-OpName %uImg1d "uImg1d"
-OpName %uImg2d "uImg2d"
-OpName %uImg3d "uImg3d"
-OpName %uImg1dArr "uImg1dArr"
-OpName %uImg2dArr "uImg2dArr"
-OpName %uImgCube "uImgCube"
-OpName %uImgCubeArr "uImgCubeArr"
-OpName %uImgBuf "uImgBuf"
-OpName %fImg1D "fImg1D"
-OpName %fImg2D "fImg2D"
-OpName %fImg3D "fImg3D"
-OpName %fImgCube "fImgCube"
-OpName %fImg2DRect "fImg2DRect"
-OpName %fImg1DArray "fImg1DArray"
-OpName %fImg2DArray "fImg2DArray"
-OpName %fImgCubeArray "fImgCubeArray"
-OpName %fImgBuffer "fImgBuffer"
-OpName %fImg2DMS "fImg2DMS"
-OpName %fImg2DMSArray "fImg2DMSArray"
-OpName %iSamp1D "iSamp1D"
-OpName %iSamp2D "iSamp2D"
-OpName %iSamp3D "iSamp3D"
-OpName %iSampCube "iSampCube"
-OpName %iSamp2DRect "iSamp2DRect"
-OpName %iSamp1DArray "iSamp1DArray"
-OpName %iSamp2DArray "iSamp2DArray"
-OpName %iSampCubeArray "iSampCubeArray"
-OpName %iSampBuffer "iSampBuffer"
-OpName %iSamp2DMS "iSamp2DMS"
-OpName %iSamp2DMSArray "iSamp2DMSArray"
-OpName %uSamp1D "uSamp1D"
-OpName %uSamp2D "uSamp2D"
-OpName %uSamp3D "uSamp3D"
-OpName %uSampCube "uSampCube"
-OpName %uSamp2DRect "uSamp2DRect"
-OpName %uSamp1DArray "uSamp1DArray"
-OpName %uSamp2DArray "uSamp2DArray"
-OpName %uSampCubeArray "uSampCubeArray"
-OpName %uSampBuffer "uSampBuffer"
-OpName %uSamp2DMS "uSamp2DMS"
-OpName %uSamp2DMSArray "uSamp2DMSArray"
-OpName %fSamp1D "fSamp1D"
-OpName %fSamp2D "fSamp2D"
-OpName %fSamp3D "fSamp3D"
-OpName %fSampCube "fSampCube"
-OpName %fSamp2DRect "fSamp2DRect"
-OpName %fSamp1DArray "fSamp1DArray"
-OpName %fSamp2DArray "fSamp2DArray"
-OpName %fSampCubeArray "fSampCubeArray"
-OpName %fSampBuffer "fSampBuffer"
-OpName %fSamp2DMS "fSamp2DMS"
-OpName %fSamp2DMSArray "fSamp2DMSArray"
-OpName %dsSamp1D "dsSamp1D"
-OpName %dsSamp2D "dsSamp2D"
-OpName %dsSampCube "dsSampCube"
-OpName %dsSamp2DRect "dsSamp2DRect"
-OpName %dsSamp1DArray "dsSamp1DArray"
-OpName %dsSamp2DArray "dsSamp2DArray"
-OpName %dsSampCubeArray "dsSampCubeArray"
-OpName %samp "samp"
-OpName %sampShadow "sampShadow"
-OpName %iTex1D "iTex1D"
-OpName %iTex2D "iTex2D"
-OpName %iTex3D "iTex3D"
-OpName %iTexCube "iTexCube"
-OpName %iTex2DRect "iTex2DRect"
-OpName %iTex1DArray "iTex1DArray"
-OpName %iTex2DArray "iTex2DArray"
-OpName %iTexCubeArray "iTexCubeArray"
-OpName %iTexBuffer "iTexBuffer"
-OpName %iTex2DMS "iTex2DMS"
-OpName %iTex2DMSArray "iTex2DMSArray"
-OpName %uTex1D "uTex1D"
-OpName %uTex2D "uTex2D"
-OpName %uTex3D "uTex3D"
-OpName %uTexCube "uTexCube"
-OpName %uTex2DRect "uTex2DRect"
-OpName %uTex1DArray "uTex1DArray"
-OpName %uTex2DArray "uTex2DArray"
-OpName %uTexCubeArray "uTexCubeArray"
-OpName %uTexBuffer "uTexBuffer"
-OpName %uTex2DMS "uTex2DMS"
-OpName %uTex2DMSArray "uTex2DMSArray"
-OpName %fTex1D "fTex1D"
-OpName %fTex2D "fTex2D"
-OpName %fTex3D "fTex3D"
-OpName %fTexCube "fTexCube"
-OpName %fTex2DRect "fTex2DRect"
-OpName %fTex1DArray "fTex1DArray"
-OpName %fTex2DArray "fTex2DArray"
-OpName %fTexCubeArray "fTexCubeArray"
-OpName %fTexBuffer "fTexBuffer"
-OpName %fTex2DMS "fTex2DMS"
-OpName %fTex2DMSArray "fTex2DMSArray"
-OpName %Data "Data"
-OpMemberName %Data 0 "i0"
-OpMemberName %Data 1 "i1"
-OpMemberName %Data 2 "i2"
-OpMemberName %Data 3 "i3"
-OpMemberName %Data 4 "u0"
-OpMemberName %Data 5 "u1"
-OpMemberName %Data 6 "u2"
-OpMemberName %Data 7 "u3"
-OpMemberName %Data 8 "f0"
-OpMemberName %Data 9 "f1"
-OpMemberName %Data 10 "f2"
-OpMemberName %Data 11 "f3"
-OpMemberName %Data 12 "fMat0"
-OpMemberName %Data 13 "fMat1"
-OpMemberName %Data 14 "fMat2"
-OpMemberName %Data 15 "fMat3"
-OpMemberName %Data 16 "fMat4"
-OpMemberName %Data 17 "fMat5"
-OpMemberName %Data 18 "fMat6"
-OpMemberName %Data 19 "fMat7"
-OpMemberName %Data 20 "fMat8"
-OpMemberName %Data 21 "d0"
-OpMemberName %Data 22 "d1"
-OpMemberName %Data 23 "d2"
-OpMemberName %Data 24 "d3"
-OpMemberName %Data 25 "dMat0"
-OpMemberName %Data 26 "dMat1"
-OpMemberName %Data 27 "dMat2"
-OpMemberName %Data 28 "dMat3"
-OpMemberName %Data 29 "dMat4"
-OpMemberName %Data 30 "dMat5"
-OpMemberName %Data 31 "dMat6"
-OpMemberName %Data 32 "dMat7"
-OpMemberName %Data 33 "dMat8"
-OpName %Ubo "Ubo"
-OpMemberName %Ubo 0 "ds"
-OpName %ubo "ubo"
-OpName %Ssbo "Ssbo"
-OpMemberName %Ssbo 0 "ds"
-OpName %ssbo "ssbo"
-OpName %iAttm "iAttm"
-OpName %iAttmMS "iAttmMS"
-OpName %uAttm "uAttm"
-OpName %uAttmMS "uAttmMS"
-OpName %fAttm "fAttm"
-OpName %fAttmMS "fAttmMS"
-OpName %acc "acc"
-OpDecorate %iImg1d DescriptorSet 1
-OpDecorate %iImg1d Binding 0
-OpDecorate %iImg1d NonWritable
-OpDecorate %iImg2d DescriptorSet 1
-OpDecorate %iImg2d Binding 1
-OpDecorate %iImg2d NonWritable
-OpDecorate %iImg3d DescriptorSet 1
-OpDecorate %iImg3d Binding 2
-OpDecorate %iImg3d NonWritable
-OpDecorate %iImg1dArr DescriptorSet 1
-OpDecorate %iImg1dArr Binding 3
-OpDecorate %iImg1dArr NonWritable
-OpDecorate %iImg2dArr DescriptorSet 1
-OpDecorate %iImg2dArr Binding 4
-OpDecorate %iImg2dArr NonWritable
-OpDecorate %iImgCube DescriptorSet 1
-OpDecorate %iImgCube Binding 5
-OpDecorate %iImgCube NonWritable
-OpDecorate %iImgCubeArr DescriptorSet 1
-OpDecorate %iImgCubeArr Binding 6
-OpDecorate %iImgCubeArr NonWritable
-OpDecorate %iImgBuf DescriptorSet 1
-OpDecorate %iImgBuf Binding 7
-OpDecorate %iImgBuf NonWritable
-OpDecorate %uImg1d DescriptorSet 2
-OpDecorate %uImg1d Binding 0
-OpDecorate %uImg1d NonWritable
-OpDecorate %uImg2d DescriptorSet 2
-OpDecorate %uImg2d Binding 1
-OpDecorate %uImg2d NonWritable
-OpDecorate %uImg3d DescriptorSet 2
-OpDecorate %uImg3d Binding 2
-OpDecorate %uImg3d NonWritable
-OpDecorate %uImg1dArr DescriptorSet 2
-OpDecorate %uImg1dArr Binding 3
-OpDecorate %uImg1dArr NonWritable
-OpDecorate %uImg2dArr DescriptorSet 2
-OpDecorate %uImg2dArr Binding 4
-OpDecorate %uImg2dArr NonWritable
-OpDecorate %uImgCube DescriptorSet 2
-OpDecorate %uImgCube Binding 5
-OpDecorate %uImgCube NonWritable
-OpDecorate %uImgCubeArr DescriptorSet 2
-OpDecorate %uImgCubeArr Binding 6
-OpDecorate %uImgCubeArr NonWritable
-OpDecorate %uImgBuf DescriptorSet 2
-OpDecorate %uImgBuf Binding 7
-OpDecorate %uImgBuf NonWritable
-OpDecorate %fImg1D DescriptorSet 3
-OpDecorate %fImg1D Binding 0
-OpDecorate %fImg1D NonReadable
-OpDecorate %fImg2D DescriptorSet 3
-OpDecorate %fImg2D Binding 1
-OpDecorate %fImg2D NonReadable
-OpDecorate %fImg3D DescriptorSet 3
-OpDecorate %fImg3D Binding 2
-OpDecorate %fImg3D NonReadable
-OpDecorate %fImgCube DescriptorSet 3
-OpDecorate %fImgCube Binding 3
-OpDecorate %fImgCube NonReadable
-OpDecorate %fImg2DRect DescriptorSet 3
-OpDecorate %fImg2DRect Binding 4
-OpDecorate %fImg2DRect NonReadable
-OpDecorate %fImg1DArray DescriptorSet 3
-OpDecorate %fImg1DArray Binding 5
-OpDecorate %fImg1DArray NonReadable
-OpDecorate %fImg2DArray DescriptorSet 3
-OpDecorate %fImg2DArray Binding 6
-OpDecorate %fImg2DArray NonReadable
-OpDecorate %fImgCubeArray DescriptorSet 3
-OpDecorate %fImgCubeArray Binding 7
-OpDecorate %fImgCubeArray NonReadable
-OpDecorate %fImgBuffer DescriptorSet 3
-OpDecorate %fImgBuffer Binding 8
-OpDecorate %fImgBuffer NonReadable
-OpDecorate %fImg2DMS DescriptorSet 3
-OpDecorate %fImg2DMS Binding 9
-OpDecorate %fImg2DMS NonReadable
-OpDecorate %fImg2DMSArray DescriptorSet 3
-OpDecorate %fImg2DMSArray Binding 10
-OpDecorate %fImg2DMSArray NonReadable
-OpDecorate %iSamp1D DescriptorSet 4
-OpDecorate %iSamp1D Binding 0
-OpDecorate %iSamp2D DescriptorSet 4
-OpDecorate %iSamp2D Binding 1
-OpDecorate %iSamp3D DescriptorSet 4
-OpDecorate %iSamp3D Binding 2
-OpDecorate %iSampCube DescriptorSet 4
-OpDecorate %iSampCube Binding 3
-OpDecorate %iSamp2DRect DescriptorSet 4
-OpDecorate %iSamp2DRect Binding 4
-OpDecorate %iSamp1DArray DescriptorSet 4
-OpDecorate %iSamp1DArray Binding 5
-OpDecorate %iSamp2DArray DescriptorSet 4
-OpDecorate %iSamp2DArray Binding 6
-OpDecorate %iSampCubeArray DescriptorSet 4
-OpDecorate %iSampCubeArray Binding 7
-OpDecorate %iSampBuffer DescriptorSet 4
-OpDecorate %iSampBuffer Binding 8
-OpDecorate %iSamp2DMS DescriptorSet 4
-OpDecorate %iSamp2DMS Binding 9
-OpDecorate %iSamp2DMSArray DescriptorSet 4
-OpDecorate %iSamp2DMSArray Binding 10
-OpDecorate %uSamp1D DescriptorSet 5
-OpDecorate %uSamp1D Binding 0
-OpDecorate %uSamp2D DescriptorSet 5
-OpDecorate %uSamp2D Binding 1
-OpDecorate %uSamp3D DescriptorSet 5
-OpDecorate %uSamp3D Binding 2
-OpDecorate %uSampCube DescriptorSet 5
-OpDecorate %uSampCube Binding 3
-OpDecorate %uSamp2DRect DescriptorSet 5
-OpDecorate %uSamp2DRect Binding 4
-OpDecorate %uSamp1DArray DescriptorSet 5
-OpDecorate %uSamp1DArray Binding 5
-OpDecorate %uSamp2DArray DescriptorSet 5
-OpDecorate %uSamp2DArray Binding 6
-OpDecorate %uSampCubeArray DescriptorSet 5
-OpDecorate %uSampCubeArray Binding 7
-OpDecorate %uSampBuffer DescriptorSet 5
-OpDecorate %uSampBuffer Binding 8
-OpDecorate %uSamp2DMS DescriptorSet 5
-OpDecorate %uSamp2DMS Binding 9
-OpDecorate %uSamp2DMSArray DescriptorSet 5
-OpDecorate %uSamp2DMSArray Binding 10
-OpDecorate %fSamp1D DescriptorSet 6
-OpDecorate %fSamp1D Binding 0
-OpDecorate %fSamp2D DescriptorSet 6
-OpDecorate %fSamp2D Binding 1
-OpDecorate %fSamp3D DescriptorSet 6
-OpDecorate %fSamp3D Binding 2
-OpDecorate %fSampCube DescriptorSet 6
-OpDecorate %fSampCube Binding 3
-OpDecorate %fSamp2DRect DescriptorSet 6
-OpDecorate %fSamp2DRect Binding 4
-OpDecorate %fSamp1DArray DescriptorSet 6
-OpDecorate %fSamp1DArray Binding 5
-OpDecorate %fSamp2DArray DescriptorSet 6
-OpDecorate %fSamp2DArray Binding 6
-OpDecorate %fSampCubeArray DescriptorSet 6
-OpDecorate %fSampCubeArray Binding 7
-OpDecorate %fSampBuffer DescriptorSet 6
-OpDecorate %fSampBuffer Binding 8
-OpDecorate %fSamp2DMS DescriptorSet 6
-OpDecorate %fSamp2DMS Binding 9
-OpDecorate %fSamp2DMSArray DescriptorSet 6
-OpDecorate %fSamp2DMSArray Binding 10
-OpDecorate %dsSamp1D DescriptorSet 7
-OpDecorate %dsSamp1D Binding 0
-OpDecorate %dsSamp2D DescriptorSet 7
-OpDecorate %dsSamp2D Binding 1
-OpDecorate %dsSampCube DescriptorSet 7
-OpDecorate %dsSampCube Binding 2
-OpDecorate %dsSamp2DRect DescriptorSet 7
-OpDecorate %dsSamp2DRect Binding 3
-OpDecorate %dsSamp1DArray DescriptorSet 7
-OpDecorate %dsSamp1DArray Binding 4
-OpDecorate %dsSamp2DArray DescriptorSet 7
-OpDecorate %dsSamp2DArray Binding 5
-OpDecorate %dsSampCubeArray DescriptorSet 7
-OpDecorate %dsSampCubeArray Binding 6
-OpDecorate %samp DescriptorSet 8
-OpDecorate %samp Binding 0
-OpDecorate %sampShadow DescriptorSet 8
-OpDecorate %sampShadow Binding 1
-OpDecorate %iTex1D DescriptorSet 9
-OpDecorate %iTex1D Binding 0
-OpDecorate %iTex2D DescriptorSet 9
-OpDecorate %iTex2D Binding 1
-OpDecorate %iTex3D DescriptorSet 9
-OpDecorate %iTex3D Binding 2
-OpDecorate %iTexCube DescriptorSet 9
-OpDecorate %iTexCube Binding 3
-OpDecorate %iTex2DRect DescriptorSet 9
-OpDecorate %iTex2DRect Binding 4
-OpDecorate %iTex1DArray DescriptorSet 9
-OpDecorate %iTex1DArray Binding 5
-OpDecorate %iTex2DArray DescriptorSet 9
-OpDecorate %iTex2DArray Binding 6
-OpDecorate %iTexCubeArray DescriptorSet 9
-OpDecorate %iTexCubeArray Binding 7
-OpDecorate %iTexBuffer DescriptorSet 9
-OpDecorate %iTexBuffer Binding 8
-OpDecorate %iTex2DMS DescriptorSet 9
-OpDecorate %iTex2DMS Binding 9
-OpDecorate %iTex2DMSArray DescriptorSet 9
-OpDecorate %iTex2DMSArray Binding 10
-OpDecorate %uTex1D DescriptorSet 10
-OpDecorate %uTex1D Binding 0
-OpDecorate %uTex2D DescriptorSet 10
-OpDecorate %uTex2D Binding 1
-OpDecorate %uTex3D DescriptorSet 10
-OpDecorate %uTex3D Binding 2
-OpDecorate %uTexCube DescriptorSet 10
-OpDecorate %uTexCube Binding 3
-OpDecorate %uTex2DRect DescriptorSet 10
-OpDecorate %uTex2DRect Binding 4
-OpDecorate %uTex1DArray DescriptorSet 10
-OpDecorate %uTex1DArray Binding 5
-OpDecorate %uTex2DArray DescriptorSet 10
-OpDecorate %uTex2DArray Binding 6
-OpDecorate %uTexCubeArray DescriptorSet 10
-OpDecorate %uTexCubeArray Binding 7
-OpDecorate %uTexBuffer DescriptorSet 10
-OpDecorate %uTexBuffer Binding 8
-OpDecorate %uTex2DMS DescriptorSet 10
-OpDecorate %uTex2DMS Binding 9
-OpDecorate %uTex2DMSArray DescriptorSet 10
-OpDecorate %uTex2DMSArray Binding 10
-OpDecorate %fTex1D DescriptorSet 11
-OpDecorate %fTex1D Binding 0
-OpDecorate %fTex2D DescriptorSet 11
-OpDecorate %fTex2D Binding 1
-OpDecorate %fTex3D DescriptorSet 11
-OpDecorate %fTex3D Binding 2
-OpDecorate %fTexCube DescriptorSet 11
-OpDecorate %fTexCube Binding 3
-OpDecorate %fTex2DRect DescriptorSet 11
-OpDecorate %fTex2DRect Binding 4
-OpDecorate %fTex1DArray DescriptorSet 11
-OpDecorate %fTex1DArray Binding 5
-OpDecorate %fTex2DArray DescriptorSet 11
-OpDecorate %fTex2DArray Binding 6
-OpDecorate %fTexCubeArray DescriptorSet 11
-OpDecorate %fTexCubeArray Binding 7
-OpDecorate %fTexBuffer DescriptorSet 11
-OpDecorate %fTexBuffer Binding 8
-OpDecorate %fTex2DMS DescriptorSet 11
-OpDecorate %fTex2DMS Binding 9
-OpDecorate %fTex2DMSArray DescriptorSet 11
-OpDecorate %fTex2DMSArray Binding 10
-OpMemberDecorate %Data 0 Offset 0
-OpMemberDecorate %Data 1 Offset 8
-OpMemberDecorate %Data 2 Offset 16
-OpMemberDecorate %Data 3 Offset 32
-OpMemberDecorate %Data 4 Offset 48
-OpMemberDecorate %Data 5 Offset 56
-OpMemberDecorate %Data 6 Offset 64
-OpMemberDecorate %Data 7 Offset 80
-OpMemberDecorate %Data 8 Offset 96
-OpMemberDecorate %Data 9 Offset 104
-OpMemberDecorate %Data 10 Offset 112
-OpMemberDecorate %Data 11 Offset 128
-OpMemberDecorate %Data 12 ColMajor
-OpMemberDecorate %Data 12 Offset 144
-OpMemberDecorate %Data 12 MatrixStride 16
-OpMemberDecorate %Data 13 ColMajor
-OpMemberDecorate %Data 13 Offset 176
-OpMemberDecorate %Data 13 MatrixStride 16
-OpMemberDecorate %Data 14 ColMajor
-OpMemberDecorate %Data 14 Offset 208
-OpMemberDecorate %Data 14 MatrixStride 16
-OpMemberDecorate %Data 15 ColMajor
-OpMemberDecorate %Data 15 Offset 240
-OpMemberDecorate %Data 15 MatrixStride 16
-OpMemberDecorate %Data 16 ColMajor
-OpMemberDecorate %Data 16 Offset 288
-OpMemberDecorate %Data 16 MatrixStride 16
-OpMemberDecorate %Data 17 ColMajor
-OpMemberDecorate %Data 17 Offset 336
-OpMemberDecorate %Data 17 MatrixStride 16
-OpMemberDecorate %Data 18 ColMajor
-OpMemberDecorate %Data 18 Offset 384
-OpMemberDecorate %Data 18 MatrixStride 16
-OpMemberDecorate %Data 19 ColMajor
-OpMemberDecorate %Data 19 Offset 448
-OpMemberDecorate %Data 19 MatrixStride 16
-OpMemberDecorate %Data 20 ColMajor
-OpMemberDecorate %Data 20 Offset 512
-OpMemberDecorate %Data 20 MatrixStride 16
-OpMemberDecorate %Data 21 Offset 576
-OpMemberDecorate %Data 22 Offset 592
-OpMemberDecorate %Data 23 Offset 608
-OpMemberDecorate %Data 24 Offset 640
-OpMemberDecorate %Data 25 ColMajor
-OpMemberDecorate %Data 25 Offset 672
-OpMemberDecorate %Data 25 MatrixStride 16
-OpMemberDecorate %Data 26 ColMajor
-OpMemberDecorate %Data 26 Offset 704
-OpMemberDecorate %Data 26 MatrixStride 32
-OpMemberDecorate %Data 27 ColMajor
-OpMemberDecorate %Data 27 Offset 768
-OpMemberDecorate %Data 27 MatrixStride 32
-OpMemberDecorate %Data 28 ColMajor
-OpMemberDecorate %Data 28 Offset 832
-OpMemberDecorate %Data 28 MatrixStride 16
-OpMemberDecorate %Data 29 ColMajor
-OpMemberDecorate %Data 29 Offset 896
-OpMemberDecorate %Data 29 MatrixStride 32
-OpMemberDecorate %Data 30 ColMajor
-OpMemberDecorate %Data 30 Offset 992
-OpMemberDecorate %Data 30 MatrixStride 32
-OpMemberDecorate %Data 31 ColMajor
-OpMemberDecorate %Data 31 Offset 1088
-OpMemberDecorate %Data 31 MatrixStride 16
-OpMemberDecorate %Data 32 ColMajor
-OpMemberDecorate %Data 32 Offset 1152
-OpMemberDecorate %Data 32 MatrixStride 32
-OpMemberDecorate %Data 33 ColMajor
-OpMemberDecorate %Data 33 Offset 1280
-OpMemberDecorate %Data 33 MatrixStride 32
-OpDecorate %_arr_Data_uint_4 ArrayStride 1408
-OpMemberDecorate %Ubo 0 Offset 0
-OpDecorate %Ubo Block
-OpDecorate %ubo DescriptorSet 12
-OpDecorate %ubo Binding 0
-OpDecorate %_runtimearr_int ArrayStride 4
-OpMemberDecorate %Ssbo 0 Offset 0
-OpDecorate %Ssbo Block
-OpDecorate %ssbo DescriptorSet 13
-OpDecorate %ssbo Binding 0
-OpDecorate %iAttm DescriptorSet 14
-OpDecorate %iAttm Binding 0
-OpDecorate %iAttm InputAttachmentIndex 0
-OpDecorate %iAttmMS DescriptorSet 14
-OpDecorate %iAttmMS Binding 1
-OpDecorate %iAttmMS InputAttachmentIndex 1
-OpDecorate %uAttm DescriptorSet 14
-OpDecorate %uAttm Binding 2
-OpDecorate %uAttm InputAttachmentIndex 2
-OpDecorate %uAttmMS DescriptorSet 14
-OpDecorate %uAttmMS Binding 3
-OpDecorate %uAttmMS InputAttachmentIndex 3
-OpDecorate %fAttm DescriptorSet 14
-OpDecorate %fAttm Binding 4
-OpDecorate %fAttm InputAttachmentIndex 4
-OpDecorate %fAttmMS DescriptorSet 14
-OpDecorate %fAttmMS Binding 5
-OpDecorate %fAttmMS InputAttachmentIndex 5
-OpDecorate %acc DescriptorSet 15
-OpDecorate %acc Binding 0
-%void = OpTypeVoid
-%3 = OpTypeFunction %void
+OpName %0 "main"
+OpName %2 "ray_query"
+OpName %4 "iImg1d"
+OpName %7 "iImg2d"
+OpName %8 "iImg3d"
+OpName %9 "iImg1dArr"
+OpName %11 "iImg2dArr"
+OpName %13 "iImgCube"
+OpName %14 "iImgCubeArr"
+OpName %16 "iImgBuf"
+OpName %17 "uImg1d"
+OpName %19 "uImg2d"
+OpName %20 "uImg3d"
+OpName %22 "uImg1dArr"
+OpName %23 "uImg2dArr"
+OpName %25 "uImgCube"
+OpName %26 "uImgCubeArr"
+OpName %28 "uImgBuf"
+OpName %29 "fImg1D"
+OpName %31 "fImg2D"
+OpName %32 "fImg3D"
+OpName %34 "fImgCube"
+OpName %35 "fImg2DRect"
+OpName %36 "fImg1DArray"
+OpName %38 "fImg2DArray"
+OpName %39 "fImgCubeArray"
+OpName %41 "fImgBuffer"
+OpName %42 "fImg2DMS"
+OpName %44 "fImg2DMSArray"
+OpName %45 "iSamp1D"
+OpName %47 "iSamp2D"
+OpName %48 "iSamp3D"
+OpName %50 "iSampCube"
+OpName %51 "iSamp2DRect"
+OpName %53 "iSamp1DArray"
+OpName %54 "iSamp2DArray"
+OpName %56 "iSampCubeArray"
+OpName %57 "iSampBuffer"
+OpName %59 "iSamp2DMS"
+OpName %60 "iSamp2DMSArray"
+OpName %61 "uSamp1D"
+OpName %63 "uSamp2D"
+OpName %64 "uSamp3D"
+OpName %66 "uSampCube"
+OpName %67 "uSamp2DRect"
+OpName %69 "uSamp1DArray"
+OpName %70 "uSamp2DArray"
+OpName %72 "uSampCubeArray"
+OpName %73 "uSampBuffer"
+OpName %75 "uSamp2DMS"
+OpName %76 "uSamp2DMSArray"
+OpName %78 "fSamp1D"
+OpName %79 "fSamp2D"
+OpName %81 "fSamp3D"
+OpName %82 "fSampCube"
+OpName %84 "fSamp2DRect"
+OpName %85 "fSamp1DArray"
+OpName %87 "fSamp2DArray"
+OpName %88 "fSampCubeArray"
+OpName %90 "fSampBuffer"
+OpName %91 "fSamp2DMS"
+OpName %93 "fSamp2DMSArray"
+OpName %94 "dsSamp1D"
+OpName %97 "dsSamp2D"
+OpName %98 "dsSampCube"
+OpName %101 "dsSamp2DRect"
+OpName %102 "dsSamp1DArray"
+OpName %105 "dsSamp2DArray"
+OpName %106 "dsSampCubeArray"
+OpName %109 "samp"
+OpName %110 "sampShadow"
+OpName %113 "iTex1D"
+OpName %114 "iTex2D"
+OpName %117 "iTex3D"
+OpName %118 "iTexCube"
+OpName %121 "iTex2DRect"
+OpName %122 "iTex1DArray"
+OpName %125 "iTex2DArray"
+OpName %126 "iTexCubeArray"
+OpName %129 "iTexBuffer"
+OpName %130 "iTex2DMS"
+OpName %133 "iTex2DMSArray"
+OpName %134 "uTex1D"
+OpName %137 "uTex2D"
+OpName %138 "uTex3D"
+OpName %141 "uTexCube"
+OpName %142 "uTex2DRect"
+OpName %145 "uTex1DArray"
+OpName %146 "uTex2DArray"
+OpName %149 "uTexCubeArray"
+OpName %150 "uTexBuffer"
+OpName %153 "uTex2DMS"
+OpName %154 "uTex2DMSArray"
+OpName %157 "fTex1D"
+OpName %158 "fTex2D"
+OpName %161 "fTex3D"
+OpName %162 "fTexCube"
+OpName %165 "fTex2DRect"
+OpName %166 "fTex1DArray"
+OpName %169 "fTex2DArray"
+OpName %170 "fTexCubeArray"
+OpName %173 "fTexBuffer"
+OpName %174 "fTex2DMS"
+OpName %177 "fTex2DMSArray"
+OpName %197 "Data"
+OpMemberName %197 0 "i0"
+OpMemberName %197 1 "i1"
+OpMemberName %197 2 "i2"
+OpMemberName %197 3 "i3"
+OpMemberName %197 4 "u0"
+OpMemberName %197 5 "u1"
+OpMemberName %197 6 "u2"
+OpMemberName %197 7 "u3"
+OpMemberName %197 8 "f0"
+OpMemberName %197 9 "f1"
+OpMemberName %197 10 "f2"
+OpMemberName %197 11 "f3"
+OpMemberName %197 12 "fMat0"
+OpMemberName %197 13 "fMat1"
+OpMemberName %197 14 "fMat2"
+OpMemberName %197 15 "fMat3"
+OpMemberName %197 16 "fMat4"
+OpMemberName %197 17 "fMat5"
+OpMemberName %197 18 "fMat6"
+OpMemberName %197 19 "fMat7"
+OpMemberName %197 20 "fMat8"
+OpMemberName %197 21 "d0"
+OpMemberName %197 22 "d1"
+OpMemberName %197 23 "d2"
+OpMemberName %197 24 "d3"
+OpMemberName %197 25 "dMat0"
+OpMemberName %197 26 "dMat1"
+OpMemberName %197 27 "dMat2"
+OpMemberName %197 28 "dMat3"
+OpMemberName %197 29 "dMat4"
+OpMemberName %197 30 "dMat5"
+OpMemberName %197 31 "dMat6"
+OpMemberName %197 32 "dMat7"
+OpMemberName %197 33 "dMat8"
+OpName %198 "Ubo"
+OpMemberName %198 0 "ds"
+OpName %178 "ubo"
+OpName %201 "Ssbo"
+OpMemberName %201 0 "ds"
+OpName %181 "ssbo"
+OpName %182 "iAttm"
+OpName %185 "iAttmMS"
+OpName %186 "uAttm"
+OpName %189 "uAttmMS"
+OpName %190 "fAttm"
+OpName %193 "fAttmMS"
+OpName %194 "acc"
+OpDecorate %4 DescriptorSet 1
+OpDecorate %4 Binding 0
+OpDecorate %4 NonWritable
+OpDecorate %7 DescriptorSet 1
+OpDecorate %7 Binding 1
+OpDecorate %7 NonWritable
+OpDecorate %8 DescriptorSet 1
+OpDecorate %8 Binding 2
+OpDecorate %8 NonWritable
+OpDecorate %9 DescriptorSet 1
+OpDecorate %9 Binding 3
+OpDecorate %9 NonWritable
+OpDecorate %11 DescriptorSet 1
+OpDecorate %11 Binding 4
+OpDecorate %11 NonWritable
+OpDecorate %13 DescriptorSet 1
+OpDecorate %13 Binding 5
+OpDecorate %13 NonWritable
+OpDecorate %14 DescriptorSet 1
+OpDecorate %14 Binding 6
+OpDecorate %14 NonWritable
+OpDecorate %16 DescriptorSet 1
+OpDecorate %16 Binding 7
+OpDecorate %16 NonWritable
+OpDecorate %17 DescriptorSet 2
+OpDecorate %17 Binding 0
+OpDecorate %17 NonWritable
+OpDecorate %19 DescriptorSet 2
+OpDecorate %19 Binding 1
+OpDecorate %19 NonWritable
+OpDecorate %20 DescriptorSet 2
+OpDecorate %20 Binding 2
+OpDecorate %20 NonWritable
+OpDecorate %22 DescriptorSet 2
+OpDecorate %22 Binding 3
+OpDecorate %22 NonWritable
+OpDecorate %23 DescriptorSet 2
+OpDecorate %23 Binding 4
+OpDecorate %23 NonWritable
+OpDecorate %25 DescriptorSet 2
+OpDecorate %25 Binding 5
+OpDecorate %25 NonWritable
+OpDecorate %26 DescriptorSet 2
+OpDecorate %26 Binding 6
+OpDecorate %26 NonWritable
+OpDecorate %28 DescriptorSet 2
+OpDecorate %28 Binding 7
+OpDecorate %28 NonWritable
+OpDecorate %29 DescriptorSet 3
+OpDecorate %29 Binding 0
+OpDecorate %29 NonReadable
+OpDecorate %31 DescriptorSet 3
+OpDecorate %31 Binding 1
+OpDecorate %31 NonReadable
+OpDecorate %32 DescriptorSet 3
+OpDecorate %32 Binding 2
+OpDecorate %32 NonReadable
+OpDecorate %34 DescriptorSet 3
+OpDecorate %34 Binding 3
+OpDecorate %34 NonReadable
+OpDecorate %35 DescriptorSet 3
+OpDecorate %35 Binding 4
+OpDecorate %35 NonReadable
+OpDecorate %36 DescriptorSet 3
+OpDecorate %36 Binding 5
+OpDecorate %36 NonReadable
+OpDecorate %38 DescriptorSet 3
+OpDecorate %38 Binding 6
+OpDecorate %38 NonReadable
+OpDecorate %39 DescriptorSet 3
+OpDecorate %39 Binding 7
+OpDecorate %39 NonReadable
+OpDecorate %41 DescriptorSet 3
+OpDecorate %41 Binding 8
+OpDecorate %41 NonReadable
+OpDecorate %42 DescriptorSet 3
+OpDecorate %42 Binding 9
+OpDecorate %42 NonReadable
+OpDecorate %44 DescriptorSet 3
+OpDecorate %44 Binding 10
+OpDecorate %44 NonReadable
+OpDecorate %45 DescriptorSet 4
+OpDecorate %45 Binding 0
+OpDecorate %47 DescriptorSet 4
+OpDecorate %47 Binding 1
+OpDecorate %48 DescriptorSet 4
+OpDecorate %48 Binding 2
+OpDecorate %50 DescriptorSet 4
+OpDecorate %50 Binding 3
+OpDecorate %51 DescriptorSet 4
+OpDecorate %51 Binding 4
+OpDecorate %53 DescriptorSet 4
+OpDecorate %53 Binding 5
+OpDecorate %54 DescriptorSet 4
+OpDecorate %54 Binding 6
+OpDecorate %56 DescriptorSet 4
+OpDecorate %56 Binding 7
+OpDecorate %57 DescriptorSet 4
+OpDecorate %57 Binding 8
+OpDecorate %59 DescriptorSet 4
+OpDecorate %59 Binding 9
+OpDecorate %60 DescriptorSet 4
+OpDecorate %60 Binding 10
+OpDecorate %61 DescriptorSet 5
+OpDecorate %61 Binding 0
+OpDecorate %63 DescriptorSet 5
+OpDecorate %63 Binding 1
+OpDecorate %64 DescriptorSet 5
+OpDecorate %64 Binding 2
+OpDecorate %66 DescriptorSet 5
+OpDecorate %66 Binding 3
+OpDecorate %67 DescriptorSet 5
+OpDecorate %67 Binding 4
+OpDecorate %69 DescriptorSet 5
+OpDecorate %69 Binding 5
+OpDecorate %70 DescriptorSet 5
+OpDecorate %70 Binding 6
+OpDecorate %72 DescriptorSet 5
+OpDecorate %72 Binding 7
+OpDecorate %73 DescriptorSet 5
+OpDecorate %73 Binding 8
+OpDecorate %75 DescriptorSet 5
+OpDecorate %75 Binding 9
+OpDecorate %76 DescriptorSet 5
+OpDecorate %76 Binding 10
+OpDecorate %78 DescriptorSet 6
+OpDecorate %78 Binding 0
+OpDecorate %79 DescriptorSet 6
+OpDecorate %79 Binding 1
+OpDecorate %81 DescriptorSet 6
+OpDecorate %81 Binding 2
+OpDecorate %82 DescriptorSet 6
+OpDecorate %82 Binding 3
+OpDecorate %84 DescriptorSet 6
+OpDecorate %84 Binding 4
+OpDecorate %85 DescriptorSet 6
+OpDecorate %85 Binding 5
+OpDecorate %87 DescriptorSet 6
+OpDecorate %87 Binding 6
+OpDecorate %88 DescriptorSet 6
+OpDecorate %88 Binding 7
+OpDecorate %90 DescriptorSet 6
+OpDecorate %90 Binding 8
+OpDecorate %91 DescriptorSet 6
+OpDecorate %91 Binding 9
+OpDecorate %93 DescriptorSet 6
+OpDecorate %93 Binding 10
+OpDecorate %94 DescriptorSet 7
+OpDecorate %94 Binding 0
+OpDecorate %97 DescriptorSet 7
+OpDecorate %97 Binding 1
+OpDecorate %98 DescriptorSet 7
+OpDecorate %98 Binding 2
+OpDecorate %101 DescriptorSet 7
+OpDecorate %101 Binding 3
+OpDecorate %102 DescriptorSet 7
+OpDecorate %102 Binding 4
+OpDecorate %105 DescriptorSet 7
+OpDecorate %105 Binding 5
+OpDecorate %106 DescriptorSet 7
+OpDecorate %106 Binding 6
+OpDecorate %109 DescriptorSet 8
+OpDecorate %109 Binding 0
+OpDecorate %110 DescriptorSet 8
+OpDecorate %110 Binding 1
+OpDecorate %113 DescriptorSet 9
+OpDecorate %113 Binding 0
+OpDecorate %114 DescriptorSet 9
+OpDecorate %114 Binding 1
+OpDecorate %117 DescriptorSet 9
+OpDecorate %117 Binding 2
+OpDecorate %118 DescriptorSet 9
+OpDecorate %118 Binding 3
+OpDecorate %121 DescriptorSet 9
+OpDecorate %121 Binding 4
+OpDecorate %122 DescriptorSet 9
+OpDecorate %122 Binding 5
+OpDecorate %125 DescriptorSet 9
+OpDecorate %125 Binding 6
+OpDecorate %126 DescriptorSet 9
+OpDecorate %126 Binding 7
+OpDecorate %129 DescriptorSet 9
+OpDecorate %129 Binding 8
+OpDecorate %130 DescriptorSet 9
+OpDecorate %130 Binding 9
+OpDecorate %133 DescriptorSet 9
+OpDecorate %133 Binding 10
+OpDecorate %134 DescriptorSet 10
+OpDecorate %134 Binding 0
+OpDecorate %137 DescriptorSet 10
+OpDecorate %137 Binding 1
+OpDecorate %138 DescriptorSet 10
+OpDecorate %138 Binding 2
+OpDecorate %141 DescriptorSet 10
+OpDecorate %141 Binding 3
+OpDecorate %142 DescriptorSet 10
+OpDecorate %142 Binding 4
+OpDecorate %145 DescriptorSet 10
+OpDecorate %145 Binding 5
+OpDecorate %146 DescriptorSet 10
+OpDecorate %146 Binding 6
+OpDecorate %149 DescriptorSet 10
+OpDecorate %149 Binding 7
+OpDecorate %150 DescriptorSet 10
+OpDecorate %150 Binding 8
+OpDecorate %153 DescriptorSet 10
+OpDecorate %153 Binding 9
+OpDecorate %154 DescriptorSet 10
+OpDecorate %154 Binding 10
+OpDecorate %157 DescriptorSet 11
+OpDecorate %157 Binding 0
+OpDecorate %158 DescriptorSet 11
+OpDecorate %158 Binding 1
+OpDecorate %161 DescriptorSet 11
+OpDecorate %161 Binding 2
+OpDecorate %162 DescriptorSet 11
+OpDecorate %162 Binding 3
+OpDecorate %165 DescriptorSet 11
+OpDecorate %165 Binding 4
+OpDecorate %166 DescriptorSet 11
+OpDecorate %166 Binding 5
+OpDecorate %169 DescriptorSet 11
+OpDecorate %169 Binding 6
+OpDecorate %170 DescriptorSet 11
+OpDecorate %170 Binding 7
+OpDecorate %173 DescriptorSet 11
+OpDecorate %173 Binding 8
+OpDecorate %174 DescriptorSet 11
+OpDecorate %174 Binding 9
+OpDecorate %177 DescriptorSet 11
+OpDecorate %177 Binding 10
+OpMemberDecorate %197 0 Offset 0
+OpMemberDecorate %197 1 Offset 8
+OpMemberDecorate %197 2 Offset 16
+OpMemberDecorate %197 3 Offset 32
+OpMemberDecorate %197 4 Offset 48
+OpMemberDecorate %197 5 Offset 56
+OpMemberDecorate %197 6 Offset 64
+OpMemberDecorate %197 7 Offset 80
+OpMemberDecorate %197 8 Offset 96
+OpMemberDecorate %197 9 Offset 104
+OpMemberDecorate %197 10 Offset 112
+OpMemberDecorate %197 11 Offset 128
+OpMemberDecorate %197 12 ColMajor
+OpMemberDecorate %197 12 Offset 144
+OpMemberDecorate %197 12 MatrixStride 16
+OpMemberDecorate %197 13 ColMajor
+OpMemberDecorate %197 13 Offset 176
+OpMemberDecorate %197 13 MatrixStride 16
+OpMemberDecorate %197 14 ColMajor
+OpMemberDecorate %197 14 Offset 208
+OpMemberDecorate %197 14 MatrixStride 16
+OpMemberDecorate %197 15 ColMajor
+OpMemberDecorate %197 15 Offset 240
+OpMemberDecorate %197 15 MatrixStride 16
+OpMemberDecorate %197 16 ColMajor
+OpMemberDecorate %197 16 Offset 288
+OpMemberDecorate %197 16 MatrixStride 16
+OpMemberDecorate %197 17 ColMajor
+OpMemberDecorate %197 17 Offset 336
+OpMemberDecorate %197 17 MatrixStride 16
+OpMemberDecorate %197 18 ColMajor
+OpMemberDecorate %197 18 Offset 384
+OpMemberDecorate %197 18 MatrixStride 16
+OpMemberDecorate %197 19 ColMajor
+OpMemberDecorate %197 19 Offset 448
+OpMemberDecorate %197 19 MatrixStride 16
+OpMemberDecorate %197 20 ColMajor
+OpMemberDecorate %197 20 Offset 512
+OpMemberDecorate %197 20 MatrixStride 16
+OpMemberDecorate %197 21 Offset 576
+OpMemberDecorate %197 22 Offset 592
+OpMemberDecorate %197 23 Offset 608
+OpMemberDecorate %197 24 Offset 640
+OpMemberDecorate %197 25 ColMajor
+OpMemberDecorate %197 25 Offset 672
+OpMemberDecorate %197 25 MatrixStride 16
+OpMemberDecorate %197 26 ColMajor
+OpMemberDecorate %197 26 Offset 704
+OpMemberDecorate %197 26 MatrixStride 32
+OpMemberDecorate %197 27 ColMajor
+OpMemberDecorate %197 27 Offset 768
+OpMemberDecorate %197 27 MatrixStride 32
+OpMemberDecorate %197 28 ColMajor
+OpMemberDecorate %197 28 Offset 832
+OpMemberDecorate %197 28 MatrixStride 16
+OpMemberDecorate %197 29 ColMajor
+OpMemberDecorate %197 29 Offset 896
+OpMemberDecorate %197 29 MatrixStride 32
+OpMemberDecorate %197 30 ColMajor
+OpMemberDecorate %197 30 Offset 992
+OpMemberDecorate %197 30 MatrixStride 32
+OpMemberDecorate %197 31 ColMajor
+OpMemberDecorate %197 31 Offset 1088
+OpMemberDecorate %197 31 MatrixStride 16
+OpMemberDecorate %197 32 ColMajor
+OpMemberDecorate %197 32 Offset 1152
+OpMemberDecorate %197 32 MatrixStride 32
+OpMemberDecorate %197 33 ColMajor
+OpMemberDecorate %197 33 Offset 1280
+OpMemberDecorate %197 33 MatrixStride 32
+OpDecorate %202 ArrayStride 1408
+OpMemberDecorate %198 0 Offset 0
+OpDecorate %198 Block
+OpDecorate %178 DescriptorSet 12
+OpDecorate %178 Binding 0
+OpDecorate %205 ArrayStride 4
+OpMemberDecorate %201 0 Offset 0
+OpDecorate %201 Block
+OpDecorate %181 DescriptorSet 13
+OpDecorate %181 Binding 0
+OpDecorate %182 DescriptorSet 14
+OpDecorate %182 Binding 0
+OpDecorate %182 InputAttachmentIndex 0
+OpDecorate %185 DescriptorSet 14
+OpDecorate %185 Binding 1
+OpDecorate %185 InputAttachmentIndex 1
+OpDecorate %186 DescriptorSet 14
+OpDecorate %186 Binding 2
+OpDecorate %186 InputAttachmentIndex 2
+OpDecorate %189 DescriptorSet 14
+OpDecorate %189 Binding 3
+OpDecorate %189 InputAttachmentIndex 3
+OpDecorate %190 DescriptorSet 14
+OpDecorate %190 Binding 4
+OpDecorate %190 InputAttachmentIndex 4
+OpDecorate %193 DescriptorSet 14
+OpDecorate %193 Binding 5
+OpDecorate %193 InputAttachmentIndex 5
+OpDecorate %194 DescriptorSet 15
+OpDecorate %194 Binding 0
+%206 = OpTypeVoid
+%3 = OpTypeFunction %206
 %6 = OpTypeRayQueryKHR
-%_ptr_Private_6 = OpTypePointer Private %6
-%ray_query = OpVariable %_ptr_Private_6 Private
-%bool = OpTypeBool
-%int = OpTypeInt 32 1
-%12 = OpTypeImage %int 1D 0 0 0 2 Rgba32i
-%_ptr_UniformConstant_12 = OpTypePointer UniformConstant %12
-%iImg1d = OpVariable %_ptr_UniformConstant_12 UniformConstant
-%15 = OpTypeImage %int 2D 0 0 0 2 Rgba16i
-%_ptr_UniformConstant_15 = OpTypePointer UniformConstant %15
-%iImg2d = OpVariable %_ptr_UniformConstant_15 UniformConstant
-%18 = OpTypeImage %int 3D 0 0 0 2 Rgba8i
-%_ptr_UniformConstant_18 = OpTypePointer UniformConstant %18
-%iImg3d = OpVariable %_ptr_UniformConstant_18 UniformConstant
-%21 = OpTypeImage %int 1D 0 1 0 2 Rgba32i
-%_ptr_UniformConstant_21 = OpTypePointer UniformConstant %21
-%iImg1dArr = OpVariable %_ptr_UniformConstant_21 UniformConstant
-%24 = OpTypeImage %int 2D 0 1 0 2 Rgba32i
-%_ptr_UniformConstant_24 = OpTypePointer UniformConstant %24
-%iImg2dArr = OpVariable %_ptr_UniformConstant_24 UniformConstant
-%27 = OpTypeImage %int Cube 0 0 0 2 Rgba32i
-%_ptr_UniformConstant_27 = OpTypePointer UniformConstant %27
-%iImgCube = OpVariable %_ptr_UniformConstant_27 UniformConstant
-%30 = OpTypeImage %int Cube 0 1 0 2 Rgba32i
-%_ptr_UniformConstant_30 = OpTypePointer UniformConstant %30
-%iImgCubeArr = OpVariable %_ptr_UniformConstant_30 UniformConstant
-%33 = OpTypeImage %int Buffer 0 0 0 2 Rgba32i
-%_ptr_UniformConstant_33 = OpTypePointer UniformConstant %33
-%iImgBuf = OpVariable %_ptr_UniformConstant_33 UniformConstant
-%uint = OpTypeInt 32 0
-%37 = OpTypeImage %uint 1D 0 0 0 2 Rgba32ui
-%_ptr_UniformConstant_37 = OpTypePointer UniformConstant %37
-%uImg1d = OpVariable %_ptr_UniformConstant_37 UniformConstant
-%40 = OpTypeImage %uint 2D 0 0 0 2 Rgba16ui
-%_ptr_UniformConstant_40 = OpTypePointer UniformConstant %40
-%uImg2d = OpVariable %_ptr_UniformConstant_40 UniformConstant
-%43 = OpTypeImage %uint 3D 0 0 0 2 Rgba8ui
-%_ptr_UniformConstant_43 = OpTypePointer UniformConstant %43
-%uImg3d = OpVariable %_ptr_UniformConstant_43 UniformConstant
-%46 = OpTypeImage %uint 1D 0 1 0 2 Rgba32ui
-%_ptr_UniformConstant_46 = OpTypePointer UniformConstant %46
-%uImg1dArr = OpVariable %_ptr_UniformConstant_46 UniformConstant
-%49 = OpTypeImage %uint 2D 0 1 0 2 Rgba32ui
-%_ptr_UniformConstant_49 = OpTypePointer UniformConstant %49
-%uImg2dArr = OpVariable %_ptr_UniformConstant_49 UniformConstant
-%52 = OpTypeImage %uint Cube 0 0 0 2 Rgba32ui
-%_ptr_UniformConstant_52 = OpTypePointer UniformConstant %52
-%uImgCube = OpVariable %_ptr_UniformConstant_52 UniformConstant
-%55 = OpTypeImage %uint Cube 0 1 0 2 Rgba32ui
-%_ptr_UniformConstant_55 = OpTypePointer UniformConstant %55
-%uImgCubeArr = OpVariable %_ptr_UniformConstant_55 UniformConstant
-%58 = OpTypeImage %uint Buffer 0 0 0 2 Rgba32ui
-%_ptr_UniformConstant_58 = OpTypePointer UniformConstant %58
-%uImgBuf = OpVariable %_ptr_UniformConstant_58 UniformConstant
-%float = OpTypeFloat 32
-%62 = OpTypeImage %float 1D 0 0 0 2 Rgba32f
-%_ptr_UniformConstant_62 = OpTypePointer UniformConstant %62
-%fImg1D = OpVariable %_ptr_UniformConstant_62 UniformConstant
-%65 = OpTypeImage %float 2D 0 0 0 2 Rgba16f
-%_ptr_UniformConstant_65 = OpTypePointer UniformConstant %65
-%fImg2D = OpVariable %_ptr_UniformConstant_65 UniformConstant
-%68 = OpTypeImage %float 3D 0 0 0 2 R32f
-%_ptr_UniformConstant_68 = OpTypePointer UniformConstant %68
-%fImg3D = OpVariable %_ptr_UniformConstant_68 UniformConstant
-%71 = OpTypeImage %float Cube 0 0 0 2 Rgba8
-%_ptr_UniformConstant_71 = OpTypePointer UniformConstant %71
-%fImgCube = OpVariable %_ptr_UniformConstant_71 UniformConstant
-%74 = OpTypeImage %float Rect 0 0 0 2 Rgba8Snorm
-%_ptr_UniformConstant_74 = OpTypePointer UniformConstant %74
-%fImg2DRect = OpVariable %_ptr_UniformConstant_74 UniformConstant
-%77 = OpTypeImage %float 1D 0 1 0 2 Rgba32f
-%_ptr_UniformConstant_77 = OpTypePointer UniformConstant %77
-%fImg1DArray = OpVariable %_ptr_UniformConstant_77 UniformConstant
-%80 = OpTypeImage %float 2D 0 1 0 2 Rgba32f
-%_ptr_UniformConstant_80 = OpTypePointer UniformConstant %80
-%fImg2DArray = OpVariable %_ptr_UniformConstant_80 UniformConstant
-%83 = OpTypeImage %float Cube 0 1 0 2 Rgba32f
-%_ptr_UniformConstant_83 = OpTypePointer UniformConstant %83
-%fImgCubeArray = OpVariable %_ptr_UniformConstant_83 UniformConstant
-%86 = OpTypeImage %float Buffer 0 0 0 2 Rgba32f
-%_ptr_UniformConstant_86 = OpTypePointer UniformConstant %86
-%fImgBuffer = OpVariable %_ptr_UniformConstant_86 UniformConstant
-%89 = OpTypeImage %float 2D 0 0 1 2 Rgba32f
-%_ptr_UniformConstant_89 = OpTypePointer UniformConstant %89
-%fImg2DMS = OpVariable %_ptr_UniformConstant_89 UniformConstant
-%92 = OpTypeImage %float 2D 0 1 1 2 Rgba32f
-%_ptr_UniformConstant_92 = OpTypePointer UniformConstant %92
-%fImg2DMSArray = OpVariable %_ptr_UniformConstant_92 UniformConstant
-%95 = OpTypeImage %int 1D 0 0 0 1 Unknown
+%209 = OpTypePointer Private %6
+%2 = OpVariable %209 Private
+%210 = OpTypeBool
+%213 = OpTypeInt 32 1
+%12 = OpTypeImage %213 1D 0 0 0 2 Rgba32i
+%214 = OpTypePointer UniformConstant %12
+%4 = OpVariable %214 UniformConstant
+%15 = OpTypeImage %213 2D 0 0 0 2 Rgba16i
+%217 = OpTypePointer UniformConstant %15
+%7 = OpVariable %217 UniformConstant
+%18 = OpTypeImage %213 3D 0 0 0 2 Rgba8i
+%218 = OpTypePointer UniformConstant %18
+%8 = OpVariable %218 UniformConstant
+%21 = OpTypeImage %213 1D 0 1 0 2 Rgba32i
+%221 = OpTypePointer UniformConstant %21
+%9 = OpVariable %221 UniformConstant
+%24 = OpTypeImage %213 2D 0 1 0 2 Rgba32i
+%222 = OpTypePointer UniformConstant %24
+%11 = OpVariable %222 UniformConstant
+%27 = OpTypeImage %213 Cube 0 0 0 2 Rgba32i
+%225 = OpTypePointer UniformConstant %27
+%13 = OpVariable %225 UniformConstant
+%30 = OpTypeImage %213 Cube 0 1 0 2 Rgba32i
+%226 = OpTypePointer UniformConstant %30
+%14 = OpVariable %226 UniformConstant
+%33 = OpTypeImage %213 Buffer 0 0 0 2 Rgba32i
+%229 = OpTypePointer UniformConstant %33
+%16 = OpVariable %229 UniformConstant
+%230 = OpTypeInt 32 0
+%37 = OpTypeImage %230 1D 0 0 0 2 Rgba32ui
+%233 = OpTypePointer UniformConstant %37
+%17 = OpVariable %233 UniformConstant
+%40 = OpTypeImage %230 2D 0 0 0 2 Rgba16ui
+%234 = OpTypePointer UniformConstant %40
+%19 = OpVariable %234 UniformConstant
+%43 = OpTypeImage %230 3D 0 0 0 2 Rgba8ui
+%237 = OpTypePointer UniformConstant %43
+%20 = OpVariable %237 UniformConstant
+%46 = OpTypeImage %230 1D 0 1 0 2 Rgba32ui
+%238 = OpTypePointer UniformConstant %46
+%22 = OpVariable %238 UniformConstant
+%49 = OpTypeImage %230 2D 0 1 0 2 Rgba32ui
+%241 = OpTypePointer UniformConstant %49
+%23 = OpVariable %241 UniformConstant
+%52 = OpTypeImage %230 Cube 0 0 0 2 Rgba32ui
+%242 = OpTypePointer UniformConstant %52
+%25 = OpVariable %242 UniformConstant
+%55 = OpTypeImage %230 Cube 0 1 0 2 Rgba32ui
+%245 = OpTypePointer UniformConstant %55
+%26 = OpVariable %245 UniformConstant
+%58 = OpTypeImage %230 Buffer 0 0 0 2 Rgba32ui
+%246 = OpTypePointer UniformConstant %58
+%28 = OpVariable %246 UniformConstant
+%249 = OpTypeFloat 32
+%62 = OpTypeImage %249 1D 0 0 0 2 Rgba32f
+%250 = OpTypePointer UniformConstant %62
+%29 = OpVariable %250 UniformConstant
+%65 = OpTypeImage %249 2D 0 0 0 2 Rgba16f
+%253 = OpTypePointer UniformConstant %65
+%31 = OpVariable %253 UniformConstant
+%68 = OpTypeImage %249 3D 0 0 0 2 R32f
+%254 = OpTypePointer UniformConstant %68
+%32 = OpVariable %254 UniformConstant
+%71 = OpTypeImage %249 Cube 0 0 0 2 Rgba8
+%256 = OpTypePointer UniformConstant %71
+%34 = OpVariable %256 UniformConstant
+%74 = OpTypeImage %249 Rect 0 0 0 2 Rgba8Snorm
+%257 = OpTypePointer UniformConstant %74
+%35 = OpVariable %257 UniformConstant
+%77 = OpTypeImage %249 1D 0 1 0 2 Rgba32f
+%258 = OpTypePointer UniformConstant %77
+%36 = OpVariable %258 UniformConstant
+%80 = OpTypeImage %249 2D 0 1 0 2 Rgba32f
+%259 = OpTypePointer UniformConstant %80
+%38 = OpVariable %259 UniformConstant
+%83 = OpTypeImage %249 Cube 0 1 0 2 Rgba32f
+%260 = OpTypePointer UniformConstant %83
+%39 = OpVariable %260 UniformConstant
+%86 = OpTypeImage %249 Buffer 0 0 0 2 Rgba32f
+%261 = OpTypePointer UniformConstant %86
+%41 = OpVariable %261 UniformConstant
+%89 = OpTypeImage %249 2D 0 0 1 2 Rgba32f
+%262 = OpTypePointer UniformConstant %89
+%42 = OpVariable %262 UniformConstant
+%92 = OpTypeImage %249 2D 0 1 1 2 Rgba32f
+%263 = OpTypePointer UniformConstant %92
+%44 = OpVariable %263 UniformConstant
+%95 = OpTypeImage %213 1D 0 0 0 1 Unknown
 %96 = OpTypeSampledImage %95
-%_ptr_UniformConstant_96 = OpTypePointer UniformConstant %96
-%iSamp1D = OpVariable %_ptr_UniformConstant_96 UniformConstant
-%99 = OpTypeImage %int 2D 0 0 0 1 Unknown
+%264 = OpTypePointer UniformConstant %96
+%45 = OpVariable %264 UniformConstant
+%99 = OpTypeImage %213 2D 0 0 0 1 Unknown
 %100 = OpTypeSampledImage %99
-%_ptr_UniformConstant_100 = OpTypePointer UniformConstant %100
-%iSamp2D = OpVariable %_ptr_UniformConstant_100 UniformConstant
-%103 = OpTypeImage %int 3D 0 0 0 1 Unknown
+%265 = OpTypePointer UniformConstant %100
+%47 = OpVariable %265 UniformConstant
+%103 = OpTypeImage %213 3D 0 0 0 1 Unknown
 %104 = OpTypeSampledImage %103
-%_ptr_UniformConstant_104 = OpTypePointer UniformConstant %104
-%iSamp3D = OpVariable %_ptr_UniformConstant_104 UniformConstant
-%107 = OpTypeImage %int Cube 0 0 0 1 Unknown
+%266 = OpTypePointer UniformConstant %104
+%48 = OpVariable %266 UniformConstant
+%107 = OpTypeImage %213 Cube 0 0 0 1 Unknown
 %108 = OpTypeSampledImage %107
-%_ptr_UniformConstant_108 = OpTypePointer UniformConstant %108
-%iSampCube = OpVariable %_ptr_UniformConstant_108 UniformConstant
-%111 = OpTypeImage %int Rect 0 0 0 1 Unknown
+%267 = OpTypePointer UniformConstant %108
+%50 = OpVariable %267 UniformConstant
+%111 = OpTypeImage %213 Rect 0 0 0 1 Unknown
 %112 = OpTypeSampledImage %111
-%_ptr_UniformConstant_112 = OpTypePointer UniformConstant %112
-%iSamp2DRect = OpVariable %_ptr_UniformConstant_112 UniformConstant
-%115 = OpTypeImage %int 1D 0 1 0 1 Unknown
+%268 = OpTypePointer UniformConstant %112
+%51 = OpVariable %268 UniformConstant
+%115 = OpTypeImage %213 1D 0 1 0 1 Unknown
 %116 = OpTypeSampledImage %115
-%_ptr_UniformConstant_116 = OpTypePointer UniformConstant %116
-%iSamp1DArray = OpVariable %_ptr_UniformConstant_116 UniformConstant
-%119 = OpTypeImage %int 2D 0 1 0 1 Unknown
+%269 = OpTypePointer UniformConstant %116
+%53 = OpVariable %269 UniformConstant
+%119 = OpTypeImage %213 2D 0 1 0 1 Unknown
 %120 = OpTypeSampledImage %119
-%_ptr_UniformConstant_120 = OpTypePointer UniformConstant %120
-%iSamp2DArray = OpVariable %_ptr_UniformConstant_120 UniformConstant
-%123 = OpTypeImage %int Cube 0 1 0 1 Unknown
+%270 = OpTypePointer UniformConstant %120
+%54 = OpVariable %270 UniformConstant
+%123 = OpTypeImage %213 Cube 0 1 0 1 Unknown
 %124 = OpTypeSampledImage %123
-%_ptr_UniformConstant_124 = OpTypePointer UniformConstant %124
-%iSampCubeArray = OpVariable %_ptr_UniformConstant_124 UniformConstant
-%127 = OpTypeImage %int Buffer 0 0 0 1 Unknown
+%271 = OpTypePointer UniformConstant %124
+%56 = OpVariable %271 UniformConstant
+%127 = OpTypeImage %213 Buffer 0 0 0 1 Unknown
 %128 = OpTypeSampledImage %127
-%_ptr_UniformConstant_128 = OpTypePointer UniformConstant %128
-%iSampBuffer = OpVariable %_ptr_UniformConstant_128 UniformConstant
-%131 = OpTypeImage %int 2D 0 0 1 1 Unknown
+%272 = OpTypePointer UniformConstant %128
+%57 = OpVariable %272 UniformConstant
+%131 = OpTypeImage %213 2D 0 0 1 1 Unknown
 %132 = OpTypeSampledImage %131
-%_ptr_UniformConstant_132 = OpTypePointer UniformConstant %132
-%iSamp2DMS = OpVariable %_ptr_UniformConstant_132 UniformConstant
-%135 = OpTypeImage %int 2D 0 1 1 1 Unknown
+%273 = OpTypePointer UniformConstant %132
+%59 = OpVariable %273 UniformConstant
+%135 = OpTypeImage %213 2D 0 1 1 1 Unknown
 %136 = OpTypeSampledImage %135
-%_ptr_UniformConstant_136 = OpTypePointer UniformConstant %136
-%iSamp2DMSArray = OpVariable %_ptr_UniformConstant_136 UniformConstant
-%139 = OpTypeImage %uint 1D 0 0 0 1 Unknown
+%274 = OpTypePointer UniformConstant %136
+%60 = OpVariable %274 UniformConstant
+%139 = OpTypeImage %230 1D 0 0 0 1 Unknown
 %140 = OpTypeSampledImage %139
-%_ptr_UniformConstant_140 = OpTypePointer UniformConstant %140
-%uSamp1D = OpVariable %_ptr_UniformConstant_140 UniformConstant
-%143 = OpTypeImage %uint 2D 0 0 0 1 Unknown
+%275 = OpTypePointer UniformConstant %140
+%61 = OpVariable %275 UniformConstant
+%143 = OpTypeImage %230 2D 0 0 0 1 Unknown
 %144 = OpTypeSampledImage %143
-%_ptr_UniformConstant_144 = OpTypePointer UniformConstant %144
-%uSamp2D = OpVariable %_ptr_UniformConstant_144 UniformConstant
-%147 = OpTypeImage %uint 3D 0 0 0 1 Unknown
+%276 = OpTypePointer UniformConstant %144
+%63 = OpVariable %276 UniformConstant
+%147 = OpTypeImage %230 3D 0 0 0 1 Unknown
 %148 = OpTypeSampledImage %147
-%_ptr_UniformConstant_148 = OpTypePointer UniformConstant %148
-%uSamp3D = OpVariable %_ptr_UniformConstant_148 UniformConstant
-%151 = OpTypeImage %uint Cube 0 0 0 1 Unknown
+%277 = OpTypePointer UniformConstant %148
+%64 = OpVariable %277 UniformConstant
+%151 = OpTypeImage %230 Cube 0 0 0 1 Unknown
 %152 = OpTypeSampledImage %151
-%_ptr_UniformConstant_152 = OpTypePointer UniformConstant %152
-%uSampCube = OpVariable %_ptr_UniformConstant_152 UniformConstant
-%155 = OpTypeImage %uint Rect 0 0 0 1 Unknown
+%278 = OpTypePointer UniformConstant %152
+%66 = OpVariable %278 UniformConstant
+%155 = OpTypeImage %230 Rect 0 0 0 1 Unknown
 %156 = OpTypeSampledImage %155
-%_ptr_UniformConstant_156 = OpTypePointer UniformConstant %156
-%uSamp2DRect = OpVariable %_ptr_UniformConstant_156 UniformConstant
-%159 = OpTypeImage %uint 1D 0 1 0 1 Unknown
+%279 = OpTypePointer UniformConstant %156
+%67 = OpVariable %279 UniformConstant
+%159 = OpTypeImage %230 1D 0 1 0 1 Unknown
 %160 = OpTypeSampledImage %159
-%_ptr_UniformConstant_160 = OpTypePointer UniformConstant %160
-%uSamp1DArray = OpVariable %_ptr_UniformConstant_160 UniformConstant
-%163 = OpTypeImage %uint 2D 0 1 0 1 Unknown
+%280 = OpTypePointer UniformConstant %160
+%69 = OpVariable %280 UniformConstant
+%163 = OpTypeImage %230 2D 0 1 0 1 Unknown
 %164 = OpTypeSampledImage %163
-%_ptr_UniformConstant_164 = OpTypePointer UniformConstant %164
-%uSamp2DArray = OpVariable %_ptr_UniformConstant_164 UniformConstant
-%167 = OpTypeImage %uint Cube 0 1 0 1 Unknown
+%281 = OpTypePointer UniformConstant %164
+%70 = OpVariable %281 UniformConstant
+%167 = OpTypeImage %230 Cube 0 1 0 1 Unknown
 %168 = OpTypeSampledImage %167
-%_ptr_UniformConstant_168 = OpTypePointer UniformConstant %168
-%uSampCubeArray = OpVariable %_ptr_UniformConstant_168 UniformConstant
-%171 = OpTypeImage %uint Buffer 0 0 0 1 Unknown
+%282 = OpTypePointer UniformConstant %168
+%72 = OpVariable %282 UniformConstant
+%171 = OpTypeImage %230 Buffer 0 0 0 1 Unknown
 %172 = OpTypeSampledImage %171
-%_ptr_UniformConstant_172 = OpTypePointer UniformConstant %172
-%uSampBuffer = OpVariable %_ptr_UniformConstant_172 UniformConstant
-%175 = OpTypeImage %uint 2D 0 0 1 1 Unknown
+%283 = OpTypePointer UniformConstant %172
+%73 = OpVariable %283 UniformConstant
+%175 = OpTypeImage %230 2D 0 0 1 1 Unknown
 %176 = OpTypeSampledImage %175
-%_ptr_UniformConstant_176 = OpTypePointer UniformConstant %176
-%uSamp2DMS = OpVariable %_ptr_UniformConstant_176 UniformConstant
-%179 = OpTypeImage %uint 2D 0 1 1 1 Unknown
+%284 = OpTypePointer UniformConstant %176
+%75 = OpVariable %284 UniformConstant
+%179 = OpTypeImage %230 2D 0 1 1 1 Unknown
 %180 = OpTypeSampledImage %179
-%_ptr_UniformConstant_180 = OpTypePointer UniformConstant %180
-%uSamp2DMSArray = OpVariable %_ptr_UniformConstant_180 UniformConstant
-%183 = OpTypeImage %float 1D 0 0 0 1 Unknown
+%285 = OpTypePointer UniformConstant %180
+%76 = OpVariable %285 UniformConstant
+%183 = OpTypeImage %249 1D 0 0 0 1 Unknown
 %184 = OpTypeSampledImage %183
-%_ptr_UniformConstant_184 = OpTypePointer UniformConstant %184
-%fSamp1D = OpVariable %_ptr_UniformConstant_184 UniformConstant
-%187 = OpTypeImage %float 2D 0 0 0 1 Unknown
+%286 = OpTypePointer UniformConstant %184
+%78 = OpVariable %286 UniformConstant
+%187 = OpTypeImage %249 2D 0 0 0 1 Unknown
 %188 = OpTypeSampledImage %187
-%_ptr_UniformConstant_188 = OpTypePointer UniformConstant %188
-%fSamp2D = OpVariable %_ptr_UniformConstant_188 UniformConstant
-%191 = OpTypeImage %float 3D 0 0 0 1 Unknown
+%287 = OpTypePointer UniformConstant %188
+%79 = OpVariable %287 UniformConstant
+%191 = OpTypeImage %249 3D 0 0 0 1 Unknown
 %192 = OpTypeSampledImage %191
-%_ptr_UniformConstant_192 = OpTypePointer UniformConstant %192
-%fSamp3D = OpVariable %_ptr_UniformConstant_192 UniformConstant
-%195 = OpTypeImage %float Cube 0 0 0 1 Unknown
+%288 = OpTypePointer UniformConstant %192
+%81 = OpVariable %288 UniformConstant
+%195 = OpTypeImage %249 Cube 0 0 0 1 Unknown
 %196 = OpTypeSampledImage %195
-%_ptr_UniformConstant_196 = OpTypePointer UniformConstant %196
-%fSampCube = OpVariable %_ptr_UniformConstant_196 UniformConstant
-%199 = OpTypeImage %float Rect 0 0 0 1 Unknown
+%289 = OpTypePointer UniformConstant %196
+%82 = OpVariable %289 UniformConstant
+%199 = OpTypeImage %249 Rect 0 0 0 1 Unknown
 %200 = OpTypeSampledImage %199
-%_ptr_UniformConstant_200 = OpTypePointer UniformConstant %200
-%fSamp2DRect = OpVariable %_ptr_UniformConstant_200 UniformConstant
-%203 = OpTypeImage %float 1D 0 1 0 1 Unknown
+%290 = OpTypePointer UniformConstant %200
+%84 = OpVariable %290 UniformConstant
+%203 = OpTypeImage %249 1D 0 1 0 1 Unknown
 %204 = OpTypeSampledImage %203
-%_ptr_UniformConstant_204 = OpTypePointer UniformConstant %204
-%fSamp1DArray = OpVariable %_ptr_UniformConstant_204 UniformConstant
-%207 = OpTypeImage %float 2D 0 1 0 1 Unknown
+%291 = OpTypePointer UniformConstant %204
+%85 = OpVariable %291 UniformConstant
+%207 = OpTypeImage %249 2D 0 1 0 1 Unknown
 %208 = OpTypeSampledImage %207
-%_ptr_UniformConstant_208 = OpTypePointer UniformConstant %208
-%fSamp2DArray = OpVariable %_ptr_UniformConstant_208 UniformConstant
-%211 = OpTypeImage %float Cube 0 1 0 1 Unknown
+%292 = OpTypePointer UniformConstant %208
+%87 = OpVariable %292 UniformConstant
+%211 = OpTypeImage %249 Cube 0 1 0 1 Unknown
 %212 = OpTypeSampledImage %211
-%_ptr_UniformConstant_212 = OpTypePointer UniformConstant %212
-%fSampCubeArray = OpVariable %_ptr_UniformConstant_212 UniformConstant
-%215 = OpTypeImage %float Buffer 0 0 0 1 Unknown
+%293 = OpTypePointer UniformConstant %212
+%88 = OpVariable %293 UniformConstant
+%215 = OpTypeImage %249 Buffer 0 0 0 1 Unknown
 %216 = OpTypeSampledImage %215
-%_ptr_UniformConstant_216 = OpTypePointer UniformConstant %216
-%fSampBuffer = OpVariable %_ptr_UniformConstant_216 UniformConstant
-%219 = OpTypeImage %float 2D 0 0 1 1 Unknown
+%294 = OpTypePointer UniformConstant %216
+%90 = OpVariable %294 UniformConstant
+%219 = OpTypeImage %249 2D 0 0 1 1 Unknown
 %220 = OpTypeSampledImage %219
-%_ptr_UniformConstant_220 = OpTypePointer UniformConstant %220
-%fSamp2DMS = OpVariable %_ptr_UniformConstant_220 UniformConstant
-%223 = OpTypeImage %float 2D 0 1 1 1 Unknown
+%295 = OpTypePointer UniformConstant %220
+%91 = OpVariable %295 UniformConstant
+%223 = OpTypeImage %249 2D 0 1 1 1 Unknown
 %224 = OpTypeSampledImage %223
-%_ptr_UniformConstant_224 = OpTypePointer UniformConstant %224
-%fSamp2DMSArray = OpVariable %_ptr_UniformConstant_224 UniformConstant
-%227 = OpTypeImage %float 1D 1 0 0 1 Unknown
+%296 = OpTypePointer UniformConstant %224
+%93 = OpVariable %296 UniformConstant
+%227 = OpTypeImage %249 1D 1 0 0 1 Unknown
 %228 = OpTypeSampledImage %227
-%_ptr_UniformConstant_228 = OpTypePointer UniformConstant %228
-%dsSamp1D = OpVariable %_ptr_UniformConstant_228 UniformConstant
-%231 = OpTypeImage %float 2D 1 0 0 1 Unknown
+%297 = OpTypePointer UniformConstant %228
+%94 = OpVariable %297 UniformConstant
+%231 = OpTypeImage %249 2D 1 0 0 1 Unknown
 %232 = OpTypeSampledImage %231
-%_ptr_UniformConstant_232 = OpTypePointer UniformConstant %232
-%dsSamp2D = OpVariable %_ptr_UniformConstant_232 UniformConstant
-%235 = OpTypeImage %float Cube 1 0 0 1 Unknown
+%298 = OpTypePointer UniformConstant %232
+%97 = OpVariable %298 UniformConstant
+%235 = OpTypeImage %249 Cube 1 0 0 1 Unknown
 %236 = OpTypeSampledImage %235
-%_ptr_UniformConstant_236 = OpTypePointer UniformConstant %236
-%dsSampCube = OpVariable %_ptr_UniformConstant_236 UniformConstant
-%239 = OpTypeImage %float Rect 1 0 0 1 Unknown
+%299 = OpTypePointer UniformConstant %236
+%98 = OpVariable %299 UniformConstant
+%239 = OpTypeImage %249 Rect 1 0 0 1 Unknown
 %240 = OpTypeSampledImage %239
-%_ptr_UniformConstant_240 = OpTypePointer UniformConstant %240
-%dsSamp2DRect = OpVariable %_ptr_UniformConstant_240 UniformConstant
-%243 = OpTypeImage %float 1D 1 1 0 1 Unknown
+%300 = OpTypePointer UniformConstant %240
+%101 = OpVariable %300 UniformConstant
+%243 = OpTypeImage %249 1D 1 1 0 1 Unknown
 %244 = OpTypeSampledImage %243
-%_ptr_UniformConstant_244 = OpTypePointer UniformConstant %244
-%dsSamp1DArray = OpVariable %_ptr_UniformConstant_244 UniformConstant
-%247 = OpTypeImage %float 2D 1 1 0 1 Unknown
+%301 = OpTypePointer UniformConstant %244
+%102 = OpVariable %301 UniformConstant
+%247 = OpTypeImage %249 2D 1 1 0 1 Unknown
 %248 = OpTypeSampledImage %247
-%_ptr_UniformConstant_248 = OpTypePointer UniformConstant %248
-%dsSamp2DArray = OpVariable %_ptr_UniformConstant_248 UniformConstant
-%251 = OpTypeImage %float Cube 1 1 0 1 Unknown
+%302 = OpTypePointer UniformConstant %248
+%105 = OpVariable %302 UniformConstant
+%251 = OpTypeImage %249 Cube 1 1 0 1 Unknown
 %252 = OpTypeSampledImage %251
-%_ptr_UniformConstant_252 = OpTypePointer UniformConstant %252
-%dsSampCubeArray = OpVariable %_ptr_UniformConstant_252 UniformConstant
+%303 = OpTypePointer UniformConstant %252
+%106 = OpVariable %303 UniformConstant
 %255 = OpTypeSampler
-%_ptr_UniformConstant_255 = OpTypePointer UniformConstant %255
-%samp = OpVariable %_ptr_UniformConstant_255 UniformConstant
-%sampShadow = OpVariable %_ptr_UniformConstant_255 UniformConstant
-%_ptr_UniformConstant_95 = OpTypePointer UniformConstant %95
-%iTex1D = OpVariable %_ptr_UniformConstant_95 UniformConstant
-%_ptr_UniformConstant_99 = OpTypePointer UniformConstant %99
-%iTex2D = OpVariable %_ptr_UniformConstant_99 UniformConstant
-%_ptr_UniformConstant_103 = OpTypePointer UniformConstant %103
-%iTex3D = OpVariable %_ptr_UniformConstant_103 UniformConstant
-%_ptr_UniformConstant_107 = OpTypePointer UniformConstant %107
-%iTexCube = OpVariable %_ptr_UniformConstant_107 UniformConstant
-%_ptr_UniformConstant_111 = OpTypePointer UniformConstant %111
-%iTex2DRect = OpVariable %_ptr_UniformConstant_111 UniformConstant
-%_ptr_UniformConstant_115 = OpTypePointer UniformConstant %115
-%iTex1DArray = OpVariable %_ptr_UniformConstant_115 UniformConstant
-%_ptr_UniformConstant_119 = OpTypePointer UniformConstant %119
-%iTex2DArray = OpVariable %_ptr_UniformConstant_119 UniformConstant
-%_ptr_UniformConstant_123 = OpTypePointer UniformConstant %123
-%iTexCubeArray = OpVariable %_ptr_UniformConstant_123 UniformConstant
-%_ptr_UniformConstant_127 = OpTypePointer UniformConstant %127
-%iTexBuffer = OpVariable %_ptr_UniformConstant_127 UniformConstant
-%_ptr_UniformConstant_131 = OpTypePointer UniformConstant %131
-%iTex2DMS = OpVariable %_ptr_UniformConstant_131 UniformConstant
-%_ptr_UniformConstant_135 = OpTypePointer UniformConstant %135
-%iTex2DMSArray = OpVariable %_ptr_UniformConstant_135 UniformConstant
-%_ptr_UniformConstant_139 = OpTypePointer UniformConstant %139
-%uTex1D = OpVariable %_ptr_UniformConstant_139 UniformConstant
-%_ptr_UniformConstant_143 = OpTypePointer UniformConstant %143
-%uTex2D = OpVariable %_ptr_UniformConstant_143 UniformConstant
-%_ptr_UniformConstant_147 = OpTypePointer UniformConstant %147
-%uTex3D = OpVariable %_ptr_UniformConstant_147 UniformConstant
-%_ptr_UniformConstant_151 = OpTypePointer UniformConstant %151
-%uTexCube = OpVariable %_ptr_UniformConstant_151 UniformConstant
-%_ptr_UniformConstant_155 = OpTypePointer UniformConstant %155
-%uTex2DRect = OpVariable %_ptr_UniformConstant_155 UniformConstant
-%_ptr_UniformConstant_159 = OpTypePointer UniformConstant %159
-%uTex1DArray = OpVariable %_ptr_UniformConstant_159 UniformConstant
-%_ptr_UniformConstant_163 = OpTypePointer UniformConstant %163
-%uTex2DArray = OpVariable %_ptr_UniformConstant_163 UniformConstant
-%_ptr_UniformConstant_167 = OpTypePointer UniformConstant %167
-%uTexCubeArray = OpVariable %_ptr_UniformConstant_167 UniformConstant
-%_ptr_UniformConstant_171 = OpTypePointer UniformConstant %171
-%uTexBuffer = OpVariable %_ptr_UniformConstant_171 UniformConstant
-%_ptr_UniformConstant_175 = OpTypePointer UniformConstant %175
-%uTex2DMS = OpVariable %_ptr_UniformConstant_175 UniformConstant
-%_ptr_UniformConstant_179 = OpTypePointer UniformConstant %179
-%uTex2DMSArray = OpVariable %_ptr_UniformConstant_179 UniformConstant
-%_ptr_UniformConstant_183 = OpTypePointer UniformConstant %183
-%fTex1D = OpVariable %_ptr_UniformConstant_183 UniformConstant
-%_ptr_UniformConstant_187 = OpTypePointer UniformConstant %187
-%fTex2D = OpVariable %_ptr_UniformConstant_187 UniformConstant
-%_ptr_UniformConstant_191 = OpTypePointer UniformConstant %191
-%fTex3D = OpVariable %_ptr_UniformConstant_191 UniformConstant
-%_ptr_UniformConstant_195 = OpTypePointer UniformConstant %195
-%fTexCube = OpVariable %_ptr_UniformConstant_195 UniformConstant
-%_ptr_UniformConstant_199 = OpTypePointer UniformConstant %199
-%fTex2DRect = OpVariable %_ptr_UniformConstant_199 UniformConstant
-%_ptr_UniformConstant_203 = OpTypePointer UniformConstant %203
-%fTex1DArray = OpVariable %_ptr_UniformConstant_203 UniformConstant
-%_ptr_UniformConstant_207 = OpTypePointer UniformConstant %207
-%fTex2DArray = OpVariable %_ptr_UniformConstant_207 UniformConstant
-%_ptr_UniformConstant_211 = OpTypePointer UniformConstant %211
-%fTexCubeArray = OpVariable %_ptr_UniformConstant_211 UniformConstant
-%_ptr_UniformConstant_215 = OpTypePointer UniformConstant %215
-%fTexBuffer = OpVariable %_ptr_UniformConstant_215 UniformConstant
-%_ptr_UniformConstant_219 = OpTypePointer UniformConstant %219
-%fTex2DMS = OpVariable %_ptr_UniformConstant_219 UniformConstant
-%_ptr_UniformConstant_223 = OpTypePointer UniformConstant %223
-%fTex2DMSArray = OpVariable %_ptr_UniformConstant_223 UniformConstant
-%v2int = OpTypeVector %int 2
-%v3int = OpTypeVector %int 3
-%v4int = OpTypeVector %int 4
-%v2uint = OpTypeVector %uint 2
-%v3uint = OpTypeVector %uint 3
-%v4uint = OpTypeVector %uint 4
-%v2float = OpTypeVector %float 2
-%v3float = OpTypeVector %float 3
-%v4float = OpTypeVector %float 4
-%mat2v2float = OpTypeMatrix %v2float 2
-%mat2v3float = OpTypeMatrix %v3float 2
-%mat2v4float = OpTypeMatrix %v4float 2
-%mat3v2float = OpTypeMatrix %v2float 3
-%mat3v3float = OpTypeMatrix %v3float 3
-%mat3v4float = OpTypeMatrix %v4float 3
-%mat4v2float = OpTypeMatrix %v2float 4
-%mat4v3float = OpTypeMatrix %v3float 4
-%mat4v4float = OpTypeMatrix %v4float 4
-%double = OpTypeFloat 64
-%v2double = OpTypeVector %double 2
-%v3double = OpTypeVector %double 3
-%v4double = OpTypeVector %double 4
-%mat2v2double = OpTypeMatrix %v2double 2
-%mat2v3double = OpTypeMatrix %v3double 2
-%mat2v4double = OpTypeMatrix %v4double 2
-%mat3v2double = OpTypeMatrix %v2double 3
-%mat3v3double = OpTypeMatrix %v3double 3
-%mat3v4double = OpTypeMatrix %v4double 3
-%mat4v2double = OpTypeMatrix %v2double 4
-%mat4v3double = OpTypeMatrix %v3double 4
-%mat4v4double = OpTypeMatrix %v4double 4
-%Data = OpTypeStruct %int %v2int %v3int %v4int %uint %v2uint %v3uint %v4uint %float %v2float %v3float %v4float %mat2v2float %mat2v3float %mat2v4float %mat3v2float %mat3v3float %mat3v4float %mat4v2float %mat4v3float %mat4v4float %double %v2double %v3double %v4double %mat2v2double %mat2v3double %mat2v4double %mat3v2double %mat3v3double %mat3v4double %mat4v2double %mat4v3double %mat4v4double
-%uint_4 = OpConstant %uint 4
-%_arr_Data_uint_4 = OpTypeArray %Data %uint_4
-%Ubo = OpTypeStruct %_arr_Data_uint_4
-%uint_1 = OpConstant %uint 1
-%_arr_Ubo_uint_1 = OpTypeArray %Ubo %uint_1
-%_ptr_Uniform__arr_Ubo_uint_1 = OpTypePointer Uniform %_arr_Ubo_uint_1
-%ubo = OpVariable %_ptr_Uniform__arr_Ubo_uint_1 Uniform
-%_runtimearr_int = OpTypeRuntimeArray %int
-%Ssbo = OpTypeStruct %_runtimearr_int
-%_ptr_StorageBuffer_Ssbo = OpTypePointer StorageBuffer %Ssbo
-%ssbo = OpVariable %_ptr_StorageBuffer_Ssbo StorageBuffer
-%368 = OpTypeImage %int SubpassData 0 0 0 2 Unknown
-%_ptr_UniformConstant_368 = OpTypePointer UniformConstant %368
-%iAttm = OpVariable %_ptr_UniformConstant_368 UniformConstant
-%371 = OpTypeImage %int SubpassData 0 0 1 2 Unknown
-%_ptr_UniformConstant_371 = OpTypePointer UniformConstant %371
-%iAttmMS = OpVariable %_ptr_UniformConstant_371 UniformConstant
-%374 = OpTypeImage %uint SubpassData 0 0 0 2 Unknown
-%_ptr_UniformConstant_374 = OpTypePointer UniformConstant %374
-%uAttm = OpVariable %_ptr_UniformConstant_374 UniformConstant
-%377 = OpTypeImage %uint SubpassData 0 0 1 2 Unknown
-%_ptr_UniformConstant_377 = OpTypePointer UniformConstant %377
-%uAttmMS = OpVariable %_ptr_UniformConstant_377 UniformConstant
-%380 = OpTypeImage %float SubpassData 0 0 0 2 Unknown
-%_ptr_UniformConstant_380 = OpTypePointer UniformConstant %380
-%fAttm = OpVariable %_ptr_UniformConstant_380 UniformConstant
-%383 = OpTypeImage %float SubpassData 0 0 1 2 Unknown
-%_ptr_UniformConstant_383 = OpTypePointer UniformConstant %383
-%fAttmMS = OpVariable %_ptr_UniformConstant_383 UniformConstant
+%304 = OpTypePointer UniformConstant %255
+%109 = OpVariable %304 UniformConstant
+%110 = OpVariable %304 UniformConstant
+%305 = OpTypePointer UniformConstant %95
+%113 = OpVariable %305 UniformConstant
+%306 = OpTypePointer UniformConstant %99
+%114 = OpVariable %306 UniformConstant
+%307 = OpTypePointer UniformConstant %103
+%117 = OpVariable %307 UniformConstant
+%308 = OpTypePointer UniformConstant %107
+%118 = OpVariable %308 UniformConstant
+%309 = OpTypePointer UniformConstant %111
+%121 = OpVariable %309 UniformConstant
+%310 = OpTypePointer UniformConstant %115
+%122 = OpVariable %310 UniformConstant
+%311 = OpTypePointer UniformConstant %119
+%125 = OpVariable %311 UniformConstant
+%312 = OpTypePointer UniformConstant %123
+%126 = OpVariable %312 UniformConstant
+%313 = OpTypePointer UniformConstant %127
+%129 = OpVariable %313 UniformConstant
+%314 = OpTypePointer UniformConstant %131
+%130 = OpVariable %314 UniformConstant
+%315 = OpTypePointer UniformConstant %135
+%133 = OpVariable %315 UniformConstant
+%316 = OpTypePointer UniformConstant %139
+%134 = OpVariable %316 UniformConstant
+%317 = OpTypePointer UniformConstant %143
+%137 = OpVariable %317 UniformConstant
+%318 = OpTypePointer UniformConstant %147
+%138 = OpVariable %318 UniformConstant
+%319 = OpTypePointer UniformConstant %151
+%141 = OpVariable %319 UniformConstant
+%320 = OpTypePointer UniformConstant %155
+%142 = OpVariable %320 UniformConstant
+%321 = OpTypePointer UniformConstant %159
+%145 = OpVariable %321 UniformConstant
+%322 = OpTypePointer UniformConstant %163
+%146 = OpVariable %322 UniformConstant
+%323 = OpTypePointer UniformConstant %167
+%149 = OpVariable %323 UniformConstant
+%324 = OpTypePointer UniformConstant %171
+%150 = OpVariable %324 UniformConstant
+%325 = OpTypePointer UniformConstant %175
+%153 = OpVariable %325 UniformConstant
+%326 = OpTypePointer UniformConstant %179
+%154 = OpVariable %326 UniformConstant
+%327 = OpTypePointer UniformConstant %183
+%157 = OpVariable %327 UniformConstant
+%328 = OpTypePointer UniformConstant %187
+%158 = OpVariable %328 UniformConstant
+%329 = OpTypePointer UniformConstant %191
+%161 = OpVariable %329 UniformConstant
+%330 = OpTypePointer UniformConstant %195
+%162 = OpVariable %330 UniformConstant
+%331 = OpTypePointer UniformConstant %199
+%165 = OpVariable %331 UniformConstant
+%332 = OpTypePointer UniformConstant %203
+%166 = OpVariable %332 UniformConstant
+%333 = OpTypePointer UniformConstant %207
+%169 = OpVariable %333 UniformConstant
+%334 = OpTypePointer UniformConstant %211
+%170 = OpVariable %334 UniformConstant
+%335 = OpTypePointer UniformConstant %215
+%173 = OpVariable %335 UniformConstant
+%336 = OpTypePointer UniformConstant %219
+%174 = OpVariable %336 UniformConstant
+%337 = OpTypePointer UniformConstant %223
+%177 = OpVariable %337 UniformConstant
+%338 = OpTypeVector %213 2
+%339 = OpTypeVector %213 3
+%340 = OpTypeVector %213 4
+%341 = OpTypeVector %230 2
+%342 = OpTypeVector %230 3
+%343 = OpTypeVector %230 4
+%344 = OpTypeVector %249 2
+%345 = OpTypeVector %249 3
+%346 = OpTypeVector %249 4
+%347 = OpTypeMatrix %344 2
+%348 = OpTypeMatrix %345 2
+%349 = OpTypeMatrix %346 2
+%350 = OpTypeMatrix %344 3
+%351 = OpTypeMatrix %345 3
+%352 = OpTypeMatrix %346 3
+%353 = OpTypeMatrix %344 4
+%354 = OpTypeMatrix %345 4
+%355 = OpTypeMatrix %346 4
+%356 = OpTypeFloat 64
+%357 = OpTypeVector %356 2
+%358 = OpTypeVector %356 3
+%359 = OpTypeVector %356 4
+%360 = OpTypeMatrix %357 2
+%361 = OpTypeMatrix %358 2
+%362 = OpTypeMatrix %359 2
+%363 = OpTypeMatrix %357 3
+%364 = OpTypeMatrix %358 3
+%365 = OpTypeMatrix %359 3
+%366 = OpTypeMatrix %357 4
+%367 = OpTypeMatrix %358 4
+%369 = OpTypeMatrix %359 4
+%197 = OpTypeStruct %213 %338 %339 %340 %230 %341 %342 %343 %249 %344 %345 %346 %347 %348 %349 %350 %351 %352 %353 %354 %355 %356 %357 %358 %359 %360 %361 %362 %363 %364 %365 %366 %367 %369
+%370 = OpConstant %230 4
+%202 = OpTypeArray %197 %370
+%198 = OpTypeStruct %202
+%372 = OpConstant %230 1
+%373 = OpTypeArray %198 %372
+%375 = OpTypePointer Uniform %373
+%178 = OpVariable %375 Uniform
+%205 = OpTypeRuntimeArray %213
+%201 = OpTypeStruct %205
+%376 = OpTypePointer StorageBuffer %201
+%181 = OpVariable %376 StorageBuffer
+%368 = OpTypeImage %213 SubpassData 0 0 0 2 Unknown
+%378 = OpTypePointer UniformConstant %368
+%182 = OpVariable %378 UniformConstant
+%371 = OpTypeImage %213 SubpassData 0 0 1 2 Unknown
+%379 = OpTypePointer UniformConstant %371
+%185 = OpVariable %379 UniformConstant
+%374 = OpTypeImage %230 SubpassData 0 0 0 2 Unknown
+%381 = OpTypePointer UniformConstant %374
+%186 = OpVariable %381 UniformConstant
+%377 = OpTypeImage %230 SubpassData 0 0 1 2 Unknown
+%382 = OpTypePointer UniformConstant %377
+%189 = OpVariable %382 UniformConstant
+%380 = OpTypeImage %249 SubpassData 0 0 0 2 Unknown
+%384 = OpTypePointer UniformConstant %380
+%190 = OpVariable %384 UniformConstant
+%383 = OpTypeImage %249 SubpassData 0 0 1 2 Unknown
+%385 = OpTypePointer UniformConstant %383
+%193 = OpVariable %385 UniformConstant
 %386 = OpTypeAccelerationStructureKHR
-%_ptr_UniformConstant_386 = OpTypePointer UniformConstant %386
-%acc = OpVariable %_ptr_UniformConstant_386 UniformConstant
-%char = OpTypeInt 8 1
-%char_1 = OpConstant %char 1
-%short = OpTypeInt 16 1
-%short_1 = OpConstant %short 1
-%int_1 = OpConstant %int 1
-%long = OpTypeInt 64 1
-%long_1 = OpConstant %long 1
-%uchar = OpTypeInt 8 0
-%uchar_1 = OpConstant %uchar 1
-%ushort = OpTypeInt 16 0
-%ushort_1 = OpConstant %ushort 1
-%ulong = OpTypeInt 64 0
-%ulong_1 = OpConstant %ulong 1
-%half = OpTypeFloat 16
-%half_0x1pn2 = OpConstant %half 0x1p-2
-%float_1 = OpConstant %float 1
-%double_1 = OpConstant %double 1
-%main = OpFunction %void None %3
+%387 = OpTypePointer UniformConstant %386
+%194 = OpVariable %387 UniformConstant
+%388 = OpTypeInt 8 1
+%389 = OpConstant %388 1
+%390 = OpTypeInt 16 1
+%391 = OpConstant %390 1
+%392 = OpConstant %213 1
+%393 = OpTypeInt 64 1
+%394 = OpConstant %393 1
+%395 = OpTypeInt 8 0
+%396 = OpConstant %395 1
+%397 = OpTypeInt 16 0
+%398 = OpConstant %397 1
+%399 = OpTypeInt 64 0
+%400 = OpConstant %399 1
+%401 = OpTypeFloat 16
+%402 = OpConstant %401 0x1p-2
+%403 = OpConstant %249 1
+%404 = OpConstant %356 1
+%0 = OpFunction %206 None %3
 %5 = OpLabel
-%10 = OpRayQueryProceedKHR %bool %ray_query
+%10 = OpRayQueryProceedKHR %210 %2
 OpReturn
 OpFunctionEnd
