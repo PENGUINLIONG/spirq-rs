@@ -3066,11 +3066,11 @@ pub fn print_operand(
             // LiteralInteger
             out.push(print_u32(operands)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
             // LiteralString ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_str(operands)?);
             }
         }
@@ -3126,7 +3126,7 @@ pub fn print_operand(
             // LiteralExtInstInteger
             out.push(print_u32(operands)?);
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -3146,7 +3146,7 @@ pub fn print_operand(
             // LiteralString
             out.push(print_str(operands)?);
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -3209,7 +3209,7 @@ pub fn print_operand(
             // ImageFormat
             out.extend(print_enum_ImageFormat(operands, id_names)?);
             // AccessQualifier ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_AccessQualifier(operands, id_names)?);
             }
         }
@@ -3235,7 +3235,7 @@ pub fn print_operand(
         // OpTypeStruct
         30 => {
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -3256,7 +3256,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -3292,7 +3292,7 @@ pub fn print_operand(
         // OpConstantComposite
         44 => {
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -3319,7 +3319,7 @@ pub fn print_operand(
         // OpSpecConstantComposite
         51 => {
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -3344,7 +3344,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -3353,7 +3353,7 @@ pub fn print_operand(
             // StorageClass
             out.extend(print_enum_StorageClass(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -3371,7 +3371,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // MemoryAccess ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
         }
@@ -3382,7 +3382,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // MemoryAccess ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
         }
@@ -3393,11 +3393,11 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // MemoryAccess ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
             // MemoryAccess ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
         }
@@ -3410,11 +3410,11 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // MemoryAccess ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
             // MemoryAccess ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
         }
@@ -3423,7 +3423,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -3432,7 +3432,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -3443,7 +3443,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -3466,7 +3466,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -3493,7 +3493,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -3502,7 +3502,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // PairIdRefLiteralInteger *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.extend(print_pair_id_u32_list(operands, id_names)?);
             }
         }
@@ -3529,14 +3529,14 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // LiteralInteger *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_u32(operands)?);
             }
         }
         // OpCompositeConstruct
         80 => {
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -3545,7 +3545,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // LiteralInteger *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_u32(operands)?);
             }
         }
@@ -3556,7 +3556,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // LiteralInteger *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_u32(operands)?);
             }
         }
@@ -3584,7 +3584,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -3606,7 +3606,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -3628,7 +3628,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -3650,7 +3650,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -3672,7 +3672,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -3685,7 +3685,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -3698,7 +3698,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -3709,7 +3709,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -3722,7 +3722,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -4631,7 +4631,7 @@ pub fn print_operand(
         // OpPhi
         245 => {
             // PairIdRefIdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.extend(print_pair_id_id_list(operands, id_names)?);
             }
         }
@@ -4667,7 +4667,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // LiteralInteger *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_u32(operands)?);
             }
         }
@@ -4678,7 +4678,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // PairLiteralIntegerIdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.extend(print_pair_u32_id_list(operands, id_names)?);
             }
         }
@@ -5031,7 +5031,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5134,7 +5134,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -5156,7 +5156,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -5178,7 +5178,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -5200,7 +5200,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -5222,7 +5222,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -5235,7 +5235,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -5248,7 +5248,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -5284,7 +5284,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -5501,7 +5501,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5514,7 +5514,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5527,7 +5527,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5540,7 +5540,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5553,7 +5553,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5566,7 +5566,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5579,7 +5579,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5592,7 +5592,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5605,7 +5605,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5618,7 +5618,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5631,7 +5631,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5644,7 +5644,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5657,7 +5657,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5670,7 +5670,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5683,7 +5683,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5696,7 +5696,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5749,21 +5749,21 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
         // OpDepthAttachmentReadEXT
         4161 => {
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
         // OpStencilAttachmentReadEXT
         4162 => {
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5803,7 +5803,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -5862,7 +5862,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // PackedVectorFormat ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_PackedVectorFormat(operands, id_names)?);
             }
         }
@@ -5873,7 +5873,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // PackedVectorFormat ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_PackedVectorFormat(operands, id_names)?);
             }
         }
@@ -5884,7 +5884,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // PackedVectorFormat ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_PackedVectorFormat(operands, id_names)?);
             }
         }
@@ -5897,7 +5897,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // PackedVectorFormat ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_PackedVectorFormat(operands, id_names)?);
             }
         }
@@ -5910,7 +5910,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // PackedVectorFormat ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_PackedVectorFormat(operands, id_names)?);
             }
         }
@@ -5923,7 +5923,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // PackedVectorFormat ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_PackedVectorFormat(operands, id_names)?);
             }
         }
@@ -5947,11 +5947,11 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
             // MemoryAccess ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
         }
@@ -5964,11 +5964,11 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
             // MemoryAccess ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
         }
@@ -5981,7 +5981,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // CooperativeMatrixOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_CooperativeMatrixOperands(operands, id_names)?);
             }
         }
@@ -6521,11 +6521,11 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -6549,7 +6549,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // ImageOperands ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_ImageOperands(operands, id_names)?);
             }
         }
@@ -6562,7 +6562,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -6737,7 +6737,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // MemoryAccess ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
         }
@@ -6752,7 +6752,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // MemoryAccess ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.extend(print_enum_MemoryAccess(operands, id_names)?);
             }
         }
@@ -6999,7 +6999,7 @@ pub fn print_operand(
         // OpFunctionPointerCallINTEL
         5601 => {
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -7024,7 +7024,7 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -8523,14 +8523,14 @@ pub fn print_operand(
         // OpLoopControlINTEL
         5887 => {
             // LiteralInteger *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_u32(operands)?);
             }
         }
         // OpAliasDomainDeclINTEL
         5911 => {
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -8539,14 +8539,14 @@ pub fn print_operand(
             // IdRef
             out.push(print_id(operands, id_names)?);
             // IdRef ?
-            if !operands.is_empty() {
+            if operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
         // OpAliasScopeListDeclINTEL
         5913 => {
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -8896,28 +8896,28 @@ pub fn print_operand(
         // OpTypeStructContinuedINTEL
         6090 => {
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
         // OpConstantCompositeContinuedINTEL
         6091 => {
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
         // OpSpecConstantCompositeContinuedINTEL
         6092 => {
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
         // OpCompositeConstructContinuedINTEL
         6096 => {
             // IdRef *
-            while !operands.is_empty() {
+            while operands.len() != 0 {
                 out.push(print_id(operands, id_names)?);
             }
         }
@@ -9023,7 +9023,7 @@ pub fn print_operand(
         }
         _ => bail!("unsupported opcode {}", opcode),
     };
-    while !operands.is_empty() {
+    while operands.len() != 0 {
         out.push(format!("!{}", operands.read_u32()?));
     }
     Ok(out)
