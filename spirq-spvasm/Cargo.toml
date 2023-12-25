@@ -25,5 +25,4 @@ spirq = { version = "1.0.0", path = "../spirq"}
 half = { version =  "2.3", features = ["num-traits"] }
 
 [dev-dependencies]
-inline-spirv = "0.1"
 pretty_assertions = "1.4"

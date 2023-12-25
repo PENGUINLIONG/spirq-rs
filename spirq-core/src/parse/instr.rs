@@ -174,7 +174,13 @@ impl InstructionBuilder {
         let cstr = CString::new(x).unwrap();
         let bytes = cstr.as_bytes();
         let words = bytes.len() / 4 + 1;
-        let ptr = cstr.as_ptr() as *const u32;
+        // Pad the string with zeros.
+        let bytes = {
+            let mut out = bytes.to_owned();
+            out.resize(words * 4, 0);
+            out
+        };
+        let ptr = bytes.as_ptr() as *const u32;
         let slice = unsafe { std::slice::from_raw_parts(ptr, words) };
         self.inner.extend_from_slice(slice);
         self

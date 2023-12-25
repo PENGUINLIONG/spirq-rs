@@ -430,7 +430,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "half",
- "inline-spirv",
  "num-traits",
  "pretty_assertions",
  "spirq",
