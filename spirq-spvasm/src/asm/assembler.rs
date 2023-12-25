@@ -71,7 +71,11 @@ pub struct Assembler {
 }
 impl Assembler {
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            next_id: 1,
+            bound: 1,
+            ..Default::default()
+        }
     }
 
     fn parse_opcode(&self, s: &mut TokenStream) -> Result<u32> {
