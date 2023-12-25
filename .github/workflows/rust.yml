@@ -21,21 +21,49 @@ jobs:
     - uses: Swatinem/rust-cache@v2
       with:
         cache-on-failure: true
-    - name: Cargo build and test
-      id: cargo_build_and_test
+        workspaces: |
+          shader-reflect
+          spirq-as
+          spirq-core
+          spirq-dis
+          spirq-spvasm
+
+    - name: Cargo Format
+      id: cargo_format
       run: |
         cargo fmt -- --check
-        cargo build --release --verbose
+
+    - name: Cargo Build
+      id: cargo_build
+      run: |
+        cargo build --verbose
+
+    - name: Cargo Test
+      id: cargo_test
+      run: |
         cargo test --verbose
+
+    - name: Run SPIR-Q Examples
+      id: spirq_examples
+      run: |
         cargo run --example gallery > spirq/examples/gallery/main.log
         cargo run --example inspect > spirq/examples/inspect/main.log
         cargo run --example walk > spirq/examples/walk/main.log
-        cargo install --path shader-reflect
-        shader-reflect assets/gallery.frag -o assets/gallery.frag.json --reference-all-resources
-        shader-reflect assets/gallery.frag.spv -o assets/gallery.frag.spv.json --reference-all-resources
+
+    - name: Run shader-reflect
+      id: shader_reflect
+      run: |
+        cargo run -p shader-reflect assets/gallery.frag -o assets/gallery.frag.json --reference-all-resources
+        cargo run -p shader-reflect assets/gallery.frag.spv -o assets/gallery.frag.spv.json --reference-all-resources
         diff assets/gallery.frag.json assets/gallery.frag.spv.json
-        shader-reflect assets/spirv-spec.frag -o assets/spirv-spec.frag.json
-        shader-reflect assets/spirv-spec.frag.spv -o assets/spirv-spec.frag.spv.json
+        cargo run -p shader-reflect assets/spirv-spec.frag -o assets/spirv-spec.frag.json
+        cargo run -p shader-reflect assets/spirv-spec.frag.spv -o assets/spirv-spec.frag.spv.json
         diff assets/spirv-spec.frag.json assets/spirv-spec.frag.spv.json
-        shader-reflect assets/moon.spv -o assets/moon.spv.json --reference-all-resources
-        git diff --exit-code
+        cargo run -p shader-reflect assets/moon.spv -o assets/moon.spv.json --reference-all-resources
+
+    - name: Assemble Disassemble Roundtrip
+      id: cargo_build_and_test
+      run: |
+        cargo run -p spirq-as assets/gallery.frag.spvasm -o assets/gallery.frag.spv
+        cargo run -p spirq-dis assets/gallery.frag.spv -o assets/gallery.frag.spvasm --no-indent
+        echo git diff --exit-code --binary

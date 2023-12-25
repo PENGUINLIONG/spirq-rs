@@ -13,7 +13,7 @@ use std::{
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[arg(help = "Input SPIR-V file paths.")]
+    #[arg(help = "Input SPIR-V file path.")]
     in_path: String,
 
     #[arg(

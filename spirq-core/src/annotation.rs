@@ -179,9 +179,9 @@ impl<'a> DecorationRegistry<'a> {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
-struct NameKey {
-    id: InstrId,
-    member_idx: Option<u32>,
+pub struct NameKey {
+    pub id: InstrId,
+    pub member_idx: Option<u32>,
 }
 #[derive(Default)]
 pub struct NameRegistry<'a> {
@@ -231,5 +231,9 @@ impl<'a> NameRegistry<'a> {
                 member_idx: Some(member_idx),
             })
             .copied()
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&NameKey, &&'a str)> {
+        self.name_map.iter()
     }
 }

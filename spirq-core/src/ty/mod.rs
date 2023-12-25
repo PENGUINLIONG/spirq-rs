@@ -276,6 +276,9 @@ pub struct SampledImageType {
     pub scalar_ty: ScalarType,
     /// Dimension of the image.
     pub dim: Dim,
+    /// Whether the image is a depth image, or `None` if it's unknown at compile
+    /// time.
+    pub is_depth: Option<bool>,
     /// Whether  the image is an array of images. In Vulkan, it means that the
     /// image can have multiple layers. In Vulkan, only `Dim1D`, `Dim2D`, and
     /// `DimCube` can be arrayed.
@@ -301,6 +304,11 @@ impl fmt::Display for SampledImageType {
             Dim::DimRect => "Rect",
             Dim::DimSubpassData => "SubpassData",
         };
+        let depth = match self.is_depth {
+            Some(true) => "Depth",
+            Some(false) => "Color",
+            None => "Depth?",
+        };
         let is_array = match self.is_array {
             true => "Array",
             false => "",
@@ -311,7 +319,7 @@ impl fmt::Display for SampledImageType {
         };
         write!(
             f,
-            "SampledImage{dim}{is_array}{is_multisampled}<{scalar_ty}>"
+            "SampledImage{dim}{is_array}{is_multisampled}<{scalar_ty},{depth}>"
         )
     }
 }

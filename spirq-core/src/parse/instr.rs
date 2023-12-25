@@ -1,40 +1,65 @@
 //!  SPIR-V instruction parser.
+use anyhow::bail;
 use num_traits::FromPrimitive;
 use spirv::Op;
 use std::{borrow::Borrow, fmt, ops::Deref};
 
 use crate::error::{anyhow, Result};
 
-pub struct Instrs<'a>(&'a [u32]);
-impl<'a> Instrs<'a> {
-    pub fn new(spv: &'a [u32]) -> Instrs<'a> {
-        const HEADER_LEN: usize = 5;
-        if spv.len() < HEADER_LEN {
-            return Instrs(&[] as &[u32]);
-        }
-        Instrs(&spv[HEADER_LEN..])
-    }
+pub struct Instrs<'a> {
+    inner: &'a [u32],
+    cache: Option<&'a Instr>,
 }
-impl<'a> Iterator for Instrs<'a> {
-    type Item = &'a Instr;
-    fn next(&mut self) -> Option<Self::Item> {
-        while let Some(head) = self.0.first() {
-            // Ignore nops.
-            let opcode = head & 0xFFFF;
-            if opcode == 0 {
-                continue;
+impl<'a> Instrs<'a> {
+    pub fn new(spv: &'a [u32]) -> Result<Instrs<'a>> {
+        let mut out = Instrs {
+            inner: &spv,
+            cache: None,
+        };
+        out.load_next()?;
+        Ok(out)
+    }
+
+    fn load_next(&mut self) -> Result<()> {
+        let mut new_cache = None;
+        while let Some(head) = self.inner.first() {
+            let len = ((*head as u32) >> 16) as usize;
+            // Report zero-length instructions.
+            if len == 0 {
+                bail!("instruction length is zero");
             }
 
-            let len = ((*head as u32) >> 16) as usize;
-            if len <= self.0.len() {
-                let instr = Instr::new(&self.0[..len]);
-                self.0 = &self.0[len..];
-                return Some(instr.unwrap());
+            if len <= self.inner.len() {
+                let instr = Instr::new(&self.inner[..len])?;
+                self.inner = &self.inner[len..];
+                new_cache = Some(instr);
             } else {
-                return None;
+                if len < self.inner.len() {
+                    bail!("instruction is truncated");
+                }
+            }
+            break;
+        }
+
+        self.cache = new_cache;
+        Ok(())
+    }
+
+    pub fn peek(&self) -> Option<&'a Instr> {
+        self.cache.clone()
+    }
+    pub fn next(&mut self) -> Result<Option<&'a Instr>> {
+        let last_cache = self.cache.take();
+        self.load_next()?;
+        return Ok(last_cache);
+    }
+    pub fn next_non_nop(&mut self) -> Result<Option<&'a Instr>> {
+        while let Some(instr) = self.next()? {
+            if instr.opcode() != Op::Nop as u32 {
+                return Ok(Some(instr));
             }
         }
-        None
+        Ok(None)
     }
 }
 
@@ -101,6 +126,11 @@ impl From<&[u32]> for Instruction {
         Instruction::from(x.to_owned())
     }
 }
+impl AsRef<[u32]> for Instruction {
+    fn as_ref(&self) -> &[u32] {
+        &self.inner
+    }
+}
 impl Borrow<Instr> for Instruction {
     fn borrow(&self) -> &Instr {
         Instr::new(self.inner.as_ref()).unwrap()
@@ -110,6 +140,14 @@ impl Deref for Instruction {
     type Target = Instr;
     fn deref(&self) -> &Instr {
         self.borrow()
+    }
+}
+impl Instruction {
+    pub fn builder(op: Op) -> InstructionBuilder {
+        InstructionBuilder::new(op)
+    }
+    pub fn into_words(self) -> Vec<u32> {
+        self.inner
     }
 }
 
@@ -130,14 +168,37 @@ impl InstructionBuilder {
         self.inner.extend_from_slice(x);
         self
     }
+    pub fn push_str(mut self, x: &str) -> Self {
+        use std::ffi::CString;
+        let cstr = CString::new(x).unwrap();
+        let bytes = cstr.as_bytes();
+        let words = bytes.len() / 4 + 1;
+        // Pad the string with zeros.
+        let bytes = {
+            let mut out = bytes.to_owned();
+            out.resize(words * 4, 0);
+            out
+        };
+        let slice: &[u32] = bytemuck::cast_slice(&bytes);
+        self.inner.extend_from_slice(slice);
+        self
+    }
     pub fn build(mut self) -> Instruction {
         self.inner[0] |= (self.inner.len() as u32) << 16;
         Instruction::from(self.inner)
     }
 }
 
+#[derive(Clone)]
 pub struct Operands<'a>(&'a [u32]);
 impl<'a> Operands<'a> {
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
     pub fn read_bool(&mut self) -> Result<bool> {
         self.read_u32().map(|x| x != 0)
     }
@@ -149,19 +210,26 @@ impl<'a> Operands<'a> {
             Err(anyhow!("operand is too short"))
         }
     }
+    pub fn read_f32(&mut self) -> Result<f32> {
+        self.read_u32().map(|x| f32::from_bits(x))
+    }
+    pub fn read_id(&mut self) -> Result<u32> {
+        self.read_u32()
+    }
     pub fn read_str(&mut self) -> Result<&'a str> {
         use std::ffi::CStr;
-        use std::os::raw::c_char;
-        let ptr = self.0.as_ptr() as *const c_char;
-        let char_slice = unsafe { std::slice::from_raw_parts(ptr, self.0.len() * 4) };
-        if let Some(nul_pos) = char_slice.into_iter().position(|x| *x == 0) {
-            let nword = nul_pos / 4 + 1;
-            self.0 = &self.0[nword..];
-            if let Ok(string) = unsafe { CStr::from_ptr(ptr) }.to_str() {
-                return Ok(string);
-            }
-        }
-        Err(anyhow!("string is not null-terminated"))
+        // Find the word with a trailing zero.
+        let ieos = self
+            .0
+            .iter()
+            .position(|x| (x >> 24) == 0)
+            .ok_or(anyhow!("string is not null-terminated"))?;
+
+        let slice: &[u32] = &self.0[..ieos + 1];
+        self.0 = &self.0[ieos + 1..];
+        let bytes: &[u8] = bytemuck::cast_slice(slice);
+        let cstr = CStr::from_bytes_until_nul(bytes)?;
+        Ok(cstr.to_str()?)
     }
     pub fn read_enum<E: FromPrimitive>(&mut self) -> Result<E> {
         self.read_u32()

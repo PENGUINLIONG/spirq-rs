@@ -1,6 +1,13 @@
 #version 460 core
 #extension GL_EXT_ray_tracing : enable
 #extension GL_EXT_ray_query : enable
+#extension GL_EXT_shader_explicit_arithmetic_types_int8 : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int16 : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int32 : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float32 : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float64 : require
 
 struct Data {
     // Signed integer scalar and vector types.
@@ -181,7 +188,7 @@ layout(set=12, binding=0) uniform Ubo {
 
 // Storage buffer block with dynamic size.
 layout(set=13, binding=0) buffer Ssbo {
-    Data ds[];
+    int ds[];
 } ssbo;
 
 layout(set=14, binding=0, input_attachment_index=0) uniform isubpassInput   iAttm;
@@ -193,6 +200,23 @@ layout(set=14, binding=5, input_attachment_index=5) uniform subpassInputMS  fAtt
 
 // Acceleration structure (for ray-tracing).
 layout(set=15, binding=0) uniform accelerationStructureEXT acc;
+
+const int8_t INT8 = int8_t(1);
+const int16_t INT16 = int16_t(1);
+const int32_t INT32 = int32_t(1);
+const int64_t INT64 = int64_t(1);
+
+const uint8_t UINT8 = uint8_t(1);
+const uint16_t UINT16 = uint16_t(1);
+const uint32_t UINT32 = uint32_t(1);
+const uint64_t UINT64 = uint64_t(1);
+
+// (penguinliong) Don't know why but SPIR-V Tools disassemble fp16 values to
+// mantissa and exponent bias which is pretty much a special case I don't wanna
+// work with atm.
+const float16_t FLOAT16 = float16_t(0.25);
+const float32_t FLOAT32 = float32_t(1.0);
+const float64_t FLOAT64 = float64_t(1.0);
 
 void main() {
     rayQueryEXT ray_query;
