@@ -42,4 +42,4 @@ jobs:
         cargo install --path spirq-dis
         spirq-as assets/gallery.frag.spvasm -o assets/gallery.frag.spv
         spirq-dis assets/gallery.frag.spv -o assets/gallery.frag.spvasm --no-indent
-        git diff --exit-code
+        git diff --exit-code --binary
