@@ -44,5 +44,5 @@ jobs:
         diff assets/spirv-spec.frag.json assets/spirv-spec.frag.spv.json
         cargo run -p shader-reflect assets/moon.spv -o assets/moon.spv.json --reference-all-resources
         cargo run -p spirq-as assets/gallery.frag.spvasm -o assets/gallery.frag.spv
-        cargo run -p spirq-dis assets/gallery.frag.spv -o assets/gallery.frag.spvasm --no-indent
+        cargo run -p spirq-dis assets/gallery.frag.spv -o assets/gallery.frag.spvasm --no-indent --raw-id
         git diff --exit-code --binary
