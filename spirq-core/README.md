@@ -1,10 +1,14 @@
 # SPIR-Q Core
 
-[![Build Status](https://travis-ci.com/PENGUINLIONG/spirq-rs.svg?branch=master)](https://travis-ci.com/PENGUINLIONG/spirq-rs)
 [![Crate](https://img.shields.io/crates/v/spirq-core)](https://crates.io/crates/spirq-core)
 [![Documentation](https://docs.rs/spirq-core/badge.svg)](https://docs.rs/spirq-core)
 
-SPIR-Q Core contains the foundational structures and functions in the SPIR-Q ecosystem.
+SPIR-Q Core provides the foundational structures and functions in the SPIR-Q ecosystem:
+
+- Binary instruction parser and builder (without semantical understanding of the operands)
+- SPIR-V types and type registry
+- Constant expression evaluator
+- Shader interface resource descriptors
 
 ## License
 

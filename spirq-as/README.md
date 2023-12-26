@@ -1,10 +1,28 @@
-# SPIR-Q Disassembler
+# SPIR-Q Assembler
 
-[![Build Status](https://travis-ci.com/PENGUINLIONG/spirq-rs.svg?branch=master)](https://travis-ci.com/PENGUINLIONG/spirq-rs)
-[![Crate](https://img.shields.io/crates/v/spirq-dis)](https://crates.io/crates/spirq-dis)
-[![Documentation](https://docs.rs/spirq-dis/badge.svg)](https://docs.rs/spirq-dis)
+[![Crate](https://img.shields.io/crates/v/spirq-as)](https://crates.io/crates/spirq-as)
 
-SPIR-Q Disassembler is a SPIR-V disassembler written in pure Rust.
+SPIR-Q Assembler (`spirq-as`) is a SPIR-V assembler written in pure Rust. It is a drop-in replacement of the official assembler `spirv-as` with the same commandline arguments.
+
+## Install
+
+You can install `spirq-as` from cargo with:
+
+```bash
+cargo install spirq-as
+```
+
+## Usage
+
+To assemble SPIR-V binary from SPIR-V assembly, you can either pass the source file path by argument or pipe the code in.
+
+```bash
+spirq-as [INPUT].spvasm -o [OUTPUT].spv
+# - or -
+cat [INPUT].spvasm | spirq-as -o [OUTPUT].spv
+```
+
+`spirq-as` is a CLI tool for end users. You can also integrate the assembler to your application from the library crate [`spirq-spvasm`](../spirq-spvasm/README.md).
 
 ## License
 
