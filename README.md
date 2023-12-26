@@ -1,53 +1,31 @@
 # SPIR-Q
 
-[![Build Status](https://travis-ci.com/PENGUINLIONG/spirq-rs.svg?branch=master)](https://travis-ci.com/PENGUINLIONG/spirq-rs)
 [![Crate](https://img.shields.io/crates/v/spirq)](https://crates.io/crates/spirq)
 [![Documentation](https://docs.rs/spirq/badge.svg)](https://docs.rs/spirq)
 
-SPIR-Q is a light weight library for SPIR-V pipeline metadata query, supporting upto SPIR-V 1.5 specification aligned with Vulkan 1.2.
+SPIR-Q is a family of crates to help you process SPIR-V binary and assembly for Vulkan.
 
-## Why SPIR-Q?
+| Crate | Purpose |
+|-|-|
+|[spirq](spirq/README.md) [![Crate](https://img.shields.io/crates/v/spirq)](https://crates.io/crates/spirq)| Shader resource reflection, including descriptor bindings, pipeline inputs and outputs, specialization constants. |
+|[spirq-core](spirq-core/README.md) [![Crate](https://img.shields.io/crates/v/spirq-core)](https://crates.io/crates/spirq-core)| Common structures and routines for SPIR-V IR analysis. |
+|[spirq-spvasm](spirq-spvasm/README.md) [![Crate](https://img.shields.io/crates/v/spirq-spvasm)](https://crates.io/crates/spirq-spvasm)| SPIR-V assembler and disassembler. |
 
-Back in days of OpenGL, we have `glGetActiveUniformsiv` and other APIs to get pipeline metadata, so that we can determine the sizes, names, array strides and other information dynamically at runtime. However, the next-gen API, Vulkan, was deisgned not to support shader reflection so that the driver can be kept as thin as possible. SPIR-Q is an attempt to fill this gap.
+Commandline (CLI) tools are also provided for general use.
 
-SPIR-Q can be very useful for scenarios where we want some dynamic in pipeline construction, so that we don't have to refill those redundantly long `VkXxxCreateInfo`s all the time. It can also be used to automate filler code generation at compile time.
+| Crate | Purpose |
+|-|-|
+|[shader-reflect](shader-reflect/README.md) [![Crate](https://img.shields.io/crates/v/shader-reflect)](https://crates.io/crates/shader-reflect)| Shader resource declaration reflector. |
+|[spirq-dis](spirq-dis/README.md) [![Crate](https://img.shields.io/crates/v/spirq-dis)](https://crates.io/crates/spirq-dis)| SPIR-V disassembler frontend. Drop-in replacement of `spirv-dis`. |
+|[spirq-as](spirq-as/README.md) [![Crate](https://img.shields.io/crates/v/spirq-as)](https://crates.io/crates/spirq-as)| SPIR-V assembler frontend. Drop-in replacement of `spirv-as`. |
 
-It should be noted that SPIR-V is targeting at Vulkan so OpenCL binaries are not supported.
+## What's different from other crates?
 
-## Usage
+A lot of my works stand in an overlapping field of compilers and graphics systems, so I often have to work with weird or even corrupted SPIR-V binaries. Obviously, existing tools like `rspirv` and `spirv-reflect` are not designed for this. I then decided to develop my own toolkit, which is now the SPIR-Q family.
 
-```rust
-use spirq::*;
-let entry_points = ReflectConfig::new()
-    // Load SPIR-V data into `[u32]` buffer `spv_words`.
-    .spv(spv_words)
-    // Set this true if you want to reflect all resources no matter it's
-    // used by an entry point or not.
-    .ref_all_rscs(true)
-    // Combine sampled image and separated sampler states if they are bound
-    // to the same binding point.
-    .combine_img_samplers(true)
-    // Generate unique names for types and struct fields to help further
-    // processing of the reflection data. Otherwise, the debug names are
-    // assigned.
-    .gen_unique_names(true)
-    // Specialize the constant at `SpecID=3` with unsigned integer 7. The
-    // constants specialized here won't be listed in the result entry point's
-    // variable list.
-    .specialize(3, ConstantValue::U32(7))
-    // Do the work.
-    .reflect()
-    .unwrap();
-// All extracted entry point data are available in `entry_points` now.
-```
+Compared with SPIR-Q, `rspirv` has more strict requirements on SPIR-V physical layout, which makes it impossible to process bad test cases for other projects. `spirv-reflect` is a broadly used reflection tool and it's a wrapper crate of Khronos' official [SPIRV-Reflect](https://github.com/KhronosGroup/SPIRV-Reflect) tool. `SPIRV-Reflect`, however, was developed in pretty early days and it has some legacy bad designs (like a limit of 16 descriptors). [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Reflect) provides Khronos' official assembler and disassembler, while it's hard to be integrated to other Rust projects.
 
-Please also refer to the attached examples:
-
-* [walk](examples/walk): Enumerate offsets, symbols and types of all descriptor variables.
-* [inspect](examples/inspect): Customize shader reflection with your own inspector function.
-* [gallery](examples/gallery): All data types in GLSL.
-
-Sample output are attached in the same directories as the code files.
+On the other hand, the tools in SPIR-Q are more tolerant of the input quality. They don't check the semantics strictly to the spec. They won't stop processing unless there is a fatal structural problem making the input totally indecipherable. As a result, you might have to be familiar with the SPIR-V specification so that it serves you well, if you are developing other tools based on SPIR-Q.
 
 ## License
 
