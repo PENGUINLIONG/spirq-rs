@@ -22,8 +22,10 @@ const GENERATOR: u32 = 0;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[arg(help = "Input SPIR-V assembly file path.")]
-    in_path: String,
+    #[arg(
+        help = "Input SPIR-V assembly file path. Or read from stdin if input file path is not provided."
+    )]
+    in_path: Option<String>,
 
     #[arg(
         short,
@@ -45,17 +47,28 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let in_path = Path::new(&args.in_path);
+    let mut in_file: Box<dyn Read> = if let Some(in_path) = &args.in_path {
+        let in_path = Path::new(in_path);
+        let in_file = File::open(in_path).unwrap_or_else(|e| {
+            writeln!(stderr(), "error: failed to open input file: {}", e).unwrap();
+            exit(1);
+        });
+        let in_file: Box<dyn Read> = Box::new(in_file);
+        in_file
+    } else {
+        let stdin = std::io::stdin();
+        let in_file = Box::new(stdin);
+        in_file
+    };
     let out_path = if let Some(out_path) = args.out_path {
         Path::new(&out_path).to_owned()
     } else {
-        Path::new(&format!("{}.spv", args.in_path)).to_owned()
+        let in_path = match args.in_path.as_ref() {
+            Some(x) => x,
+            _ => "out",
+        };
+        Path::new(&format!("{}.spv", in_path)).to_owned()
     };
-
-    let mut in_file = File::open(in_path).unwrap_or_else(|e| {
-        writeln!(stderr(), "error: failed to open input file: {}", e).unwrap();
-        exit(1);
-    });
 
     let mut code = String::new();
     in_file.read_to_string(&mut code).unwrap_or_else(|e| {
