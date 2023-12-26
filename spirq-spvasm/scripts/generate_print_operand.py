@@ -114,12 +114,12 @@ def print_operand(kind: str, quantifier: Optional[str], indent: int) -> List[str
 
     if quantifier == "*":
         out += [
-            padding + "while !operands.is_empty() {",
+            padding + "while operands.len() != 0 {",
         ]
         padding += "    "
     elif quantifier == "?":
         out += [
-            padding + "if !operands.is_empty() {",
+            padding + "if operands.len() != 0 {",
         ]
         padding += "    "
     elif quantifier is None:
@@ -242,7 +242,7 @@ for opcode, (opname, op_operand_kinds) in ops.items():
 out += [
     '        _ => bail!("unsupported opcode {}", opcode),',
     "    };",
-    "    while !operands.is_empty() {",
+    "    while operands.len() != 0 {",
     '        out.push(format!("!{}", operands.read_u32()?));',
     "    }",
     "    Ok(out)",

@@ -10,7 +10,7 @@ fn test_asm_dis_roundtrip() {
 ; SPIR-V
 ; Version: 1.5
 ; Generator: 0; 0
-; Bound: 0
+; Bound: 13
 ; Schema: 0
 %void = OpTypeVoid
 %void_0 = OpTypeVoid
@@ -25,7 +25,7 @@ fn test_asm_dis_roundtrip() {
 %void_9 = OpTypeVoid
 %void_10 = OpTypeVoid
 "#
-    .trim();
+    .trim_start();
     let header = SpirvHeader::default();
     let spv = Assembler::new().assemble(code, header).unwrap();
     let spvasm = Disassembler::new()
@@ -42,9 +42,9 @@ fn test_gallery_roundtrip() {
         // (penguinliong) For some reason our reassembled SPIR-V use less IDs
         // than the GLSLang output. Workaround here.
         .skip(5)
-        .map(|x| x.trim())
+        .map(|x| x.trim().to_owned() + "\n")
         .collect::<Vec<_>>()
-        .join("\n");
+        .concat();
     let header = SpirvHeader::new(0x00010500, 0x0008000b);
     let spv = Assembler::new().assemble(&code, header).unwrap();
     let spvasm = Disassembler::new()

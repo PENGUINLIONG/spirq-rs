@@ -1,5 +1,11 @@
 # Change Log
 
+## v1.1.0
+
+- Identify depth images via `SampledImageType`.
+- New instruction iterator interface.
+
+
 ## v1.0.2
 
 - Supported explicitly typed constant. (#118)

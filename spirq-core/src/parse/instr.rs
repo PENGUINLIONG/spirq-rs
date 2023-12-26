@@ -192,13 +192,6 @@ impl InstructionBuilder {
 #[derive(Clone)]
 pub struct Operands<'a>(&'a [u32]);
 impl<'a> Operands<'a> {
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-
     pub fn read_bool(&mut self) -> Result<bool> {
         self.read_u32().map(|x| x != 0)
     }
@@ -239,5 +232,16 @@ impl<'a> Operands<'a> {
         let rv = self.0;
         self.0 = &[];
         Ok(rv)
+    }
+}
+impl<'a> Iterator for Operands<'a> {
+    type Item = u32;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.read_u32().ok()
+    }
+}
+impl<'a> ExactSizeIterator for Operands<'a> {
+    fn len(&self) -> usize {
+        self.0.len()
     }
 }

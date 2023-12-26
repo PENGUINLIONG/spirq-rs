@@ -388,7 +388,7 @@ dependencies = [
 
 [[package]]
 name = "spirq"
-version = "1.0.2"
+version = "1.1.0"
 dependencies = [
  "byteorder",
  "bytes",
@@ -402,7 +402,7 @@ dependencies = [
 
 [[package]]
 name = "spirq-as"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -411,7 +411,7 @@ dependencies = [
 
 [[package]]
 name = "spirq-core"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "anyhow",
  "bytemuck",
@@ -424,7 +424,7 @@ dependencies = [
 
 [[package]]
 name = "spirq-dis"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -433,7 +433,7 @@ dependencies = [
 
 [[package]]
 name = "spirq-spvasm"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "half",

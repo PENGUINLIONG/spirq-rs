@@ -11,6 +11,7 @@ use spirq_core::{
     ty::{self, Type},
 };
 
+/// SPIR-V disassembler.
 pub struct Disassembler {
     print_header: bool,
     name_ids: bool,
@@ -19,6 +20,7 @@ pub struct Disassembler {
     indent: bool,
 }
 impl Disassembler {
+    /// Create a new SPIR-V disassembler.
     pub fn new() -> Self {
         Self {
             print_header: true,
@@ -29,6 +31,15 @@ impl Disassembler {
         }
     }
 
+    /// Print the metadata in SPIR-V header which looks like this:
+    ///
+    /// ```plaintext
+    /// ; SPIR-V
+    /// ; Version: 1.5
+    /// ; Generator: Khronos Glslang Reference Front End; 11
+    /// ; Bound: 406
+    /// ; Schema: 0
+    /// ```
     pub fn print_header(mut self, value: bool) -> Self {
         self.print_header = value;
         return self;
@@ -78,8 +89,8 @@ impl Disassembler {
         operands: &mut Operands<'_>,
         id_names: &HashMap<u32, String>,
     ) -> Result<String> {
-        let operands = generated::print_operand(opcode, operands, id_names)?;
-        let out = operands.join(" ");
+        let out = generated::print_operand(opcode, operands, id_names)?.join(" ");
+        assert_eq!(operands.len(), 0);
         Ok(out)
     }
     fn print_opcode(&self, opcode: u32) -> Result<String> {
@@ -265,6 +276,7 @@ impl Disassembler {
         self.print_lines(&mut spv.instrs()?, itm, id_names)
     }
 
+    /// Disamble SPIR-V binary into SPIR-V assembly code.
     pub fn disassemble(&self, spv: &SpirvBinary) -> Result<String> {
         let mut out = Vec::new();
 
@@ -327,6 +339,7 @@ impl Disassembler {
         }
 
         out.extend(instrs);
+        out.push(String::new()); // Add a trailing zero to align with spirv-dis.
 
         Ok(out.join("\n"))
     }
@@ -346,7 +359,7 @@ mod test {
         let out = Disassembler::new().disassemble(&spv).unwrap();
         assert_eq!(
             out,
-            "; SPIR-V\n; Version: 1.0\n; Generator: 0; 0\n; Bound: 1\n; Schema: 0"
+            "; SPIR-V\n; Version: 1.0\n; Generator: 0; 0\n; Bound: 1\n; Schema: 0\n"
         );
     }
 
@@ -362,7 +375,7 @@ mod test {
         let out = Disassembler::new().disassemble(&spv).unwrap();
         assert_eq!(
             out,
-            "; SPIR-V\n; Version: 1.0\n; Generator: 0; 0\n; Bound: 1\n; Schema: 0\nOpNop"
+            "; SPIR-V\n; Version: 1.0\n; Generator: 0; 0\n; Bound: 1\n; Schema: 0\nOpNop\n"
         );
     }
 }

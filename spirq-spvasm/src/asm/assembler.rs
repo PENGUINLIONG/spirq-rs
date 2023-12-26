@@ -59,6 +59,7 @@ impl<'a> TokenStream<'a> {
     }
 }
 
+/// SPIR-V assembler.
 #[derive(Default)]
 pub struct Assembler {
     name2id: HashMap<String, u32>,
@@ -70,8 +71,13 @@ pub struct Assembler {
     scalar_tys: HashMap<u32, ScalarType>,
 }
 impl Assembler {
+    /// Create a new SPIR-V assembler.
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            next_id: 1,
+            bound: 1,
+            ..Default::default()
+        }
     }
 
     fn parse_opcode(&self, s: &mut TokenStream) -> Result<u32> {
@@ -580,6 +586,7 @@ impl Assembler {
         Ok(buf)
     }
 
+    /// Assemble a SPIR-V binary from the given SPIR-V assembly and header.
     pub fn assemble(&mut self, input: &str, header: SpirvHeader) -> Result<SpirvBinary> {
         let mut instrs = self.parse(input)?;
 
@@ -626,6 +633,8 @@ impl Assembler {
             let instr = self.assemble_instr(&instr)?;
             buf.extend(instr);
         }
+
+        self.bound = self.bound.max(self.next_id);
 
         let mut spv = vec![
             0x07230203,       // Magic number
