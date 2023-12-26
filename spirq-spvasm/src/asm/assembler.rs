@@ -634,6 +634,8 @@ impl Assembler {
             buf.extend(instr);
         }
 
+        self.bound = self.bound.max(self.next_id);
+
         let mut spv = vec![
             0x07230203,       // Magic number
             header.version,   // Version

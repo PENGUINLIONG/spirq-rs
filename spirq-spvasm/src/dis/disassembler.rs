@@ -359,7 +359,7 @@ mod test {
         let out = Disassembler::new().disassemble(&spv).unwrap();
         assert_eq!(
             out,
-            "; SPIR-V\n; Version: 1.0\n; Generator: 0; 0\n; Bound: 1\n; Schema: 0"
+            "; SPIR-V\n; Version: 1.0\n; Generator: 0; 0\n; Bound: 1\n; Schema: 0\n"
         );
     }
 
@@ -375,7 +375,7 @@ mod test {
         let out = Disassembler::new().disassemble(&spv).unwrap();
         assert_eq!(
             out,
-            "; SPIR-V\n; Version: 1.0\n; Generator: 0; 0\n; Bound: 1\n; Schema: 0\nOpNop"
+            "; SPIR-V\n; Version: 1.0\n; Generator: 0; 0\n; Bound: 1\n; Schema: 0\nOpNop\n"
         );
     }
 }

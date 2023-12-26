@@ -14,8 +14,8 @@ fn test_disassembler() {
         .unwrap();
     let expect = include_str!("../../../assets/gallery.frag.spvasm")
         .lines()
-        .map(|x| x.trim())
+        .map(|x| x.trim().to_owned() + "\n")
         .collect::<Vec<_>>()
-        .join("\n");
+        .concat();
     assert_eq!(expect, spvasm);
 }
