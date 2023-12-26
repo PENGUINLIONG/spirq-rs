@@ -1,5 +1,10 @@
 # Change Log
 
+## v1.1.1
+
+- Better readme.
+- Support reading from stdin in `spirq-as` and `spirq-dis`.
+
 ## v1.1.0
 
 - Identify depth images via `SampledImageType`.

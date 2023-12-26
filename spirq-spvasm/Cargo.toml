@@ -1,6 +1,6 @@
 [package]
 name = "spirq-spvasm"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["PENGUINLIONG <admin@penguinliong.moe>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
@@ -20,8 +20,8 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 anyhow = "1.0"
 num-traits = "0.2"
-spirq-core = { version = "1.0.1", path = "../spirq-core" }
-spirq = { version = "1.1.0", path = "../spirq"}
+spirq-core = { version = "1.0.2", path = "../spirq-core" }
+spirq = { version = "1.1.1", path = "../spirq"}
 half = { version =  "2.3", features = ["num-traits"] }
 
 [dev-dependencies]
