@@ -3,8 +3,15 @@ use num_traits::FromPrimitive;
 use spirq_core::spirv::Op;
 
 fn unknown_decorate_parameter_index(decoration: u32, i: usize) -> Result<&'static str> {
-    let opname = Op::from_u32(decoration).map(|op| format!("{:?}", op)).unwrap_or("<unknown>".to_owned());
-    bail!("Unknown op {} ({}) parameter index: {}", opname, decoration, i)
+    let opname = Op::from_u32(decoration)
+        .map(|op| format!("{:?}", op))
+        .unwrap_or("<unknown>".to_owned());
+    bail!(
+        "Unknown op {} ({}) parameter index: {}",
+        opname,
+        decoration,
+        i
+    )
 }
 
 pub fn decorate_parameter_enum_type(decoration: u32, i: usize) -> Result<&'static str> {
@@ -61,7 +68,11 @@ pub fn decorate_parameter_enum_type(decoration: u32, i: usize) -> Result<&'stati
             1 => "StoreCacheControl",
             _ => return unknown_decorate_parameter_index(decoration, i),
         },
-        _ => bail!("{}-th parameter of decoration {} is not a enum", i, decoration),
+        _ => bail!(
+            "{}-th parameter of decoration {} is not a enum",
+            i,
+            decoration
+        ),
     };
     Ok(out)
 }
