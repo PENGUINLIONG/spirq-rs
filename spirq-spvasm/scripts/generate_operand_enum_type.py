@@ -31,10 +31,12 @@ out = []
 
 out += [
     "use anyhow::{bail, Result};",
+    "use num_traits::FromPrimitive;",
+    "use spirq_core::spirv::Op;",
     "",
-    "",
-    "fn unknown_operand_index(i: usize) -> Result<&'static str> {",
-    '    bail!("Unknown operand index: {}", i)',
+    "fn unknown_operand_index(opcode: u32, i: usize) -> Result<&'static str> {",
+    '    let opname = Op::from_u32(opcode).map(|op| format!("{:?}", op)).unwrap_or("<unknown>".to_owned());',
+    '    bail!("Unknown op {} ({}) operand index: {}", opname, opcode, i)',
     "}",
     "",
     "pub fn operand_enum_type(opcode: u32, i: usize) -> Result<&'static str> {",
@@ -53,8 +55,8 @@ for opcode, op_operand_kinds in operand_kinds.items():
             f'            {i} => "{kind}",',
         ]
     out += [
-        "            _ => return unknown_operand_index(i),",
-        "        }",
+        "            _ => return unknown_operand_index(opcode, i),",
+        "        },",
     ]
 
 out += [
