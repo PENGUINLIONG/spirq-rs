@@ -1,0 +1,37 @@
+fn integer_type(width: Literal, signed: Literal) -> IdRef<Type> {
+    intrinsic();
+}
+
+extern i32 = integer_type(width=32, signed=true);
+extern u32 = integer_type(width=32, signed=false);
+extern f32 = float_type(width=32);
+
+
+const global_idx: ivec3;
+
+#[std140]
+struct Resources {
+    x: vec3,
+    v: vec3,
+};
+
+#[binding = 1]
+uniform u : struct {
+    x: i32,
+    y: i32,
+};
+
+extern fn get_global_index() -> uvec3;
+extern fn get_global_id() -> u32;
+extern fn get_local_index() -> uvec3;
+extern fn get_local_id() -> u32;
+
+extern fn load(self: &mut Buffer<>, index: u32) -> i32 {
+    intrinsic
+}
+
+#[kernel]
+fn main() {
+    let global_idx: uvec3 = get_global_index();
+    buffer[global_idx.x] = 1;
+}

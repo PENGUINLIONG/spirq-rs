@@ -1,0 +1,24 @@
+[package]
+name = "spirq-run"
+version = "0.1.0"
+authors = ["PENGUINLIONG <admin@penguinliong.moe>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "SPIR-V compute shader runner"
+repository = "https://github.com/PENGUINLIONG/spirq-rs"
+homepage = "https://github.com/PENGUINLIONG/spirq-rs"
+documentation = "https://docs.rs/spirq-run"
+categories = ["graphics"]
+readme = "README.md"
+keywords = ["spirv"]
+
+[badges]
+maintenance = { status = "actively-developed" }
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+spirq = { version = "1.1.1", path = "../spirq" }
+clap = { version = "4.0.6", features = ["derive"] }
+screen-13 = "0.9"

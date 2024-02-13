@@ -6,4 +6,5 @@ members = [
     "spirq-dis",
     "spirq-as",
     "shader-reflect",
+    "spirq-run",
 ]
