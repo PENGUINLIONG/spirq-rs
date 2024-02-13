@@ -722,3 +722,40 @@ fn test_resource_in_chained_call() {
     // Ensure the unreferenced one is not in the map.
     assert_eq!(desc_binds.get(&DescriptorBinding::new(1, 3)), None);
 }
+
+#[test]
+fn test_issue_124() {
+    inline_spirv!(r#"
+    OpCapability Shader
+    OpExtension "SPV_GOOGLE_hlsl_functionality1"
+    OpMemoryModel Logical GLSL450
+    OpEntryPoint Vertex %vert "vert" %in_var_POSITION %gl_Position
+    OpDecorateString %in_var_POSITION UserSemantic "POSITION"
+    OpDecorate %gl_Position BuiltIn Position
+    OpDecorateString %gl_Position UserSemantic "SV_POSITION"
+    OpDecorate %in_var_POSITION Location 0
+%float = OpTypeFloat 32
+%v4float = OpTypeVector %float 4
+%_ptr_Input_v4float = OpTypePointer Input %v4float
+%_ptr_Output_v4float = OpTypePointer Output %v4float
+%void = OpTypeVoid
+%10 = OpTypeFunction %void
+%in_var_POSITION = OpVariable %_ptr_Input_v4float Input
+%gl_Position = OpVariable %_ptr_Output_v4float Output
+%vert = OpFunction %void None %10
+%11 = OpLabel
+%12 = OpLoad %v4float %in_var_POSITION
+    OpStore %gl_Position %12
+    OpReturn
+    OpFunctionEnd
+"#, spvasm);
+    let entry = ReflectConfig::new()
+        .spv(SPV)
+        .ref_all_rscs(true)
+        .reflect()
+        .unwrap()
+        .pop()
+        .unwrap();
+    
+
+}

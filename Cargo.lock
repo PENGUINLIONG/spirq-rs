@@ -168,13 +168,12 @@ dependencies = [
 
 [[package]]
 name = "inline-spirv"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9053387c6399d5186b89157b38dc4a923e6759440769bef1b03881ada343f24a"
+version = "0.2.0"
 dependencies = [
  "quote",
  "shaderc",
- "syn 1.0.107",
+ "spirq-spvasm 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn 2.0.27",
 ]
 
 [[package]]
@@ -363,7 +362,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shaderc",
- "spirq",
+ "spirq 1.1.1",
 ]
 
 [[package]]
@@ -397,7 +396,20 @@ dependencies = [
  "num-derive",
  "num-traits",
  "ordered-float",
- "spirq-core",
+ "spirq-core 1.0.2",
+]
+
+[[package]]
+name = "spirq"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d3d533a07dc68fbbe7bb156011d2ae627481d43c915b41dd999b257cb100ca7"
+dependencies = [
+ "fnv",
+ "num-derive",
+ "num-traits",
+ "ordered-float",
+ "spirq-core 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -406,7 +418,7 @@ version = "0.1.3"
 dependencies = [
  "anyhow",
  "clap",
- "spirq-spvasm",
+ "spirq-spvasm 0.1.3",
 ]
 
 [[package]]
@@ -423,12 +435,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "spirq-core"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "647d3ae16263e7c6ebef89bb3e1fd6433003b1a28a37f47e8f1b7cf24ee16faf"
+dependencies = [
+ "anyhow",
+ "bytemuck",
+ "fnv",
+ "half",
+ "num-traits",
+ "ordered-float",
+ "spirv",
+]
+
+[[package]]
 name = "spirq-dis"
 version = "0.1.3"
 dependencies = [
  "anyhow",
  "clap",
- "spirq-spvasm",
+ "spirq-spvasm 0.1.3",
 ]
 
 [[package]]
@@ -439,8 +466,21 @@ dependencies = [
  "half",
  "num-traits",
  "pretty_assertions",
- "spirq",
- "spirq-core",
+ "spirq 1.1.1",
+ "spirq-core 1.0.2",
+]
+
+[[package]]
+name = "spirq-spvasm"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "649660d5b8b7dc158eb4597c79ea5f85cd0bd3014f1d961d2dafccdec59b0561"
+dependencies = [
+ "anyhow",
+ "half",
+ "num-traits",
+ "spirq 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spirq-core 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
