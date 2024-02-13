@@ -484,17 +484,96 @@ impl Assembler {
             .build();
         Ok(instr.into_words())
     }
+    fn assemble_op_decorate(&mut self, instr: &Instruction) -> Result<Vec<u32>> {
+        if instr.operands.len() < 2 {
+            bail!("OpDecorate expected at least 2 operands");
+        }
+        let target_id = match &instr.operands[0] {
+            Operand::IdRef(IdRef::Id(id)) => *id,
+            _ => bail!("OpDecorate expected target id"),
+        };
+        let decoration = match &instr.operands[1] {
+            Operand::Ident(ident) => generated::enum_from_str("Decoration", &ident)?,
+            Operand::Literal(Lit::Int(i)) => *i as u32,
+            _ => bail!("OpDecorate expected decoration"),
+        };
+        let mut parameters = Vec::new();
+        for (i, parameter) in instr.operands[2..].iter().enumerate() {
+            let parameter = match parameter {
+                Operand::IdRef(IdRef::Id(id)) => *id,
+                Operand::Literal(Lit::Int(i)) => *i as u32,
+                Operand::Ident(ident) => {
+                    let ety = generated::decorate_parameter_enum_type(decoration, i)?;
+                    let e = generated::enum_from_str(ety, &ident)?;
+                    e
+                }
+                _ => bail!("OpDecorate expected parameter"),
+            };
+            parameters.push(parameter);
+        }
+
+        let instr = InstructionBuilder::new(Op::Decorate)
+            .push(target_id)
+            .push(decoration)
+            .push_list(&parameters[..])
+            .build();
+        Ok(instr.into_words())
+    }
+    fn assemble_op_member_decorate(&mut self, instr: &Instruction) -> Result<Vec<u32>> {
+        if instr.operands.len() < 3 {
+            bail!("OpMemberDecorate expected at least 3 operands");
+        }
+        let target_id = match &instr.operands[0] {
+            Operand::IdRef(IdRef::Id(id)) => *id,
+            _ => bail!("OpMemberDecorate expected target id"),
+        };
+        let member = match &instr.operands[1] {
+            Operand::Literal(Lit::Int(i)) => *i as u32,
+            _ => bail!("OpMemberDecorate expected member"),
+        };
+        let decoration = match &instr.operands[2] {
+            Operand::Ident(ident) => generated::enum_from_str("Decoration", &ident)?,
+            Operand::Literal(Lit::Int(i)) => *i as u32,
+            _ => bail!("OpMemberDecorate expected decoration"),
+        };
+        let mut parameters = Vec::new();
+        for (i, parameter) in instr.operands[3..].iter().enumerate() {
+            let parameter = match parameter {
+                Operand::IdRef(IdRef::Id(id)) => *id,
+                Operand::Literal(Lit::Int(i)) => *i as u32,
+                Operand::Ident(ident) => {
+                    let ety = generated::decorate_parameter_enum_type(decoration, i)?;
+                    let e = generated::enum_from_str(ety, &ident)?;
+                    e
+                }
+                _ => bail!("OpMemberDecorate expected parameter"),
+            };
+            parameters.push(parameter);
+        }
+
+        let instr = InstructionBuilder::new(Op::MemberDecorate)
+            .push(target_id)
+            .push(member)
+            .push(decoration)
+            .push_list(&parameters[..])
+            .build();
+        Ok(instr.into_words())
+    }
 
     // Call this after you sanitized named refs to ID refs.
     fn assemble_special_instr(&mut self, instr: &Instruction) -> Result<Option<Vec<u32>>> {
         const OP_TYPE_INT: u32 = Op::TypeInt as u32;
         const OP_TYPE_FLOAT: u32 = Op::TypeFloat as u32;
         const OP_CONSTANT: u32 = Op::Constant as u32;
+        const OP_DECORATE: u32 = Op::Decorate as u32;
+        const OP_MEMBER_DECORATE: u32 = Op::MemberDecorate as u32;
 
         let out = match instr.opcode {
             OP_TYPE_INT => Some(self.assemble_op_type_int(instr)?),
             OP_TYPE_FLOAT => Some(self.assemble_op_type_float(instr)?),
             OP_CONSTANT => Some(self.assemble_op_constant(instr)?),
+            OP_DECORATE => Some(self.assemble_op_decorate(instr)?),
+            OP_MEMBER_DECORATE => Some(self.assemble_op_member_decorate(instr)?),
             _ => None,
         };
         Ok(out)

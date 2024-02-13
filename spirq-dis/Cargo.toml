@@ -1,6 +1,6 @@
 [package]
 name = "spirq-dis"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["PENGUINLIONG <admin@penguinliong.moe>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
@@ -19,5 +19,5 @@ maintenance = { status = "actively-developed" }
 
 [dependencies]
 anyhow = "1.0"
-spirq-spvasm = { version = "0.1.2", path = "../spirq-spvasm" }
+spirq-spvasm = { version = "0.1.3", path = "../spirq-spvasm" }
 clap = { version = "4.0.6", features = ["derive"] }
