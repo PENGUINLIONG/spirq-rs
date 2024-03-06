@@ -3,7 +3,8 @@ foreach ($example in Get-ChildItem -Path "spirq/examples") {
 }
 
 foreach ($shader in Get-ChildItem -Path "assets") {
-    if ($shader.Name -notlike "*.json") {
+    # ignore json and direcotries.
+    if ($shader.Name -notlike "*.json" -and $shader.Name -notlike "*.spvasm" -and $shader.PSIsContainer -eq $false) {
         & cargo run -p shader-reflect "$shader" --reference-all-resources > "assets/$($shader.Name).json" 
     }
 }
