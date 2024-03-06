@@ -217,15 +217,7 @@ impl fmt::Display for ImageType {
             Some(false) => "Color",
             None => "Depth?",
         };
-        let dim = match self.dim {
-            Dim::Dim1D => "1D",
-            Dim::Dim2D => "2D",
-            Dim::Dim3D => "3D",
-            Dim::DimBuffer => "Buffer",
-            Dim::DimCube => "Cube",
-            Dim::DimRect => "Rect",
-            Dim::DimSubpassData => "SubpassData",
-        };
+        let dim = format!("{:?}", self.dim)[3..].to_owned();
         let is_array = match self.is_array {
             true => "Array",
             false => "",
@@ -295,15 +287,7 @@ impl SpirvType for SampledImageType {
 impl fmt::Display for SampledImageType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let scalar_ty = &self.scalar_ty;
-        let dim = match self.dim {
-            Dim::Dim1D => "1D",
-            Dim::Dim2D => "2D",
-            Dim::Dim3D => "3D",
-            Dim::DimBuffer => "Buffer",
-            Dim::DimCube => "Cube",
-            Dim::DimRect => "Rect",
-            Dim::DimSubpassData => "SubpassData",
-        };
+        let dim = format!("{:?}", self.dim)[3..].to_owned();
         let depth = match self.is_depth {
             Some(true) => "Depth",
             Some(false) => "Color",
@@ -346,15 +330,7 @@ impl SpirvType for StorageImageType {
 }
 impl fmt::Display for StorageImageType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let dim = match self.dim {
-            Dim::Dim1D => "1D",
-            Dim::Dim2D => "2D",
-            Dim::Dim3D => "3D",
-            Dim::DimBuffer => "Buffer",
-            Dim::DimCube => "Cube",
-            Dim::DimRect => "Rect",
-            Dim::DimSubpassData => "SubpassData",
-        };
+        let dim = format!("{:?}", self.dim)[3..].to_owned();
         let is_array = match self.is_array {
             true => "Array",
             false => "",
