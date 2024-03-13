@@ -1,6 +1,5 @@
 //!  SPIR-V instruction parser.
 use anyhow::bail;
-use num_traits::FromPrimitive;
 use spirv::Op;
 use std::{borrow::Borrow, fmt, ops::Deref};
 
@@ -223,10 +222,6 @@ impl<'a> Operands<'a> {
         let bytes: &[u8] = bytemuck::cast_slice(slice);
         let cstr = CStr::from_bytes_until_nul(bytes)?;
         Ok(cstr.to_str()?)
-    }
-    pub fn read_enum<E: FromPrimitive>(&mut self) -> Result<E> {
-        self.read_u32()
-            .and_then(|x| FromPrimitive::from_u32(x).ok_or(anyhow!("invalid enum value")))
     }
     pub fn read_list(&mut self) -> Result<&'a [u32]> {
         let rv = self.0;

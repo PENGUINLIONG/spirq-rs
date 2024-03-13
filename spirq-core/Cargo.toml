@@ -19,7 +19,7 @@ maintenance = { status = "actively-developed" }
 
 [dependencies]
 fnv = "1.0.7"
-spirv = ">=0.2"
+spirv = ">=0.3"
 anyhow = "1.0"
 ordered-float = "3.4"
 num-traits = "0.2"

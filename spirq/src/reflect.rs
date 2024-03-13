@@ -3,7 +3,6 @@ use std::collections::BTreeMap;
 use std::convert::TryFrom;
 
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
-use num_traits::FromPrimitive;
 use spirq_core::parse::Instrs;
 
 use crate::{
@@ -929,7 +928,8 @@ impl<'a> ReflectIntermediate<'a> {
                     };
 
                     let func_id = operands.read_u32()?;
-                    let exec_mode = operands.read_enum::<spirv::ExecutionMode>()?;
+                    let exec_mode = spirv::ExecutionMode::from_u32(operands.read_u32()?)
+                        .ok_or_else(|| anyhow!("invalid execution mode"))?;
                     let operands = operands
                         .read_list()?
                         .into_iter()

@@ -1,3 +1,4 @@
+use spirq_core::error::anyhow;
 use std::convert::TryFrom;
 
 use crate::{parse::Instr, spirv::*};
@@ -13,7 +14,18 @@ type MemberIdx = u32;
 
 #[macro_export]
 macro_rules! define_ops {
-    ($($opcode:ident { $($field:ident: $type:ty = $read_fn:ident(),)+ })+) => {
+    (read_enum: $type:ty: $operands:expr) => {
+        {
+            <$type>::from_u32($operands.read_u32()?)
+                .ok_or_else(|| anyhow!("invalid enum value"))?
+        }
+    };
+    ($read_fn:ident: $type:ty: $operands:expr) => {
+        {
+            $operands.$read_fn()?
+        }
+    };
+    ($($opcode:ident { $($field:ident: $type:ty = $read_fn:tt(),)+ })+) => {
         $(
             pub struct $opcode<'a> {
                 $( pub $field: $type, )*
@@ -24,7 +36,7 @@ macro_rules! define_ops {
                 fn try_from(instr: &'a Instr) -> ::spirq_core::error::Result<Self> {
                     let mut operands = instr.operands();
                     let op = $opcode {
-                        $( $field: operands.$read_fn()?, )+
+                        $( $field: define_ops!($read_fn: $type: operands), )+
                         _ph: ::std::marker::PhantomData,
                     };
                     Ok(op)

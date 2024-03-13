@@ -1,4 +1,5 @@
 use pretty_assertions::assert_eq;
+use spirq::spirv;
 use spirq_core::parse::bin::SpirvHeader;
 
 use crate::asm::Assembler;
@@ -8,7 +9,7 @@ use crate::dis::Disassembler;
 fn test_asm_dis_roundtrip() {
     let code = r#"
 ; SPIR-V
-; Version: 1.5
+; Version: SPIRV_VERSION
 ; Generator: 0; 0
 ; Bound: 13
 ; Schema: 0
@@ -26,8 +27,12 @@ fn test_asm_dis_roundtrip() {
 %void_10 = OpTypeVoid
 "#
     .trim_start();
+    let code = code.replace(
+        "SPIRV_VERSION",
+        &format!("{}.{}", spirv::MAJOR_VERSION, spirv::MINOR_VERSION),
+    );
     let header = SpirvHeader::default();
-    let spv = Assembler::new().assemble(code, header).unwrap();
+    let spv = Assembler::new().assemble(&code, header).unwrap();
     let spvasm = Disassembler::new()
         .name_type_ids(true)
         .disassemble(&spv.into())
