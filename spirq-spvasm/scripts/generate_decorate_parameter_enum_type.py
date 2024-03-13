@@ -37,7 +37,6 @@ out = []
 
 out += [
     "use anyhow::{bail, Result};",
-    "use num_traits::FromPrimitive;",
     "use spirq_core::spirv::Op;",
     "",
     "fn unknown_decorate_parameter_index(decoration: u32, i: usize) -> Result<&'static str> {",

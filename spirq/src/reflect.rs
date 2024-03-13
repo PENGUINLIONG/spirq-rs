@@ -3,7 +3,6 @@ use std::collections::BTreeMap;
 use std::convert::TryFrom;
 
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
-use num_traits::FromPrimitive;
 use spirq_core::parse::Instrs;
 
 use crate::{

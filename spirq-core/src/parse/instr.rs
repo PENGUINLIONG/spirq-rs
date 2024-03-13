@@ -1,6 +1,5 @@
 //!  SPIR-V instruction parser.
 use anyhow::bail;
-use num_traits::FromPrimitive;
 use spirv::Op;
 use std::{borrow::Borrow, fmt, ops::Deref};
 
