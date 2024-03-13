@@ -224,10 +224,6 @@ impl<'a> Operands<'a> {
         let cstr = CStr::from_bytes_until_nul(bytes)?;
         Ok(cstr.to_str()?)
     }
-    pub fn read_enum<E: FromPrimitive>(&mut self) -> Result<E> {
-        self.read_u32()
-            .and_then(|x| FromPrimitive::from_u32(x).ok_or(anyhow!("invalid enum value")))
-    }
     pub fn read_list(&mut self) -> Result<&'a [u32]> {
         let rv = self.0;
         self.0 = &[];

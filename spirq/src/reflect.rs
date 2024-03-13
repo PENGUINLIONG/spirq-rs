@@ -929,7 +929,8 @@ impl<'a> ReflectIntermediate<'a> {
                     };
 
                     let func_id = operands.read_u32()?;
-                    let exec_mode = operands.read_enum::<spirv::ExecutionMode>()?;
+                    let exec_mode = spirv::ExecutionMode::from_u32(operands.read_u32()?)
+                        .ok_or_else(|| anyhow!("invalid execution mode"))?;
                     let operands = operands
                         .read_list()?
                         .into_iter()
