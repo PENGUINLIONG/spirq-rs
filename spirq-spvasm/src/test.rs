@@ -27,7 +27,10 @@ fn test_asm_dis_roundtrip() {
 %void_10 = OpTypeVoid
 "#
     .trim_start();
-    let code = code.replace("SPIRV_VERSION", &format!("{}.{}", spirv::MAJOR_VERSION, spirv::MINOR_VERSION));
+    let code = code.replace(
+        "SPIRV_VERSION",
+        &format!("{}.{}", spirv::MAJOR_VERSION, spirv::MINOR_VERSION),
+    );
     let header = SpirvHeader::default();
     let spv = Assembler::new().assemble(&code, header).unwrap();
     let spvasm = Disassembler::new()
