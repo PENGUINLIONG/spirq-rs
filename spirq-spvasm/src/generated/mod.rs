@@ -10,7 +10,7 @@ mod print_operand;
 
 pub use decorate_parameter_enum_type::decorate_parameter_enum_type;
 pub use enum_from_str::enum_from_str;
-pub use enum_to_str::enum_to_str;
+//pub use enum_to_str::enum_to_str;
 pub use op_from_str::op_from_str;
 pub use op_has_result_id::op_has_result_id;
 pub use op_has_result_type_id::op_has_result_type_id;

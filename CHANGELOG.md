@@ -1,5 +1,11 @@
 # Change Log
 
+## v1.1.2
+
+- Fixed compatibility with `spirv` v0.3. (#130)
+- Properly support mesh shader reflection. (#127)
+- From this version SPIR-Q is renamed to spirq (all lower case).
+
 ## v1.1.1
 
 - Better readme.
