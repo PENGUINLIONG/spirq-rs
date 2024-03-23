@@ -1,5 +1,10 @@
 # Change Log
 
+## v1.2.0
+
+- The prefix `spirq-` of several sub-crates has been replaced with `spq-`.
+
+
 ## v1.1.2
 
 - Fixed compatibility with `spirv` v0.3. (#130)

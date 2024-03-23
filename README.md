@@ -1,9 +1,8 @@
-# spirq
+# spq
 
-[![Crate](https://img.shields.io/crates/v/spirq)](https://crates.io/crates/spirq)
-[![Documentation](https://docs.rs/spirq/badge.svg)](https://docs.rs/spirq)
+`spq` is a family of crates to help you process SPIR-V binary and assembly for Vulkan.
 
-`spirq` is a family of crates to help you process SPIR-V binary and assembly for Vulkan.
+> Note: The prefix `spirq-` of several sub-crates has been replaced with `spq-` in the v1.2.0 release.
 
 | Crate | Purpose |
 |-|-|
