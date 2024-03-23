@@ -5,7 +5,7 @@ use crate::{dis::utils::to_hexadecimal_float, generated};
 use anyhow::{bail, Result};
 use half::f16;
 use spirq::{reflect::ReflectIntermediate, ReflectConfig};
-use spirq_core::{
+use spq_core::{
     parse::{Instr, Instrs, Operands, SpirvBinary},
     spirv::Op,
     ty::{self, Type},

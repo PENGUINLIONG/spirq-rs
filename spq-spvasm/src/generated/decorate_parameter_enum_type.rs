@@ -1,5 +1,5 @@
 use anyhow::{bail, Result};
-use spirq_core::spirv::Op;
+use spq_core::spirv::Op;
 
 fn unknown_decorate_parameter_index(decoration: u32, i: usize) -> Result<&'static str> {
     let opname = Op::from_u32(decoration)

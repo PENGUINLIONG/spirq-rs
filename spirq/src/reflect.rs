@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use std::convert::TryFrom;
 
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
-use spirq_core::parse::Instrs;
+use spq_core::parse::Instrs;
 
 use crate::{
     annotation::{DecorationRegistry, NameRegistry},

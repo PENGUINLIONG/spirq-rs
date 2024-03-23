@@ -1,15 +1,15 @@
-# SPIR-Q Disassembler
+# spq Disassembler
 
-[![Crate](https://img.shields.io/crates/v/spirq-dis)](https://crates.io/crates/spirq-dis)
+[![Crate](https://img.shields.io/crates/v/spq-dis)](https://crates.io/crates/spq-dis)
 
-SPIR-Q Disassembler (`spirq-dis`) is a SPIR-V disassembler written in pure Rust. It is a drop-in replacement of the official disassembler `spirv-dis` with the same commandline arguments.
+spq Disassembler (`spq-dis`) is a SPIR-V disassembler written in pure Rust. It is a drop-in replacement of the official disassembler `spirv-dis` with the same commandline arguments.
 
 ## Install
 
-You can install `spirq-dis` from cargo with:
+You can install `spq-dis` from cargo with:
 
 ```bash
-cargo install spirq-dis
+cargo install spq-dis
 ```
 
 ## Usage
@@ -17,12 +17,12 @@ cargo install spirq-dis
 To disassemble SPIR-V binary, you can either pass the SPIR-V file path by argument or pipe the content in.
 
 ```bash
-spirq-dis [INPUT].spv -o [OUTPUT].spvasm
+spq-dis [INPUT].spv -o [OUTPUT].spvasm
 # - or -
-cat [INPUT].spv | spirq-dis -o [OUTPUT].spvasm
+cat [INPUT].spv | spq-dis -o [OUTPUT].spvasm
 ```
 
-`spirq-dis` is a CLI tool for end users. You can also integrate the disassembler to your application from the library crate [`spirq-spvasm`](../spirq-spvasm/README.md).
+`spq-dis` is a CLI tool for end users. You can also integrate the disassembler to your application from the library crate [`spq-spvasm`](../spq-spvasm/README.md).
 
 ## License
 

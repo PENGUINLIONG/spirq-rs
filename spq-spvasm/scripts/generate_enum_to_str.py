@@ -66,5 +66,5 @@ out += [
     "",
 ]
 
-with open("spirq-spvasm/src/generated/enum_to_str.rs", "w") as f:
+with open("spq-spvasm/src/generated/enum_to_str.rs", "w") as f:
     f.write("\n".join(out))

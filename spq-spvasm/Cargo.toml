@@ -1,13 +1,13 @@
 [package]
-name = "spirq-spvasm"
+name = "spq-spvasm"
 version = "0.1.4"
 authors = ["PENGUINLIONG <admin@penguinliong.moe>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
 description = "Tools for SPIR-V Assembly interaction."
-repository = "https://github.com/PENGUINLIONG/spirq-rs"
-homepage = "https://github.com/PENGUINLIONG/spirq-rs"
-documentation = "https://docs.rs/spirq-spvasm"
+repository = "https://github.com/PENGUINLIONG/spq-rs"
+homepage = "https://github.com/PENGUINLIONG/spq-rs"
+documentation = "https://docs.rs/spq-spvasm"
 categories = ["graphics"]
 readme = "README.md"
 keywords = ["spirv", "spvasm"]
@@ -20,7 +20,7 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 anyhow = "1.0"
 num-traits = "0.2"
-spirq-core = { version = "1.0.4", path = "../spirq-core" }
+spq-core = { version = "1.0.4", path = "../spq-core" }
 spirq = { version = "1.1.1", path = "../spirq"}
 half = { version =  "2.3", features = ["num-traits"] }
 

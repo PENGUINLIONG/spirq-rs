@@ -31,5 +31,5 @@ out += [
     "",
 ]
 
-with open("spirq-spvasm/src/generated/op_from_str.rs", "w") as f:
+with open("spq-spvasm/src/generated/op_from_str.rs", "w") as f:
     f.write("\n".join(out))

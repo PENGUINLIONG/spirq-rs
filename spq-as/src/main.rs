@@ -1,5 +1,5 @@
 use clap::Parser;
-use spirq_spvasm::{Assembler, SpirvHeader};
+use spq_spvasm::{Assembler, SpirvHeader};
 use std::{
     borrow::Borrow,
     fs::File,

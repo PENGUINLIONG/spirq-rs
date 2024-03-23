@@ -4,12 +4,12 @@
 
 - Fixed compatibility with `spirv` v0.3. (#130)
 - Properly support mesh shader reflection. (#127)
-- From this version SPIR-Q is renamed to spirq (all lower case).
+- From this version spq is renamed to spirq (all lower case).
 
 ## v1.1.1
 
 - Better readme.
-- Support reading from stdin in `spirq-as` and `spirq-dis`.
+- Support reading from stdin in `spq-as` and `spq-dis`.
 
 ## v1.1.0
 
@@ -28,8 +28,8 @@
 
 ## v1.0.0
 
-- Celebrate SPIR-Q v1.0! 🎉
-- Major refactorization. Separated foundational structures and routines to `spirq-core` which might be a part of other projects in the future.
+- Celebrate spq v1.0! 🎉
+- Major refactorization. Separated foundational structures and routines to `spq-core` which might be a part of other projects in the future.
 
 
 ## v0.6.4
@@ -47,16 +47,16 @@
 ## v0.6.1
 
 - Fixed variable order varies between runs.
-- `spirq-reflect` is renamed to `shader-reflect`.
+- `spq-reflect` is renamed to `shader-reflect`.
 - Supported GLSL/HLSL reflection in `shader-reflect`.
 
 ## v0.6.0
 
-SPIR-Q v0.6 has undergone a massive type system refactorization to get rid of many historical design issues.
+spq v0.6 has undergone a massive type system refactorization to get rid of many historical design issues.
 
 - Fixed crash due to absence of matrix stride. (#84)
 - Major type system refactorization; lots of breaking changes. (#80)
-- For the first time we have a CLI driver `spirq-reflect`!
+- For the first time we have a CLI driver `spq-reflect`!
 
 
 ## v0.5.1
@@ -65,7 +65,7 @@ SPIR-Q v0.6 has undergone a massive type system refactorization to get rid of ma
 
 ## v0.5.0
 
-Finally, SPIR-Q v0.5 has come! The new APIs has breaking changes and is NOT compatible with the usage before. Please refer to the documentation for detail.
+Finally, spq v0.5 has come! The new APIs has breaking changes and is NOT compatible with the usage before. Please refer to the documentation for detail.
 
 - Symbol API is completely removed for simplicity;
 - `DescriptorType` is now a separated enum from `Type` and adheres to `VkDescriptorType`;
@@ -192,7 +192,7 @@ Finally, SPIR-Q v0.5 has come! The new APIs has breaking changes and is NOT comp
 
 ## v0.2.0
 
-This is a breaking change. SPIR-Q is now more handy with better and easier reflection information accessors.
+This is a breaking change. spq is now more handy with better and easier reflection information accessors.
 
 - Fix several bugs;
 - Restructured project files;

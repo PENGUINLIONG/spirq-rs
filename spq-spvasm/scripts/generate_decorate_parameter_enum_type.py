@@ -37,7 +37,7 @@ out = []
 
 out += [
     "use anyhow::{bail, Result};",
-    "use spirq_core::spirv::Op;",
+    "use spq_core::spirv::Op;",
     "",
     "fn unknown_decorate_parameter_index(decoration: u32, i: usize) -> Result<&'static str> {",
     '    let opname = Op::from_u32(decoration).map(|op| format!("{:?}", op)).unwrap_or("<unknown>".to_owned());',
@@ -72,5 +72,5 @@ out += [
     "",
 ]
 
-with open("spirq-spvasm/src/generated/decorate_parameter_enum_type.rs", "w") as f:
+with open("spq-spvasm/src/generated/decorate_parameter_enum_type.rs", "w") as f:
     f.write("\n".join(out))

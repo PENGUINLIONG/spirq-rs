@@ -1,8 +1,8 @@
-//! # SPIR-Q: Light Weight SPIR-V Query Utility for Graphics.
+//! # spq: Light Weight SPIR-V Query Utility for Graphics.
 //!
-//! SPIR-Q is a light weight library for SPIR-V pipeline metadata query, which
+//! spq is a light weight library for SPIR-V pipeline metadata query, which
 //! can be very useful for dynamic graphics/compute pipeline construction,
-//! shader debugging and so on. SPIR-Q is currently compatible with a subset of
+//! shader debugging and so on. spq is currently compatible with a subset of
 //! SPIR-V 1.5, with most of graphics capabilities but no OpenCL kernel
 //! capabilities covered.
 //!
@@ -41,8 +41,8 @@
 //! ## Size calculation
 //!
 //! The struct member offsets and array/matrix strides are specified in SPIR-V
-//! files. With these information SPIR-Q deduce the minimal size required for
-//! to contain an instance of a type. However, SPIR-Q cannot handle dynamically-
+//! files. With these information spq deduce the minimal size required for
+//! to contain an instance of a type. However, spq cannot handle dynamically-
 //! sized arrays, and it will treat such arrays as zero-sized. The user has to
 //! handle such SSBO-like themselves via [`Type`] APIs.
 //!
@@ -68,15 +68,15 @@ pub mod reflect_cfg;
 #[cfg(test)]
 mod tests;
 
-pub use spirq_core::annotation;
-pub use spirq_core::constant;
-pub use spirq_core::error;
-pub use spirq_core::evaluator;
-pub use spirq_core::func;
-pub use spirq_core::parse;
-pub use spirq_core::spirv;
-pub use spirq_core::ty;
-pub use spirq_core::var;
+pub use spq_core::annotation;
+pub use spq_core::constant;
+pub use spq_core::error;
+pub use spq_core::evaluator;
+pub use spq_core::func;
+pub use spq_core::parse;
+pub use spq_core::spirv;
+pub use spq_core::ty;
+pub use spq_core::var;
 
 pub use reflect_cfg::ReflectConfig;
 

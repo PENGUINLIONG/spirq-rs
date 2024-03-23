@@ -1,5 +1,5 @@
 use clap::Parser;
-use spirq_spvasm::{Disassembler, SpirvBinary};
+use spq_spvasm::{Disassembler, SpirvBinary};
 use std::{
     fs::File,
     io::{stderr, Read, Write},

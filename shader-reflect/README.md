@@ -2,7 +2,7 @@
 
 [![Crate](https://img.shields.io/crates/v/shader-reflect)](https://crates.io/crates/shader-reflect)
 
-[`shader-reflect`](https://crates.io/crates/shader-reflect) is a CLI frontend of the shader reflection library [`spirq`](https://github.com/PENGUINLIONG/spirq-rs). It generates reflection JSONs from SPIR-V shader binaries. You can install `shader-reflect` with:
+[`shader-reflect`](https://crates.io/crates/shader-reflect) is a CLI frontend of the shader reflection library [`spirq`](https://github.com/PENGUINLIONG/spq-rs). It generates reflection JSONs from SPIR-V shader binaries. You can install `shader-reflect` with:
 
 ```bash
 cargo install shader-reflect
@@ -72,7 +72,7 @@ A suffix of `.glsl` or `.hlsl` can be appended to explicitly specify the shading
 
 ## Example Output
 
-The [`spirv-spec.frag.spv`](https://github.com/PENGUINLIONG/spirq-rs/tree/master/assets/spirv-spec.frag) binary in the [`spirq`](https://github.com/PENGUINLIONG/spirq-rs) repository gives the following output:
+The [`spirv-spec.frag.spv`](https://github.com/PENGUINLIONG/spq-rs/tree/master/assets/spirv-spec.frag) binary in the [`spirq`](https://github.com/PENGUINLIONG/spq-rs) repository gives the following output:
 
 ```json
 {

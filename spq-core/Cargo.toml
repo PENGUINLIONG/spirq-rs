@@ -1,13 +1,13 @@
 [package]
-name = "spirq-core"
+name = "spq-core"
 version = "1.0.4"
 authors = ["PENGUINLIONG <admin@penguinliong.moe>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
-description = "SPIR-Q core feature implementation, a light weight SPIR-V query utility for graphics."
-repository = "https://github.com/PENGUINLIONG/spirq-rs"
-homepage = "https://github.com/PENGUINLIONG/spirq-rs"
-documentation = "https://docs.rs/spirq-core"
+description = "spq core feature implementation, a light weight SPIR-V query utility for graphics."
+repository = "https://github.com/PENGUINLIONG/spq-rs"
+homepage = "https://github.com/PENGUINLIONG/spq-rs"
+documentation = "https://docs.rs/spq-core"
 categories = ["graphics"]
 readme = "README.md"
 keywords = ["spirv", "vulkan", "opengl", "opencl"]

@@ -1,13 +1,13 @@
 [package]
-name = "spirq-dis"
+name = "spq-dis"
 version = "0.1.4"
 authors = ["PENGUINLIONG <admin@penguinliong.moe>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
 description = "SPIR-V disassembler"
-repository = "https://github.com/PENGUINLIONG/spirq-rs"
-homepage = "https://github.com/PENGUINLIONG/spirq-rs"
-documentation = "https://docs.rs/spirq-dis"
+repository = "https://github.com/PENGUINLIONG/spq-rs"
+homepage = "https://github.com/PENGUINLIONG/spq-rs"
+documentation = "https://docs.rs/spq-dis"
 categories = ["graphics"]
 readme = "README.md"
 keywords = ["spirv"]
@@ -19,5 +19,5 @@ maintenance = { status = "actively-developed" }
 
 [dependencies]
 anyhow = "1.0"
-spirq-spvasm = { version = "0.1.4", path = "../spirq-spvasm" }
+spq-spvasm = { version = "0.1.4", path = "../spq-spvasm" }
 clap = { version = "4.0.6", features = ["derive"] }

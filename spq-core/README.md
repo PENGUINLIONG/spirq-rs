@@ -1,9 +1,9 @@
-# SPIR-Q Core
+# spq Core
 
-[![Crate](https://img.shields.io/crates/v/spirq-core)](https://crates.io/crates/spirq-core)
-[![Documentation](https://docs.rs/spirq-core/badge.svg)](https://docs.rs/spirq-core)
+[![Crate](https://img.shields.io/crates/v/spq-core)](https://crates.io/crates/spq-core)
+[![Documentation](https://docs.rs/spq-core/badge.svg)](https://docs.rs/spq-core)
 
-SPIR-Q Core provides the foundational structures and functions in the SPIR-Q ecosystem:
+spq Core provides the foundational structures and functions in the spq ecosystem:
 
 - Binary instruction parser and builder (without semantical understanding of the operands)
 - SPIR-V types and type registry

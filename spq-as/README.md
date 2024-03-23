@@ -1,15 +1,15 @@
-# SPIR-Q Assembler
+# spq Assembler
 
-[![Crate](https://img.shields.io/crates/v/spirq-as)](https://crates.io/crates/spirq-as)
+[![Crate](https://img.shields.io/crates/v/spq-as)](https://crates.io/crates/spq-as)
 
-SPIR-Q Assembler (`spirq-as`) is a SPIR-V assembler written in pure Rust. It is a drop-in replacement of the official assembler `spirv-as` with the same commandline arguments.
+spq Assembler (`spq-as`) is a SPIR-V assembler written in pure Rust. It is a drop-in replacement of the official assembler `spirv-as` with the same commandline arguments.
 
 ## Install
 
-You can install `spirq-as` from cargo with:
+You can install `spq-as` from cargo with:
 
 ```bash
-cargo install spirq-as
+cargo install spq-as
 ```
 
 ## Usage
@@ -17,12 +17,12 @@ cargo install spirq-as
 To assemble SPIR-V binary from SPIR-V assembly, you can either pass the source file path by argument or pipe the code in.
 
 ```bash
-spirq-as [INPUT].spvasm -o [OUTPUT].spv
+spq-as [INPUT].spvasm -o [OUTPUT].spv
 # - or -
-cat [INPUT].spvasm | spirq-as -o [OUTPUT].spv
+cat [INPUT].spvasm | spq-as -o [OUTPUT].spv
 ```
 
-`spirq-as` is a CLI tool for end users. You can also integrate the assembler to your application from the library crate [`spirq-spvasm`](../spirq-spvasm/README.md).
+`spq-as` is a CLI tool for end users. You can also integrate the assembler to your application from the library crate [`spq-spvasm`](../spq-spvasm/README.md).
 
 ## License
 

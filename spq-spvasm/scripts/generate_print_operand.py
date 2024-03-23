@@ -54,7 +54,7 @@ out = []
 out += [
     "use std::collections::HashMap;",
     "use anyhow::{bail, Result};",
-    "use spirq_core::parse::Operands;",
+    "use spq_core::parse::Operands;",
     "use super::enum_to_str::enum_to_str;",
     "",
     "fn print_id(operands: &mut Operands, id_names: &HashMap<u32, String>) -> Result<String> {",
@@ -250,5 +250,5 @@ out += [
     "",
 ]
 
-with open("spirq-spvasm/src/generated/print_operand.rs", "w") as f:
+with open("spq-spvasm/src/generated/print_operand.rs", "w") as f:
     f.write("\n".join(out))

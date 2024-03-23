@@ -1,4 +1,4 @@
-use spirq_core::error::anyhow;
+use spq_core::error::anyhow;
 use std::convert::TryFrom;
 
 use crate::{parse::Instr, spirv::*};
@@ -32,8 +32,8 @@ macro_rules! define_ops {
                 _ph: ::std::marker::PhantomData<&'a ()>,
             }
             impl<'a> TryFrom<&'a Instr> for $opcode<'a> {
-                type Error = ::spirq_core::error::Error;
-                fn try_from(instr: &'a Instr) -> ::spirq_core::error::Result<Self> {
+                type Error = ::spq_core::error::Error;
+                fn try_from(instr: &'a Instr) -> ::spq_core::error::Result<Self> {
                     let mut operands = instr.operands();
                     let op = $opcode {
                         $( $field: define_ops!($read_fn: $type: operands), )+
