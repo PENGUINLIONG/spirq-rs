@@ -1,5 +1,10 @@
 # Change Log
 
+## v1.2.0
+
+- Separated `spirq-` family of subcrates to [`spq`](https://github.com/PENGUINLIONG/spq-rs)
+
+
 ## v1.1.2
 
 - Fixed compatibility with `spirv` v0.3. (#130)

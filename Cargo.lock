@@ -129,7 +129,7 @@ dependencies = [
  "heck",
  "proc-macro2",
  "quote",
- "syn 2.0.52",
+ "syn",
 ]
 
 [[package]]
@@ -206,13 +206,14 @@ dependencies = [
 
 [[package]]
 name = "inline-spirv"
-version = "0.1.6"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b167f7553467c596aa5a432ea130dce4da07f44f40c60251b2369904663eceb3"
+checksum = "c31c5529150e569a0abf53803f304dc3329570ccb11da01719e3be7d28405ea6"
 dependencies = [
  "quote",
  "shaderc",
- "syn 1.0.109",
+ "spirq-spvasm",
+ "syn",
 ]
 
 [[package]]
@@ -241,7 +242,7 @@ checksum = "ed3955f1a9c7c0c15e092f9c887db08b1fc683305fdf6eb6684f22555355e202"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.52",
+ "syn",
 ]
 
 [[package]]
@@ -259,6 +260,15 @@ name = "ordered-float"
 version = "3.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1e1c390732d15f1d48471625cd92d154e66db2c56645e29a9cd26f4699f72dc"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
+name = "ordered-float"
+version = "4.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a76df7075c7d4d01fdcb46c912dd17fba5b60c78ea480b475f2b6ab6f666584e"
 dependencies = [
  "num-traits",
 ]
@@ -304,7 +314,7 @@ checksum = "7eb0b34b42edc17f6b7cac84a52a1c5f0e1bb2227e997ca9011ea3dd34e8610b"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.52",
+ "syn",
 ]
 
 [[package]]
@@ -327,7 +337,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shaderc",
- "spirq",
+ "spirq 1.1.3",
 ]
 
 [[package]]
@@ -360,7 +370,20 @@ dependencies = [
  "inline-spirv",
  "num-derive",
  "num-traits",
- "ordered-float",
+ "ordered-float 4.2.0",
+ "spq-core",
+]
+
+[[package]]
+name = "spirq"
+version = "1.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "007c5d8eaa031ad723894e38ca47819fbf76889ef5fd047cc86882b565355f52"
+dependencies = [
+ "fnv",
+ "num-derive",
+ "num-traits",
+ "ordered-float 3.9.2",
  "spirq-core",
 ]
 
@@ -375,8 +398,21 @@ dependencies = [
  "fnv",
  "half",
  "num-traits",
- "ordered-float",
+ "ordered-float 3.9.2",
  "spirv",
+]
+
+[[package]]
+name = "spirq-spvasm"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0941c46a5b2c9d26f899f8e63a727c3e4cafb54e14d98166e68ea6b5e8400f53"
+dependencies = [
+ "anyhow",
+ "half",
+ "num-traits",
+ "spirq 1.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spirq-core",
 ]
 
 [[package]]
@@ -389,21 +425,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "spq-core"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54c20ea3869984b0cdd695e7cb69dfc7f8814b99c1611446504e2d2e38d17380"
+dependencies = [
+ "anyhow",
+ "bytemuck",
+ "fnv",
+ "half",
+ "num-traits",
+ "ordered-float 3.9.2",
+ "spirv",
+]
+
+[[package]]
 name = "strsim"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ee073c9e4cd00e28217186dbe12796d692868f432bf2e97ee73bed0c56dfa01"
-
-[[package]]
-name = "syn"
-version = "1.0.109"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72b64191b275b66ffe2469e8af2c1cfe3bafa67b529ead792a6d0160888b4237"
-dependencies = [
- "proc-macro2",
- "quote",
- "unicode-ident",
-]
 
 [[package]]
 name = "syn"
