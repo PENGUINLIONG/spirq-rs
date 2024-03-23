@@ -23,10 +23,7 @@ jobs:
         cache-on-failure: true
         workspaces: |
           shader-reflect
-          spirq-as
-          spirq-core
-          spirq-dis
-          spirq-spvasm
+          spirq
 
     - name: Cargo Format
       id: cargo_format
@@ -60,10 +57,3 @@ jobs:
         cargo run -p shader-reflect assets/spirv-spec.frag.spv -o assets/spirv-spec.frag.spv.json
         diff assets/spirv-spec.frag.json assets/spirv-spec.frag.spv.json
         cargo run -p shader-reflect assets/moon.spv -o assets/moon.spv.json --reference-all-resources
-
-    - name: Assemble Disassemble Roundtrip
-      id: cargo_build_and_test
-      run: |
-        cargo run -p spirq-as assets/gallery.frag.spvasm -o assets/gallery.frag.spv
-        cargo run -p spirq-dis assets/gallery.frag.spv -o assets/gallery.frag.spvasm --no-indent
-        echo git diff --exit-code --binary

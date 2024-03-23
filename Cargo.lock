@@ -160,12 +160,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 
 [[package]]
-name = "diff"
-version = "0.1.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56254986775e3233ffa9c4d7d3faaf6d36a2c09d30b20687e9f88bc8bafc16c8"
-
-[[package]]
 name = "equivalent"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -270,16 +264,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pretty_assertions"
-version = "1.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af7cee1a6c8a5b9208b3cb1061f10c0cb689087b3d8ce85fb9d2dd7a29b6ba66"
-dependencies = [
- "diff",
- "yansi",
-]
-
-[[package]]
 name = "proc-macro2"
 version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -381,17 +365,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "spirq-as"
-version = "0.1.4"
-dependencies = [
- "anyhow",
- "clap",
- "spirq-spvasm",
-]
-
-[[package]]
 name = "spirq-core"
 version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0aedd7eaf8571f35732bdbfc38b42cf25329aadd1c85abb6fb1cc30af466b98b"
 dependencies = [
  "anyhow",
  "bytemuck",
@@ -400,27 +377,6 @@ dependencies = [
  "num-traits",
  "ordered-float",
  "spirv",
-]
-
-[[package]]
-name = "spirq-dis"
-version = "0.1.4"
-dependencies = [
- "anyhow",
- "clap",
- "spirq-spvasm",
-]
-
-[[package]]
-name = "spirq-spvasm"
-version = "0.1.4"
-dependencies = [
- "anyhow",
- "half",
- "num-traits",
- "pretty_assertions",
- "spirq",
- "spirq-core",
 ]
 
 [[package]]
@@ -537,9 +493,3 @@ name = "windows_x86_64_msvc"
 version = "0.52.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32b752e52a2da0ddfbdbcc6fceadfeede4c939ed16d13e648833a61dfb611ed8"
-
-[[package]]
-name = "yansi"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09041cd90cf85f7f8b2df60c646f853b7f535ce68f85244eb6731cf89fa498ec"

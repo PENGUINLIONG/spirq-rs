@@ -3,7 +3,7 @@
 [![Crate](https://img.shields.io/crates/v/spirq)](https://crates.io/crates/spirq)
 [![Documentation](https://docs.rs/spirq/badge.svg)](https://docs.rs/spirq)
 
-SPIR-Q is a light weight library for SPIR-V pipeline metadata query, supporting upto SPIR-V 1.5 specification aligned with Vulkan 1.2.
+SPIR-Q is a light weight library for SPIR-V pipeline metadata query, supporting upto SPIR-V 1.5 specification aligned with Vulkan 1.3.
 
 ## Why SPIR-Q?
 
