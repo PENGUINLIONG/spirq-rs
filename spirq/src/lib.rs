@@ -68,15 +68,15 @@ pub mod reflect_cfg;
 #[cfg(test)]
 mod tests;
 
-pub use spirq_core::annotation;
-pub use spirq_core::constant;
-pub use spirq_core::error;
-pub use spirq_core::evaluator;
-pub use spirq_core::func;
-pub use spirq_core::parse;
-pub use spirq_core::spirv;
-pub use spirq_core::ty;
-pub use spirq_core::var;
+pub use spq_core::annotation;
+pub use spq_core::constant;
+pub use spq_core::error;
+pub use spq_core::evaluator;
+pub use spq_core::func;
+pub use spq_core::parse;
+pub use spq_core::spirv;
+pub use spq_core::ty;
+pub use spq_core::var;
 
 pub use reflect_cfg::ReflectConfig;
 

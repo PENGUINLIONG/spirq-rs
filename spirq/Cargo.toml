@@ -18,13 +18,13 @@ maintenance = { status = "actively-developed" }
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-spirq-core = { version = "1.0.4", path = "../spirq-core" }
+spq-core = "1.0.4"
 num-traits = "0.2"
 num-derive = "0.4"
 fnv = "1.0.7"
-ordered-float = "3.4.0"
+ordered-float = "4.2"
 
 [dev-dependencies]
 bytes = "1.2"
 byteorder = "1.3"
-inline-spirv = "0.1"
+inline-spirv = "0.2"
