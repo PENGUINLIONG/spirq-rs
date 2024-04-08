@@ -1,5 +1,9 @@
 # Change Log
 
+## v1.2.1
+
+- Fixed compatibility with non-semantics extension instructions. (#138)
+
 ## v1.2.0
 
 - Separated `spirq-` family of subcrates to [`spq`](https://github.com/PENGUINLIONG/spq-rs)

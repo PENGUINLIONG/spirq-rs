@@ -1,4 +1,4 @@
-collected spirvs: ["gallery.frag", "mesh-shader", "moon", "spirv-spec.frag"]
+collected spirvs: ["gallery.frag", "mesh-shader", "moon", "my_shader.frag", "spirv-spec.frag"]
 entered function main
 found a store instruction
 found a load instruction
