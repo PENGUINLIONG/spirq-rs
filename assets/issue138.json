@@ -1,0 +1,57 @@
+{
+  "EntryPoint": "main",
+  "ExecutionModel": "Fragment",
+  "ExecutionModes": [
+    {
+      "ExecutionMode": "OriginUpperLeft",
+      "Operands": []
+    }
+  ],
+  "Variables": {
+    "Inputs": [
+      {
+        "Name": "v_position",
+        "Location": 0,
+        "Component": 0,
+        "Type": "vec2<f32>"
+      }
+    ],
+    "Outputs": [
+      {
+        "Name": "outDepth",
+        "Location": 0,
+        "Component": 0,
+        "Type": "vec4<f32>"
+      }
+    ],
+    "Descriptors": [
+      {
+        "Name": "u_depthBufferTex",
+        "Set": 0,
+        "Binding": 1,
+        "DescriptorType": "CombinedImageSampler",
+        "Type": "CombinedImageSampler<SampledImage2D<f32,Color>>",
+        "Count": 1
+      },
+      {
+        "Name": null,
+        "Set": 0,
+        "Binding": 0,
+        "DescriptorType": "UniformBuffer",
+        "Type": {
+          "Kind": "Struct",
+          "Members": [
+            {
+              "Name": "u_stuff",
+              "Offset": 0,
+              "MemberType": "vec4<f32>"
+            }
+          ]
+        },
+        "Count": 1
+      }
+    ],
+    "PushConstants": [],
+    "SpecConstants": []
+  }
+}
