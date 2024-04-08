@@ -1023,7 +1023,7 @@ impl<'a> ReflectIntermediate<'a> {
         //   b. Non-semantic instructions with OpExtInst.
         while let Some(instr) = instrs.peek() {
             let opcode = instr.op();
-            if let Op::Line | Op::NoLine = opcode {
+            if let Op::Line | Op::NoLine | Op::ExtInst | Op::Undef = opcode {
                 instrs.next()?;
                 continue;
             }
