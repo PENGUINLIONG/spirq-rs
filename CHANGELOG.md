@@ -1,5 +1,9 @@
 # Change Log
 
+## v1.2.2
+
+- Support `OpIEqual` and `OpINotEqual` in Evaluator. (https://github.com/PENGUINLIONG/spq-rs/pull/1)
+
 ## v1.2.1
 
 - Fixed compatibility with non-semantics extension instructions. (#138)
