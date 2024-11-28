@@ -331,13 +331,13 @@ dependencies = [
 
 [[package]]
 name = "shader-reflect"
-version = "0.2.9"
+version = "0.2.10"
 dependencies = [
  "clap",
  "serde",
  "serde_json",
  "shaderc",
- "spirq 1.2.2",
+ "spirq 1.2.3",
 ]
 
 [[package]]
@@ -375,7 +375,7 @@ dependencies = [
 
 [[package]]
 name = "spirq"
-version = "1.2.2"
+version = "1.2.3"
 dependencies = [
  "byteorder",
  "bytes",
@@ -426,9 +426,9 @@ dependencies = [
 
 [[package]]
 name = "spq-core"
-version = "1.0.5"
+version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "605fb8ae60065f7a9d21d1ae1e89f7a5ff93ca7755df88ada937ac06ba0a0a43"
+checksum = "54479dd334e2bb25e246d73d09bc1e130c53d1a7ac6be8f95b0a75fe88fd8f45"
 dependencies = [
  "anyhow",
  "bytemuck",

@@ -1,5 +1,9 @@
 # Change Log
 
+## v1.2.3
+
+- Support more data types in Evaluator. (https://github.com/PENGUINLIONG/spq-rs/pull/4)
+
 ## v1.2.2
 
 - Support `OpIEqual` and `OpINotEqual` in Evaluator. (https://github.com/PENGUINLIONG/spq-rs/pull/1)
