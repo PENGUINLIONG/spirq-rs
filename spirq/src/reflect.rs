@@ -646,16 +646,18 @@ impl Inspector for FunctionInspector {
                     } else if op == Op::Load || is_atomic_load_op(op) {
                         let op = OpLoad::try_from(instr)?;
                         let mut var_id = op.var_id;
-                        // Resolve access chain.
-                        if let Some(&x) = self.access_chain_map.get(&var_id) {
+                        // Resolve the access chain transitively until
+                        // reaching the base variable.
+                        while let Some(&x) = self.access_chain_map.get(&var_id) {
                             var_id = x
                         }
                         func.accessed_vars.insert(var_id);
                     } else if op == Op::Store || is_atomic_store_op(op) {
                         let op = OpStore::try_from(instr)?;
                         let mut var_id = op.var_id;
-                        // Resolve access chain.
-                        if let Some(&x) = self.access_chain_map.get(&var_id) {
+                        // Resolve the access chain transitively until
+                        // reaching the base variable.
+                        while let Some(&x) = self.access_chain_map.get(&var_id) {
                             var_id = x
                         }
                         func.accessed_vars.insert(var_id);
